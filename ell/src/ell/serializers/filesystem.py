@@ -1,28 +1,13 @@
 import os
 import json
 from typing import Any, Optional, Dict, List
+from ell.lstr import lstr
 import ell.serializer
 import numpy as np
 import glob
 from operator import itemgetter
 import warnings
-
-class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if hasattr(obj, "to_json"):
-            return obj.to_json()
-        if isinstance(obj, str):
-            return obj
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        
-        if isinstance(obj, set):
-            return list(obj)
-        try:
-            return super().default(obj)
-        except TypeError as e:
-            return str(obj)
-
+import cattrs
 
 class FilesystemSerializer(ell.serializer.Serializer):
     def __init__(self, storage_dir: str, max_file_size: int = 1024 * 1024, check_empty: bool = False):  # 1MB default
@@ -34,6 +19,36 @@ class FilesystemSerializer(ell.serializer.Serializer):
         if check_empty and not os.path.exists(os.path.join(storage_dir, 'invocations')) and \
            not os.path.exists(os.path.join(storage_dir, 'programs')):
             warnings.warn(f"The ELL storage directory '{storage_dir}' is empty. No invocations or programs found.")
+
+        self.converter = cattrs.Converter()
+        self._setup_cattrs()
+
+    def lst_converter(self, obj: Any) -> Any:
+        # print(obj)
+        # return obj
+        return self.converter.unstructure(dict(content=str(obj), **obj.__dict__, __is_lstr=True))
+        
+        return obj
+    def _setup_cattrs(self):
+        self.converter.register_unstructure_hook(
+            np.ndarray,
+            lambda arr: arr.tolist()
+        )
+        self.converter.register_unstructure_hook(
+            lstr,
+            self.lst_converter
+        )
+        self.converter.register_unstructure_hook(
+            set,
+            lambda s: list(s)
+        )
+        self.converter.register_unstructure_hook(
+            frozenset,
+            lambda s: list(s)
+        )
+
+    def _serialize(self, obj: Any) -> Any:
+        return self.converter.unstructure(obj)
 
     def write_lmp(self, lmp_id: str, name: str, source: str, dependencies: List[str], 
                   created_at: float, is_lmp: bool, lm_kwargs: Optional[str], 
@@ -56,7 +71,7 @@ class FilesystemSerializer(ell.serializer.Serializer):
         }
 
         with open(file_path, 'w') as f:
-            json.dump(lmp_data, f, cls=CustomJSONEncoder)
+            json.dump(self._serialize(lmp_data), f)
 
         return None
 
@@ -87,7 +102,7 @@ class FilesystemSerializer(ell.serializer.Serializer):
         }
 
         file_info = self.open_files[lmp_id]
-        file_info['file'].write(json.dumps(invocation_data, cls=CustomJSONEncoder) + '\n')
+        file_info['file'].write(json.dumps(self._serialize(invocation_data)) + '\n')
         file_info['file'].flush()
 
         if os.path.getsize(file_info['path']) >= self.max_file_size:

@@ -91,7 +91,6 @@ class TestLstr:
     def test_formatting(self):
         s = lstr("Hello {}!")
         filled = s.format(lstr("world", originator="model9"))
-        print(filled)
         assert str(filled) == "Hello world!"
         assert filled.logits is None
         assert filled.originator == frozenset({"model9"})

@@ -256,6 +256,11 @@ class lstr(str):
         attr = super().__getattribute__(name)
 
         # Check if the attribute is a callable and not defined in lstr class itself
+
+
+        if name == "__class__":
+            return type(self)
+        
         if callable(attr) and name not in lstr.__dict__:
 
             def wrapped(*args: Any, **kwargs: Any) -> Any:
@@ -274,6 +279,7 @@ class lstr(str):
                 return result
 
             return wrapped
+        
         return attr
 
     @override

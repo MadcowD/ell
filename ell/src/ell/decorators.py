@@ -141,11 +141,13 @@ def lm(model: str, client: Optional[openai.Client] = None, **lm_kwargs):
             final_lm_kwargs = _get_lm_kwargs(lm_kwargs, lm_params)
             _invocation_kwargs = dict(model=model, messages=messages, lm_kwargs=final_lm_kwargs, client=client or default_client_from_decorator, _logging_color=color)
             tracked_str = _run_lm(**_invocation_kwargs)
+            
             return tracked_str, _invocation_kwargs
 
         # TODO: # we'll deal with type safety here later
         wrapper.__ell_lm_kwargs__ = lm_kwargs
         wrapper.__ell_func__ = fn
+        wrapper.__ell_lm = True
         return track(wrapper)
 
     return decorator
@@ -172,6 +174,8 @@ def track(fn: Callable) -> Callable:
     def wrapper(*fn_args, get_invocation=False, **fn_kwargs) -> str:
         nonlocal _has_serialized
         assert (get_invocation and config.has_serializers) or not get_invocation, "In order to get an invocation, you must have a serializer and get_invocation must be True."
+
+        
         # get the prompt
         (result, invocation_kwargs) = (
             (fn(*fn_args, **fn_kwargs), None)
@@ -183,8 +187,11 @@ def track(fn: Callable) -> Callable:
         if config.has_serializers and not _has_serialized:
             fn_closure, _uses = ell.util.closure.lexically_closured_source(func_to_track)
             fn_hash = func_to_track.__ell_hash__
-            # print(fn_hash)
-            
+            if isinstance(result, lstr):
+                result._originator = frozenset({fn_hash})
+            elif isinstance(result, list):
+                for r in result:
+                    r._originator = frozenset({fn_hash})
 
             for serializer in config.serializers:
                 serializer.write_lmp(
@@ -195,7 +202,7 @@ def track(fn: Callable) -> Callable:
                     created_at=_time,
                     is_lmp=lmp,
                     lm_kwargs=(
-                        json.dumps(lm_kwargs)
+                        (lm_kwargs)
                         if lm_kwargs
                         else None
                     ),
@@ -206,9 +213,9 @@ def track(fn: Callable) -> Callable:
             # Let's add an invocation
             invocation_params = dict(
                 lmp_id=fn_hash,
-                args=json.dumps(fn_args),
-                kwargs=json.dumps(fn_kwargs),
-                result=json.dumps(result),
+                args=(fn_args),
+                kwargs=(fn_kwargs),
+                result=(result),
                 created_at=time.time(),
                 invocation_kwargs=invocation_kwargs,
             )
@@ -223,9 +230,10 @@ def track(fn: Callable) -> Callable:
         else:
             return result
 
-    fn.__wrapper__ = wrapper
+    fn.__wrapper__  = wrapper
     wrapper.__ell_lm_kwargs__ = lm_kwargs
     wrapper.__ell_func__ = func_to_track
+    wrapper.__ell_track = True
 
 
 

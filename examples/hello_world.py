@@ -22,4 +22,4 @@ if __name__ == "__main__":
     from ell.serializers.filesystem import FilesystemSerializer
     serializer = FilesystemSerializer('./examples_serialized')
     serializer.install()
-    print(hello("sama")) # > "hello amas!"
+    (hello("sama")) # > "hello amas!"

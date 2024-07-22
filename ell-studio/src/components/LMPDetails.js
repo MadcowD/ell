@@ -78,7 +78,7 @@ function LMPDetails() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">LM Keywords</h3>
                 <pre className={`bg-${darkMode ? 'gray-700' : 'gray-100'} p-4 rounded-md overflow-x-auto`}>
-                  <code>{JSON.stringify(JSON.parse(lmp.lm_kwargs), null, 2)}</code>
+                  <code>{JSON.stringify((lmp.lm_kwargs), null, 2)}</code>
                 </pre>
               </div>
             )}
@@ -150,9 +150,9 @@ function LMPDetails() {
                 <div className="p-4 border-t border-gray-600">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p><strong>Args:</strong> {invocation.args}</p>
-                      <p><strong>Kwargs:</strong> {invocation.kwargs}</p>
-                      <p><strong>Result:</strong> {invocation.result}</p>
+                      <p><strong>Args:</strong> {JSON.stringify(invocation.args)}</p>
+                      <p><strong>Kwargs:</strong> {JSON.stringify(invocation.kwargs)}</p>
+                      <p><strong>Result:</strong> {JSON.stringify(invocation.result)}</p>
                       <p><strong>Created at:</strong> {new Date(invocation.created_at * 1000).toLocaleString()}</p>
                     </div>
                     <div>

@@ -133,14 +133,10 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
         return "", ("", ""), {}
 
 
-    print("Already closed", func.__name__)
-
     outer_ell_func = func
     while hasattr(func, "__ell_func__"):
         func = func.__ell_func__
     
-    print(func, outer_ell_func)
-    print(hasattr(func, "__ell_func__"))
     source = getsource(func, lstrip=True)
     already_closed.add(hash(func))
     # if func is nested func
@@ -200,7 +196,6 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
                 ret = lexical_closure(
                     var_value, already_closed=already_closed,
                 )
-                print(ret)
                 dep, _, dep_uses = ret
                 dependencies.append(dep)
                 # See if the function was called at all in the source code of the func
