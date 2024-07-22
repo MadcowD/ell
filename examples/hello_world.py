@@ -6,6 +6,7 @@ ell.config.verbose = True
 
 @ell.lm(model="gpt-4o-mini", temperature=0.1)
 def reverse_name(name : str):
+    """You only answer with the result no other text."""
     return f"Reverse this string: {name}"
 
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import { useTheme } from '../contexts/ThemeContext';
+import { fetchLMPs } from '../utils/lmpUtils';
+import { DependencyGraph } from './depgraph/DependencyGraph';
 
 function LMPList() {
   const [lmps, setLmps] = useState([]);
@@ -9,35 +10,16 @@ function LMPList() {
   const [expandedLMP, setExpandedLMP] = useState(null);
 
   useEffect(() => {
-    const fetchLMPs = async () => {
+    const getLMPs = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/api/lmps');
-        const aggregatedLMPs = aggregateLMPsByName(response.data);
+        const aggregatedLMPs = await fetchLMPs();
         setLmps(aggregatedLMPs);
       } catch (error) {
         console.error('Error fetching LMPs:', error);
       }
     };
-    fetchLMPs();
+    getLMPs();
   }, []);
-
-  const aggregateLMPsByName = (lmpList) => {
-    const lmpMap = new Map();
-    lmpList.forEach(lmp => {
-      if (!lmpMap.has(lmp.name)) {
-        lmpMap.set(lmp.name, { ...lmp, versions: [] });
-      }
-      lmpMap.get(lmp.name).versions.push({
-        lmp_id: lmp.lmp_id,
-        created_at: lmp.created_at,
-        invocations: lmp.invocations || 0
-      });
-    });
-    return Array.from(lmpMap.values()).map(lmp => ({
-      ...lmp,
-      versions: lmp.versions.sort((a, b) => b.created_at - a.created_at)
-    }));
-  };
 
   const toggleExpand = (lmpName, event) => {
     // Prevent toggling when clicking on the link
@@ -54,6 +36,7 @@ function LMPList() {
     <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen`}>
       <div className="container mx-auto px-4 py-8">
         <h1 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Language Model Programs</h1>
+        <DependencyGraph lmps={lmps} />
         <div className="space-y-4">
           {lmps.map((lmp) => (
             <div 

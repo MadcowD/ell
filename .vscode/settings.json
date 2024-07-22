@@ -1,0 +1,22 @@
+{
+    "eslint.workingDirectories": [
+      "./ell-studio"
+    ],
+    "typescript.tsdk": "ell-studio/node_modules/typescript/lib",
+    "javascript.preferences.importModuleSpecifier": "relative",
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/build": true
+    },
+    "files.exclude": {
+      "**/.git": true,
+      "**/.DS_Store": true,
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/build": true
+    },
+    "typescript.validate.enable": true,
+    "javascript.validate.enable": true
+  }

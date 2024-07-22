@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useTheme } from '../contexts/ThemeContext';
 import { ChevronDownIcon, ChevronUpIcon, LinkIcon } from '@heroicons/react/24/solid';
@@ -15,6 +16,7 @@ function LMPDetails() {
   const [uses, setUses] = useState([]);
   const [expandedSection, setExpandedSection] = useState(null);
   const { darkMode } = useTheme();
+  console.log(uses)
 
   useEffect(() => {
     const fetchLMPDetails = async () => {
@@ -29,7 +31,15 @@ function LMPDetails() {
         const sortedInvocations = invocationsResponse.data.sort((a, b) => b.created_at - a.created_at);
         setInvocations(sortedInvocations);
 
-        setUses(lmpResponse.data.uses);
+        const usesIds = (lmpResponse.data.uses);
+        // Get all of the uses there are many its a list so we need many api calls
+        const uses = usesIds.map(async (use) => {
+          
+          const useResponse = await axios.get(`http://127.0.0.1:5000/api/lmps/${use}`);
+          return useResponse.data;
+          
+        });
+        setUses(await Promise.all( uses));
       } catch (error) {
         console.error('Error fetching LMP details:', error);
       }
@@ -56,7 +66,7 @@ function LMPDetails() {
           <p className="text-sm mb-4">ID: {lmp.lmp_id}</p>
           <h2 className="text-2xl font-semibold mb-4">Source Code</h2>
           <pre className={`rounded-md overflow-x-auto ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
-            <code className="language-jsx">{lmp.dependencies.trim() + '\n\n' + lmp.source}</code>
+            <code className="language-jsx">{(lmp.dependencies.trim() + '\n\n' + lmp.source).trim()}</code>
           </pre>
           <div className="mt-6 grid grid-cols-2 gap-4">
             <div>
@@ -110,7 +120,7 @@ function LMPDetails() {
               uses.map((use, index) => (
                 <div key={use.lmp_id} className="flex items-center">
                   <LinkIcon className="h-5 w-5 mr-2" />
-                  <p className="text-sm">{use.name} (ID: {use.lmp_id})</p>
+                  <Link to={`/lmp/${use.lmp_id}`} className="text-sm hover:underline">{use.name}()</Link>
                 </div>
               ))
             ) : (
