@@ -164,7 +164,7 @@ def get_really_good_story(about: str):
 
 ## Clean up 
 - [x] Fixing serializers so that they actually work
-- [ ] Fix uses.
+- [x] Fix uses.
 - [ ] Graph view in the ell studio 
 - [ ] Originators 
 - [ ] Multimodal inputs
