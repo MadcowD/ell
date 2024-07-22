@@ -1,12 +1,31 @@
-# What is ell?
-A extremly tiny language model prompting library that treats prompts like weights to be serialized.
+# What is `ell`?
+ 
+ `ell` is a lightweight, functional prompt engineering framework built on a few core principles:
+### 1. Prompts are programs not strings.
+Prompts aren't just strings; they are all the code that leads to strings being sent to a language model. In `ell` we think of one particular way of using a language model as a discrete subroutine called a **language model program**. 
 
-# Logging
+
 ```python
-@ell.lm("this_is_my_model")
+import ell
+
+@ell.lm(model="gpt-4o")
 def hello(world : str):
-    return f"Say hello to {world}"
+    """You are a helpful assistant that writes in lower case.""" # System Message
+    return f"Say hello to {world[::-1]} with a poem."    # User Message
+
+hello("sama")
 ```
+![alt text](image.png)
+
+### 2. Prompts are actually parameters of a machine learning model.
+
+- [ ] Add notes on serialization and lexical closures
+...
+
+### 3. Every call to a language model is worth its weight in credits.
+
+...
+
 
 We want this to log to the console when someone sets a logging flag.
 
