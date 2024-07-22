@@ -8,6 +8,7 @@ __pycache__/
 # macOS DS_Store files
 .DS_Store
 
+examples_serialized/
 # Distribution / packaging
 .Python
 build/

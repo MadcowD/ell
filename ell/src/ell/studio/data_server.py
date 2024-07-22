@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})  # Enable CORS for all /api routes
-serializer = FilesystemSerializer(os.environ.get('ELL_STORAGE_DIR', os.getcwd()))
+serializer = FilesystemSerializer(os.environ.get('ELL_STORAGE_DIR', os.getcwd()), check_empty=True)
 
 @app.route('/api/lmps', methods=['GET'])
 def get_lmps():

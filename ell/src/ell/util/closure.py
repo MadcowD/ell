@@ -108,7 +108,7 @@ def get_referenced_names(code: str, module_name: str):
 CLOSURE_SOURCE: Dict[str, str] = {}
 
 
-def lexical_closure(func: Any, already_closed=None) -> Tuple[str, Tuple[str, str], Set[str]]:
+def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple[str, Tuple[str, str], Set[str]]:
     """
     This function takes a function or any callable as input and returns a string representation of its lexical closure.
     The lexical closure includes the source code of the function itself, as well as the source code of any global variables,
@@ -133,13 +133,12 @@ def lexical_closure(func: Any, already_closed=None) -> Tuple[str, Tuple[str, str
         return "", ("", ""), {}
 
 
+    print("Already closed", func.__name__)
+
     outer_ell_func = func
-    is_ell_func = hasattr(outer_ell_func, "__ell_func__")
     while hasattr(func, "__ell_func__"):
         func = func.__ell_func__
     
-
-
     print(func, outer_ell_func)
     print(hasattr(func, "__ell_func__"))
     source = getsource(func, lstrip=True)
@@ -244,6 +243,7 @@ def lexical_closure(func: Any, already_closed=None) -> Tuple[str, Tuple[str, str
         + DELIM
         + "\n"
     )
+
     reverse_module_src = deque()
     while len(modules) > 0:
         mname, mval = modules.popleft()
@@ -304,12 +304,12 @@ def lexical_closure(func: Any, already_closed=None) -> Tuple[str, Tuple[str, str
         outer_ell_func.__ell_hash__ = fn_hash
         outer_ell_func.__ell_uses__ = uses
 
-    return (dirty_src, (source, dsrc), ({fn_hash} if hasattr(outer_ell_func, "__ell_func__") else uses))
+
+    return (dirty_src, (source, dsrc), ({fn_hash}  if not initial_call and hasattr(outer_ell_func, "__ell_func__") else uses))
 
 def lexically_closured_source(func):
-    _, fnclosure, uses = lexical_closure(func)
+    _, fnclosure, uses = lexical_closure(func, initial_call=True)
     return fnclosure, uses
-
 
 import ast
 

@@ -1,4 +1,4 @@
-# What is `ell`?
+# Functional Prompt Engineering: `ell`
  
  `ell` is a lightweight, functional prompt engineering framework built on a few core principles:
 ### 1. Prompts are programs not strings.
@@ -152,12 +152,26 @@ def get_really_good_story(about: str):
 
 
 #  Reimplementaiton
-- [] Serializers (saving prompts via serializing code) 
-    - [] Which format are we chosing to serialize in for the vcs
-- [] Adapters (different api providers) (mdoel proxy)
-    - [] How to handle multimodal inputs and prompting 
+- [x] Serializers (saving prompts via serializing code) 
+    - [x] Which format are we chosing to serialize in for the vcs
+- [x] Adapters (different api providers) (mdoel proxy)
+    - [x] How to handle multimodal inputs and prompting 
 - [] Lstr origination (this is tracking various different lm strs through different prop interfaces)
 
 - [x] Mock API mode for testing.
 
-- [] Ell studio
+- [x] Ell studio
+
+## Clean up 
+- [x] Fixing serializers so that they actually work
+- [ ] Fix uses.
+- [ ] Graph view in the ell studio 
+- [ ] Originators 
+- [ ] Multimodal inputs
+- [ ] UI/UX Improvements for the tensorboard thing
+- [ ] Database backend for serializers
+- [ ] Serializer schemas (cross backend)
+- [ ] Version history diff view (possibly automatic commit messages using GPT-4o mini)
+- [ ] Add a vscode style explorer
+- [ ] Imporve the API 
+- [ ] Add an index to the filesystem serialzier

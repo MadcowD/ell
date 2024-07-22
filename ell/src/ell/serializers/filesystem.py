@@ -5,6 +5,7 @@ import ell.serializer
 import numpy as np
 import glob
 from operator import itemgetter
+import warnings
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -14,7 +15,9 @@ class CustomJSONEncoder(json.JSONEncoder):
             return obj
         if isinstance(obj, np.ndarray):
             return obj.tolist()
-
+        
+        if isinstance(obj, set):
+            return list(obj)
         try:
             return super().default(obj)
         except TypeError as e:
@@ -22,11 +25,15 @@ class CustomJSONEncoder(json.JSONEncoder):
 
 
 class FilesystemSerializer(ell.serializer.Serializer):
-    def __init__(self, storage_dir: str, max_file_size: int = 1024 * 1024):  # 1MB default
+    def __init__(self, storage_dir: str, max_file_size: int = 1024 * 1024, check_empty: bool = False):  # 1MB default
         self.storage_dir = storage_dir
         self.max_file_size = max_file_size
         os.makedirs(storage_dir, exist_ok=True)
         self.open_files = {}
+        
+        if check_empty and not os.path.exists(os.path.join(storage_dir, 'invocations')) and \
+           not os.path.exists(os.path.join(storage_dir, 'programs')):
+            warnings.warn(f"The ELL storage directory '{storage_dir}' is empty. No invocations or programs found.")
 
     def write_lmp(self, lmp_id: str, name: str, source: str, dependencies: List[str], 
                   created_at: float, is_lmp: bool, lm_kwargs: Optional[str], 
