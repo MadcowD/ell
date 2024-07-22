@@ -6,6 +6,7 @@ import { DependencyGraph } from './depgraph/DependencyGraph';
 
 function LMPList() {
   const [lmps, setLmps] = useState([]);
+  const [loaded, setLoaded] = useState(false);
   const { darkMode } = useTheme();
   const [expandedLMP, setExpandedLMP] = useState(null);
 
@@ -13,6 +14,7 @@ function LMPList() {
     const getLMPs = async () => {
       try {
         const aggregatedLMPs = await fetchLMPs();
+        setLoaded(true);
         setLmps(aggregatedLMPs);
       } catch (error) {
         console.error('Error fetching LMPs:', error);
@@ -36,7 +38,7 @@ function LMPList() {
     <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen`}>
       <div className="container mx-auto px-4 py-8">
         <h1 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Language Model Programs</h1>
-        <DependencyGraph lmps={lmps} />
+        {loaded && <DependencyGraph lmps={lmps} />}
         <div className="space-y-4">
           {lmps.map((lmp) => (
             <div 

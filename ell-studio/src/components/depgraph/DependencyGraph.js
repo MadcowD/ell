@@ -21,9 +21,6 @@ import { Link } from "react-router-dom";
 
 import "reactflow/dist/style.css";
 
-// import { Card } from "../components/Card";
-// import { BiCube } from "react-icons/bi";
-
 
 import { useLayoutedElements, getInitialGraph } from "./graphUtils";
 
@@ -35,7 +32,7 @@ function LMPNode({ data }) {
   return (
     <>
       <Handle type="source" position={Position.Top} />
-      <div height="30px" key={lmp.lmp_id}>
+      <div height="30px" width="300px" key={lmp.lmp_id}>
         <Link to={`/studio/lmp/${lmp.lmp_id}`}>
           {/* <LMPCardTitle lmp={lmp} /> */}
           {lmp.name}
@@ -49,38 +46,42 @@ function LMPNode({ data }) {
 
 const LayoutFlow = ({ initialNodes, initialEdges }) => {
   const { fitView } = useReactFlow();
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  // const [initialised, { toggle, isRunning }] = useLayoutedElements();
-  // const [didInitialSimulation, setDidInitialSimulation] = useState(false);
+  const [nodes, _, onNodesChange] = useNodesState(initialNodes);
+  const [edges, __, onEdgesChange] = useEdgesState(initialEdges);
+  const [initialised, { toggle, isRunning }] = useLayoutedElements();
+  const [didInitialSimulation, setDidInitialSimulation] = useState(false);
 
-  // // Start the simulation automatically when the initialized is good & run it for like 1second
+  // Start the simulation automatically when the initialized is good & run it for like 1second
   // useEffect(() => {
   //   if (initialised && !didInitialSimulation) {
   //     setDidInitialSimulation(true);
   //     toggle();
   //     setTimeout(() => {
   //       toggle();
-  //     }, 2000);
+  //     }, 100);
   //   }
   // }, [initialised, didInitialSimulation]);
 
   const nodeTypes = useMemo(() => ({ lmp: LMPNode }), []);
-
+  
 
   return (
     
     <div style={{ height: 600 }}>
     <ReactFlow
-      nodes={initialNodes}
-      edges={initialEdges}
+      nodes={nodes}
+      edges={edges}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       nodeTypes={nodeTypes}
-  
+      // fitView
     >
       <Panel>
-        
+        {initialised && (
+          <button onClick={toggle}>
+            {isRunning() ? "Stop" : "Start"} force simulation
+        </button>
+        )}
       </Panel>
       <Controls />
 
