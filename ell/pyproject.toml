@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "ell"
+version = "0.0.1"
+description = "ℓ is an language model programming library."
+authors = ["William Guss <carlostnb@gmail.com>"]
+license = "Modified BSD License"
+
+packages = [
+    { include = "ell", from = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+numpy = "^1.26.4"
+openai = "^1.28.0"
+coloredlogs = "^15.0.1"
+colorama = "^0.4.6"
+flask = "^3.0.3"
+flask-cors = "^4.0.1"
+
+
+
+[tool.poetry.dev-dependencies]
+pytest = "^8.2.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
