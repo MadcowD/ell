@@ -171,12 +171,17 @@ def get_really_good_story(about: str):
 - [x] Schemas and a better data server
 - [ ] Update the stores to use the schemas in the tpe hints and then seerilize to model dumpo on flask or switch to FastAPI
 - [ ] Runtime Logging
-  - [ ] Origination index.
+  - [x] Origination index.
 - [ ] Multimodal inputs
 - [ ] UI/UX Improvements for the tensorboard thing
-- [ ] Database backend for serializers
-- [ ] Serializer schemas (cross backend)
+- [x] Database backend for serializers
+- [x] Serializer schemas (cross backend)
 - [ ] Version history diff view (possibly automatic commit messages using GPT-4o mini)
 - [ ] Add a vscode style explorer
-- [ ] Imporve the API 
-- [ ] Add an index to the filesystem serialzier
+- [ ] Improve ell studio generically?
+  
+
+
+## Figure out where we sit in the ecosystem (trace APIs vs LLM programmming interfaces)
+- [ ] Figure out where we sit in the ecosystem (trace APIs vs LLM programmming interfaces)
+

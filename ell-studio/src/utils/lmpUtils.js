@@ -1,8 +1,9 @@
 import axios from 'axios';
 
+const API_BASE_URL = "http://localhost:8080"
 export const fetchLMPs = async () => {
   try {
-    const baseUrl = process.env.API_BASE_URL || 'http://127.0.0.1:5000';
+    const baseUrl = API_BASE_URL
     const response = await axios.get(`${baseUrl}/api/lmps`);
     return aggregateLMPsByName(response.data);
   } catch (error) {
@@ -17,14 +18,15 @@ export const aggregateLMPsByName = (lmpList) => {
     if (!lmpMap.has(lmp.name)) {
       lmpMap.set(lmp.name, { ...lmp, versions: [] });
     }
+    console.log(new Date(lmp.created_at))
     lmpMap.get(lmp.name).versions.push({
       lmp_id: lmp.lmp_id,
-      created_at: lmp.created_at,
+      created_at: new Date(lmp.created_at + 'Z'), // Parse the date string as UTC
       invocations: lmp.invocations || 0
     });
   });
   return Array.from(lmpMap.values()).map(lmp => ({
     ...lmp,
-    versions: lmp.versions.sort((a, b) => b.created_at - a.created_at)
+    versions: lmp.versions.sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
   }));
 };

@@ -10,10 +10,11 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
+
+      <Header />
         <div className="flex min-h-screen bg-gray-900 text-gray-100">
           <Sidebar />
           <div className="flex-1">
-            <Header />
             <main className="container mx-auto px-6 py-8">
               <Routes>
                 <Route path="/" element={<LMPList />} />

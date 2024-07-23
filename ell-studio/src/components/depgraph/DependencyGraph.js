@@ -52,15 +52,15 @@ const LayoutFlow = ({ initialNodes, initialEdges }) => {
   const [didInitialSimulation, setDidInitialSimulation] = useState(false);
 
   // Start the simulation automatically when the initialized is good & run it for like 1second
-  // useEffect(() => {
-  //   if (initialised && !didInitialSimulation) {
-  //     setDidInitialSimulation(true);
-  //     toggle();
-  //     setTimeout(() => {
-  //       toggle();
-  //     }, 100);
-  //   }
-  // }, [initialised, didInitialSimulation]);
+  useEffect(() => {
+    if (initialised && !didInitialSimulation) {
+      setDidInitialSimulation(true);
+      toggle();
+      setTimeout(() => {
+        toggle();
+      }, 1000);
+    }
+  }, [initialised, didInitialSimulation]);
 
   const nodeTypes = useMemo(() => ({ lmp: LMPNode }), []);
   
@@ -77,11 +77,6 @@ const LayoutFlow = ({ initialNodes, initialEdges }) => {
       // fitView
     >
       <Panel>
-        {initialised && (
-          <button onClick={toggle}>
-            {isRunning() ? "Stop" : "Start"} force simulation
-        </button>
-        )}
       </Panel>
       <Controls />
 

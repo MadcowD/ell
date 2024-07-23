@@ -78,6 +78,7 @@ class SQLStore(ell.store.Store):
                 for key, value in filters.items():
                     query = query.where(getattr(SerializedLMP, key) == value)
             results = session.exec(query).all()
+            
             lmp_dict = {lmp.lmp_id: {**lmp.model_dump(), 'uses': []} for lmp, _ in results}
             for lmp, using_id in results:
                 if using_id:
@@ -91,7 +92,7 @@ class SQLStore(ell.store.Store):
                 for key, value in filters.items():
                     query = query.where(getattr(Invocation, key) == value)
             invocations = session.exec(query).all()
-            return [inv.model_dump() for inv in invocations]
+            return [inv for inv in invocations]
 
 
     def get_lmp_versions(self, lmp_id: str) -> List[Dict[str, Any]]:

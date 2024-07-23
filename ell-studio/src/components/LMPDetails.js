@@ -18,7 +18,7 @@ function LMPDetails() {
   const { darkMode } = useTheme();
   console.log(uses)
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:5000';
+  const API_BASE_URL = "http://localhost:8080"
 
   useEffect(() => {
     const fetchLMPDetails = async () => {
@@ -30,6 +30,7 @@ function LMPDetails() {
         setVersionHistory(versionHistoryResponse.data);
 
         const invocationsResponse = await axios.get(`${API_BASE_URL}/api/invocations/${id}`);
+        
         const sortedInvocations = invocationsResponse.data.sort((a, b) => b.created_at - a.created_at);
         setInvocations(sortedInvocations);
 
