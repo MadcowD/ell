@@ -25,6 +25,6 @@ def joke(topic : str):
 
 
 if __name__ == "__main__":
-    serializer = SQLiteStore('sqlite_example')
-    serializer.install()
-    joke("minecraft")
+    store = SQLiteStore('sqlite_example')
+    store.install()
+    come_up_with_a_premise_for_a_joke_about("minecraft") # <The joke>

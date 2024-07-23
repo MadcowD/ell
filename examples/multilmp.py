@@ -1,6 +1,8 @@
 from typing import List
 import ell
 
+from ell.stores.sql import SQLiteStore
+
 ell.config.verbose = True
 
 @ell.lm(model="gpt-4o-mini", temperature=1.0)
@@ -38,9 +40,9 @@ def write_a_really_good_story(about : str):
     ]
 
 if __name__ == "__main__":
-    from ell.stores.jsonl import FilesystemSerializer
-    fs = FilesystemSerializer('examples_serialized')
-    fs.install()
+    
+    serializer = SQLiteStore('sqlite_example')
+    serializer.install()
     story = write_a_really_good_story("a dog")
     print(story)
 

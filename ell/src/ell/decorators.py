@@ -17,6 +17,9 @@ from ell.types import LMP, InvocableLM, LMPParams, Message, MessageOrDict, _lstr
 from ell.util.verbosity import  model_usage_logger_post_end, model_usage_logger_post_intermediate, model_usage_logger_post_start, model_usage_logger_pre, compute_color
 import numpy as np
 import openai
+import cattrs
+
+
 
 
 import logging
@@ -153,6 +156,7 @@ def lm(model: str, client: Optional[openai.Client] = None, **lm_kwargs):
     return decorator
 
 
+
 def track(fn: Callable) -> Callable:
     if hasattr(fn, "__ell_lm_kwargs__"):
         func_to_track = fn
@@ -214,12 +218,39 @@ def track(fn: Callable) -> Callable:
                 lmp_id=fn_hash,
                 args=(fn_args),
                 kwargs=(fn_kwargs),
-                result=(result),
                 invocation_kwargs=invocation_kwargs,
             )
+
             
+            invocation_converter = cattrs.Converter()
+            consumes = set()
+            
+            def process_lstr(obj):
+                consumes.add(obj.originator)
+                return invocation_converter.unstructure(dict(content=str(obj), **obj.__dict__, __lstr=True))
+
+                
+            invocation_converter.register_unstructure_hook(
+                np.ndarray,
+                lambda arr: arr.tolist()
+            )
+            invocation_converter.register_unstructure_hook(
+                lstr,
+                process_lstr
+            )
+            invocation_converter.register_unstructure_hook(
+                set,
+                lambda s: list(s)
+            )
+            invocation_converter.register_unstructure_hook(
+                frozenset,
+                lambda s: list(s)
+            )
+            
+            
+            cleaned_invocation_params = invocation_converter.unstructure(invocation_params)
             for serializer in config.serializers:
-                serializer.write_invocation(**invocation_params)
+                serializer.write_invocation(**cleaned_invocation_params, consumes=consumes, result=result)
             
             invoc = invocation_params  # For compatibility with existing code
 

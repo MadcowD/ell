@@ -42,15 +42,6 @@ ChatLMP = Callable[[Chat, T], Chat]
 LMP = Union[OneTurn, MultiTurnLMP, ChatLMP]
 InvocableLM = Callable[..., _lstr_generic]
 
-class LStrOriginator(SQLModel, table=True):
-    """
-    Represents the many-to-many relationship between LStrs and their originating SerializedLMPs.
-    
-    This class is used to track which LMPs originated which LStrs.
-    """
-    id: Optional[int] = Field(default=None, primary_key=True)  # Unique identifier for the relationship
-    lstr_id: int = Field(foreign_key="serializedlstr.id")  # ID of the LStr
-    lmp_id: int = Field(foreign_key="serializedlmp.lmp_id")  # ID of the originating LMP
 
 class SerializedLMPUses(SQLModel, table=True):
     """
@@ -61,6 +52,8 @@ class SerializedLMPUses(SQLModel, table=True):
 
     lmp_user_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id", primary_key=True)  # ID of the LMP that is being used
     lmp_using_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id", primary_key=True)  # ID of the LMP that is using the other LMP
+
+
 
 class SerializedLMP(SQLModel, table=True):
     """
@@ -77,7 +70,6 @@ class SerializedLMP(SQLModel, table=True):
     lm_kwargs: dict  = Field(sa_column=Column(JSON)) # Additional keyword arguments for the LMP
 
     invocations: List["Invocation"] = Relationship(back_populates="lmp")  # Relationship to invocations of this LMP
-    results: List["SerializedLStr"] = Relationship(back_populates="originator", link_model=LStrOriginator)  # Relationship to LStr objects originated by this LMP
     used_by: Optional[List["SerializedLMP"]] = Relationship(
         back_populates="uses",
         link_model=SerializedLMPUses,
@@ -95,6 +87,63 @@ class SerializedLMP(SQLModel, table=True):
         ),
     )
 
+class LStrOriginator(SQLModel, table=True):
+    """
+    Represents the many-to-many relationship between LStrs and their originating SerializedLMPs.
+    
+    This class is used to track which LMPs originated which LStrs.
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)  # Unique identifier for the relationship
+    lstr_id: int = Field(foreign_key="serializedlstr.id")  # ID of the LStr
+    invocation_id: int = Field(foreign_key="invocation.id")  # ID of the originating LMP
+
+
+
+class InvocationConsumes(SQLModel, table=True):
+    """
+    Represents a many-to-many relationship between Invocations and other Invocations (it's a 1st degree link in the trace graph)
+
+    This class is used to keep track of when an invocation consumes a in its kwargs or args a result of another invocation.
+    """
+    invocaton_consumer_id: str = Field(foreign_key="invocation.id", primary_key=True)  # ID of the Invocation that is consuming another Invocation
+    invocaton_consumed_id: str = Field(foreign_key="invocation.id", primary_key=True)  # ID of the Invocation that is being consumed by another Invocation
+
+class Invocation(SQLModel, table=True):
+    """
+    Represents an invocation of an LMP.
+    
+    This class is used to store information about each time an LMP is called.
+    """
+    id: Optional[str] = Field(default=None, primary_key=True)  # Unique identifier for the invocation
+    lmp_id: str = Field(foreign_key="serializedlmp.lmp_id")  # ID of the LMP that was invoked
+    args: List[Any] = Field(default_factory=list, sa_column=Column(JSON))  # Arguments used in the invocation
+    kwargs: dict = Field(default_factory=dict, sa_column=Column(JSON))  # Keyword arguments used in the invocation
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)  # Timestamp of when the invocation was created
+    invocation_kwargs: str  # Additional keyword arguments for the invocation
+
+    # Relationships
+    lmp: SerializedLMP = Relationship(back_populates="invocations")  # Relationship to the LMP that was invoked
+    results: List[SerializedLStr] = Relationship(back_populates="producer_invocation")  # Relationship to the LStr results of the invocation
+
+
+    # Consumes
+    consumed_by: Optional[List["Invocation"]] = Relationship(
+        back_populates="consumes",
+        link_model=InvocationConsumes,
+        sa_relationship_kwargs=dict(
+            primaryjoin="Invocation.id==InvocationConsumes.invocaton_consumer_id",
+            secondaryjoin="Invocation.id==InvocationConsumes.invocaton_consumed_id",
+        ),
+    )
+    consumes: List["Invocation"]  = Relationship(
+        back_populates="consumed_by",
+        link_model=InvocationConsumes,
+        sa_relationship_kwargs=dict(
+            primaryjoin="Invocation.id==InvocationConsumes.invocaton_consumed_id",
+            secondaryjoin="Invocation.id==InvocationConsumes.invocaton_consumer_id",
+        ),
+    )
 
 
 class SerializedLStr(SQLModel, table=True):
@@ -106,25 +155,45 @@ class SerializedLStr(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)  # Unique identifier for the LStr
     content: str  # The actual content of the LStr
     logits: List[float] = Field(default_factory=list, sa_column=Column(JSON))  # Logits associated with the LStr, if available
+    producer_invocation_id: Optional[int] = Field(default=None, foreign_key="invocation.id")  # ID of the Invocation that produced this LStr
 
     originator: List[SerializedLMP] = Relationship(back_populates="results", link_model=LStrOriginator)  # Relationship to the LMP(s) that originated this LStr
+    producer_invocation: Optional[Invocation] = Relationship(back_populates="results")  # Relationship to the Invocation that produced this LStr
 
-class Invocation(SQLModel, table=True):
-    """
-    Represents an invocation of an LMP.
-    
-    This class is used to store information about each time an LMP is called.
-    """
-    id: Optional[int] = Field(default=None, primary_key=True)  # Unique identifier for the invocation
-    lmp_id: str = Field(foreign_key="serializedlmp.lmp_id")  # ID of the LMP that was invoked
-    args: List[Any] = Field(default_factory=list, sa_column=Column(JSON))  # Arguments used in the invocation
-    kwargs: dict = Field(default_factory=dict, sa_column=Column(JSON))  # Keyword arguments used in the invocation
-    
-    result_id: int = Field(foreign_key="serializedlstr.id")  # ID of the LStr result of the invocation
-    created_at: datetime = Field(default_factory=datetime.utcnow)  # Timestamp of when the invocation was created
-    invocation_kwargs: str  # Additional keyword arguments for the invocation
 
-    # Relationships
-    lmp: SerializedLMP = Relationship(back_populates="invocations")  # Relationship to the LMP that was invoked
-    result: SerializedLStr = Relationship()  # Relationship to the LStr result of the invocation
+lmp() <- result_lstrs[]  ...compute... another_lmp(result_lstrs[]) <- new_result[]
+
+invocation -> lstrs <- another_invoke
+                |
+                |
+         third invocation    (trace(3rd invocation) = [invocation, another_invocation]
+                              
+
+orignators in ell will always be invocation ids.
+
+when i get a new lstr from calling an LMP, i will get the id of the invocaiton that produced it as the sole originator
+
+
+some_lmp() -> y:= lstr("content", originator=invocation_id of that call.)
+
+y += x 
+
+some_lmp() -> y:= lstr("content", originator=(invocation_id), instantenous_meta_data={
+      logits, 
+      completion id
+      model id
+      invocation_id,
+      lmp_id.
+})
+
+
+
+y.invocation_id
+
+
+y += " 123"
+y = some_lmp(meta_data = True)
+
+
+
 
