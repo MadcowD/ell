@@ -2,7 +2,8 @@ import axios from 'axios';
 
 export const fetchLMPs = async () => {
   try {
-    const response = await axios.get('http://127.0.0.1:5000/api/lmps');
+    const baseUrl = process.env.API_BASE_URL || 'http://127.0.0.1:5000';
+    const response = await axios.get(`${baseUrl}/api/lmps`);
     return aggregateLMPsByName(response.data);
   } catch (error) {
     console.error('Error fetching LMPs:', error);

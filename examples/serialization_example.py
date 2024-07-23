@@ -3,8 +3,8 @@ An example of how to utilize the serializer to save and load invocations from th
 """
 
 import ell
-from ell.serializer import Serializer
-from ell.serializers.filesystem import FilesystemSerializer
+from ell.store import Store
+from ell.stores.jsonl import FilesystemSerializer
 
 
 @ell.lm(model="gpt-4-turbo",  temperature=0.1, max_tokens=5)

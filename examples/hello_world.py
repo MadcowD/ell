@@ -3,23 +3,12 @@ import math
 
 ell.config.verbose = True
 
-
-@ell.lm(model="gpt-4o-mini", temperature=0.1)
-def reverse_name(name : str):
-    """You only answer with the result no other text."""
-    return f"Reverse this string: {name}"
-
-
-def get_user_prompt(world : str):
-    return f"Say hello to {world} + {math.pi} with a haiku."
-
 @ell.lm(model="gpt-4o")
 def hello(world : str):
-    """You are a helpful assistant that writes in lower case.""" # System Message
-    return get_user_prompt(reverse_name(world))
+    return [
+        ell.system("You are a helpful assistant that writes in lower case."),
+        ell.user(f"Say hello to {world.capitalize()} with a haiku.")
+    ]
 
 if __name__ == "__main__":
-    from ell.serializers.filesystem import FilesystemSerializer
-    serializer = FilesystemSerializer('./examples_serialized')
-    serializer.install()
     (hello("sama")) # > "hello amas!"

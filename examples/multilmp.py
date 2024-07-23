@@ -3,7 +3,6 @@ import ell
 
 ell.config.verbose = True
 
-
 @ell.lm(model="gpt-4o-mini", temperature=1.0)
 def generate_story_ideas(about : str):
     return [
@@ -14,11 +13,11 @@ def generate_story_ideas(about : str):
 @ell.lm(model="gpt-4o-mini", temperature=1.0)
 def write_a_draft_of_a_story(idea : str):
     return [
-        ell.system("You are an expert story writer. The story should only be 3 paragraphs."),
+        ell.system("You are an adept story writer. The story should only be 3 paragraphs."),
         ell.user(f"Write a story about {idea}."),
     ]
 
-@ell.lm(model="gpt-4o", temperature=10.0)
+@ell.lm(model="gpt-4o", temperature=0.1)
 def choose_the_best_draft(drafts : List[str]):
     return [
         ell.system("You are an expert fiction editor."),
@@ -39,7 +38,7 @@ def write_a_really_good_story(about : str):
     ]
 
 if __name__ == "__main__":
-    from ell.serializers.filesystem import FilesystemSerializer
+    from ell.stores.jsonl import FilesystemSerializer
     fs = FilesystemSerializer('examples_serialized')
     fs.install()
     story = write_a_really_good_story("a dog")

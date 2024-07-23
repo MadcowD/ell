@@ -1,6 +1,6 @@
 import os
 from argparse import ArgumentParser
-from ell.studio.data_server import app, serializer
+from ell.studio.data_server import create_app
 
 def main():
     parser = ArgumentParser(description="ELL Studio Data Server")
@@ -8,11 +8,10 @@ def main():
                         help="Directory for filesystem serializer storage (default: current directory)")
     args = parser.parse_args()
 
-    # Update the serializer's storage directory
-    serializer.storage_dir = args.storage_dir
 
-    # Run the Flask app
-    app.run(debug=True)
+    app = create_app(args.storage_dir)
+    app.run(debug=True, port=8080)
+    print('jho')
 
 if __name__ == "__main__":
     main()

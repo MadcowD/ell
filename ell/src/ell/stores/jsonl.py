@@ -2,14 +2,14 @@ import os
 import json
 from typing import Any, Optional, Dict, List
 from ell.lstr import lstr
-import ell.serializer
+import ell.store
 import numpy as np
 import glob
 from operator import itemgetter
 import warnings
 import cattrs
 
-class FilesystemSerializer(ell.serializer.Serializer):
+class JsonlStore(ell.store.Store):
     def __init__(self, storage_dir: str, max_file_size: int = 1024 * 1024, check_empty: bool = False):  # 1MB default
         self.storage_dir = storage_dir
         self.max_file_size = max_file_size
@@ -111,7 +111,7 @@ class FilesystemSerializer(ell.serializer.Serializer):
         
         return invocation_data
 
-    def get_lmps(self, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def get_lmps(self, **filters: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
         lmps = []
         for file_path in glob.glob(os.path.join(self.storage_dir, 'programs', '*.json')):
             with open(file_path, 'r') as f:

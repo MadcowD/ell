@@ -199,7 +199,6 @@ def track(fn: Callable) -> Callable:
                     name=_name,
                     source=fn_closure[0],
                     dependencies=fn_closure[1],
-                    created_at=_time,
                     is_lmp=lmp,
                     lm_kwargs=(
                         (lm_kwargs)
@@ -216,7 +215,6 @@ def track(fn: Callable) -> Callable:
                 args=(fn_args),
                 kwargs=(fn_kwargs),
                 result=(result),
-                created_at=time.time(),
                 invocation_kwargs=invocation_kwargs,
             )
             

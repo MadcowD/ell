@@ -18,34 +18,33 @@ function LMPDetails() {
   const { darkMode } = useTheme();
   console.log(uses)
 
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:5000';
+
   useEffect(() => {
     const fetchLMPDetails = async () => {
       try {
-        const lmpResponse = await axios.get(`http://127.0.0.1:5000/api/lmps/${id}`);
+        const lmpResponse = await axios.get(`${API_BASE_URL}/api/lmps/${id}`);
         setLmp(lmpResponse.data);
 
-        const versionHistoryResponse = await axios.get(`http://127.0.0.1:5000/api/lmps/${id}/versions`);
+        const versionHistoryResponse = await axios.get(`${API_BASE_URL}/api/lmps/${id}/versions`);
         setVersionHistory(versionHistoryResponse.data);
 
-        const invocationsResponse = await axios.get(`http://127.0.0.1:5000/api/invocations/${id}`);
+        const invocationsResponse = await axios.get(`${API_BASE_URL}/api/invocations/${id}`);
         const sortedInvocations = invocationsResponse.data.sort((a, b) => b.created_at - a.created_at);
         setInvocations(sortedInvocations);
 
         const usesIds = (lmpResponse.data.uses);
-        // Get all of the uses there are many its a list so we need many api calls
         const uses = usesIds.map(async (use) => {
-          
-          const useResponse = await axios.get(`http://127.0.0.1:5000/api/lmps/${use}`);
+          const useResponse = await axios.get(`${API_BASE_URL}/api/lmps/${use}`);
           return useResponse.data;
-          
         });
-        setUses(await Promise.all( uses));
+        setUses(await Promise.all(uses));
       } catch (error) {
         console.error('Error fetching LMP details:', error);
       }
     };
     fetchLMPDetails();
-  }, [id]);
+  }, [id, API_BASE_URL]);
 
   useEffect(() => {
     // Highlight the code after the component mounts or updates

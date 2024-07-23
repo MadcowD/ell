@@ -78,7 +78,7 @@ For example in version control we just save all outputs on a commit but you ahve
 
 Alternatively serialization happens by default in some global serialzier diretory? No I hate this.
 
-Whats the middleground. We detect a .ell direcotry near the file? No thats unintuitive. This hsould behave like tensorboard
+Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. This hsould behave like tensorboard
 - [] Look at tensorboard, pytorch, & wandb equivalent no need to reinvent.
 
  What if we instal two different serializers????
@@ -166,7 +166,12 @@ def get_really_good_story(about: str):
 - [x] Fixing serializers so that they actually work
 - [x] Fix uses.
 - [x] Graph view in the ell studio 
-- [ ] Originators 
+- [x] Originators 
+- [x] Port SQL backend
+- [x] Schemas and a better data server
+- [ ] Update the stores to use the schemas in the tpe hints and then seerilize to model dumpo on flask or switch to FastAPI
+- [ ] Runtime Logging
+  - [ ] Origination index.
 - [ ] Multimodal inputs
 - [ ] UI/UX Improvements for the tensorboard thing
 - [ ] Database backend for serializers

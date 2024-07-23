@@ -10,6 +10,7 @@ def register_openai_models(client : openai.Client):
     config.register_model("gpt-4o-mini", client)
     config.register_model("gpt-3.5-turbo", client)
     config.register_model("gpt-4-turbo", client)
+    config.register_model("gpt-4", client)
 
 
 
