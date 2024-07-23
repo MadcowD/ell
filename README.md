@@ -88,34 +88,22 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 # Todos
 
 
-## some notes fom lat at night
-
-- [X] graph view
 - [ ] someway of visualizing timeline nicely
 - [ ] comment system
 - [ ] human evals immediately & easily. 
-- [X] highlight the fn being called & link it to other ell fn's.
 - [ ] keyboard shortcuts for navigating the invocations (expand with . to see detialed view of the fn call)
 - [ ] everything linkable
-- [ x comparisson mode for lms & double blind for evals.
+- [ ] comparisson mode for lms & double blind for evals.
 - [ ] evaluations & metrics (ai as well.)
-- [x] tie to git commit as well or any versioning like this.
 - [ ] feel like this should be a vscode plugin but idk, tensorboard is fine too.
 - [ ] codebases will have lots of prompts, need to be organized.. (perhaps by module or something)
 - [ ] live updates & new indicators.
 
-- [ ] chain of prompt visualization, per invocation is not the right work flow, but I can imagine a bunch of cards that go top to bottom with a line in between them. (like a timeline) and then you can click on the line to see the invocation. (or something like that) would be live
+- [ ] chain of prompt visualization, per invocation is not the right work flow, but I can imagine a bunch of cards that go top to bottom with a line in between them. (like a timeline) and then you can click on the line to see the invocation. (or something like that) would be live <--- langmsith>
  * this remidns me that we are actually probably doing it wrong with @decorators, bc what is an operation? a call to a language model? there's a lot that can go into an invocation & you visualize that as a step through really with frames in programming
  * so this is probably all a bad idea.
  - [ ] navigation should be as easy as vscode. cmd shift p or spotlifht
 
-
-another note,
-don't need to do L funcs (wrappers) I can jsut have calls to the language model recorded and keep track of the chain on my custom string object :)
-
-
-
-Some more notes:
 - [ ] Developing should be by func so I can run & go look @ the results even if the hash changes
 - [ ] Call stacks from langmsith are nice, but also fingerprinting 
 - [ ] Depdendencies take up a lot of space when someone is grocking a prompt, so should we hide them or just scorll down to the bottom where it is?
@@ -126,62 +114,20 @@ Some more notes:
 - [ ] We need checkpointing, we haven't tried using this in an ipython notebook yet, might be dogshit.
 
 
-NEEDS TO FIX:
-```
 
-# this wont get the the uses to trigger because this calls a function that calls it, we need to recursively check all fns that are called to see if it calls it.
-def int_cast_comparator(story1, story2):
-    return int(compare_two_stories(story1, story2)[0].split(":")[1].strip()) - 1
-
-
-@ell.track
-def get_really_good_story(about: str):
-    stories = write_a_story(about, lm_params=dict(n=20))
-
-    def int_cast_comparator(story1, story2):
-        return int(compare_two_stories(story1, story2)[0].split(":")[1].strip()) - 1
-
-    while len(stories) > 1:
-        ranking = tournament_ranking(stories, int_cast_comparator)
-        print(ranking)
-        # Eliminate low ranking storyes
-        stories = stories[np.where(ranking > np.min(ranking))]
-
-    return stories[np.argmax(ranking)]
-```
-
-
-#  Reimplementaiton
-- [x] Serializers (saving prompts via serializing code) 
-    - [x] Which format are we chosing to serialize in for the vcs
-- [x] Adapters (different api providers) (mdoel proxy)
-    - [x] How to handle multimodal inputs and prompting 
-- [] Lstr origination (this is tracking various different lm strs through different prop interfaces)
-
-- [x] Mock API mode for testing.
-
-- [x] Ell studio
-
-## Clean up 
-- [x] Fixing serializers so that they actually work
-- [x] Fix uses.
-- [x] Graph view in the ell studio 
-- [x] Originators 
-- [x] Port SQL backend
-- [x] Schemas and a better data server
 - [ ] Update the stores to use the schemas in the tpe hints and then seerilize to model dumpo on flask or switch to FastAPI
-- [ ] Runtime Logging
+- [ ] Runtime Logging/Trace Logging
   - [x] Origination index.
 - [ ] Multimodal inputs
 - [ ] UI/UX Improvements for the tensorboard thing
-- [x] Database backend for serializers
-- [x] Serializer schemas (cross backend)
 - [ ] Version history diff view (possibly automatic commit messages using GPT-4o mini)
 - [ ] Add a vscode style explorer
 - [ ] Improve ell studio generically?
   
 
-
-## Figure out where we sit in the ecosystem (trace APIs vs LLM programmming interfaces)
 - [ ] Figure out where we sit in the ecosystem (trace APIs vs LLM programmming interfaces)
 
+
+## Packaging
+- [ ] Write nice docs for eveyrthing
+- [ ] Package it a ll up
