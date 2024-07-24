@@ -87,23 +87,6 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 
 # Todos
 
-
-- [ ] someway of visualizing timeline nicely
-- [ ] comment system
-- [ ] human evals immediately & easily. 
-- [ ] keyboard shortcuts for navigating the invocations (expand with . to see detialed view of the fn call)
-- [ ] everything linkable
-- [ ] comparisson mode for lms & double blind for evals.
-- [ ] evaluations & metrics (ai as well.)
-- [ ] feel like this should be a vscode plugin but idk, tensorboard is fine too.
-- [ ] codebases will have lots of prompts, need to be organized.. (perhaps by module or something)
-- [ ] live updates & new indicators.
-
-- [ ] chain of prompt visualization, per invocation is not the right work flow, but I can imagine a bunch of cards that go top to bottom with a line in between them. (like a timeline) and then you can click on the line to see the invocation. (or something like that) would be live <--- langmsith>
- * this remidns me that we are actually probably doing it wrong with @decorators, bc what is an operation? a call to a language model? there's a lot that can go into an invocation & you visualize that as a step through really with frames in programming
- * so this is probably all a bad idea.
- - [ ] navigation should be as easy as vscode. cmd shift p or spotlifht
-
 - [ ] Developing should be by func so I can run & go look @ the results even if the hash changes
 - [ ] Call stacks from langmsith are nice, but also fingerprinting 
 - [ ] Depdendencies take up a lot of space when someone is grocking a prompt, so should we hide them or just scorll down to the bottom where it is?
@@ -112,8 +95,6 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 - [ ] Think about evaluator framework..
 - [ ] Builtins for classifiers, like logit debiasing.
 - [ ] We need checkpointing, we haven't tried using this in an ipython notebook yet, might be dogshit.
-
-
 
 - [ ] Update the stores to use the schemas in the tpe hints and then seerilize to model dumpo on flask or switch to FastAPI
 - [ ] Runtime Logging/Trace Logging
@@ -131,3 +112,23 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 ## Packaging
 - [ ] Write nice docs for eveyrthing
 - [ ] Package it a ll up
+
+
+## Misc
+
+
+- [ ] someway of visualizing timeline nicely
+- [ ] comment system
+- [ ] human evals immediately & easily. 
+- [ ] keyboard shortcuts for navigating the invocations (expand with . to see detialed view of the fn call)
+- [ ] everything linkable
+- [ ] comparisson mode for lms & double blind for evals.
+- [ ] evaluations & metrics (ai as well.)
+- [ ] feel like this should be a vscode plugin but idk, tensorboard is fine too.
+- [ ] codebases will have lots of prompts, need to be organized.. (perhaps by module or something)
+- [ ] live updates & new indicators.
+
+- [ ] chain of prompt visualization, per invocation is not the right work flow, but I can imagine a bunch of cards that go top to bottom with a line in between them. (like a timeline) and then you can click on the line to see the invocation. (or something like that) would be live <--- langmsith>
+ * this remidns me that we are actually probably doing it wrong with @decorators, bc what is an operation? a call to a language model? there's a lot that can go into an invocation & you visualize that as a step through really with frames in programming
+ * so this is probably all a bad idea.
+ - [ ] navigation should be as easy as vscode. cmd shift p or spotlifht

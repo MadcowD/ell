@@ -27,4 +27,4 @@ def joke(topic : str):
 if __name__ == "__main__":
     store = SQLiteStore('sqlite_example')
     store.install()
-    come_up_with_a_premise_for_a_joke_about("minecraft") # <The joke>
+    joke("minecraft") # <The joke>

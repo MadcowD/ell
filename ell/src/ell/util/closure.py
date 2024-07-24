@@ -290,7 +290,7 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
     CLOSURE_SOURCE[hash(func)] = dirty_src 
 
     dsrc = _clean_src(dirty_src_without_func)
-    fn_hash = hashlib.md5(
+    fn_hash = "lmp-" + hashlib.md5(
             "\n".join((source, dsrc, func.__qualname__)).encode()
         ).hexdigest()
     

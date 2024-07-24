@@ -29,7 +29,7 @@ class Store(ABC):
         pass
 
     @abstractmethod
-    def write_invocation(self, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], 
+    def write_invocation(self, id : str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], 
                          created_at: Optional[float], consumes: Set[str]) -> Optional[Any]:
         """
         Write an invocation of an LMP to the storage.

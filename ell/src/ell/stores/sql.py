@@ -5,7 +5,7 @@ from sqlmodel import Session, SQLModel, create_engine, select
 import ell.store
 import cattrs
 import numpy as np
-from ell.types import SerializedLMP, Invocation, SerializedLMPUses, SerializedLStr
+from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLMPUses, SerializedLStr
 from ell.lstr import lstr
 from sqlalchemy import or_, func, and_
 
@@ -46,7 +46,7 @@ class SQLStore(ell.store.Store):
             session.commit()
         return None
 
-    def write_invocation(self, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], consumes: Set[str],
+    def write_invocation(self, id : str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], consumes: Set[str],
                          created_at: Optional[float] = None) -> Optional[Any]:
         with Session(self.engine) as session:
             if isinstance(result, lstr):
@@ -60,6 +60,7 @@ class SQLStore(ell.store.Store):
             assert lmp is not None, f"LMP with id {lmp_id} not found. Writing invocation erroneously"
             
             invocation = Invocation(
+                id=id,
                 lmp_id=lmp.lmp_id,
                 args=args,
                 kwargs=kwargs,
@@ -69,12 +70,18 @@ class SQLStore(ell.store.Store):
 
             for res in results:
                 serialized_lstr = SerializedLStr(content=str(res), logits=res.logits)
-                serialized_lstr.originator.append(lmp)
                 session.add(serialized_lstr)
                 invocation.results.append(serialized_lstr)
             
-
             session.add(invocation)
+
+            # Now create traces.
+            for consumed_id in consumes:
+                session.add(InvocationTrace(
+                    invocation_consumer_id=id,
+                    invocation_consuming_id=consumed_id
+                ))
+
             session.commit()
         
 

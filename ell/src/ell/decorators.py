@@ -7,6 +7,7 @@ from collections import defaultdict
 from functools import wraps
 import hashlib
 import json
+import secrets
 import time
 import ell.util.closure
 import colorama
@@ -63,8 +64,8 @@ def _run_lm(
     model: str,
     messages: list[Message],
     lm_kwargs: Dict[str, Any],
+    _invocation_origin : str,
     client: Optional[openai.Client] = None,
-    lmp_orginator="NOT IMPLEMENTED",
     _logging_color=None,
 ) -> Union[lstr, Iterable[lstr]]:
     """
@@ -107,7 +108,7 @@ def _run_lm(
             #     ) for choice in choice_deltas])  # mypy type hinting is dogshit.
             # ),
             # Todo: Properly implement log probs.
-            originator=lmp_orginator,
+            _origin_trace=_invocation_origin,
         )
         for _, choice_deltas in sorted(choices_progress.items(), key= lambda x: x[0],)
     ]
@@ -132,6 +133,7 @@ def lm(model: str, client: Optional[openai.Client] = None, **lm_kwargs):
         @wraps(fn)
         def wrapper(
             *fn_args,
+            _invocation_origin : str,
             client: Optional[openai.Client] = None,
             lm_params: LMPParams = {},
             invocation_kwargs=False,
@@ -142,8 +144,8 @@ def lm(model: str, client: Optional[openai.Client] = None, **lm_kwargs):
             messages = _get_messages(res, fn)
             if config.verbose: model_usage_logger_pre(fn, fn_args, fn_kwargs, "notimplemented", messages, color)
             final_lm_kwargs = _get_lm_kwargs(lm_kwargs, lm_params)
-            _invocation_kwargs = dict(model=model, messages=messages, lm_kwargs=final_lm_kwargs, client=client or default_client_from_decorator, _logging_color=color)
-            tracked_str = _run_lm(**_invocation_kwargs)
+            _invocation_kwargs = dict(model=model, messages=messages, lm_kwargs=final_lm_kwargs, client=client or default_client_from_decorator)
+            tracked_str = _run_lm(**_invocation_kwargs, _invocation_origin=_invocation_origin, _logging_color=color)
             
             return tracked_str, _invocation_kwargs
 
@@ -180,22 +182,19 @@ def track(fn: Callable) -> Callable:
         assert (get_invocation and config.has_serializers) or not get_invocation, "In order to get an invocation, you must have a serializer and get_invocation must be True."
 
         
+        invocation_id = "invocation-" + secrets.token_hex(16)
         # get the prompt
         (result, invocation_kwargs) = (
             (fn(*fn_args, **fn_kwargs), None)
             if not lmp
-            else fn(*fn_args, **fn_kwargs)
+            else fn(*fn_args, _invocation_origin=invocation_id, **fn_kwargs, )
             )
             
             
         if config.has_serializers and not _has_serialized:
             fn_closure, _uses = ell.util.closure.lexically_closured_source(func_to_track)
             fn_hash = func_to_track.__ell_hash__
-            if isinstance(result, lstr):
-                result._originator = frozenset({fn_hash})
-            elif isinstance(result, list):
-                for r in result:
-                    r._originator = frozenset({fn_hash})
+
 
             for serializer in config.serializers:
                 serializer.write_lmp(
@@ -215,6 +214,7 @@ def track(fn: Callable) -> Callable:
 
             # Let's add an invocation
             invocation_params = dict(
+                id=invocation_id,
                 lmp_id=fn_hash,
                 args=(fn_args),
                 kwargs=(fn_kwargs),
@@ -226,7 +226,7 @@ def track(fn: Callable) -> Callable:
             consumes = set()
             
             def process_lstr(obj):
-                consumes.add(obj.originator)
+                consumes.update(obj._origin_trace)
                 return invocation_converter.unstructure(dict(content=str(obj), **obj.__dict__, __lstr=True))
 
                 
