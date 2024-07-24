@@ -87,27 +87,30 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 
 # Todos
 
-- [ ] Developing should be by func so I can run & go look @ the results even if the hash changes
-- [ ] Call stacks from langmsith are nice, but also fingerprinting 
-- [ ] Depdendencies take up a lot of space when someone is grocking a prompt, so should we hide them or just scorll down to the bottom where it is?
+
+## Bugs
+
 - [ ] Fix weird rehashing issue of the main prompt whenever subprompt changes? Or just make commits more of a background deal.
+
+## Trace Functionality
+- [ ] Visualize trace in graph
+- [ ] Langsmith style invocations and traces?
+
+## Version Hustory
 - [ ] Auto document commit changes
-- [ ] Think about evaluator framework..
-- [ ] Builtins for classifiers, like logit debiasing.
-- [ ] We need checkpointing, we haven't tried using this in an ipython notebook yet, might be dogshit.
-
-- [ ] Update the stores to use the schemas in the tpe hints and then seerilize to model dumpo on flask or switch to FastAPI
-- [ ] Runtime Logging/Trace Logging
-  - [x] Origination index.
-- [ ] Multimodal inputs
-- [ ] UI/UX Improvements for the tensorboard thing
 - [ ] Version history diff view (possibly automatic commit messages using GPT-4o mini)
+
+## LM Functionality
+- [ ] Multimodal inputs
+
+
+## DX
 - [ ] Add a vscode style explorer
-- [ ] Improve ell studio generically?
-  
-
-- [ ] Figure out where we sit in the ecosystem (trace APIs vs LLM programmming interfaces)
-
+- [ ] Test Jupyter compatibility
+- [ ] UI/UX Improvements for the tensorboard thing
+- [ ] LMP Details should be by func so I can run & go look @ the results even if the hash changes
+- [ ] navigation should be as easy as vscode. cmd shift p or spotlifht
+- [ ] Depdendencies take up a lot of space when someone is grocking a prompt, so should we hide them or just scorll down to the bottom where it is?
 
 ## Packaging
 - [ ] Write nice docs for eveyrthing
@@ -117,6 +120,8 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 ## Misc
 
 
+- [ ] Builtins for classifiers, like logit debiasing.
+- [ ] Think about evaluator framework..
 - [ ] someway of visualizing timeline nicely
 - [ ] comment system
 - [ ] human evals immediately & easily. 
@@ -128,7 +133,5 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 - [ ] codebases will have lots of prompts, need to be organized.. (perhaps by module or something)
 - [ ] live updates & new indicators.
 
-- [ ] chain of prompt visualization, per invocation is not the right work flow, but I can imagine a bunch of cards that go top to bottom with a line in between them. (like a timeline) and then you can click on the line to see the invocation. (or something like that) would be live <--- langmsith>
- * this remidns me that we are actually probably doing it wrong with @decorators, bc what is an operation? a call to a language model? there's a lot that can go into an invocation & you visualize that as a step through really with frames in programming
- * so this is probably all a bad idea.
- - [ ] navigation should be as easy as vscode. cmd shift p or spotlifht
+
+- [x] Update the stores to use the schemas in the tpe hints and then seerilize to model dumpo on flask or switch to FastAPI
