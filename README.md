@@ -1,4 +1,4 @@
-# Functional Prompt Engineering: `ell`
+# What is `ell`?
  
  `ell` is a lightweight, functional prompt engineering framework built on a few core principles:
 ### 1. Prompts are programs not strings.
