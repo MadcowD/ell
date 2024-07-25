@@ -45,11 +45,10 @@ export const aggregateLMPsByName = (lmpList) => {
     })
   })
   
-  
   return latestLMPs
 };
 
-export const fetchTraces = async () => {
+export const fetchTraces = async (lmps) => {
   const baseUrl = API_BASE_URL
   const response = await axios.get(`${baseUrl}/api/traces`);
   // Filter out duplicate traces based on consumed and consumer
@@ -63,7 +62,13 @@ export const fetchTraces = async () => {
 
   // Convert the object of unique traces back to an array
   const uniqueTracesArray = Object.values(uniqueTraces);
-  return response.data;
+
+  // Filter out traces between LMPs that are not on the graph
+  const lmpIds = new Set(lmps.map(lmp => lmp.lmp_id));
+  const filteredTraces = uniqueTracesArray.filter(trace => 
+    lmpIds.has(trace.consumed) && lmpIds.has(trace.consumer)
+  );
+  return filteredTraces;
 }
 
 

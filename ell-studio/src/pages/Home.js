@@ -18,7 +18,7 @@ function Home() {
     const getLMPs = async () => {
       try {
         const aggregatedLMPs = await fetchLMPs();
-        const traces = await fetchTraces();
+        const traces = await fetchTraces(aggregatedLMPs);
         setLmps(aggregatedLMPs);
         setTraces(traces);
 
