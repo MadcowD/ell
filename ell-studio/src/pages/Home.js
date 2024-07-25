@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
-import { fetchLMPs, getTimeAgo } from '../utils/lmpUtils';
+import { fetchLMPs, getTimeAgo, fetchTraces } from '../utils/lmpUtils';
 import { DependencyGraph } from '../components/depgraph/DependencyGraph';
 
 
@@ -12,13 +12,17 @@ function Home() {
   const [loaded, setLoaded] = useState(false);
   const { darkMode } = useTheme();
   const [expandedLMP, setExpandedLMP] = useState(null);
+  const [traces, setTraces] = useState([]);
 
   useEffect(() => {
     const getLMPs = async () => {
       try {
         const aggregatedLMPs = await fetchLMPs();
-        setLoaded(true);
+        const traces = await fetchTraces();
         setLmps(aggregatedLMPs);
+        setTraces(traces);
+
+        setLoaded(true);
       } catch (error) {
         console.error('Error fetching LMPs:', error);
       }
@@ -41,7 +45,7 @@ function Home() {
     <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen`}>
       <div className="container mx-auto px-4 py-8">
         <h1 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Language Model Programs</h1>
-        {loaded && <DependencyGraph lmps={lmps} />}
+        {loaded && <DependencyGraph lmps={lmps} traces={traces}/>}
         <div className="space-y-4">
           {lmps.map((lmp) => (
             <div 

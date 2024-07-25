@@ -15,7 +15,7 @@ import ReactFlow, {
   Position,
   ReactFlowProvider,
 } from "reactflow";
-
+import { getBezierPath } from 'reactflow';
 
 import { Link } from "react-router-dom";
 
@@ -39,8 +39,31 @@ function LMPNode({ data }) {
         </Link>
       </div>
       <Handle type="target" position={Position.Bottom} id="a" />
+      <Handle type="target" position={Position.Left} id="inputs" />
+      <Handle type="source" position={Position.Right} id="outputs" />
       {/* <Handle type="source" position={Position.Bottom} id="b" style={handleStyle} /> */}
     </>
+  );
+}
+
+// Add this new component for trace edges
+function TraceEdge({ id, sourceX, sourceY, targetX, targetY }) {
+  const [edgePath] = getBezierPath({
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+  });
+
+  return (
+    <path
+      id={id}
+      className="react-flow__edge-path"
+      d={edgePath}
+      strokeWidth={2}
+      stroke="#ff0000"
+      strokeDasharray="5,5"
+    />
   );
 }
 
@@ -63,7 +86,7 @@ const LayoutFlow = ({ initialNodes, initialEdges }) => {
   }, [initialised, didInitialSimulation]);
 
   const nodeTypes = useMemo(() => ({ lmp: LMPNode }), []);
-  
+  const edgeTypes = useMemo(() => ({ trace: TraceEdge }), []);
 
   return (
     
@@ -74,6 +97,7 @@ const LayoutFlow = ({ initialNodes, initialEdges }) => {
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       // fitView
     >
       <Panel>
@@ -87,11 +111,11 @@ const LayoutFlow = ({ initialNodes, initialEdges }) => {
 };
 
 
-export function DependencyGraph({ lmps, ...rest }) {
+export function DependencyGraph({ lmps, traces, ...rest }) {
   // construct ndoes from LMPS
   const { initialEdges, initialNodes } = useMemo(
-    () => getInitialGraph(lmps),
-    [lmps]
+    () => getInitialGraph(lmps, traces),
+    [lmps, traces]
   );
 
   return (

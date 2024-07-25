@@ -66,5 +66,10 @@ def create_app(storage_dir: Optional[str] = None):
     def search_invocations(q: str = Query(...)):
         invocations = serializer.search_invocations(q)
         return invocations
+    
+    @app.get('/api/traces')
+    def get_consumption_graph():
+        traces = serializer.get_traces()
+        return traces
 
     return app

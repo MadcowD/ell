@@ -65,6 +65,7 @@ def _run_lm(
     messages: list[Message],
     lm_kwargs: Dict[str, Any],
     _invocation_origin : str,
+    exempt_from_tracking: bool,
     client: Optional[openai.Client] = None,
     _logging_color=None,
 ) -> Union[lstr, Iterable[lstr]]:
@@ -84,7 +85,7 @@ def _run_lm(
     choices_progress = defaultdict(list)
     n = lm_kwargs.get("n", 1)
 
-    if config.verbose:
+    if config.verbose and not exempt_from_tracking:
         model_usage_logger_post_start(_logging_color, n)
 
     with model_usage_logger_post_intermediate(_logging_color, n) as _logger:
@@ -92,10 +93,10 @@ def _run_lm(
             for choice in chunk.choices:
                 # print(choice)
                 choices_progress[choice.index].append(choice)
-                if config.verbose and choice.index == 0:
+                if config.verbose and choice.index == 0 and not exempt_from_tracking:
                     _logger(choice.delta.content)
 
-    if config.verbose:
+    if config.verbose and not exempt_from_tracking:
         model_usage_logger_post_end()
     n_choices = len(choices_progress)
 
@@ -144,10 +145,10 @@ def lm(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=
             assert exempt_from_tracking or _invocation_origin is not None, "Invocation orgiin is required when using a tracked LMP"
             messages = _get_messages(res, fn)
             
-            if config.verbose: model_usage_logger_pre(fn, fn_args, fn_kwargs, "notimplemented", messages, color)
+            if config.verbose and not exempt_from_tracking: model_usage_logger_pre(fn, fn_args, fn_kwargs, "notimplemented", messages, color)
             final_lm_kwargs = _get_lm_kwargs(lm_kwargs, lm_params)
             _invocation_kwargs = dict(model=model, messages=messages, lm_kwargs=final_lm_kwargs, client=client or default_client_from_decorator)
-            tracked_str = _run_lm(**_invocation_kwargs, _invocation_origin=_invocation_origin, _logging_color=color)
+            tracked_str = _run_lm(**_invocation_kwargs, _invocation_origin=_invocation_origin, exempt_from_tracking=exempt_from_tracking, _logging_color=color)
             
             return tracked_str, _invocation_kwargs
 

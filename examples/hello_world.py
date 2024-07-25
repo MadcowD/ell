@@ -22,7 +22,9 @@ if __name__ == "__main__":
 
     store = SQLiteStore('sqlite_example')
     store.install(autocommit=True)
-    hello("sama") # > "hello sama!"
+    x = hello("Derick Walker") # > "hello sama!"
+    print(x[:2]._origin_trace)
+    print(x[:2])
 
 
 

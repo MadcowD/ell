@@ -49,6 +49,23 @@ export const aggregateLMPsByName = (lmpList) => {
   return latestLMPs
 };
 
+export const fetchTraces = async () => {
+  const baseUrl = API_BASE_URL
+  const response = await axios.get(`${baseUrl}/api/traces`);
+  // Filter out duplicate traces based on consumed and consumer
+  const uniqueTraces = response.data.reduce((acc, trace) => {
+    const key = `${trace.consumed}-${trace.consumer}`;
+    if (!acc[key]) {
+      acc[key] = trace;
+    }
+    return acc;
+  }, {});
+
+  // Convert the object of unique traces back to an array
+  const uniqueTracesArray = Object.values(uniqueTraces);
+  return response.data;
+}
+
 
 export function getTimeAgo(date) {
   const now = new Date();

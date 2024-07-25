@@ -5,6 +5,7 @@ from sqlmodel import Session, SQLModel, create_engine, select
 import ell.store
 import cattrs
 import numpy as np
+from sqlalchemy.sql import text
 from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLMPUses, SerializedLStr
 from ell.lstr import lstr
 from sqlalchemy import or_, func, and_
@@ -126,6 +127,32 @@ class SQLStore(ell.store.Store):
             
             invocations = session.exec(query).all()
             return [inv.model_dump() for inv in invocations]
+        
+
+    def get_traces(self):
+        with Session(self.engine) as session:
+            query = text("""
+            SELECT 
+                consumer.lmp_id, 
+                trace.*, 
+                consumed.lmp_id
+            FROM 
+                invocation AS consumer
+            JOIN 
+                invocationtrace AS trace ON consumer.id = trace.invocation_consumer_id
+            JOIN 
+                invocation AS consumed ON trace.invocation_consuming_id = consumed.id
+            """)
+            results = session.exec(query).all()
+            
+            traces = []
+            for (consumer_lmp_id, consumer_invocation_id, consumed_invocation_id, consumed_lmp_id) in results:
+                traces.append({
+                    'consumer': consumer_lmp_id,
+                    'consumed': consumed_lmp_id
+                })
+            
+            return traces
 
 
     def get_lmp_versions(self, name: str) -> List[Dict[str, Any]]:

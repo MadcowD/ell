@@ -6,7 +6,6 @@ import numpy as np
 
 from ell.stores.sql import SQLiteStore
 
-ell.config.verbose = True
 
 @ell.lm(model="gpt-4o-mini")
 def come_up_with_a_premise_for_a_joke_about(topic : str):

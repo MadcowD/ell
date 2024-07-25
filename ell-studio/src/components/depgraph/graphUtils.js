@@ -55,7 +55,7 @@ const simulation = forceSimulation()
       if (visited.has(node.id)) return;
       visited.add(node.id);
       edges
-        .filter((edge) => edge.source === node.id)
+        .filter((edge) => edge.source === node.id && edge.sourceHandle !== "outputs")
         .forEach((edge) => {
           referenceCount[edge.target] += 1;
           increaseReferenceCountOfFamilyTree(nodeMap[edge.target], visited);
@@ -151,7 +151,7 @@ export const useLayoutedElements = () => {
 };
 
 
-export function getInitialGraph(lmps) {
+export function getInitialGraph(lmps, traces) {
   const initialNodes =
     lmps
       .filter((x) => !!x)
@@ -164,7 +164,6 @@ export function getInitialGraph(lmps) {
         };
       }) || [];
 
-  // Connect the mby their uses
   const initialEdges =
     lmps
       .filter((x) => !!x)
@@ -173,14 +172,32 @@ export function getInitialGraph(lmps) {
         return (
           lmp?.uses?.map((use) => {
             return {
-              id: `${lmp.lmp_id}-${use}`,
+              id: `uses-${lmp.lmp_id}-${use}`,
               target: `${lmp.lmp_id}`,
               source: `${use}`,
-              animated: true,
+              animated: false,
+              type: 'default',
             };
           }) || []
         );
       }) || [];
+
+  // Add horizontal trace edges
+  if (traces && traces.length > 0) {
+    traces.forEach((trace, index) => {
+      if (index < traces.length - 1) {
+        initialEdges.push({
+          id: `trace-${trace.consumed}-${trace.consumer}`,
+          source: `${trace.consumed}`,
+          sourceHandle: "outputs",
+          target: `${trace.consumer}`,
+          targetHandle: "inputs",
+          animated: true,
+          // type: 'trace',
+        });
+      }
+    });
+  }
     
   getLayout(initialNodes, initialEdges);
 
