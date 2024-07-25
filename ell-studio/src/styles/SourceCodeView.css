@@ -85,6 +85,7 @@
 .code-container {
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 }
 
 .gradient-overlay {
@@ -92,38 +93,28 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 100%;
-  pointer-events: none;
+  height: 100px;
   z-index: 2;
   background: linear-gradient(to bottom, 
   rgba(30, 30, 30, 0) 0%,
   rgba(30, 30, 30, 0.8) 50%,
   rgba(30, 30, 30, 1) 100%
-);
+  );
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.expand-button {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background-color: rgba(60, 60, 60, 0.8);
+.show-more-button {
+  background-color: rgba(255, 255, 255, 0.1);
   color: #fff;
   border: none;
+  padding: 8px 16px;
   border-radius: 4px;
-  padding: 5px 10px;
-  display: flex;
-  align-items: center;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  z-index: 3;
-}
 
-.expand-button:hover {
-  background-color: rgba(80, 80, 80, 0.9);
-}
-
-.expand-button svg {
-  margin-right: 5px;
+  background-color: rgba(255, 255, 255, 0.2);
+  transition: background-color 0.2s;
 }
 
 /* Ensure code blocks take full width */

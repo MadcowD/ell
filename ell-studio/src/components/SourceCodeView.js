@@ -49,6 +49,7 @@ const SourceCodeView = ({ dependencies, source, uses }) => {
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
           ref={codeRef}
+          onClick={() => !showCode && setShowCode(true)}
         >
           <SyntaxHighlighter
             language="python"
@@ -63,20 +64,20 @@ const SourceCodeView = ({ dependencies, source, uses }) => {
           >
             {code}
           </SyntaxHighlighter>
-          {!showCode && lines > 6 && (
-            <div className="gradient-overlay" />
-          )}
-          {lines > 6 && (isHovering || showCode) && (
-            <button
-              className="toggle-expand-button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowCode(!showCode);
-              }}
-              aria-label={showCode ? "Collapse code" : "Expand code"}
-            >
-              {showCode ? <FiMinimize2 /> : <FiMaximize2 />}
-            </button>
+          {!showCode && (
+            <div className="gradient-overlay">
+              {isHovering && (
+                <button
+                  className="show-more-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowCode(true);
+                  }}
+                >
+                  Show more ({lines} lines)
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
