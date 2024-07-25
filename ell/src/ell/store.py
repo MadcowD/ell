@@ -12,6 +12,7 @@ class Store(ABC):
     @abstractmethod
     def write_lmp(self, lmp_id: str, name: str, source: str, dependencies: List[str], is_lmp: bool, lm_kwargs: str, 
                   uses: Dict[str, Any], 
+                  commit_message: Optional[str] = None,
                   created_at: Optional[float]=None) -> Optional[Any]:
         """
         Write an LMP (Language Model Package) to the storage.
@@ -27,6 +28,8 @@ class Store(ABC):
         :return: Optional return value.
         """
         pass
+
+    
 
     @abstractmethod
     def write_invocation(self, id : str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], 
@@ -104,8 +107,9 @@ class Store(ABC):
         """
         pass
 
-    def install(self):
+    def install(self, autocommit=True):
         """
         Register the serializer with the ell config.
         """
-        config.register_serializer(self)
+        # Todo: Hae this wrap serializers
+        config.register_serializer(self, autocommit=autocommit)

@@ -117,7 +117,7 @@ def _run_lm(
 
 
 
-def lm(model: str, client: Optional[openai.Client] = None, **lm_kwargs):
+def lm(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=False,  **lm_kwargs):
     """
     Defines a basic language model program (a parameterization of an existing foundation model using a particular prompt.)
 
@@ -133,7 +133,7 @@ def lm(model: str, client: Optional[openai.Client] = None, **lm_kwargs):
         @wraps(fn)
         def wrapper(
             *fn_args,
-            _invocation_origin : str,
+            _invocation_origin : str = None,
             client: Optional[openai.Client] = None,
             lm_params: LMPParams = {},
             invocation_kwargs=False,
@@ -141,7 +141,9 @@ def lm(model: str, client: Optional[openai.Client] = None, **lm_kwargs):
         ) -> _lstr_generic:
             res = fn(*fn_args, **fn_kwargs)
             
+            assert exempt_from_tracking or _invocation_origin is not None, "Invocation orgiin is required when using a tracked LMP"
             messages = _get_messages(res, fn)
+            
             if config.verbose: model_usage_logger_pre(fn, fn_args, fn_kwargs, "notimplemented", messages, color)
             final_lm_kwargs = _get_lm_kwargs(lm_kwargs, lm_params)
             _invocation_kwargs = dict(model=model, messages=messages, lm_kwargs=final_lm_kwargs, client=client or default_client_from_decorator)
@@ -153,7 +155,12 @@ def lm(model: str, client: Optional[openai.Client] = None, **lm_kwargs):
         wrapper.__ell_lm_kwargs__ = lm_kwargs
         wrapper.__ell_func__ = fn
         wrapper.__ell_lm = True
-        return track(wrapper)
+        wrapper.__ell_exempt_from_tracking = exempt_from_tracking
+        if exempt_from_tracking:
+            return wrapper
+        else:
+            return track(wrapper)
+        
 
     return decorator
 
@@ -197,11 +204,26 @@ def track(fn: Callable) -> Callable:
 
 
             for serializer in config.serializers:
+                # Compute commit messages if enabled
+                commit = None
+                if config.autocommit:
+                    lmps = serializer.get_lmps(name=_name)
+                    # Get the latest lmp
+                    # sort by created at
+                    if len(lmps) > 0:
+                        lmps.sort(key=lambda x: x['created_at'], reverse=True)
+                        latest_lmp = lmps[0]
+                        from ell.util.differ import write_commit_message_for_diff
+                        
+                        commit = str(write_commit_message_for_diff(f"{latest_lmp['dependencies']}\n\n{latest_lmp['source']}", f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
+
+
                 serializer.write_lmp(
                     lmp_id=fn_hash,
                     name=_name,
                     source=fn_closure[0],
                     dependencies=fn_closure[1],
+                    commit_message=(commit),
                     is_lmp=lmp,
                     lm_kwargs=(
                         (lm_kwargs)
@@ -263,9 +285,6 @@ def track(fn: Callable) -> Callable:
     wrapper.__ell_lm_kwargs__ = lm_kwargs
     wrapper.__ell_func__ = func_to_track
     wrapper.__ell_track = True
-
-
-
 
     return wrapper
 

@@ -2,14 +2,18 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FiClock, FiTag, FiGitCommit } from 'react-icons/fi';
 import { getTimeAgo } from '../utils/lmpUtils';
+import ReactMarkdown from 'react-markdown';
 
 function VersionItem({ version, index, totalVersions, currentLmpId }) {
   const isLatest = index === 0;
   const isCurrent = version.lmp_id === currentLmpId;
   const versionNumber = totalVersions - index;
+  const commitLines = (version.commit_message || 'Commit message not available').split('\n');
+  const commitTitle = commitLines[0] || `Version ${versionNumber}`;
+  const commitDetails = commitLines.slice(1).join('\n').trim();
 
   return (
-    <div className="flex items-center mb-3">
+    <div className="flex items-start mb-3">
       <div className="mr-3 relative">
         <div className={`w-3 h-3 rounded-full ${isCurrent ? 'bg-blue-500' : isLatest ? 'bg-green-500' : 'bg-gray-500'}`}></div>
         {index !== 0 && (
@@ -21,10 +25,15 @@ function VersionItem({ version, index, totalVersions, currentLmpId }) {
         className={`flex-grow text-sm ${isCurrent ? 'font-semibold text-white' : isLatest ? 'text-green-400' : 'text-gray-400'} hover:text-white`}
       >
         <div className="flex justify-between items-center">
-          <span>{version.commit_message ? version.commit_message : `Version ${versionNumber}`}</span>
+          <span>{commitTitle}</span>
           {isLatest && <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded">Latest</span>}
         </div>
-        <div className="text-xs text-gray-500">
+        {commitDetails && (
+          <div className="text-xs text-gray-500 mt-1 prose prose-sm max-w-none">
+            <ReactMarkdown>{commitDetails}</ReactMarkdown>
+          </div>
+        )}
+        <div className="text-xs text-gray-500 mt-1">
           {getTimeAgo(new Date(version.created_at + "Z"))}
         </div>
       </Link>
@@ -38,7 +47,7 @@ function LMPDetailsSidePanel({ lmp, versionHistory, onSeeAllClick }) {
   const displayVersions = versionHistory.slice(Math.max(0, currentVersionIndex - 2), currentVersionIndex + 3);
 
   return (
-    <aside className="w-[250px] min-w-[150px] sm:min-w-[250px] bg-[#1c1f26] p-6 overflow-y-auto">
+    <aside className="w-[250px] min-w-[350px] sm:min-w-[350px] bg-[#1c1f26] p-6 overflow-y-auto">
       <h2 className="text-lg font-semibold mb-4">Details</h2>
       <div className="space-y-4">
         <p className="flex items-center text-sm">

@@ -44,6 +44,9 @@ const VersionHistoryPane = ({ versions }) => {
           <h3 className="text-sm font-semibold mb-2 text-gray-400">{date}</h3>
           {dateVersions.map((version) => {
             totalIndex++;
+            const commitLines = (version.commit_message || 'Commit message not available').split('\n');
+            const commitTitle = commitLines[0] || 'Commit message not available';
+            const commitDetails = commitLines.slice(1).join('\n').trim();
             return (
             <div key={version.lmp_id} className="mb-2 border border-gray-700 rounded-lg overflow-hidden">
               <div className={`bg-gray-800 p-3 flex items-center justify-between cursor-pointer hover:bg-gray-750 ${version.lmp_id === currentLmpId ? 'bg-blue-900' : ''}`}
@@ -51,9 +54,12 @@ const VersionHistoryPane = ({ versions }) => {
                 <div>
                   <div className="flex items-center mb-1">
                     <FiGitCommit className="text-blue-400 mr-2" />
-                    <span className="font-semibold">{version.commit_message || 'Commit message not available'}</span>
+                    <span className="font-semibold">{commitTitle}</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-400">
+                  {commitDetails && (
+                    <div className="text-sm text-gray-400 ml-6 mt-1 whitespace-pre-wrap">{commitDetails}</div>
+                  )}
+                  <div className="flex items-center text-sm text-gray-400 mt-2">
                     <img
                       src={version.author_avatar || 'https://github.com/github.png'}
                       alt="Author"

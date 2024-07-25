@@ -35,14 +35,14 @@ def write_a_really_good_story(about : str):
     best_draft = choose_the_best_draft(drafts)
 
     return [
-        ell.system("You are an expert novelist that writes in the style of Hemmingway. You writei n lowercase."),
+        ell.system("You are an expert novelist that writes in the style of Hemmingway. You write in lowercase."),
         ell.user(f"Make a final revision of this story in your voice: {best_draft}."),
     ]
 
 if __name__ == "__main__":
     
     serializer = SQLiteStore('sqlite_example')
-    serializer.install()
+    serializer.install(autocommit=True)
     story = write_a_really_good_story("a dog")
     print(story)
 

@@ -14,7 +14,7 @@ class Config:
     wrapped_logging: bool = True
     override_wrapped_logging_width: Optional[int] = None
     serializers: Set["Serializer"] = field(default_factory=set)
-
+    autocommit: bool = False
 
     def __post_init__(self):
         self._lock = threading.Lock()
@@ -57,8 +57,9 @@ class Config:
             if hasattr(self._local, 'stack'):
                 del self._local.stack
 
-    def register_serializer(self, serializer: "Serializer") -> None:
+    def register_serializer(self, serializer: "Serializer", autocommit: bool = False) -> None:
         self.serializers.add(serializer)
+        self.autocommit = autocommit or self.autocommit
 
 # Singleton instance
 config = Config()

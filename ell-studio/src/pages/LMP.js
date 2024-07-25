@@ -8,6 +8,7 @@ import SourceCodeView from '../components/SourceCodeView';
 import { FiCopy, FiFilter, FiColumns } from 'react-icons/fi';
 import VersionHistoryPane from '../components/VersionHistoryPane';
 import LMPDetailsSidePanel from '../components/LMPDetailsSidePanel';
+import toast, { Toaster } from 'react-hot-toast';
 
 function LMP() {
   const { name, id } = useParams();
@@ -59,10 +60,29 @@ function LMP() {
     setActiveTab('version_history');
   };
 
+  const handleCopyCode = () => {
+    const fullCode = `${lmp.dependencies.trim()}\n\n${lmp.source.trim()}`;
+    navigator.clipboard.writeText(fullCode)
+      .then(() => {
+        toast.success('Code copied to clipboard', {
+          duration: 2000,
+          position: 'top-center',
+        });
+      })
+      .catch(err => {
+        console.error('Failed to copy code: ', err);
+        toast.error('Failed to copy code', {
+          duration: 2000,
+          position: 'top-center',
+        });
+      });
+  };
+
   if (!lmp) return <div className="flex items-center justify-center h-screen bg-gray-900 text-gray-100">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-[#13151a] text-gray-200">
+      <Toaster />
       <div className="flex flex-col h-screen">
         <header className="bg-[#1c1f26] p-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
@@ -85,7 +105,10 @@ function LMP() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">Language Model Program</h2>
                 <div className="flex space-x-2">
-                  <button className="p-1 rounded bg-[#2a2f3a] hover:bg-[#3a3f4b] transition-colors">
+                  <button 
+                    className="p-1 rounded bg-[#2a2f3a] hover:bg-[#3a3f4b] transition-colors"
+                    onClick={handleCopyCode}
+                  >
                     <FiCopy className="w-4 h-4" />
                   </button>
                 </div>

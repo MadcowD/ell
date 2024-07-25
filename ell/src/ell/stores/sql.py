@@ -13,12 +13,14 @@ class SQLStore(ell.store.Store):
     def __init__(self, db_uri: str):
         self.engine = create_engine(db_uri)
         SQLModel.metadata.create_all(self.engine)
+        
 
         self.open_files: Dict[str, Dict[str, Any]] = {}
 
 
     def write_lmp(self, lmp_id: str, name: str, source: str, dependencies: List[str], is_lmp: bool, lm_kwargs: str, 
                   uses: Dict[str, Any], 
+                  commit_message: Optional[str] = None,
                   created_at: Optional[float]=None) -> Optional[Any]:
         with Session(self.engine) as session:
             lmp = session.query(SerializedLMP).filter(SerializedLMP.lmp_id == lmp_id).first()
@@ -34,7 +36,8 @@ class SQLStore(ell.store.Store):
                     dependencies=dependencies,
                     created_at=datetime.datetime.fromtimestamp(created_at) if created_at else datetime.datetime.utcnow(),
                     is_lm=is_lmp,
-                    lm_kwargs=lm_kwargs
+                    lm_kwargs=lm_kwargs,
+                    commit_message=commit_message
                 )
                 session.add(lmp)
             

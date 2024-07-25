@@ -90,7 +90,7 @@ class SerializedLMP(SQLModel, table=True):
 
     # Cached INfo
     num_invocations : Optional[int] = Field(default=0)
-
+    commit_message : Optional[str] = Field(default=None)
 
 
 
