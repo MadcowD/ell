@@ -18,6 +18,10 @@ const SourceCodeView = ({ dependencies, source, uses, showDependenciesInitial = 
       setShowDependencies(true);
     }
   }, [dependencyLines]);
+  // UseEffect for showDependenciesInitial
+  useEffect(() => {
+    if(showDependenciesInitial) setShowDependencies(showDependenciesInitial);
+  }, [showDependenciesInitial]);
 
   const CodeSection = ({ title, code, showCode, setShowCode, lines, startingLineNumber = 1, isDependent = false }) => {
     const [isHovering, setIsHovering] = useState(false);

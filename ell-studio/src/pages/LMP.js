@@ -5,8 +5,9 @@ import { useTheme } from '../contexts/ThemeContext';
 import TracesRunsPane from '../components/TracesRunsPane';
 import DependencyGraphPane from '../components/DependencyGraphPane';
 import SourceCodeView from '../components/SourceCodeView';
-import { FiCopy, FiFilter, FiClock, FiTag, FiColumns } from 'react-icons/fi';
+import { FiCopy, FiFilter, FiColumns } from 'react-icons/fi';
 import VersionHistoryPane from '../components/VersionHistoryPane';
+import LMPDetailsSidePanel from '../components/LMPDetailsSidePanel';
 
 function LMP() {
   const { name, id } = useParams();
@@ -33,7 +34,7 @@ function LMP() {
         console.log(lmpResponse.data)
         const versionHistoryResponse = await axios.get(`${API_BASE_URL}/api/lmps/${latest_lmp.name}`);
         console.log("versionHistoryResponse", versionHistoryResponse)
-        setVersionHistory(versionHistoryResponse.data || []);
+        setVersionHistory((versionHistoryResponse.data || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
 
         const invocationsResponse = await axios.get(`${API_BASE_URL}/api/invocations/${name}${id ? `/${id}` : ''}`);
         const sortedInvocations = invocationsResponse.data.sort((a, b) => b.created_at - a.created_at);
@@ -53,6 +54,10 @@ function LMP() {
   }, [name, id, API_BASE_URL]);
 
 
+
+  const handleSeeAllClick = () => {
+    setActiveTab('version_history');
+  };
 
   if (!lmp) return <div className="flex items-center justify-center h-screen bg-gray-900 text-gray-100">Loading...</div>;
 
@@ -155,30 +160,11 @@ function LMP() {
             </div>
           </main>
 
-          <aside className="w-80 bg-[#1c1f26] p-6 overflow-y-auto">
-            <h2 className="text-lg font-semibold mb-4">Details</h2>
-            <div className="space-y-4">
-              <p className="flex items-center text-sm">
-                <FiClock className="mr-2 text-gray-400" />
-                Created: {new Date(lmp.created_at * 1000).toLocaleString()}
-              </p>
-              <p className="flex items-center text-sm">
-                <FiTag className="mr-2 text-gray-400" />
-                Is LMP: 
-                <span className={`ml-2 px-2 py-0.5 rounded ${lmp.is_lmp ? 'bg-green-500' : 'bg-red-500'} text-white text-xs font-medium`}>
-                  {lmp.is_lmp ? 'Yes' : 'No'}
-                </span>
-              </p>
-              {lmp.lm_kwargs && (
-                <div>
-                  <h3 className="text-md font-semibold mb-2">LM Keywords</h3>
-                  <pre className="bg-[#13151a] p-2 rounded overflow-x-auto text-xs">
-                    <code>{JSON.stringify(lmp.lm_kwargs, null, 2)}</code>
-                  </pre>
-                </div>
-              )}
-            </div>
-          </aside>
+          <LMPDetailsSidePanel
+            lmp={lmp}
+            versionHistory={versionHistory}
+            onSeeAllClick={handleSeeAllClick}
+          />
         </div>
       </div>
     </div>

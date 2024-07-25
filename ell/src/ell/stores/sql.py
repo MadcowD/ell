@@ -90,13 +90,12 @@ class SQLStore(ell.store.Store):
 
             session.commit()
         
-
     def get_lmps(self, **filters: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
         with Session(self.engine) as session:
             query = select(SerializedLMP, SerializedLMPUses.lmp_using_id).outerjoin(
                 SerializedLMPUses,
                 SerializedLMP.lmp_id == SerializedLMPUses.lmp_user_id
-            )
+            ).order_by(SerializedLMP.created_at.desc())  # Sort by created_at in descending order
             
             if filters:
                 for key, value in filters.items():
