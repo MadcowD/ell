@@ -18,13 +18,22 @@ def hello(world : str):
 
     return f"Say hello to {name} in {number_of_chars_in_name*2} characters or less!" # User prompt
 
+
+# Goodbye
+@ell.lm(model="gpt-4o-mini")
+def goodbye(name : str, greeting : str):
+    """You are helpful assistant""" # System prpmpt
+
+    return f"Say goodbye to {name}! (Fyi: this how you greeted them)" # User prompt
+
 if __name__ == "__main__":
 
     store = SQLiteStore('sqlite_example')
     store.install(autocommit=True)
     x = hello("Derick Walker") # > "hello sama!"
-    print(x[:2]._origin_trace)
-    print(x[:2])
+    
+    good_bye = goodbye("Derick Walker", x)
+    
 
 
 

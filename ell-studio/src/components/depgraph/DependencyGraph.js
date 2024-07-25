@@ -41,7 +41,6 @@ function LMPNode({ data }) {
       <Handle type="target" position={Position.Bottom} id="a" />
       <Handle type="target" position={Position.Left} id="inputs" />
       <Handle type="source" position={Position.Right} id="outputs" />
-      {/* <Handle type="source" position={Position.Bottom} id="b" style={handleStyle} /> */}
     </>
   );
 }
@@ -68,7 +67,6 @@ function TraceEdge({ id, sourceX, sourceY, targetX, targetY }) {
 }
 
 const LayoutFlow = ({ initialNodes, initialEdges }) => {
-  const { fitView } = useReactFlow();
   const [nodes, _, onNodesChange] = useNodesState(initialNodes);
   const [edges, __, onEdgesChange] = useEdgesState(initialEdges);
   const [initialised, { toggle, isRunning }] = useLayoutedElements();
