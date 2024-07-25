@@ -35,13 +35,16 @@ const VersionHistoryPane = ({ versions }) => {
   };
 
   const groupedVersions = groupVersionsByDate(versions);
+  let totalIndex = 0;
 
   return (
     <div className="text-gray-200 p-4">
-      {Object.entries(groupedVersions).map(([date, dateVersions]) => (
+      {Object.entries(groupedVersions).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, dateVersions]) => (
         <div key={date} className="mb-6">
           <h3 className="text-sm font-semibold mb-2 text-gray-400">{date}</h3>
-          {dateVersions.map((version, index) => (
+          {dateVersions.map((version) => {
+            totalIndex++;
+            return (
             <div key={version.lmp_id} className="mb-2 border border-gray-700 rounded-lg overflow-hidden">
               <div className={`bg-gray-800 p-3 flex items-center justify-between cursor-pointer hover:bg-gray-750 ${version.lmp_id === currentLmpId ? 'bg-blue-900' : ''}`}
                    onClick={() => navigate(`/lmp/${version.name}/${version.lmp_id}`)}>
@@ -63,10 +66,10 @@ const VersionHistoryPane = ({ versions }) => {
                 </div>
                 <FiChevronRight className="text-gray-500" />
               </div>
-              <div className={`bg-gray-850 px-3 py-2 flex items-center justify-between ${version.lmp_id === currentLmpId ? 'bg-blue-800' : ''}`}>
+              <div className={`bg-gray-850 px-3 py-2 flex items-center justify-between ${version.lmp_id === currentLmpId || (totalIndex === 1 && !currentLmpId) ? 'bg-blue-800' : ''}`}>
                 <div className="flex items-center">
                   <span className="bg-gray-700 text-xs font-medium px-2 py-1 rounded-full mr-2">
-                    Version {versions.length - index}
+                    Version {versions.length - totalIndex + 1}
                   </span>
                   <span className="text-xs font-mono text-gray-400">{version.lmp_id.substring(0, 7)}</span>
                 </div>
@@ -78,8 +81,9 @@ const VersionHistoryPane = ({ versions }) => {
                   <FiCopy />
                 </button>
               </div>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       ))}
     </div>

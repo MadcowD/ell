@@ -15,12 +15,12 @@ def come_up_with_a_premise_for_a_joke_about(topic : str):
 
 
 def get_random_length():
-    return int(np.random.beta(2, 5) * 1000)
+    return int(np.random.beta(2, 5) * 2000)
 
 
 @ell.lm(model="gpt-4o")
 def joke(topic : str):
-    """You are an incredibly talented comedian. You respond in scripts."""
+    """You are a world renowned comedian. You respond in scripts."""
     return f"Act out a full joke. Make your script {get_random_length()} words long. Here's the premise: {come_up_with_a_premise_for_a_joke_about(topic)}"
 
 

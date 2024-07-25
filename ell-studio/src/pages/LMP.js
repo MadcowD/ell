@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useTheme } from '../contexts/ThemeContext';
-import TracesRunsPane from './TracesRunsPane';
-import DependencyGraphPane from './DependencyGraphPane';
-import SourceCodeView from './SourceCodeView';
+import TracesRunsPane from '../components/TracesRunsPane';
+import DependencyGraphPane from '../components/DependencyGraphPane';
+import SourceCodeView from '../components/SourceCodeView';
 import { FiCopy, FiFilter, FiClock, FiTag, FiColumns } from 'react-icons/fi';
-import VersionHistoryPane from './VersionHistoryPane';
+import VersionHistoryPane from '../components/VersionHistoryPane';
 
-function LMPDetails() {
+function LMP() {
   const { name, id } = useParams();
   const [lmp, setLmp] = useState(null);
   const [versionHistory, setVersionHistory] = useState([]);
@@ -52,7 +52,7 @@ function LMPDetails() {
     fetchLMPDetails();
   }, [name, id, API_BASE_URL]);
 
-  console.log(lmp)
+
 
   if (!lmp) return <div className="flex items-center justify-center h-screen bg-gray-900 text-gray-100">Loading...</div>;
 
@@ -90,6 +90,7 @@ function LMPDetails() {
                   dependencies={lmp.dependencies.trim()}
                   source={lmp.source.trim()}
                   uses={lmp.uses}
+                  showDependenciesInitial={!!id}
                 />
               </div>
             </div>
@@ -184,4 +185,4 @@ function LMPDetails() {
   );
 }
 
-export default LMPDetails;
+export default LMP;

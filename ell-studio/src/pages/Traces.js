@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FiCopy, FiZap, FiEdit2, FiFilter, FiClock, FiColumns } from 'react-icons/fi';
-import TraceDetailsSidebar from './TraceDetailsSidebar';
-import TracesRunsPane from './TracesRunsPane';
+import TraceDetailsSidebar from '../components/TraceDetailsSidebar';
+import TracesRunsPane from '../components/TracesRunsPane';
 
 const Traces = () => {
   const [selectedTrace, setSelectedTrace] = useState(null);

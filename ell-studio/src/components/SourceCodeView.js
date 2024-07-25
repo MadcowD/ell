@@ -4,8 +4,8 @@ import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { FiChevronDown, FiChevronRight, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
 import '../styles/SourceCodeView.css';
 
-const SourceCodeView = ({ dependencies, source, uses }) => {
-  const [showDependencies, setShowDependencies] = useState(false);
+const SourceCodeView = ({ dependencies, source, uses, showDependenciesInitial = false }) => {
+  const [showDependencies, setShowDependencies] = useState(showDependenciesInitial);
   const [showSource, setShowSource] = useState(true);
 
   const trimmedDependencies = dependencies.trim();

@@ -13,20 +13,38 @@ export const fetchLMPs = async () => {
 };
 
 export const aggregateLMPsByName = (lmpList) => {
-  const lmpMap = new Map();
+  const lmpsByName = new Map()
+  const lmpNameById = new Map()
   lmpList.forEach(lmp => {
-    if (!lmpMap.has(lmp.name)) {
-      lmpMap.set(lmp.name, { ...lmp, versions: [] });
+    const cleanedLmp = {
+      ...lmp,
+      created_at: new Date(lmp.created_at + 'Z'),
     }
-    console.log(new Date(lmp.created_at))
-    lmpMap.get(lmp.name).versions.push({
-      lmp_id: lmp.lmp_id,
-      created_at: new Date(lmp.created_at + 'Z'), // Parse the date string as UTC
-      invocations: lmp.invocations || 0
-    });
+    if (!lmpsByName.has(lmp.name)) {
+      lmpsByName.set(lmp.name, [cleanedLmp]);
+    } else {
+      lmpsByName.get(lmp.name).push(cleanedLmp);
+    }
+    lmpNameById.set(lmp.lmp_id, lmp.name)
   });
-  return Array.from(lmpMap.values()).map(lmp => ({
-    ...lmp,
-    versions: lmp.versions.sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
-  }));
+
+  const latestLMPByName = new Map()
+  lmpsByName.forEach((lmpVersions, lmpName) => {
+    const latestLMP = lmpVersions.sort((a, b) => b.created_at - a.created_at)[0]
+    latestLMPByName.set(lmpName, latestLMP)
+  })
+
+  // Now make a latest LMP by nam but add all the versions as a property on that lmp
+  const latestLMPs = Array.from(latestLMPByName.values())
+  latestLMPs.forEach(lmp => {
+    lmp.versions = lmpsByName.get(lmp.name).sort((a, b) => b.created_at - a.created_at)
+    // sanetize the uses of the lmp to only have the latest version of the lmp whose id has that name
+    lmp.uses = lmp.uses.map(useId => {
+      const useLmpName = lmpNameById.get(useId)
+      return latestLMPByName.get(useLmpName).lmp_id
+    })
+  })
+  
+  
+  return latestLMPs
 };

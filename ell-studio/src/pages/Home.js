@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { fetchLMPs } from '../utils/lmpUtils';
-import { DependencyGraph } from './depgraph/DependencyGraph';
+import { DependencyGraph } from '../components/depgraph/DependencyGraph';
 
 
 
 
-function LMPList() {
+function Home() {
   const [lmps, setLmps] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const { darkMode } = useTheme();
@@ -105,7 +105,7 @@ function LMPList() {
   );
 }
 
-export default LMPList;
+export default Home;
 
 function getTimeAgo(date) {
   const now = new Date();
