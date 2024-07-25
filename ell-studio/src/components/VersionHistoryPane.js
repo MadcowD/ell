@@ -1,0 +1,89 @@
+import React from 'react';
+import { FiGitCommit, FiClock, FiCopy, FiChevronRight } from 'react-icons/fi';
+import { useNavigate, useParams } from 'react-router-dom';
+
+const VersionHistoryPane = ({ versions }) => {
+  const navigate = useNavigate();
+  const { id: currentLmpId } = useParams();
+
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    // You might want to add a toast notification here
+  };
+
+  const groupVersionsByDate = (versions) => {
+    const grouped = {};
+    versions.forEach(version => {
+      const date = new Date(version.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      if (!grouped[date]) grouped[date] = [];
+      grouped[date].push(version);
+    });
+    return grouped;
+  };
+
+  const groupedVersions = groupVersionsByDate(versions);
+
+  return (
+    <div className="text-gray-200 p-4">
+      {Object.entries(groupedVersions).map(([date, dateVersions]) => (
+        <div key={date} className="mb-6">
+          <h3 className="text-sm font-semibold mb-2 text-gray-400">{date}</h3>
+          {dateVersions.map((version, index) => (
+            <div key={version.lmp_id} className="mb-2 border border-gray-700 rounded-lg overflow-hidden">
+              <div className={`bg-gray-800 p-3 flex items-center justify-between cursor-pointer hover:bg-gray-750 ${version.lmp_id === currentLmpId ? 'bg-blue-900' : ''}`}
+                   onClick={() => navigate(`/lmp/${version.name}/${version.lmp_id}`)}>
+                <div>
+                  <div className="flex items-center mb-1">
+                    <FiGitCommit className="text-blue-400 mr-2" />
+                    <span className="font-semibold">{version.commit_message || 'Commit message not available'}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-400">
+                    <img
+                      src={version.author_avatar || 'https://github.com/github.png'}
+                      alt="Author"
+                      className="w-5 h-5 rounded-full mr-2"
+                    />
+                    <span>{version.author_name || 'Unknown'} committed</span>
+                    <FiClock className="ml-4 mr-1" />
+                    <span>{formatDate(version.created_at)}</span>
+                  </div>
+                </div>
+                <FiChevronRight className="text-gray-500" />
+              </div>
+              <div className={`bg-gray-850 px-3 py-2 flex items-center justify-between ${version.lmp_id === currentLmpId ? 'bg-blue-800' : ''}`}>
+                <div className="flex items-center">
+                  <span className="bg-gray-700 text-xs font-medium px-2 py-1 rounded-full mr-2">
+                    Version {versions.length - index}
+                  </span>
+                  <span className="text-xs font-mono text-gray-400">{version.lmp_id.substring(0, 7)}</span>
+                </div>
+                <button
+                  className="text-gray-400 hover:text-gray-200 focus:outline-none"
+                  onClick={() => copyToClipboard(version.lmp_id)}
+                  title="Copy full hash"
+                >
+                  <FiCopy />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default VersionHistoryPane;

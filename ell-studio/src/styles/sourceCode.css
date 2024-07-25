@@ -1,0 +1,13 @@
+.source-code-container pre {
+  tab-size: 4;
+  -moz-tab-size: 4;
+}
+
+.source-code-container code {
+  display: block;
+  line-height: 1.5;
+}
+
+.source-code-container code span {
+  white-space: pre-wrap !important;
+}

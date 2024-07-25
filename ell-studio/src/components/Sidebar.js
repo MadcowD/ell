@@ -1,26 +1,25 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
+import { Link, useLocation } from 'react-router-dom';
+import { FiHome, FiCode, FiActivity } from 'react-icons/fi';
 
 const Sidebar = () => {
-  const { darkMode, toggleDarkMode } = useTheme();
+  const location = useLocation();
+
+  const isActive = (path) => {
+    return location.pathname === path ? 'bg-[#2a2f3a] text-white' : 'text-gray-400 hover:bg-[#2a2f3a] hover:text-white';
+  };
 
   return (
-    <aside className="w-64 bg-gray-800 p-6">
-      <nav className="space-y-4">
-        <Link to="/" className="block text-gray-300 hover:text-white">Dashboard</Link>
-        <Link to="/models" className="block text-gray-300 hover:text-white">Models</Link>
-        <Link to="/datasets" className="block text-gray-300 hover:text-white">Datasets</Link>
-        <Link to="/visualizations" className="block text-gray-300 hover:text-white">Visualizations</Link>
-      </nav>
-      <div className="mt-8">
-        <button
-          onClick={toggleDarkMode}
-          className="px-4 py-2 bg-gray-700 text-gray-300 rounded hover:bg-gray-600"
-        >
-          {darkMode ? 'Light Mode' : 'Dark Mode'}
-        </button>
-      </div>
+    <aside className="w-16 bg-[#1c1f26] flex flex-col items-center py-4">
+      <Link to="/" className={`p-3 rounded-lg mb-4 ${isActive('/')}`}>
+        <FiHome className="w-6 h-6" />
+      </Link>
+      <Link to="/lmp/:id" className={`p-3 rounded-lg mb-4 ${isActive('/lmp/:id')}`}>
+        <FiCode className="w-6 h-6" />
+      </Link>
+      <Link to="/traces" className={`p-3 rounded-lg mb-4 ${isActive('/traces')}`}>
+        <FiActivity className="w-6 h-6" />
+      </Link>
     </aside>
   );
 };

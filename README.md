@@ -105,6 +105,7 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 
 
 ## DX
+- [ ] Improve the UX fcor the LMP details page.
 - [ ] Add a vscode style explorer
 - [ ] Test Jupyter compatibility
 - [ ] UI/UX Improvements for the tensorboard thing

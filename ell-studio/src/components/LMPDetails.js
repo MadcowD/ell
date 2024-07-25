@@ -1,171 +1,183 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useTheme } from '../contexts/ThemeContext';
-import { ChevronDownIcon, ChevronUpIcon, LinkIcon } from '@heroicons/react/24/solid';
-import Prism from 'prismjs';
-import 'prismjs/themes/prism-tomorrow.css'; // Dark theme
-import 'prismjs/components/prism-jsx';
+import TracesRunsPane from './TracesRunsPane';
+import DependencyGraphPane from './DependencyGraphPane';
+import SourceCodeView from './SourceCodeView';
+import { FiCopy, FiFilter, FiClock, FiTag, FiColumns } from 'react-icons/fi';
+import VersionHistoryPane from './VersionHistoryPane';
 
 function LMPDetails() {
-  const { id } = useParams();
+  const { name, id } = useParams();
   const [lmp, setLmp] = useState(null);
   const [versionHistory, setVersionHistory] = useState([]);
   const [invocations, setInvocations] = useState([]);
   const [uses, setUses] = useState([]);
-  const [expandedSection, setExpandedSection] = useState(null);
   const { darkMode } = useTheme();
-  console.log(uses)
+  const [activeTab, setActiveTab] = useState('runs');
 
-  const API_BASE_URL = "http://localhost:8080"
+  const API_BASE_URL = "http://localhost:8080";
 
   useEffect(() => {
     const fetchLMPDetails = async () => {
       try {
-        const lmpResponse = await axios.get(`${API_BASE_URL}/api/lmps/${id}`);
-        setLmp(lmpResponse.data);
+        const lmpResponse = await axios.get(`${API_BASE_URL}/api/lmps/${name}${id ? `/${id}` : ''}`);
+        const all_lmps_matching = lmpResponse.data;
+        // choose the latest lmp
+        const latest_lmp = all_lmps_matching
+          .map(lmp => ({ ...lmp, created_at: new Date(lmp.created_at) }))
+          .sort((a, b) => b.created_at - a.created_at)[0];
+        setLmp(latest_lmp);
 
-        const versionHistoryResponse = await axios.get(`${API_BASE_URL}/api/lmps/${id}/versions`);
-        setVersionHistory(versionHistoryResponse.data);
+        console.log(lmpResponse.data)
+        const versionHistoryResponse = await axios.get(`${API_BASE_URL}/api/lmps/${latest_lmp.name}`);
+        console.log("versionHistoryResponse", versionHistoryResponse)
+        setVersionHistory(versionHistoryResponse.data || []);
 
-        const invocationsResponse = await axios.get(`${API_BASE_URL}/api/invocations/${id}`);
-        
+        const invocationsResponse = await axios.get(`${API_BASE_URL}/api/invocations/${name}${id ? `/${id}` : ''}`);
         const sortedInvocations = invocationsResponse.data.sort((a, b) => b.created_at - a.created_at);
         setInvocations(sortedInvocations);
 
-        const usesIds = (lmpResponse.data.uses);
-        const uses = usesIds.map(async (use) => {
+        const usesIds = lmpResponse.data.uses;
+        const uses = await Promise.all(usesIds.map(async (use) => {
           const useResponse = await axios.get(`${API_BASE_URL}/api/lmps/${use}`);
           return useResponse.data;
-        });
-        setUses(await Promise.all(uses));
+        }));
+        setUses(uses);
       } catch (error) {
         console.error('Error fetching LMP details:', error);
       }
     };
     fetchLMPDetails();
-  }, [id, API_BASE_URL]);
+  }, [name, id, API_BASE_URL]);
 
-  useEffect(() => {
-    // Highlight the code after the component mounts or updates
-    Prism.highlightAll();
-  }, [lmp]);
+  console.log(lmp)
 
-  if (!lmp) return <div className={`flex items-center justify-center h-screen ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>Loading...</div>;
-
-  const toggleSectionExpand = (section) => {
-    setExpandedSection(expandedSection === section ? null : section);
-  };
+  if (!lmp) return <div className="flex items-center justify-center h-screen bg-gray-900 text-gray-100">Loading...</div>;
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">{lmp.name}</h1>
-        <div className={`bg-${darkMode ? 'gray-800' : 'white'} rounded-lg shadow-md p-6 mb-8`}>
-          <p className="text-sm mb-4">ID: {lmp.lmp_id}</p>
-          <h2 className="text-2xl font-semibold mb-4">Source Code</h2>
-          <pre className={`rounded-md overflow-x-auto ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`}>
-            <code className="language-jsx">{(lmp.dependencies.trim() + '\n\n' + lmp.source).trim()}</code>
-          </pre>
-          <div className="mt-6 grid grid-cols-2 gap-4">
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Details</h3>
-              <p><strong>Created at:</strong> {new Date(lmp.created_at * 1000).toLocaleString()}</p>
-              <p><strong>Is LMP:</strong> {lmp.is_lmp ? 'Yes' : 'No'}</p>
-            </div>
-            {lmp.lm_kwargs && (
-              <div>
-                <h3 className="text-xl font-semibold mb-2">LM Keywords</h3>
-                <pre className={`bg-${darkMode ? 'gray-700' : 'gray-100'} p-4 rounded-md overflow-x-auto`}>
-                  <code>{JSON.stringify((lmp.lm_kwargs), null, 2)}</code>
-                </pre>
+    <div className="min-h-screen bg-[#13151a] text-gray-200">
+      <div className="flex flex-col h-screen">
+        <header className="bg-[#1c1f26] p-4 flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-xl font-semibold">{lmp.name}</h1>
+            <span className="text-sm px-2 py-1 bg-[#2a2f3a] rounded">ID: {lmp.lmp_id}</span>
+          </div>
+          <div className="flex space-x-2">
+            <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-sm hover:bg-[#3a3f4b] transition-colors">
+              Add to Dataset
+            </button>
+            <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-sm hover:bg-[#3a3f4b] transition-colors">
+              Share
+            </button>
+          </div>
+        </header>
+        
+        <div className="flex-grow flex overflow-hidden">
+          <main className="flex-grow p-6 overflow-y-auto">
+            <div className="mb-6 bg-[#1c1f26] rounded-lg p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Language Model Program</h2>
+                <div className="flex space-x-2">
+                  <button className="p-1 rounded bg-[#2a2f3a] hover:bg-[#3a3f4b] transition-colors">
+                    <FiCopy className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
-        </div>
-        <h2 className="text-2xl font-semibold mt-8 mb-4">Version History</h2>
-        <div className={`bg-${darkMode ? 'gray-800' : 'white'} rounded-lg shadow-md p-6 mb-8`}>
-          <div 
-            className="cursor-pointer flex justify-between items-center"
-            onClick={() => toggleSectionExpand('versionHistory')}
-          >
-            <h3 className="text-xl font-semibold">Source Code Versions</h3>
-            {expandedSection === 'versionHistory' ? (
-              <ChevronUpIcon className="h-5 w-5" />
-            ) : (
-              <ChevronDownIcon className="h-5 w-5" />
-            )}
-          </div>
-          {expandedSection === 'versionHistory' && (
-            <div className="mt-4 space-y-4">
-              {versionHistory.map((version, index) => (
-                <div key={version.lmp_id} className="flex items-center">
-                  <div className={`w-4 h-4 rounded-full ${darkMode ? 'bg-blue-500' : 'bg-blue-400'} mr-2`}></div>
-                  <div>
-                    <p className="text-sm font-semibold">Version {versionHistory.length - index}</p>
-                    <p className="text-xs">{new Date(version.created_at * 1000).toLocaleString()}</p>
-                    <p className="text-xs">Temporary commit message</p>
-                  </div>
-                </div>
-              ))}
+              <div className="overflow-hidden">
+                <SourceCodeView
+                  dependencies={lmp.dependencies.trim()}
+                  source={lmp.source.trim()}
+                  uses={lmp.uses}
+                />
+              </div>
             </div>
-          )}
-        </div>
-        <h2 className="text-2xl font-semibold mt-8 mb-4">Uses (Dependencies)</h2>
-        <div className={`bg-${darkMode ? 'gray-800' : 'white'} rounded-lg shadow-md p-6 mb-8`}>
-          <h3 className="text-xl font-semibold mb-4">LMP Dependencies</h3>
-          <div className="space-y-2">
-            {uses.length > 0 ? (
-              uses.map((use, index) => (
-                <div key={use.lmp_id} className="flex items-center">
-                  <LinkIcon className="h-5 w-5 mr-2" />
-                  <Link to={`/lmp/${use.lmp_id}`} className="text-sm hover:underline">{use.name}()</Link>
-                </div>
-              ))
-            ) : (
-              <p>No dependencies on other LMPs.</p>
-            )}
-          </div>
-        </div>
-        <h2 className="text-2xl font-semibold mt-8 mb-4">Invocations</h2>
-        <div className="space-y-4">
-          {invocations.map((invocation, index) => (
-            <div key={index} className={`bg-${darkMode ? 'gray-800' : 'white'} rounded-lg shadow-md overflow-hidden relative`}>
-              <div 
-                className={`p-4 cursor-pointer flex justify-between items-center`}
-                onClick={() => toggleSectionExpand(`invocation-${index}`)}
-              >
-                <h3 className="text-xl font-semibold">Invocation {invocations.length - index}</h3>
-                {expandedSection === `invocation-${index}` ? (
-                  <ChevronUpIcon className="h-5 w-5" />
-                ) : (
-                  <ChevronDownIcon className="h-5 w-5" />
+
+            <div className="mb-6">
+              <div className="flex border-b border-gray-700">
+                {['Runs', 'Version History', 'Dependency Graph'].map((tab) => (
+                  <button
+                    key={tab}
+                    className={`px-4 py-2 focus:outline-none ${
+                      activeTab === tab.toLowerCase().replace(' ', '_')
+                        ? 'text-blue-400 border-b-2 border-blue-400 font-medium'
+                        : 'text-gray-400 hover:text-gray-200'
+                    }`}
+                    onClick={() => setActiveTab(tab.toLowerCase().replace(' ', '_'))}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="mt-4">
+                {activeTab === 'runs' && (
+                  <>
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex space-x-2">
+                        <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors flex items-center">
+                          <FiFilter className="mr-1" /> 1 filter
+                        </button>
+                        <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
+                          Last 7 days
+                        </button>
+                        <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
+                          Root Runs
+                        </button>
+                        <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
+                          LLM Calls
+                        </button>
+                        <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
+                          All Runs
+                        </button>
+                      </div>
+                      <button className="p-1 rounded bg-[#2a2f3a] hover:bg-[#3a3f4b] transition-colors">
+                        <FiColumns className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <TracesRunsPane
+                      traces={invocations.map(inv => ({
+                        name: `Invocation ${inv.id}`,
+                        input: JSON.stringify(inv.args),
+                        output: JSON.stringify(inv.result),
+                        startTime: new Date(inv.created_at * 1000).toLocaleString(),
+                        latency: `${inv.latency}ms`
+                      }))}
+                      onSelectTrace={(trace) => console.log('Selected trace:', trace)}
+                    />
+                  </>
                 )}
+                {activeTab === 'version_history' && <VersionHistoryPane versions={versionHistory} />}
+                {activeTab === 'dependency_graph' && <DependencyGraphPane uses={uses} />}
               </div>
-              <span className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full ${darkMode ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-800'}`}>
-                Version {versionHistory.findIndex(v => v.lmp_id === invocation.lmp_id) + 1}
-              </span>
-              {expandedSection === `invocation-${index}` && (
-                <div className="p-4 border-t border-gray-600">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p><strong>Args:</strong> {JSON.stringify(invocation.args)}</p>
-                      <p><strong>Kwargs:</strong> {JSON.stringify(invocation.kwargs)}</p>
-                      <p><strong>Result:</strong> {JSON.stringify(invocation.result)}</p>
-                      <p><strong>Created at:</strong> {new Date(invocation.created_at * 1000).toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-2">Invocation Kwargs</h4>
-                      <pre className={`bg-${darkMode ? 'gray-700' : 'gray-100'} p-4 rounded-md overflow-x-auto`}>
-                        <code>{JSON.stringify(invocation.invocation_kwargs, null, 2)}</code>
-                      </pre>
-                    </div>
-                  </div>
+            </div>
+          </main>
+
+          <aside className="w-80 bg-[#1c1f26] p-6 overflow-y-auto">
+            <h2 className="text-lg font-semibold mb-4">Details</h2>
+            <div className="space-y-4">
+              <p className="flex items-center text-sm">
+                <FiClock className="mr-2 text-gray-400" />
+                Created: {new Date(lmp.created_at * 1000).toLocaleString()}
+              </p>
+              <p className="flex items-center text-sm">
+                <FiTag className="mr-2 text-gray-400" />
+                Is LMP: 
+                <span className={`ml-2 px-2 py-0.5 rounded ${lmp.is_lmp ? 'bg-green-500' : 'bg-red-500'} text-white text-xs font-medium`}>
+                  {lmp.is_lmp ? 'Yes' : 'No'}
+                </span>
+              </p>
+              {lmp.lm_kwargs && (
+                <div>
+                  <h3 className="text-md font-semibold mb-2">LM Keywords</h3>
+                  <pre className="bg-[#13151a] p-2 rounded overflow-x-auto text-xs">
+                    <code>{JSON.stringify(lmp.lm_kwargs, null, 2)}</code>
+                  </pre>
                 </div>
               )}
             </div>
-          ))}
+          </aside>
         </div>
       </div>
     </div>

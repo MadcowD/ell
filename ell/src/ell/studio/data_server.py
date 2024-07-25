@@ -25,40 +25,45 @@ def create_app(storage_dir: Optional[str] = None):
         lmps = serializer.get_lmps()
         return lmps
 
-    @app.get('/api/lmps/search')
-    def search_lmps(q: str = Query(...)):
-        lmps = serializer.search_lmps(q)
-        return lmps
 
-    @app.get('/api/lmps/{lmp_id}')
-    def get_lmp(lmp_id: str):
-        lmps = serializer.get_lmps(lmp_id=lmp_id)
-        if lmps:
-            return lmps[0]
-        else:
-            raise HTTPException(status_code=404, detail="LMP not found")
+    
+    @app.get('/api/lmps/{name:path}')
+    def get_lmp(name: str):
+        # Remove any leading slash if present
+        name = name.lstrip('/')
+        
+        # First, try to get by name
+        lmps_by_name = serializer.get_lmps(name=name)
+        if lmps_by_name:
+            return list(lmps_by_name)        
+        # If not found by name, check if the last part of the path is a valid lmp_id
+        name_parts = name.split('/')
+        if len(name_parts) > 1:
+            potential_lmp_id = name_parts[-1]
+            potential_name = '/'.join(name_parts[:-1])
+            lmps = serializer.get_lmps(name=potential_name, lmp_id=potential_lmp_id)
+            if lmps:
+                return list(lmps)
 
-    @app.get('/api/invocations/{lmp_id}')
-    def get_invocations(lmp_id: str):
-        invocations = serializer.get_invocations(lmp_id)
+        raise HTTPException(status_code=404, detail="LMP not found")
+    
+
+    @app.get('/api/invocations/{name:path}')
+    def get_invocations(name: str):
+        name = name.lstrip('/')
+        lmp_filters = {"name": name}
+        name_parts = name.split('/')
+        if len(name_parts) > 1: 
+            potential_lmp_id = name_parts[-1]
+            if potential_lmp_id.isalnum():  # Check if it's a valid LMP ID
+                lmp_filters["lmp_id"] = potential_lmp_id
+                lmp_filters["name"] = '/'.join(name_parts[:-1])
+        invocations = serializer.get_invocations(lmp_filters=lmp_filters)
         return invocations
 
     @app.post('/api/invocations/search')
     def search_invocations(q: str = Query(...)):
         invocations = serializer.search_invocations(q)
         return invocations
-
-    @app.get('/api/lmps/{lmp_id}/versions')
-    def get_lmp_versions(lmp_id: str):
-        versions = serializer.get_lmp_versions(lmp_id)
-        if versions:
-            return versions
-        else:
-            raise HTTPException(status_code=404, detail="LMP versions not found")
-
-    @app.get('/api/lmps/latest')
-    async def get_latest_lmps():
-        latest_lmps = serializer.get_latest_lmps()
-        return latest_lmps
 
     return app

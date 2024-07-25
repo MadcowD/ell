@@ -1,0 +1,141 @@
+.source-code-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.source-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.source-code-header h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.source-code-header button {
+  background-color: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.source-code-header button:hover {
+  background-color: #3e8e41;
+}
+
+.source-code-header button:active {
+  background-color: #3e8e41;
+  transform: scale(0.98);
+}
+
+.source-code-header button:focus {
+  outline: none;
+}
+
+.source-code-header button svg {
+  margin-left: 0.5rem;
+}
+
+.source-code-body {
+  background-color: #1a1d23;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  max-width: 800px;
+  margin: 2rem auto;
+}
+
+.source-code-body pre {
+  background-color: #1a1d23;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  max-width: 800px;
+  margin: 2rem auto;
+}
+
+.source-code-body code {
+  background-color: #1a1d23;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  max-width: 800px;
+  margin: 2rem auto;
+}
+
+
+.dependencies-container {
+  position: relative;
+  transition: max-height 0.3s ease-out;
+  overflow: hidden;
+}
+
+.dependencies-container.expanded {
+  max-height: none;
+}
+
+.code-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.gradient-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  background: linear-gradient(to bottom, 
+  rgba(30, 30, 30, 0) 0%,
+  rgba(30, 30, 30, 0.8) 50%,
+  rgba(30, 30, 30, 1) 100%
+);
+}
+
+.expand-button {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(60, 60, 60, 0.8);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  z-index: 3;
+}
+
+.expand-button:hover {
+  background-color: rgba(80, 80, 80, 0.9);
+}
+
+.expand-button svg {
+  margin-right: 5px;
+}
+
+/* Ensure code blocks take full width */
+pre {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Adjust line numbers to align properly */
+.linenumber {
+  min-width: 2em;
+  padding-right: 1em;
+  text-align: right;
+  user-select: none;
+}

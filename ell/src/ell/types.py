@@ -88,6 +88,11 @@ class SerializedLMP(SQLModel, table=True):
     )
 
 
+    # Cached INfo
+    num_invocations : Optional[int] = Field(default=0)
+
+
+
 
 class InvocationTrace(SQLModel, table=True):
     """
@@ -132,6 +137,8 @@ class Invocation(SQLModel, table=True):
             secondaryjoin="Invocation.id==InvocationTrace.invocation_consumer_id",
         ),
     )
+
+
 
 
 class SerializedLStr(SQLModel, table=True):

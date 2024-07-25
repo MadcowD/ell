@@ -51,15 +51,19 @@ function LMPList() {
             >
               <div className="flex justify-between items-center mb-2">
                 <Link 
-                  to={`/lmp/${lmp.versions[0].lmp_id}`} 
+                  to={`/lmp/${lmp.name}`} 
                   className={`text-xl font-semibold ${darkMode ? 'text-gray-100 hover:text-blue-300' : 'text-gray-800 hover:text-blue-600'}`}
                   onClick={(e) => e.stopPropagation()} // Prevent card expansion when clicking the link
                 >
                   {lmp.name}
                 </Link>
                 <div className="flex space-x-2">
-                  <span className={`text-xs px-2 py-1 rounded-full ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
+                <span className={`text-xs px-2 py-1 rounded-full ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
                     ID: {truncateId(lmp.versions[0].lmp_id)}
+                  </span>
+
+                  <span className={`text-xs px-2 py-1 rounded-full ml-2 ${darkMode ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800'}`}>
+                    Latest
                   </span>
                   <span className={`text-xs px-2 py-1 rounded-full ${darkMode ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-800'}`}>
                     {lmp.versions.length} Version{lmp.versions.length > 1 ? 's' : ''}

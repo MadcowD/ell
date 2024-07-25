@@ -59,6 +59,12 @@ class SQLStore(ell.store.Store):
             lmp = session.query(SerializedLMP).filter(SerializedLMP.lmp_id == lmp_id).first()
             assert lmp is not None, f"LMP with id {lmp_id} not found. Writing invocation erroneously"
             
+            # Increment num_invocations
+            if lmp.num_invocations is None:
+                lmp.num_invocations = 1
+            else:
+                lmp.num_invocations += 1
+            
             invocation = Invocation(
                 id=id,
                 lmp_id=lmp.lmp_id,
@@ -103,18 +109,25 @@ class SQLStore(ell.store.Store):
                     lmp_dict[lmp.lmp_id]['uses'].append(using_id)
             return list(lmp_dict.values())
 
-    def get_invocations(self, lmp_id: str, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def get_invocations(self, lmp_filters: Dict[str, Any], filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         with Session(self.engine) as session:
-            query = select(Invocation).where(Invocation.lmp_id == lmp_id)
+            query = select(Invocation).join(SerializedLMP)
+            
+            # Apply LMP filters
+            for key, value in lmp_filters.items():
+                query = query.where(getattr(SerializedLMP, key) == value)
+            
+            # Apply invocation filters
             if filters:
                 for key, value in filters.items():
                     query = query.where(getattr(Invocation, key) == value)
+            
             invocations = session.exec(query).all()
-            return [inv for inv in invocations]
+            return [inv.model_dump() for inv in invocations]
 
 
-    def get_lmp_versions(self, lmp_id: str) -> List[Dict[str, Any]]:
-        return self.get_lmps(lmp_id=lmp_id)
+    def get_lmp_versions(self, name: str) -> List[Dict[str, Any]]:
+        return self.get_lmps(name=name)
 
     def get_latest_lmps(self) -> List[Dict[str, Any]]:
         raise NotImplementedError()

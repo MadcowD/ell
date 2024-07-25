@@ -33,7 +33,7 @@ function LMPNode({ data }) {
     <>
       <Handle type="source" position={Position.Top} />
       <div height="30px" width="300px" key={lmp.lmp_id}>
-        <Link to={`/lmp/${lmp.lmp_id}`}>
+        <Link to={`/lmp/${lmp.name}`}>
           {/* <LMPCardTitle lmp={lmp} /> */}
           {lmp.name}
         </Link>
