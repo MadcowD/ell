@@ -33,5 +33,6 @@ if __name__ == "__main__":
     store.install(autocommit=True)
     greeting = hello("Sam Altman") # > "hello sama!"
     good_bye = goodbye("Sam Altman", greeting)
+    hello_again = hello(good_bye)
     
 

@@ -7,6 +7,7 @@ import {
   } from "d3-force";
 
 
+
 import { useMemo } from "react";
 
 import ReactFlow, {
@@ -20,6 +21,7 @@ import ReactFlow, {
   useStore,
   Position,
   ReactFlowProvider,
+ MarkerType
 } from "reactflow";
 
   
@@ -84,7 +86,7 @@ const simulation = forceSimulation()
       }
       tempVisited.add(nodeId);
       
-      const outgoingEdges = edges.filter(edge => edge.source === nodeId);
+      const outgoingEdges = edges.filter(edge => edge.source  === nodeId && edge.sourceHandle === "outputs");
       for (const edge of outgoingEdges) {
         dfs(edge.target);
       }
@@ -103,7 +105,7 @@ const simulation = forceSimulation()
 
     // Assign x-coordinates based on the trace order
     traceOrder.forEach((nodeId, index) => {
-      nodeMap[nodeId].position.x = index * 150;
+      nodeMap[nodeId].position.x = index * 50;
     });
 
   
@@ -235,7 +237,17 @@ export function getInitialGraph(lmps, traces) {
           target: `${trace.consumer}`,
           targetHandle: "inputs",
           animated: true,
-        // type: 'trace',
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 30,
+            height: 30,
+          },
+          style: {
+            stroke: '#ff7f50',  // Coral color
+            strokeWidth: 1,
+          },
+          labelStyle: { fill: '#ff7f50', fontWeight: 700 },
+          // label: 'Trace',
       });
     });
   }

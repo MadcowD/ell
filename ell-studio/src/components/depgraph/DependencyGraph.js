@@ -17,8 +17,11 @@ import ReactFlow, {
 } from "reactflow";
 import { getBezierPath } from 'reactflow';
 
-import { Link } from "react-router-dom";
 
+import { Link } from "react-router-dom";
+import { LMPCardTitle } from "./LMPCardTitle"; // Add this import
+
+import { Card } from "../Card";
 import "reactflow/dist/style.css";
 
 
@@ -32,12 +35,11 @@ function LMPNode({ data }) {
   return (
     <>
       <Handle type="source" position={Position.Top} />
-      <div height="30px" width="300px" key={lmp.lmp_id}>
+      <Card  key={lmp.lmp_id}>
         <Link to={`/lmp/${lmp.name}`}>
-          {/* <LMPCardTitle lmp={lmp} /> */}
-          {lmp.name}
+          <LMPCardTitle lmp={lmp} fontSize="sm" />
         </Link>
-      </div>
+      </Card>
       <Handle type="target" position={Position.Bottom} id="a" />
       <Handle type="target" position={Position.Left} id="inputs" />
       <Handle type="source" position={Position.Right} id="outputs" />
@@ -45,26 +47,6 @@ function LMPNode({ data }) {
   );
 }
 
-// Add this new component for trace edges
-function TraceEdge({ id, sourceX, sourceY, targetX, targetY }) {
-  const [edgePath] = getBezierPath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-  });
-
-  return (
-    <path
-      id={id}
-      className="react-flow__edge-path"
-      d={edgePath}
-      strokeWidth={2}
-      stroke="#ff0000"
-      strokeDasharray="5,5"
-    />
-  );
-}
 
 const LayoutFlow = ({ initialNodes, initialEdges }) => {
   const [nodes, _, onNodesChange] = useNodesState(initialNodes);
@@ -84,7 +66,6 @@ const LayoutFlow = ({ initialNodes, initialEdges }) => {
   }, [initialised, didInitialSimulation]);
 
   const nodeTypes = useMemo(() => ({ lmp: LMPNode }), []);
-  const edgeTypes = useMemo(() => ({ trace: TraceEdge }), []);
 
   return (
     
@@ -95,7 +76,6 @@ const LayoutFlow = ({ initialNodes, initialEdges }) => {
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
       // fitView
     >
       <Panel>
