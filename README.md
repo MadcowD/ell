@@ -101,7 +101,7 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 - [o] Visualize trace in graph
 - [o] Langsmith style invocations and traces?
 - [ ] Full trace implementaiton on invocation page
-- [ ] Make a better UX arround the traces in dpedency graphs
+- [x] Make a better UX arround the traces in dpedency graphs
 - 
 
 ## Version Hustory
