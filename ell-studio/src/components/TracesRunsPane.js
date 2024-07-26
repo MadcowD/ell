@@ -36,7 +36,7 @@ const TracesRunsPane = ({ invocations, onSelectTrace }) => {
         header: 'LMP', 
         key: 'name', 
         render: (item) => <Card noMinW={true}><LMPCardTitle lmp={item.lmp} fontSize="sm" /></Card>, 
-        maxWidth: 200,
+        // maxWidth: 200,
         sortable: true
       },
       { 

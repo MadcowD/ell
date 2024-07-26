@@ -105,7 +105,7 @@ function getLayout(nodes, edges) {
 
   // Assign x-coordinates based on the trace order
   traceOrder.forEach((nodeId, index) => {
-    nodeMap[nodeId].position.x = index * 50;
+    nodeMap[nodeId].position.x = index * 60;
   });
 
   // Group nodes by all the unique reference count levels
@@ -118,7 +118,7 @@ function getLayout(nodes, edges) {
     // for each node at this level, set its x coordinate to be the index of the node
 
     nodesAtLevel.forEach((node, i) => {
-      node.position.y = -level * 100;
+      node.position.y = -level * 100 + Math.random() * 10;
     });
   });
 }
@@ -146,7 +146,7 @@ export const useLayoutedElements = () => {
       "link",
       forceLink(edges)
         .id((d) => d.id)
-        .strength(0.05)
+        .strength(0.0)
         .distance(100)
     );
 

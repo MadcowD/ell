@@ -11,7 +11,7 @@ CHORD_FORMAT = "| Chord | Chord | ... |"
 
 
 @ell.lm(model="gpt-4o", temperature=0.5)
-def write_a_chord_progression_for_song(genre: Optional[str], key : Optional[str]) -> str:
+def write_a_chord_progression_for_song(genre: Optional[str], key : Optional[str]) :
     return [
         ell.system(f"You are a world class music theorist and composer. Your goal is to write chord progressions to songs given parameters. They should be fully featured and compositionally sound. Feel free to use advanced chords of your choosing. Only answer with the chord progression in {CHORD_FORMAT} format. Do not provide any additional text. Feel free to occaisonally use 13 chrods and complex chords if necessary etc."),
         ell.user(f"Write a chord progression for a song {'in ' + genre if genre else ''} {'in the key of ' + key if key else ''}.")

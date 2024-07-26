@@ -188,12 +188,12 @@ def track(fn: Callable) -> Callable:
     # see if it exists
     _name = func_to_track.__qualname__
     _time = time.time()
-    _has_serialized = False
+    _has_serialized_lmp = False
     
 
     @wraps(fn)
     def wrapper(*fn_args, get_invocation=False, **fn_kwargs) -> str:
-        nonlocal _has_serialized
+        nonlocal _has_serialized_lmp
         assert (get_invocation and config.has_serializers) or not get_invocation, "In order to get an invocation, you must have a serializer and get_invocation must be True."
 
         
@@ -211,55 +211,56 @@ def track(fn: Callable) -> Callable:
         
             
             
-        if config.has_serializers and not _has_serialized:
-            fn_closure, _uses = ell.util.closure.lexically_closured_source(func_to_track)
-            fn_hash = func_to_track.__ell_hash__
+        if config.has_serializers:
+            if not _has_serialized_lmp:
+                fn_closure, _uses = ell.util.closure.lexically_closured_source(func_to_track)
 
 
-            for serializer in config.serializers:
-                # Compute commit messages if enabled
-                commit = None
-                lmps = serializer.get_lmps(name=_name)
-                version = 0
-                if any(lmp['lmp_id'] == fn_hash for lmp in lmps):
-                    continue
+                for serializer in config.serializers:
+                    # Compute commit messages if enabled
+                    commit = None
+                    lmps = serializer.get_lmps(name=_name)
+                    version = 0
+                    if any(lmp['lmp_id'] == func_to_track.__ell_hash__ for lmp in lmps):
+                        continue
 
-                if len(lmps) > 0 :
-                    lmps.sort(key=lambda x: x['created_at'], reverse=True)
-                    latest_lmp = lmps[0]
-      
-    
-                    version = (latest_lmp['version_number']) + 1
-                    if config.autocommit:
-                    # Get the latest lmp
-                    # sort by created at  
-                        from ell.util.differ import write_commit_message_for_diff
-                        commit = str(write_commit_message_for_diff(f"{latest_lmp['dependencies']}\n\n{latest_lmp['source']}", f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
-
-
-                serializer.write_lmp(
-                    lmp_id=fn_hash,
-                    name=_name,
-                    created_at=datetime.now(),
-                    source=fn_closure[0],
-                    dependencies=fn_closure[1],
-                    commit_message=(commit),
+                    if len(lmps) > 0 :
+                        lmps.sort(key=lambda x: x['created_at'], reverse=True)
+                        latest_lmp = lmps[0]
         
-                    is_lmp=lmp,
-                    lm_kwargs=(
-                        (lm_kwargs)
-                        if lm_kwargs
-                        else None
-                    ),
-                    version_number=version,
-                    uses=_uses,
-                )
-            _has_serialized = True
+        
+                        version = (latest_lmp['version_number']) + 1
+                        print(latest_lmp['version_number'], version)
+                        if config.autocommit:
+                        # Get the latest lmp
+                        # sort by created at  
+                            from ell.util.differ import write_commit_message_for_diff
+                            commit = str(write_commit_message_for_diff(f"{latest_lmp['dependencies']}\n\n{latest_lmp['source']}", f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
+
+
+                    serializer.write_lmp(
+                        lmp_id=func_to_track.__ell_hash__,
+                        name=_name,
+                        created_at=datetime.now(),
+                        source=fn_closure[0],
+                        dependencies=fn_closure[1],
+                        commit_message=(commit),
+            
+                        is_lmp=lmp,
+                        lm_kwargs=(
+                            (lm_kwargs)
+                            if lm_kwargs
+                            else None
+                        ),
+                        version_number=version,
+                        uses=_uses,
+                    )
+                _has_serialized_lmp = True
 
             # Let's add an invocation
             invocation_params = dict(
                 id=invocation_id,
-                lmp_id=fn_hash,
+                lmp_id=func_to_track.__ell_hash__,
                 args=(fn_args),
                 kwargs=(fn_kwargs),
                 invocation_kwargs=invocation_kwargs,
@@ -299,6 +300,7 @@ def track(fn: Callable) -> Callable:
             
             cleaned_invocation_params = invocation_converter.unstructure(invocation_params)
             for serializer in config.serializers:
+                print("wrinting invocation")
                 serializer.write_invocation(**cleaned_invocation_params, consumes=consumes, result=result)
             
             invoc = invocation_params  # For compatibility with existing code

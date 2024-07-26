@@ -1,33 +1,41 @@
-import React, { useState } from 'react';
-import { FiCopy, FiZap, FiEdit2, FiFilter, FiClock, FiColumns } from 'react-icons/fi';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FiCopy, FiZap, FiEdit2, FiFilter, FiClock, FiColumns, FiPause, FiPlay } from 'react-icons/fi';
 import TraceDetailsSidebar from '../components/TraceDetailsSidebar';
 import TracesRunsPane from '../components/TracesRunsPane';
+import axios from 'axios';
 
+
+const API_BASE_URL = "http://localhost:8080";
 const Traces = () => {
   const [selectedTrace, setSelectedTrace] = useState(null);
-  const traces = [
-    {
-      name: 'Sample Agent Trace',
-      input: 'What is a document l...',
-      output: 'BEEP BOOP! A document loader is a component that retrieves data from a specific source and returns it as a LangChain "Document." You can find more information about document loader integrations [here] (/docs/modules/data_connection/document_loaders/). Each loader is designed to retrieve data from a particular source and return it in a format that can be processed by LangChain.',
-      startTime: '07/23/2024, 03:29:20 PM',
-      endTime: '07/23/2024, 03:29:28 PM',
-      timeToFirstToken: 'N/A',
-      latency: '7.31s',
-      tokens: 540,
-      tags: ['this-is-a-tag'],
-    },
-  ];
+  const [invocations, setInvocations] = useState([]);
+  const [isPolling, setIsPolling] = useState(true);
 
-  const schema = {
-    columns: [
-      { key: 'name', header: 'Name', sortable: true },
-      { key: 'startTime', header: 'Start Time', sortable: true },
-      { key: 'endTime', header: 'End Time', sortable: true },
-      { key: 'latency', header: 'Latency', sortable: true },
-      { key: 'tokens', header: 'Tokens', sortable: true },
-      // Add other columns as needed
-    ]
+  const fetchInvocations = useCallback(async () => {
+    try {
+      const invocationsResponse = await axios.get(`${API_BASE_URL}/api/invocations`);
+      const sortedInvocations = invocationsResponse.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setInvocations(sortedInvocations);
+    } catch (error) {
+      console.error('Error fetching invocations:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInvocations(); // Initial fetch
+
+    let intervalId;
+    if (isPolling) {
+      intervalId = setInterval(fetchInvocations, 1000); // Poll every second
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isPolling, fetchInvocations]);
+
+  const togglePolling = () => {
+    setIsPolling(!isPolling);
   };
 
   return (
@@ -88,12 +96,19 @@ const Traces = () => {
           <button className="px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">Root Runs</button>
           <button className="px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">LLM Calls</button>
           <button className="px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">All Runs</button>
+          <button
+            className={`flex items-center px-2 py-1 ${isPolling ? 'bg-blue-600' : 'bg-[#1c2128]'} text-xs rounded hover:bg-gray-700`}
+            onClick={togglePolling}
+          >
+            {isPolling ? <FiPause className="mr-1" /> : <FiPlay className="mr-1" />}
+            {isPolling ? 'Pause Updates' : 'Resume Updates'}
+          </button>
           <button className="ml-auto flex items-center px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">
             <FiColumns className="mr-1" />
             Columns
           </button>
         </div>
-        <TracesRunsPane invocations={traces} onSelectTrace={setSelectedTrace} schema={schema} />
+        <TracesRunsPane invocations={invocations} onSelectTrace={setSelectedTrace} />
       </div>
       {selectedTrace && (
         <TraceDetailsSidebar
