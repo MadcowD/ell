@@ -91,36 +91,60 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 ## Bugs
 
 - [ ] Fix weird rehashing issue of the main prompt whenever subprompt changes? Or just make commits more of a background deal.
+- [ ] Trace not writing on first invoc.
+- [ ] Rewrite lexical closures
+
+## Tests
+- [ ] Add tests for the all the core fn'ality.
 
 ## Trace Functionality
-- [ ] Visualize trace in graph
-- [ ] Langsmith style invocations and traces?
+- [o] Visualize trace in graph
+- [o] Langsmith style invocations and traces?
+- [ ] Full trace implementaiton on invocation page
+- [ ] Make a better UX arround the traces in dpedency graphs
+- 
 
 ## Version Hustory
-- [ ] Auto document commit changes
-- [ ] Version history diff view (possibly automatic commit messages using GPT-4o mini)
+- [x] Auto document commit changes
+- [x] Version history diff view (possibly automatic commit messages using GPT-4o mini)
 
 ## LM Functionality
 - [ ] Multimodal inputs
+- [ ] Function calling
 
+## USe cases
+- [ ] Rag example
+- [ ] Embeddings
+- [ ] Tool use
+- [ ] Agents
+- [ ] CoT
+- [ ] Optimization
+
+## Store
+- [ ] DX around how logging works.
 
 ## DX
-- [ ] Improve the UX fcor the LMP details page.
+- [x] Improve the UX fcor the LMP details page.
+- [ ] Add Depdendency Graph on LMP page
 - [ ] Add a vscode style explorer
 - [ ] Test Jupyter compatibility
 - [ ] UI/UX Improvements for the tensorboard thing
-- [ ] LMP Details should be by func so I can run & go look @ the results even if the hash changes
+- [x] LMP Details should be by func so I can run & go look @ the results even if the hash changes
 - [ ] navigation should be as easy as vscode. cmd shift p or spotlifht
-- [ ] Depdendencies take up a lot of space when someone is grocking a prompt, so should we hide them or just scorll down to the bottom where it is?
+- [x] Depdendencies take up a lot of space when someone is grocking a prompt, so should we hide them or just scorll down to the bottom where it is?
+- [ ] Another backend?
+
 
 ## Packaging
 - [ ] Write nice docs for eveyrthing
-- [ ] Package it a ll up
+- [ ] Package it all up
+- [ ] Clean up the examples
+- [ ] Make production ell studio vuild
+- [ ] How to contribute guide
 
 
 ## Misc
-
-
+- [ ] Metric tracking?
 - [ ] Builtins for classifiers, like logit debiasing.
 - [ ] Think about evaluator framework..
 - [ ] someway of visualizing timeline nicely
