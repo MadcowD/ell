@@ -37,7 +37,7 @@ function LMPNode({ data }) {
       <Handle type="source" position={Position.Top} />
       <Card  key={lmp.lmp_id}>
         <Link to={`/lmp/${lmp.name}`}>
-          <LMPCardTitle lmp={lmp} fontSize="sm" />
+          <LMPCardTitle displayVersion lmp={lmp} fontSize="sm" />
         </Link>
       </Card>
       <Handle type="target" position={Position.Bottom} id="a" />

@@ -11,6 +11,7 @@ class Store(ABC):
 
     @abstractmethod
     def write_lmp(self, lmp_id: str, name: str, source: str, dependencies: List[str], is_lmp: bool, lm_kwargs: str, 
+                  version_number: int,
                   uses: Dict[str, Any], 
                   commit_message: Optional[str] = None,
                   created_at: Optional[float]=None) -> Optional[Any]:

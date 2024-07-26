@@ -91,6 +91,11 @@ class SerializedLMP(SQLModel, table=True):
     # Cached INfo
     num_invocations : Optional[int] = Field(default=0)
     commit_message : Optional[str] = Field(default=None)
+    version_number: Optional[int] = Field(default=None)
+    
+    class Config:
+        table_name = "serializedlmp"
+        unique_together = [("version_number", "name")]
 
 
 

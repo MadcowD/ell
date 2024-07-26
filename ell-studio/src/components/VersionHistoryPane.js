@@ -1,6 +1,7 @@
 import React from 'react';
 import { FiGitCommit, FiClock, FiCopy, FiChevronRight } from 'react-icons/fi';
 import { useNavigate, useParams } from 'react-router-dom';
+import VersionBadge from './VersionBadge';
 
 const VersionHistoryPane = ({ versions }) => {
   const navigate = useNavigate();
@@ -74,9 +75,7 @@ const VersionHistoryPane = ({ versions }) => {
               </div>
               <div className={`bg-gray-850 px-3 py-2 flex items-center justify-between ${version.lmp_id === currentLmpId || (totalIndex === 1 && !currentLmpId) ? 'bg-blue-800' : ''}`}>
                 <div className="flex items-center">
-                  <span className="bg-gray-700 text-xs font-medium px-2 py-1 rounded-full mr-2">
-                    Version {versions.length - totalIndex + 1}
-                  </span>
+                  <VersionBadge version={versions.length - totalIndex + 1} className="mr-2" />
                   <span className="text-xs font-mono text-gray-400">{version.lmp_id.substring(0, 7)}</span>
                 </div>
                 <button

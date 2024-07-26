@@ -20,6 +20,7 @@ class SQLStore(ell.store.Store):
 
 
     def write_lmp(self, lmp_id: str, name: str, source: str, dependencies: List[str], is_lmp: bool, lm_kwargs: str, 
+                  version_number: int,
                   uses: Dict[str, Any], 
                   commit_message: Optional[str] = None,
                   created_at: Optional[float]=None) -> Optional[Any]:
@@ -30,9 +31,11 @@ class SQLStore(ell.store.Store):
                 # Already added to the DB.
                 return lmp
             else:
+                print(version_number)
                 lmp = SerializedLMP(
                     lmp_id=lmp_id,
                     name=name,
+                    version_number=version_number,
                     source=source,
                     dependencies=dependencies,
                     created_at= created_at or datetime.datetime.utcnow(),

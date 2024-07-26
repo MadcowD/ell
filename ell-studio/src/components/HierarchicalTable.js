@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { FiChevronRight, FiChevronDown } from 'react-icons/fi';
+import { FiChevronRight, FiChevronDown, FiArrowUp, FiArrowDown } from 'react-icons/fi';
 import { HierarchicalTableProvider, useHierarchicalTable } from './HierarchicalTableContext';
 
 const MeasureCell = ({ content, onMeasure }) => {
@@ -79,7 +79,7 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
 };
 
 const TableHeader = ({ schema, columnWidths, updateWidth }) => {
-  const { isAllSelected, toggleAllSelection } = useHierarchicalTable();
+  const { isAllSelected, toggleAllSelection, sortConfig, onSort } = useHierarchicalTable();
 
   return (
     <thead>
@@ -96,17 +96,23 @@ const TableHeader = ({ schema, columnWidths, updateWidth }) => {
         </th>
         {schema.columns.map((column, index) => {
           const maxWidth = column.maxWidth || Infinity;
+          const isSorted = sortConfig.key === column.key;
+          const sortIcon = isSorted ? (sortConfig.direction === 'asc' ? <FiArrowUp /> : <FiArrowDown />) : null;
           return (
             <React.Fragment key={index}>
               <th 
-                className={`py-2 px-4 whitespace-nowrap overflow-hidden text-ellipsis ${column.headerClassName || ''}`}
+                className={`py-2 px-4 whitespace-nowrap overflow-hidden text-ellipsis ${column.headerClassName || ''} ${column.sortable ? 'cursor-pointer' : ''}`}
                 style={{ 
                   maxWidth: maxWidth !== Infinity ? `${maxWidth}px` : undefined,
                   width: `${Math.min(columnWidths[column.key] || 0, maxWidth)}px`,
                   ...column.headerStyle
                 }}
+                onClick={() => column.sortable && onSort(column.key)}
               >
-                {column.header}
+                <div className="flex items-center justify-between">
+                  <span>{column.header}</span>
+                  {sortIcon}
+                </div>
               </th>
               <MeasureCell 
                 content={column.header} 
@@ -120,9 +126,27 @@ const TableHeader = ({ schema, columnWidths, updateWidth }) => {
   );
 };
 
-const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange }) => {
-  const [columnWidths, setColumnWidths] = useState({});
+const TableBody = ({ schema, onRowClick, columnWidths, updateWidth }) => {
+  const { sortedData } = useHierarchicalTable();
 
+  return (
+    <tbody>
+      {sortedData.map(item => (
+        <TableRow 
+          key={item.id} 
+          item={item} 
+          schema={schema} 
+          onRowClick={onRowClick} 
+          columnWidths={columnWidths} 
+          updateWidth={updateWidth}
+        />
+      ))}
+    </tbody>
+  );
+};
+
+const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig }) => {
+  const [columnWidths, setColumnWidths] = useState({});
   const updateWidth = (key, width, maxWidth) => {
     setColumnWidths(prev => ({
       ...prev,
@@ -139,22 +163,24 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange }) => {
   }, [schema]);
 
   return (
-    <HierarchicalTableProvider data={data} onSelectionChange={onSelectionChange}>
+    <HierarchicalTableProvider 
+      data={data} 
+      onSelectionChange={onSelectionChange}
+      initialSortConfig={initialSortConfig}
+    >
       <div className="overflow-x-auto">
         <table className="w-full">
-          <TableHeader schema={schema} columnWidths={columnWidths} updateWidth={updateWidth} />
-          <tbody>
-            {data.map(item => (
-              <TableRow 
-                key={item.id} 
-                item={item} 
-                schema={schema} 
-                onRowClick={onRowClick} 
-                columnWidths={columnWidths} 
-                updateWidth={updateWidth}
-              />
-            ))}
-          </tbody>
+          <TableHeader 
+            schema={schema} 
+            columnWidths={columnWidths} 
+            updateWidth={updateWidth} 
+          />
+          <TableBody 
+            schema={schema} 
+            onRowClick={onRowClick} 
+            columnWidths={columnWidths} 
+            updateWidth={updateWidth}
+          />
         </table>
       </div>
     </HierarchicalTableProvider>

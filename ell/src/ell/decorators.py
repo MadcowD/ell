@@ -219,18 +219,22 @@ def track(fn: Callable) -> Callable:
             for serializer in config.serializers:
                 # Compute commit messages if enabled
                 commit = None
-                if config.autocommit:
-                    lmps = serializer.get_lmps(name=_name)
+                lmps = serializer.get_lmps(name=_name)
+                version = 0
+                if any(lmp['lmp_id'] == fn_hash for lmp in lmps):
+                    continue
+
+                if len(lmps) > 0 :
+                    lmps.sort(key=lambda x: x['created_at'], reverse=True)
+                    latest_lmp = lmps[0]
+      
+    
+                    version = (latest_lmp['version_number']) + 1
+                    if config.autocommit:
                     # Get the latest lmp
-                    # sort by created at
-                    if len(lmps) > 0 :
-                        lmps.sort(key=lambda x: x['created_at'], reverse=True)
-                        latest_lmp = lmps[0]
-                        if latest_lmp['lmp_id'] == fn_hash:
-                            break
-                        else:
-                            from ell.util.differ import write_commit_message_for_diff
-                            commit = str(write_commit_message_for_diff(f"{latest_lmp['dependencies']}\n\n{latest_lmp['source']}", f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
+                    # sort by created at  
+                        from ell.util.differ import write_commit_message_for_diff
+                        commit = str(write_commit_message_for_diff(f"{latest_lmp['dependencies']}\n\n{latest_lmp['source']}", f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
 
 
                 serializer.write_lmp(
@@ -240,12 +244,14 @@ def track(fn: Callable) -> Callable:
                     source=fn_closure[0],
                     dependencies=fn_closure[1],
                     commit_message=(commit),
+        
                     is_lmp=lmp,
                     lm_kwargs=(
                         (lm_kwargs)
                         if lm_kwargs
                         else None
                     ),
+                    version_number=version,
                     uses=_uses,
                 )
             _has_serialized = True

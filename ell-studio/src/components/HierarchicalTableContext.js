@@ -1,12 +1,13 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
 const HierarchicalTableContext = createContext();
 
 export const useHierarchicalTable = () => useContext(HierarchicalTableContext);
 
-export const HierarchicalTableProvider = ({ children, data, onSelectionChange }) => {
+export const HierarchicalTableProvider = ({ children, data, onSelectionChange, initialSortConfig }) => {
   const [expandedRows, setExpandedRows] = useState({});
   const [selectedRows, setSelectedRows] = useState({});
+  const [sortConfig, setSortConfig] = useState(initialSortConfig || { key: null, direction: 'asc' });
 
   const toggleRow = useCallback((rowId) => {
     setExpandedRows(prev => ({
@@ -55,6 +56,26 @@ export const HierarchicalTableProvider = ({ children, data, onSelectionChange })
     return true;
   }, [selectedRows]);
 
+  const onSort = useCallback((key) => {
+    setSortConfig((prevConfig) => ({
+      key,
+      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  }, []);
+
+  const sortedData = useMemo(() => {
+    if (!sortConfig.key) return data;
+    return [...data].sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [data, sortConfig]);
+
   React.useEffect(() => {
     if (onSelectionChange) {
       onSelectionChange(selectedRows);
@@ -69,6 +90,9 @@ export const HierarchicalTableProvider = ({ children, data, onSelectionChange })
     toggleAllSelection,
     isAllSelected,
     isItemSelected,
+    sortConfig,
+    onSort,
+    sortedData,
   };
 
   return (

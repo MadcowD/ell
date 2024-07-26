@@ -6,11 +6,7 @@ export function Card({ children, title, noMinW, ...rest }) {
       className={`relative rounded-lg border border-gray-700 text-white inline-block ${noMinW ? '' : 'min-w-[150px]'}`}
       {...rest}
     >
-      <div
-        className="flex items-center justify-center"
-      >
         {children}
-      </div>
     </div>
   );
 }

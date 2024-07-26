@@ -19,6 +19,17 @@ const Traces = () => {
     },
   ];
 
+  const schema = {
+    columns: [
+      { key: 'name', header: 'Name', sortable: true },
+      { key: 'startTime', header: 'Start Time', sortable: true },
+      { key: 'endTime', header: 'End Time', sortable: true },
+      { key: 'latency', header: 'Latency', sortable: true },
+      { key: 'tokens', header: 'Tokens', sortable: true },
+      // Add other columns as needed
+    ]
+  };
+
   return (
     <div className="flex bg-[#0d1117] text-gray-300 h-screen overflow-hidden">
       <div className="flex-grow p-6 overflow-y-auto">
@@ -82,7 +93,7 @@ const Traces = () => {
             Columns
           </button>
         </div>
-        <TracesRunsPane invocations={[]} onSelectTrace={setSelectedTrace} />
+        <TracesRunsPane invocations={traces} onSelectTrace={setSelectedTrace} schema={schema} />
       </div>
       {selectedTrace && (
         <TraceDetailsSidebar

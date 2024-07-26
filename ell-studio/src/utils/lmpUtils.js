@@ -75,6 +75,7 @@ export const fetchTraces = async (lmps) => {
 
 export function getTimeAgo(date) {
   const now = new Date();
+  console.log(date)
   const secondsPast = (now.getTime() - date.getTime()) / 1000;
   console.log(now, date);
   if (secondsPast < 60) {

@@ -47,18 +47,19 @@ def create_app(storage_dir: Optional[str] = None):
 
         raise HTTPException(status_code=404, detail="LMP not found")
     
-
+    @app.get('/api/invocations')
     @app.get('/api/invocations/{name:path}')
-    def get_invocations(name: str):
-        name = name.lstrip('/')
-        name_parts = name.split('/')
+    def get_invocations(name: Optional[str] = None):
+        lmp_filters = {}
+        if name:
+            name = name.lstrip('/')
+            name_parts = name.split('/')
 
-        lmp_filters = {"name": name_parts[0]}
-        if len(name_parts) > 1: 
-            potential_lmp_id = name_parts[-1]
-            lmp_filters["lmp_id"] = potential_lmp_id
-            
-            
+            lmp_filters["name"] = name_parts[0]
+            if len(name_parts) > 1: 
+                potential_lmp_id = name_parts[-1]
+                lmp_filters["lmp_id"] = potential_lmp_id
+        
         invocations = serializer.get_invocations(lmp_filters=lmp_filters)
         return invocations
 
