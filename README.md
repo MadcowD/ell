@@ -93,6 +93,7 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 - [ ] Fix weird rehashing issue of the main prompt whenever subprompt changes? Or just make commits more of a background deal.
 - [ ] Trace not writing on first invoc.
 - [ ] Rewrite lexical closures
+- [ ] Serialize lkstrs in the jkson dumps in pyhton the same way as the db serializers them for the frontend (__lstr vs SerialziedLstr) <- these are pydantic models and so we can reuse them
 
 ## Tests
 - [ ] Add tests for the all the core fn'ality.
@@ -102,7 +103,7 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 - [o] Langsmith style invocations and traces?
 - [ ] Full trace implementaiton on invocation page
 - [x] Make a better UX arround the traces in dpedency graphs
-- 
+- [ ] ARg pass through
 
 ## Version Hustory
 - [x] Auto document commit changes

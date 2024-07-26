@@ -35,7 +35,7 @@ class SQLStore(ell.store.Store):
                     name=name,
                     source=source,
                     dependencies=dependencies,
-                    created_at=datetime.datetime.fromtimestamp(created_at) if created_at else datetime.datetime.utcnow(),
+                    created_at= created_at or datetime.datetime.utcnow(),
                     is_lm=is_lmp,
                     lm_kwargs=lm_kwargs,
                     commit_message=commit_message
@@ -50,8 +50,10 @@ class SQLStore(ell.store.Store):
             session.commit()
         return None
 
-    def write_invocation(self, id : str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], consumes: Set[str],
-                         created_at: Optional[float] = None) -> Optional[Any]:
+    def write_invocation(self, id: str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], 
+                         created_at: Optional[float], consumes: Set[str], prompt_tokens: Optional[int] = None,
+                         completion_tokens: Optional[int] = None, latency_ms: Optional[float] = None,
+                         cost_estimate: Optional[float] = None) -> Optional[Any]:
         with Session(self.engine) as session:
             if isinstance(result, lstr):
                 results = [result]
@@ -75,7 +77,11 @@ class SQLStore(ell.store.Store):
                 args=args,
                 kwargs=kwargs,
                 created_at=created_at,
-                invocation_kwargs=str(invocation_kwargs)
+                invocation_kwargs=str(invocation_kwargs),
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                latency_ms=latency_ms,
+                cost_estimate=cost_estimate
             )
 
             for res in results:
@@ -93,7 +99,6 @@ class SQLStore(ell.store.Store):
                 ))
 
             session.commit()
-        
     def get_lmps(self, **filters: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
         with Session(self.engine) as session:
             query = select(SerializedLMP, SerializedLMPUses.lmp_using_id).outerjoin(
@@ -114,7 +119,7 @@ class SQLStore(ell.store.Store):
 
     def get_invocations(self, lmp_filters: Dict[str, Any], filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         with Session(self.engine) as session:
-            query = select(Invocation).join(SerializedLMP)
+            query = select(Invocation, SerializedLStr, SerializedLMP).join(SerializedLMP).outerjoin(SerializedLStr)
             
             # Apply LMP filters
             for key, value in lmp_filters.items():
@@ -125,8 +130,19 @@ class SQLStore(ell.store.Store):
                 for key, value in filters.items():
                     query = query.where(getattr(Invocation, key) == value)
             
-            invocations = session.exec(query).all()
-            return [inv.model_dump() for inv in invocations]
+            results = session.exec(query).all()
+            
+            invocations = {}
+            for inv, lstr, lmp in results:
+                if inv.id not in invocations:
+                    inv_dict = inv.model_dump()
+                    inv_dict['lmp'] = lmp.model_dump()
+                    invocations[inv.id] = inv_dict
+                    invocations[inv.id]['results'] = []
+                if lstr:
+                    invocations[inv.id]['results'].append(dict(**lstr.model_dump(), __lstr=True))
+            
+            return list(invocations.values())
         
 
     def get_traces(self):

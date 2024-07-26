@@ -29,20 +29,26 @@ class Store(ABC):
         """
         pass
 
-    
-
     @abstractmethod
-    def write_invocation(self, id : str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], 
-                         created_at: Optional[float], consumes: Set[str]) -> Optional[Any]:
+    def write_invocation(self, id: str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], 
+                         created_at: Optional[float], consumes: Set[str], prompt_tokens: Optional[int] = None,
+                         completion_tokens: Optional[int] = None, latency_ms: Optional[float] = None,
+                         cost_estimate: Optional[float] = None) -> Optional[Any]:
         """
         Write an invocation of an LMP to the storage.
 
+        :param id: Unique identifier for the invocation.
         :param lmp_id: Unique identifier for the LMP.
         :param args: Arguments used in the invocation.
         :param kwargs: Keyword arguments used in the invocation.
         :param result: Result of the invocation.
         :param invocation_kwargs: Additional keyword arguments for the invocation.
         :param created_at: Optional timestamp of when the invocation was created.
+        :param consumes: Set of invocation IDs consumed by this invocation.
+        :param prompt_tokens: Optional number of prompt tokens used.
+        :param completion_tokens: Optional number of completion tokens used.
+        :param latency_ms: Optional latency in milliseconds.
+        :param cost_estimate: Optional estimated cost of the invocation.
         :return: Optional return value.
         """
         pass

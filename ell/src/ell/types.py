@@ -114,13 +114,19 @@ class Invocation(SQLModel, table=True):
     lmp_id: str = Field(foreign_key="serializedlmp.lmp_id")  # ID of the LMP that was invoked
     args: List[Any] = Field(default_factory=list, sa_column=Column(JSON))  # Arguments used in the invocation
     kwargs: dict = Field(default_factory=dict, sa_column=Column(JSON))  # Keyword arguments used in the invocation
+    latency_ms : float 
+    prompt_tokens: Optional[int] = Field(default=None)
+    completion_tokens: Optional[int] = Field(default=None)
+
     
     created_at: datetime = Field(default_factory=datetime.utcnow)  # Timestamp of when the invocation was created
     invocation_kwargs: str  # Additional keyword arguments for the invocation
 
     # Relationships
     lmp: SerializedLMP = Relationship(back_populates="invocations")  # Relationship to the LMP that was invoked
+    # Todo: Rename the result shcema to be consistent
     results: List["SerializedLStr"] = Relationship(back_populates="producer_invocation")  # Relationship to the LStr results of the invocation
+    
 
     consumed_by: List["Invocation"] = Relationship(
         back_populates="consumes", link_model=InvocationTrace,

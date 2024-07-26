@@ -183,13 +183,8 @@ function LMP() {
                       </button>
                     </div>
                     <TracesRunsPane
-                      traces={invocations.map(inv => ({
-                        name: `Invocation ${inv.id}`,
-                        input: JSON.stringify(inv.args),
-                        output: JSON.stringify(inv.result),
-                        startTime: new Date(inv.created_at * 1000).toLocaleString(),
-                        latency: `${inv.latency}ms`
-                      }))}
+                      invocations={invocations}
+                      producingLmp={lmp}
                       onSelectTrace={(trace) => console.log('Selected trace:', trace)}
                     />
                   </>

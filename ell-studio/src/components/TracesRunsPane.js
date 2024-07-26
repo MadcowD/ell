@@ -1,44 +1,48 @@
-import React from 'react';
-import { FiChevronRight } from 'react-icons/fi';
+import { LMPCardTitle } from './depgraph/LMPCardTitle';
+import HierarchicalTable from './HierarchicalTable';
+import React, { useMemo } from 'react';
+import { Card } from './Card';
+import { getTimeAgo } from '../utils/lmpUtils';
 
-const TracesRunsPane = ({ traces, onSelectTrace }) => {
+
+const lstrCleanStringify = (obj_containing_lstrs) => {
+  return JSON.stringify(obj_containing_lstrs, (key, value) => {
+    if (value && value.__lstr === true) {
+      return value.content;
+    }
+    return value;
+  }, 2);
+};
+
+
+
+const TracesRunsPane = ({ invocations, onSelectTrace }) => {
+  const traces = useMemo(() => {
+    return invocations.map(inv => ({
+      name:  inv.lmp?.name || 'Unknown',
+      input: lstrCleanStringify(inv.args.length === 1 ? inv.args[0] : inv.args),
+      output: lstrCleanStringify(inv.results),
+      ...inv
+    }));
+  }, [invocations]);
+
+  const schema = {
+    columns: [
+      { header: 'Name', key: 'name', render: (item) => <Card noMinW={true}><LMPCardTitle lmp={{name: item.name}} /></Card>, maxWidth: 200 },
+      { header: 'Input', key: 'input', maxWidth: 300 },
+      { header: 'Output', key: 'output', render: (item) => `${item.output}...`, maxWidth: 600 },
+      { header: 'Start Time', key: 'created_at', render: (item) => <span className="text-gray-400">{getTimeAgo(new Date(item.created_at + "Z"))}</span>, maxWidth: 150 },
+      { header: 'Latency', key: 'latency', render: (item) => <span className="text-red-400">{(item.latency_ms / 1000).toFixed(2)}s</span>, maxWidth: 100 },
+      { header: 'Total Tokens', key: 'total_tokens', render: (item) => <span>{(item.prompt_tokens || 0) + (item.completion_tokens || 0)}</span>, maxWidth: 120 },
+    ]
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="text-left text-xs text-gray-400 border-b border-gray-800">
-            <th className="py-2 px-4"></th>
-            <th className="py-2 px-4"></th>
-            <th className="py-2 px-4">Name</th>
-            <th className="py-2 px-4">Input</th>
-            <th className="py-2 px-4">Output</th>
-            <th className="py-2 px-4">Start Time</th>
-            <th className="py-2 px-4">Latency</th>
-          </tr>
-        </thead>
-        <tbody>
-          {traces.map((trace, index) => (
-            <tr
-              key={index}
-              className="border-b border-gray-800 hover:bg-gray-800/30 cursor-pointer"
-              onClick={() => onSelectTrace(trace)}
-            >
-              <td className="py-3 px-4">
-                <FiChevronRight className="text-gray-400" />
-              </td>
-              <td className="py-3 px-4">
-                <span className="text-green-400 text-lg">●</span>
-              </td>
-              <td className="py-3 px-4 font-medium">{trace.name}</td>
-              <td className="py-3 px-4 text-sm">{trace.input}</td>
-              <td className="py-3 px-4 text-sm">{trace.output?.substring(0, 20)}...</td>
-              <td className="py-3 px-4 text-sm">{trace.startTime}</td>
-              <td className="py-3 px-4 text-sm text-red-400">{trace.latency}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <HierarchicalTable
+      schema={schema}
+      data={traces}
+      onRowClick={onSelectTrace}
+    />
   );
 };
 

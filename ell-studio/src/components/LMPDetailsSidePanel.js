@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FiClock, FiTag, FiGitCommit } from 'react-icons/fi';
 import { getTimeAgo } from '../utils/lmpUtils';
-import ReactMarkdown from 'react-markdown';
 
 function VersionItem({ version, index, totalVersions, currentLmpId }) {
   const isLatest = index === 0;
