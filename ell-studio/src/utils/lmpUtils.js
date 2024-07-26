@@ -68,6 +68,7 @@ export const fetchTraces = async (lmps) => {
   const filteredTraces = uniqueTracesArray.filter(trace => 
     lmpIds.has(trace.consumed) && lmpIds.has(trace.consumer)
   );
+  
   return filteredTraces;
 }
 

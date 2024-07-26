@@ -42,8 +42,9 @@ const simulation = forceSimulation()
     /* An algorithm that counts the number of references each node has:
       For each ndoe get all of its children and add 1
       Then we can put the y coordinate as the number of references
-      as for X we'll jsut go through each level of reference #'s and add 1
+      as for X we're going to determien its sort order using the trace order
     */
+   
     // Create a map to store the number of references each node has
     const referenceCount = nodes.reduce((map, node) => {
       map[node.id] = 0;
@@ -64,6 +65,47 @@ const simulation = forceSimulation()
     nodes.forEach((node) => {
       increaseReferenceCountOfFamilyTree(node);
     });
+
+
+    // Now get hte  trace order (if a traces into b a < b. for cycles  just put them at the end so)
+    // if a < b < c < d < a then the order should be (a,b,c,d) that is we should have order within a local order
+    // Implement cycle-aware topological sorting
+    const traceOrder = [];
+    const visited = new Set();
+    const tempVisited = new Set();
+
+    function dfs(nodeId) {
+      if (tempVisited.has(nodeId)) {
+        // Cycle detected, skip this node
+        return;
+      }
+      if (visited.has(nodeId)) {
+        return;
+      }
+      tempVisited.add(nodeId);
+      
+      const outgoingEdges = edges.filter(edge => edge.source === nodeId);
+      for (const edge of outgoingEdges) {
+        dfs(edge.target);
+      }
+      
+      tempVisited.delete(nodeId);
+      visited.add(nodeId);
+      traceOrder.unshift(nodeId);
+    }
+
+    // Perform DFS for each node
+    nodes.forEach(node => {
+      if (!visited.has(node.id)) {
+        dfs(node.id);
+      }
+    });
+
+    // Assign x-coordinates based on the trace order
+    traceOrder.forEach((nodeId, index) => {
+      nodeMap[nodeId].position.x = index * 150;
+    });
+
   
     // Group nodes by all the unique reference count levels
     const referenceCountLevels = new Set(Object.values(referenceCount));
@@ -73,8 +115,9 @@ const simulation = forceSimulation()
         .filter(([id, count]) => count === level)
         .map(([id, count]) => nodeMap[id]);
       // for each node at this level, set its x coordinate to be the index of the node
+
+
       nodesAtLevel.forEach((node, i) => {
-        node.position.x = -i * 100;
         node.position.y = -level * 100;
       });
     });
@@ -185,7 +228,6 @@ export function getInitialGraph(lmps, traces) {
   // Add horizontal trace edges
   if (traces && traces.length > 0) {
     traces.forEach((trace, index) => {
-      if (index < traces.length - 1) {
         initialEdges.push({
           id: `trace-${trace.consumed}-${trace.consumer}`,
           source: `${trace.consumed}`,
@@ -193,9 +235,8 @@ export function getInitialGraph(lmps, traces) {
           target: `${trace.consumer}`,
           targetHandle: "inputs",
           animated: true,
-          // type: 'trace',
-        });
-      }
+        // type: 'trace',
+      });
     });
   }
     

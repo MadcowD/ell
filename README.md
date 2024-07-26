@@ -107,6 +107,8 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 ## Version Hustory
 - [x] Auto document commit changes
 - [x] Version history diff view (possibly automatic commit messages using GPT-4o mini)
+- [ ] Diff view?
+- [ ] Highliught the change in the soruce when changing  the verison.
 
 ## LM Functionality
 - [ ] Multimodal inputs

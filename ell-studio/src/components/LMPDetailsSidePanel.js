@@ -28,11 +28,6 @@ function VersionItem({ version, index, totalVersions, currentLmpId }) {
           <span>{commitTitle}</span>
           {isLatest && <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded">Latest</span>}
         </div>
-        {commitDetails && (
-          <div className="text-xs text-gray-500 mt-1 prose prose-sm max-w-none">
-            <ReactMarkdown>{commitDetails}</ReactMarkdown>
-          </div>
-        )}
         <div className="text-xs text-gray-500 mt-1">
           {getTimeAgo(new Date(version.created_at + "Z"))}
         </div>

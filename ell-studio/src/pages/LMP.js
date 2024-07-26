@@ -9,6 +9,7 @@ import { FiCopy, FiFilter, FiColumns } from 'react-icons/fi';
 import VersionHistoryPane from '../components/VersionHistoryPane';
 import LMPDetailsSidePanel from '../components/LMPDetailsSidePanel';
 import toast, { Toaster } from 'react-hot-toast';
+import { Link } from 'react-router-dom';
 
 function LMP() {
   const { name, id } = useParams();
@@ -31,6 +32,9 @@ function LMP() {
           .map(lmp => ({ ...lmp, created_at: new Date(lmp.created_at) }))
           .sort((a, b) => b.created_at - a.created_at)[0];
         setLmp(latest_lmp);
+
+        // Update page title
+        
 
         console.log(lmpResponse.data)
         const versionHistoryResponse = await axios.get(`${API_BASE_URL}/api/lmps/${latest_lmp.name}`);
@@ -86,8 +90,21 @@ function LMP() {
       <div className="flex flex-col h-screen">
         <header className="bg-[#1c1f26] p-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-semibold">{lmp.name}</h1>
-            <span className="text-sm px-2 py-1 bg-[#2a2f3a] rounded">ID: {lmp.lmp_id}</span>
+            <h1 className="text-xl font-semibold">
+              <Link to={`/lmp/${lmp.name}`} onClick={() => window.history.pushState(null, '', `/lmp/${lmp.name}`)}>
+                {lmp.name}
+              </Link>
+            </h1>
+            {id && (
+              <>
+                <span className="text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                </span>
+                <span className="text-sm px-2 py-1 bg-[#2a2f3a] rounded">ID: {lmp.lmp_id}</span>
+              </>
+            )}
           </div>
           <div className="flex space-x-2">
             <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-sm hover:bg-[#3a3f4b] transition-colors">
