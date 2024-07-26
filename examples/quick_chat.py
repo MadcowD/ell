@@ -27,7 +27,7 @@ def format_message_history(message_history : List[Tuple[str, str]]) -> str:
     return "\n".join([f"{name}: {message}" for name, message in message_history])
 
 @ell.lm(model="gpt-4o-mini", temperature=0.3, max_tokens=20)
-def chat(personality : str, message_history : List[Tuple[str, str]]) -> str:
+def chat(message_history : List[Tuple[str, str]], *, personality : str):
 
     return [
         ell.system(f"""You are
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
         personality_talking = personalities[whos_turn]
         messages.append(
-            (names[whos_turn], chat(personality_talking, messages)))
+            (names[whos_turn], chat(messages, personality=personality_talking)))
         
         whos_turn = (whos_turn + 1) % len(personalities)
     print(messages)

@@ -26,7 +26,7 @@ const Traces = () => {
 
     let intervalId;
     if (isPolling) {
-      intervalId = setInterval(fetchInvocations, 1000); // Poll every second
+      intervalId = setInterval(fetchInvocations, 200); // Poll every second
     }
 
     return () => {

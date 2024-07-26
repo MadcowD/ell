@@ -97,10 +97,12 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 
 ## Tests
 - [ ] Add tests for the all the core fn'ality.
+- [ ] Optimzi the backend.
 
 ## Trace Functionality
 - [o] Visualize trace in graph
 - [o] Langsmith style invocations and traces?
+- [x] Improve UX on traces.
 - [ ] Full trace implementaiton on invocation page
 - [x] Make a better UX arround the traces in dpedency graphs
 - [ ] ARg pass through
@@ -114,6 +116,7 @@ Whats the h n. We detect a .ell direcotry near the file? No thats unintuitive. T
 ## LM Functionality
 - [ ] Multimodal inputs
 - [ ] Function calling
+- [ ] Persisntent chatting.
 
 ## USe cases
 - [ ] Rag example
