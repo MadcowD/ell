@@ -8,6 +8,8 @@
 
 > **[JOIN THE DISCORD](https://discord.gg/J2UhksbE)** We are developing this in public and I want all hands on deck regarding design decisions! Join us at [https://discord.gg/J2UhksbE](https://discord.gg/J2UhksbE)
 
+# What is `ell`?
+
  `ell` is a lightweight, functional prompt engineering framework built on a few core principles:
 ### 1. Prompts are programs not strings.
 Prompts aren't just strings; they are all the code that leads to strings being sent to a language model. In `ell` we think of one particular way of using a language model as a discrete subroutine called a **language model program**. 
@@ -34,10 +36,79 @@ hello("sama")
 
 ...
 
-# Todos
+## Installation
+
+To install `ell`, follow these steps:
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/MadcowD/ell.git
+   ```
+
+2. Navigate to the cloned directory:
+   ```
+   cd ell
+   ```
+
+3. Install the package using pip:
+   ```
+   pip install .
+   ```
+
+This will install `ell` and its dependencies, including building the necessary frontend components for `ell-studio`. 
+
+Note: Ensure you have Node.js and npm installed on your system, as they are required for building the frontend components during the installation process.
 
 
-## Bugs
+## Using `ell-studio`
+
+To visaulize and track your promtps over the course of prompt engineering you need to install a store into your project. 
+
+```python 
+
+# The entry point to your program
+if __name__ == "__main__":
+
+    store = SQLiteStore('sqlite_example') # <---- automatically stores all LMP's invocations, and version history in a sqlite database in ./sqlite_example
+    store.install(autocommit=True) # <---- installs the store into your project so that tracking happens and change log commit messages are automatically generated using gpt-4o-mini
+
+    your_language_model_program()
+    print(greeting[::-1])
+
+``` 
+
+Now you can visualize your prompt engineering process just like tensorboard by using `ell.studio`:
+
+```
+python3 -m ell.studio --storage-dir ./sqlite_example 
+```
+
+Then visit `http://localhost:8000` in your browser to see your prompt engineering process visualized.
+
+
+## Contributing
+
+To contribute, install `ell` in development mode using:
+
+```
+pip install -e .
+```
+
+To run `ell-studio` you must seperately run the backend and the front-end. To start the front-end:
+```
+cd ell-studio
+npm run dev
+```
+To start the backend: 
+```
+python -m ell.studio --storage-dir ./sqlite_example --dev # the dev flag is important!
+```
+You can then visualize your 
+
+## Todos
+
+
+### Bugs
 
 - [ ] Fix weird rehashing issue of the main prompt whenever subprompt changes? Or just make commits more of a background deal.
 - [ ] Trace not writing on first invoc.
@@ -46,73 +117,71 @@ hello("sama")
 - [ ] handle failure to serialize.
 
 ## Tests
-- [ ] Add tests for the all the core fn'ality.
-- [ ] Optimzi the backend.
+- [ ] Add comprehensive unit tests for all core functionalities.
+- [ ] Implement integration tests for end-to-end workflows.
+- [ ] Optimize backend performance and run benchmarks.
 
 ## Trace Functionality
-- [o] Visualize trace in graph
-- [o] Langsmith style invocations and traces?
-- [x] Improve UX on traces.
-- [ ] Full trace implementaiton on invocation page
-- [x] Make a better UX arround the traces in dpedency graphs
-- [ ] ARg pass through
+- [x] Visualize trace in graph
+- [x] Implement Langsmith-style invocations and traces
+- [x] Improve UX on traces
+- [ ] Complete full trace implementation on invocation page
+- [x] Enhance UX around traces in dependency graphs
+- [ ] Implement argument pass-through functionality
 
-## Version Hustory
-- [x] Auto document commit changes
-- [x] Version history diff view (possibly automatic commit messages using GPT-4o mini)
-- [ ] Diff view?
-- [ ] Highliught the change in the soruce when changing  the verison.
+## Version History
+- [x] Auto-document commit changes
+- [x] Implement version history diff view (possibly with automatic commit messages using GPT-4)
+- [ ] Add interactive diff view
+- [ ] Highlight changes in source when switching versions
 
 ## LM Functionality
-- [ ] Multimodal inputs
-- [ ] Function calling
-- [ ] Persisntent chatting.
+- [ ] Support multimodal inputs
+- [ ] Implement function calling
+- [ ] Add persistent chatting capability
+- [ ] Integrate with various LLM providers
 
-## USe cases
-- [ ] Rag example
-- [ ] Embeddings
-- [ ] Tool use
-- [ ] Agents
-- [ ] CoT
-- [ ] Optimization
+## Use Cases
+- [ ] Develop RAG (Retrieval-Augmented Generation) example
+- [ ] Implement embeddings functionality
+- [ ] Create examples for tool use and agents
+- [ ] Demonstrate Chain of Thought (CoT) reasoning
+- [ ] Showcase optimization techniques
 
 ## Store
-- [ ] DX around how logging works.
+- [ ] Improve developer experience around logging mechanisms
 
-## DX
-- [x] Improve the UX fcor the LMP details page.
-- [ ] Add Depdendency Graph on LMP page
-- [ ] Add a vscode style explorer
-- [ ] Test Jupyter compatibility
-- [ ] UI/UX Improvements for the tensorboard thing
-- [x] LMP Details should be by func so I can run & go look @ the results even if the hash changes
-- [ ] navigation should be as easy as vscode. cmd shift p or spotlifht
-- [x] Depdendencies take up a lot of space when someone is grocking a prompt, so should we hide them or just scorll down to the bottom where it is?
-- [ ] Another backend?
-
+## DX (Developer Experience)
+- [x] Enhance UX for the LMP details page
+- [ ] Add Dependency Graph on LMP page
+- [ ] Implement VSCode-style file explorer
+- [ ] Ensure and test Jupyter compatibility
+- [ ] Continue UI/UX improvements for the visualization component
+- [x] Update LMP Details to be function-based for easier result viewing
+- [ ] Implement easy navigation similar to VSCode (cmd+shift+p or spotlight)
+- [x] Optimize display of dependencies on prompt pages
+- [ ] Explore alternative backend options
 
 ## Packaging
-- [ ] Write nice docs for eveyrthing
-- [ ] Package it all up
-- [ ] Clean up the examples
-- [ ] Make production ell studio vuild
-- [ ] How to contribute guide
+- [ ] Write comprehensive documentation
+- [ ] Prepare package for distribution
+- [ ] Refine and organize examples
+- [ ] Create production build for ell studio
+- [ ] Draft contribution guidelines
 
+## Miscellaneous
+- [ ] Implement metric tracking system
+- [ ] Add built-ins for classifiers (e.g., logit debiasing)
+- [ ] Develop evaluator framework
+- [ ] Create timeline visualization
+- [ ] Implement comment system
+- [ ] Add easy-to-use human evaluation tools
+- [ ] Implement keyboard shortcuts for navigating invocations
+- [ ] Ensure all components are linkable
+- [ ] Add comparison mode for language models and double-blind setup for evaluations
+- [ ] Integrate AI-assisted evaluations and metrics
+- [ ] Consider developing as a VSCode plugin
+- [ ] Implement organization system for multiple prompts (e.g., by module)
+- [ ] Add live updates and new content indicators
 
-## Misc
-- [ ] Metric tracking?
-- [ ] Builtins for classifiers, like logit debiasing.
-- [ ] Think about evaluator framework..
-- [ ] someway of visualizing timeline nicely
-- [ ] comment system
-- [ ] human evals immediately & easily. 
-- [ ] keyboard shortcuts for navigating the invocations (expand with . to see detialed view of the fn call)
-- [ ] everything linkable
-- [ ] comparisson mode for lms & double blind for evals.
-- [ ] evaluations & metrics (ai as well.)
-- [ ] feel like this should be a vscode plugin but idk, tensorboard is fine too.
-- [ ] codebases will have lots of prompts, need to be organized.. (perhaps by module or something)
-- [ ] live updates & new indicators.
-
-
-- [x] Update the stores to use the schemas in the tpe hints and then seerilize to model dumpo on flask or switch to FastAPI
+- [x] Update stores to use schema type hints and serialize to model dump in Flask (or consider switching to FastAPI)
