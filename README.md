@@ -107,6 +107,11 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 
 ## Todos
 
+
+### Metrics
+
+- [ ] Design the metrics functionality. (maybe link WandB lol)
+
 ### Bugs
 
 - [ ] Fix weird rehashing issue of the main prompt whenever subprompt changes? Or just make commits more of a background deal.
@@ -149,6 +154,7 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 
 ## Store
 - [ ] Improve developer experience around logging mechanisms
+- [ ] Drastically improve query runtime and performance test.
 
 ## DX (Developer Experience)
 - [x] Enhance UX for the LMP details page

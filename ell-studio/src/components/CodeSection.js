@@ -12,7 +12,8 @@ export function CodeSection({
   lines, 
   startingLineNumber = 1, 
   isDependent = false, 
-  collapsedHeight = '150px' // New prop with default value
+  collapsedHeight = '150px',
+  showLineNumbers = true // New prop with default value
 }) {
     const [isHovering, setIsHovering] = useState(false);
     const codeRef = useRef(null);
@@ -47,7 +48,7 @@ export function CodeSection({
           <SyntaxHighlighter
             language="python"
             style={atomDark}
-            showLineNumbers={true}
+            showLineNumbers={showLineNumbers}
             startingLineNumber={startingLineNumber}
             customStyle={{
               margin: 0,

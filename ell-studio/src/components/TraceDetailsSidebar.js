@@ -12,7 +12,7 @@ const InvocationDetailsSidebar = ({ invocation, onClose }) => {
   const resizeRef = useRef(null);
 
   const argsLines = useMemo(() => {
-    return lstrCleanStringify(invocation.args, 1);
+    return invocation.args.length > 0 ? lstrCleanStringify(invocation.args, 1) : null;
   }, [invocation.args]);
 
   const kwargsLines = useMemo(() => {
@@ -24,7 +24,7 @@ const InvocationDetailsSidebar = ({ invocation, onClose }) => {
   }, [invocation.kwargs]);
 
   useEffect(() => {
-    if (argsLines.split('\n').length > 10 || (hasKwargs && kwargsLines.split('\n').length > 10)) {
+    if ((argsLines && argsLines.split('\n').length > 10) || (hasKwargs && kwargsLines.split('\n').length > 10)) {
       setInputExpanded(false);
     }
   }, [argsLines, kwargsLines, hasKwargs]);
@@ -104,15 +104,18 @@ const InvocationDetailsSidebar = ({ invocation, onClose }) => {
         </div>
         <div className="flex flex-grow source-code-container">
           <div className="flex-grow p-4 overflow-y-auto w-[400px] hide-scrollbar">
-            <CodeSection
-              title="Args"
-              code={argsLines}
-              showCode={inputExpanded}
-              setShowCode={setInputExpanded}
-              collapsedHeight={'300px'}
-              lines={argsLines.split('\n').length}
-              language="json"
-            />
+            {argsLines && (
+              <CodeSection
+                title="Args"
+                code={argsLines}
+                showCode={inputExpanded}
+                setShowCode={setInputExpanded}
+                collapsedHeight={'300px'}
+                lines={argsLines.split('\n').length}
+                language="json"
+                showLineNumbers={false}
+              />
+            )} 
 
             {hasKwargs && (
               <CodeSection
@@ -123,6 +126,7 @@ const InvocationDetailsSidebar = ({ invocation, onClose }) => {
                 collapsedHeight={'300px'}
                 lines={kwargsLines.split('\n').length}
                 language="json"
+                showLineNumbers={false}
               />
             )}
 
@@ -135,7 +139,8 @@ const InvocationDetailsSidebar = ({ invocation, onClose }) => {
                   showCode={outputExpanded}
                   setShowCode={setOutputExpanded}
                   lines={result.content.split('\n').length}
-                  language="plaintext"
+                  language="text"
+                  showLineNumbers={false}
                 />
               ))
             }

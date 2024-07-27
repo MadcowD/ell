@@ -168,7 +168,7 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
       onSelectionChange={onSelectionChange}
       initialSortConfig={initialSortConfig}
     >
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto hide-scrollbar">
         <table className="w-full">
           <TableHeader 
             schema={schema} 

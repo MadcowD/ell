@@ -39,5 +39,9 @@ def write_a_really_good_story(about : str):
         ell.user(f"Make a final revision of this story in your voice: {best_draft}."),
     ]
 
-story = write_a_really_good_story("a dog")
+if __name__ == "__main__":
+    from ell.stores.sql import SQLiteStore
+    store = SQLiteStore('sqlite_example')
+    store.install()
+    story = write_a_really_good_story("a dog")
 
