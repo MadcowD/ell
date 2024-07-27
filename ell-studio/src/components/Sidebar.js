@@ -14,9 +14,6 @@ const Sidebar = () => {
       <Link to="/" className={`p-3 rounded-lg mb-4 ${isActive('/')}`}>
         <FiHome className="w-6 h-6" />
       </Link>
-      <Link to="/lmp/:id" className={`p-3 rounded-lg mb-4 ${isActive('/lmp/:id')}`}>
-        <FiCode className="w-6 h-6" />
-      </Link>
       <Link to="/traces" className={`p-3 rounded-lg mb-4 ${isActive('/traces')}`}>
         <FiActivity className="w-6 h-6" />
       </Link>

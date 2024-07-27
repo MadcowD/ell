@@ -124,9 +124,9 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [x] Visualize trace in graph
 - [x] Implement Langsmith-style invocations and traces
 - [x] Improve UX on traces
-- [ ] Complete full trace implementation on invocation page
+- [o] Complete full trace implementation on invocation page
 - [x] Enhance UX around traces in dependency graphs
-- [ ] Implement argument pass-through functionality
+- [o] Implement argument pass-through functionality
 
 ## Version History
 - [x] Auto-document commit changes
