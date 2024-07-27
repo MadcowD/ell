@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from ell.studio.data_server import create_app
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from watchfiles import run_process
 
 def main():
     parser = ArgumentParser(description="ELL Studio Data Server")
@@ -25,7 +26,16 @@ def main():
         async def serve_react_app(full_path: str):
             return FileResponse(os.path.join(static_dir, "index.html"))
 
-    uvicorn.run(app, host=args.host, port=args.port)
+    if args.dev:
+        # In development mode, use watchfiles for auto-reloading
+        run_process(
+            os.path.dirname(__file__),
+            target=lambda: uvicorn.run(app, host=args.host, port=args.port, reload=True),
+            watch_filter=lambda change, path: path.endswith(".py")
+        )
+    else:
+        # In production mode, run without auto-reloading
+        uvicorn.run(app, host=args.host, port=args.port)
 
 if __name__ == "__main__":
     main()

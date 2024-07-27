@@ -103,7 +103,7 @@ To start the backend:
 ```
 python -m ell.studio --storage-dir ./sqlite_example --dev # the dev flag is important!
 ```
-You can then visualize your 
+You can then visualize your promtps by visiting the frontend on `http://localhost:3000`
 
 ## Todos
 
@@ -164,9 +164,9 @@ You can then visualize your
 
 ## Packaging
 - [ ] Write comprehensive documentation
-- [ ] Prepare package for distribution
+- [x] Prepare package for distribution
 - [ ] Refine and organize examples
-- [ ] Create production build for ell studio
+- [x] Create production build for ell studio
 - [ ] Draft contribution guidelines
 
 ## Miscellaneous

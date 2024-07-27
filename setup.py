@@ -1,20 +1,31 @@
 import os
 import subprocess
 import shutil
+import sys
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 
+
+
+
+
 class NPMInstall(object):
     def run_npm_install(self):
         print("Running npm install")
-        subprocess.check_call(['npm', 'install'], cwd='ell-studio')
+        if sys.platform == "win32":
+            subprocess.check_call('npm install', cwd='ell-studio', shell=True)
+        else:
+            subprocess.check_call(['npm', 'install'], cwd='ell-studio')
 
 class NPMBuild(object):
     def run_npm_build(self):
         print("Running npm build")
-        subprocess.check_call(['npm', 'run', 'build'], cwd='ell-studio')
-        
+        if sys.platform == "win32":
+            subprocess.check_call('npm run build', cwd='ell-studio', shell=True)
+        else:
+            subprocess.check_call(['npm', 'run', 'build'], cwd='ell-studio')
+
     def copy_static_files(self):
         source_dir = os.path.join('ell-studio', 'build')
         target_dir = os.path.join('src', 'ell', 'studio', 'static')
