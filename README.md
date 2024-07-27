@@ -161,6 +161,9 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [ ] Implement easy navigation similar to VSCode (cmd+shift+p or spotlight)
 - [x] Optimize display of dependencies on prompt pages
 - [ ] Explore alternative backend options
+- [ ] Automatic API key management if not specified as a nice experience. Should ask for the api key and store it in the ~/.ell/api_keys directory for the user's convenience.
+- [ ] Need a cli for managing api keys etc
+
 
 ## Packaging
 - [ ] Write comprehensive documentation

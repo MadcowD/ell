@@ -26,7 +26,5 @@ if __name__ == "__main__":
 
     store = SQLiteStore('sqlite_example')
     store.install(autocommit=True)
-    greeting = hello("sam Altman") # > "hello sama!"
-    print(greeting[::-1])
-
+    greeting = hello("sam altman") # > "hello sama! ... "
 
