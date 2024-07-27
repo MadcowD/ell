@@ -10,6 +10,7 @@ import VersionHistoryPane from '../components/VersionHistoryPane';
 import LMPDetailsSidePanel from '../components/LMPDetailsSidePanel';
 import toast, { Toaster } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import TraceDetailsSidebar from '../components/TraceDetailsSidebar';
 
 function LMP() {
   const { name, id } = useParams();
@@ -19,6 +20,7 @@ function LMP() {
   const [uses, setUses] = useState([]);
   const { darkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('runs');
+  const [selectedTrace, setSelectedTrace] = useState(null);
 
   const API_BASE_URL = "http://localhost:8080";
 
@@ -117,7 +119,7 @@ function LMP() {
         </header>
         
         <div className="flex-grow flex overflow-hidden">
-          <main className="flex-grow p-6 overflow-y-auto">
+          <main className="flex-grow p-6 overflow-y-auto hide-scrollbar">
             <div className="mb-6 bg-[#1c1f26] rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">Language Model Program</h2>
@@ -185,7 +187,7 @@ function LMP() {
                     <TracesRunsPane
                       invocations={invocations}
                       producingLmp={lmp}
-                      onSelectTrace={(trace) => console.log('Selected trace:', trace)}
+                      onSelectTrace={(trace) => setSelectedTrace(trace)}
                     />
                   </>
                 )}
@@ -200,6 +202,12 @@ function LMP() {
             versionHistory={versionHistory}
             onSeeAllClick={handleSeeAllClick}
           />
+          {selectedTrace && (
+            <TraceDetailsSidebar
+              invocation={selectedTrace}
+              onClose={() => setSelectedTrace(null)}
+        />
+      )}
         </div>
       </div>
     </div>

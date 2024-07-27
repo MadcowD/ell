@@ -107,7 +107,6 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 
 ## Todos
 
-
 ### Bugs
 
 - [ ] Fix weird rehashing issue of the main prompt whenever subprompt changes? Or just make commits more of a background deal.

@@ -16,7 +16,7 @@ function App() {
         <div className="flex min-h-screen max-h-screen bg-gray-900 text-gray-100">
           <Sidebar />
           <div className="flex-1 flex flex-col max-h-screen overflow-hidden">
-            <main className="flex-1 max-h-screen overflow-auto">
+            <main className="flex-1 max-h-screen overflow-auto  hide-scrollbar">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/lmp/:name/:id?" element={<LMP />} />

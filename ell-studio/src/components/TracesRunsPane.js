@@ -4,17 +4,7 @@ import React, { useMemo } from 'react';
 import { Card } from './Card';
 import { getTimeAgo } from '../utils/lmpUtils';
 import VersionBadge from './VersionBadge';
-
-const lstrCleanStringify = (obj_containing_lstrs) => {
-  return JSON.stringify(obj_containing_lstrs, (key, value) => {
-    if (value && value.__lstr === true) {
-      return value.content;
-    }
-    return value;
-  }, 2);
-};
-
-
+import { lstrCleanStringify } from './lstrCleanStringify';
 
 const TracesRunsPane = ({ invocations, onSelectTrace }) => {
   const traces = useMemo(() => {
@@ -29,6 +19,7 @@ const TracesRunsPane = ({ invocations, onSelectTrace }) => {
       ...inv
     }));
   }, [invocations]);
+
 
   const schema = {
     columns: [

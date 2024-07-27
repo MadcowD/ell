@@ -6,10 +6,6 @@ from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 
-
-
-
-
 class NPMInstall(object):
     def run_npm_install(self):
         print("Running npm install")

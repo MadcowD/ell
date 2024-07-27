@@ -1,5 +1,10 @@
+.source-code-wrapper {
+  height: 70vh;
+  overflow: auto;
+}
+
 .source-code-container {
-  width: 100%;
+  height: 100%;
   max-width: 100%;
   overflow-x: auto;
 }

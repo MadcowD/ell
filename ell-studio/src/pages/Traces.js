@@ -40,7 +40,7 @@ const Traces = () => {
 
   return (
     <div className="flex bg-[#0d1117] text-gray-300 h-screen overflow-hidden">
-      <div className="flex-grow p-6 overflow-y-auto">
+      <div className="flex-grow p-6 overflow-y-auto hide-scrollbar">
         <div className="flex items-center mb-6">
           <div className="flex items-center space-x-2 text-sm text-gray-400">
             <span>Personal</span>
@@ -112,7 +112,7 @@ const Traces = () => {
       </div>
       {selectedTrace && (
         <TraceDetailsSidebar
-          trace={selectedTrace}
+        invocation={selectedTrace}
           onClose={() => setSelectedTrace(null)}
         />
       )}
