@@ -39,10 +39,5 @@ def write_a_really_good_story(about : str):
         ell.user(f"Make a final revision of this story in your voice: {best_draft}."),
     ]
 
-if __name__ == "__main__":
-    
-    serializer = SQLiteStore('sqlite_example')
-    serializer.install(autocommit=True)
-    story = write_a_really_good_story("a dog")
-    print(story)
+story = write_a_really_good_story("a dog")
 

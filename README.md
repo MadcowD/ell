@@ -1,4 +1,4 @@
-# What is `ell`?
+#  `ell` [WIP, unreleased, experimental]
  
  `ell` is a lightweight, functional prompt engineering framework built on a few core principles:
 ### 1. Prompts are programs not strings.
