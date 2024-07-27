@@ -137,6 +137,7 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
     while hasattr(func, "__ell_func__"):
         func = func.__ell_func__
     
+    print("Getting source for", func)
     source = getsource(func, lstrip=True)
     already_closed.add(hash(func))
     # if func is nested func

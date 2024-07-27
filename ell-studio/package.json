@@ -1,6 +1,6 @@
 {
   "name": "ell-studio",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "dependencies": {
     "@heroicons/react": "^2.1.5",
@@ -28,7 +28,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "start:dev": "react-scripts start"
   },
   "eslintConfig": {
     "extends": [

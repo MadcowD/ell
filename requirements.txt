@@ -1,0 +1,9 @@
+fastapi
+numpy
+dill
+colorama
+cattrs
+openai
+fastapi
+sqlmodel
+uvicorn

@@ -25,7 +25,6 @@ def create_app(storage_dir: Optional[str] = None):
         lmps = serializer.get_lmps()
         return lmps
 
-
     
     @app.get('/api/lmps/{name:path}')
     def get_lmp(name: str):
