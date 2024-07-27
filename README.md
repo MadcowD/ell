@@ -37,6 +37,7 @@ hello("sama")
 - [ ] Trace not writing on first invoc.
 - [ ] Rewrite lexical closures
 - [ ] Serialize lkstrs in the jkson dumps in pyhton the same way as the db serializers them for the frontend (__lstr vs SerialziedLstr) <- these are pydantic models and so we can reuse them
+- [ ] handle failure to serialize.
 
 ## Tests
 - [ ] Add tests for the all the core fn'ality.
