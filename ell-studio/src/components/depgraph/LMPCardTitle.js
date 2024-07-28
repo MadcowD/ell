@@ -1,9 +1,20 @@
 import React from "react";
 import { BiCube } from "react-icons/bi";
 
-export function LMPCardTitle({lmp, fontSize, displayVersion, ...rest}) {
+export function LMPCardTitle({
+    lmp,
+    fontSize,
+    displayVersion,
+    padding = true,
+    scale = 1,
+    additionalClassName = '',
+    ...rest
+}) {
+    const paddingClass = padding ? 'p-2' : '';
+    const scaleClass = `scale-${scale}`;
+
     return (
-        <div className="flex items-center p-2 space-x-2" {...rest}>
+        <div className={`flex items-center space-x-2 ${paddingClass} ${scaleClass} ${additionalClassName}`} {...rest}>
             <div className="flex-shrink-0">
                 {lmp.is_lmp ? 
                     <div className="h-4 w-4">

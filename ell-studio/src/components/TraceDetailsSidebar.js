@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { FiLink, FiCopy, FiChevronDown, FiChevronRight } from "react-icons/fi";
+import { FiLink, FiCopy, FiChevronDown, FiClock, FiTag } from "react-icons/fi";
 import { lstrCleanStringify } from './lstrCleanStringify';
-
 import { CodeSection } from './CodeSection';
+import { TraceGraph } from './TraceGraph';
 
 const InvocationDetailsSidebar = ({ invocation, onClose }) => {
   const [activeTab, setActiveTab] = useState("Details");
@@ -10,6 +10,7 @@ const InvocationDetailsSidebar = ({ invocation, onClose }) => {
   const [outputExpanded, setOutputExpanded] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState(document.body.clientWidth * 0.75);
   const resizeRef = useRef(null);
+  const [showTraceView, setShowTraceView] = useState(true);
 
   const argsLines = useMemo(() => {
     return invocation.args.length > 0 ? lstrCleanStringify(invocation.args, 1) : null;
@@ -57,6 +58,8 @@ const InvocationDetailsSidebar = ({ invocation, onClose }) => {
     };
   }, []);
 
+
+
   return (
     <>
       <div id="sidebar-resizer" className="w-1 bg-gray-600 cursor-col-resize" />
@@ -101,8 +104,39 @@ const InvocationDetailsSidebar = ({ invocation, onClose }) => {
           >
             Results
           </button>
+          <button
+            className={`px-4 py-2 ${
+              activeTab === "Trace"
+                ? "text-blue-400 border-b-2 border-blue-400"
+                : "text-gray-400"
+            }`}
+            onClick={() => setActiveTab("Trace")}
+          >
+            Trace
+          </button>
         </div>
         <div className="flex flex-grow source-code-container">
+          <div className="bg-[#0d1117] border-r border-gray-800 w-80 overflow-y-auto hide-scrollbar">
+            <div className="p-4">
+              <h2 className="text-xl font-bold text-white mb-4">TRACE</h2>
+              <div className="flex space-x-2 mb-4">
+                <button className="bg-gray-800 text-white px-3 py-1 rounded text-sm">Collapse</button>
+                <button className="bg-gray-800 text-white px-3 py-1 rounded text-sm">Stats</button>
+                <button className="bg-gray-800 text-white px-3 py-1 rounded text-sm">Filter</button>
+              </div>
+              <div className="relative mb-4">
+                <select className="bg-gray-800 text-white w-full p-2 rounded appearance-none text-sm">
+                  <option>Most relevant</option>
+                </select>
+                <FiChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white" />
+              </div>
+              <TraceGraph from={invocation} />
+              <div className="mt-4 text-gray-400 text-sm flex items-center">
+                <span className="mr-1">ℹ️</span>
+                Some runs have been hidden. <a href="#" className="text-blue-400 hover:underline ml-1">Show 10 hidden runs</a>
+              </div>
+            </div>
+          </div>
           <div className="flex-grow p-4 overflow-y-auto w-[400px] hide-scrollbar">
             {argsLines && (
               <CodeSection

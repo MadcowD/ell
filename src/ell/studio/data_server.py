@@ -72,4 +72,9 @@ def create_app(storage_dir: Optional[str] = None):
         traces = serializer.get_traces()
         return traces
 
+
+    @app.get('/api/traces/{invocation_id}')
+    def get_all_traces_leading_to(invocation_id: str):
+        traces = serializer.get_all_traces_leading_to(invocation_id)
+        return traces
     return app

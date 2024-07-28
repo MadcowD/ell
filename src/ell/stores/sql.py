@@ -172,6 +172,41 @@ class SQLStore(ell.store.Store):
                 })
             
             return traces
+        
+
+    def get_all_traces_leading_to(self, invocation_id: str) -> List[Dict[str, Any]]:
+        with Session(self.engine) as session:
+            traces = []
+            visited = set()
+            queue = [(invocation_id, 0)]
+
+            while queue:
+                current_invocation_id, depth = queue.pop(0)
+                if depth > 4:
+                    continue
+
+                if current_invocation_id in visited:
+                    continue
+
+                visited.add(current_invocation_id)
+
+                results = session.exec(
+                    select(InvocationTrace, Invocation, SerializedLMP)
+                    .join(Invocation, InvocationTrace.invocation_consuming_id == Invocation.id)
+                    .join(SerializedLMP, Invocation.lmp_id == SerializedLMP.lmp_id)
+                    .where(InvocationTrace.invocation_consumer_id == current_invocation_id)
+                ).all()
+                for row in results:
+                    print(row)
+                    trace = {
+                        'consumer_id': row.InvocationTrace.invocation_consumer_id,
+                        'consumed': {key: value for key, value in row.Invocation.__dict__.items() if key not in ['invocation_consumer_id', 'invocation_consuming_id']},
+                        'consumed_lmp': row.SerializedLMP.model_dump()
+                    }
+                    traces.append(trace)
+                    queue.append((row.Invocation.id, depth + 1))
+
+            return traces
 
 
     def get_lmp_versions(self, name: str) -> List[Dict[str, Any]]:
