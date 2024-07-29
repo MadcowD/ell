@@ -36,12 +36,20 @@ def track(fn: Callable) -> Callable:
     @wraps(fn)
     def wrapper(*fn_args, **fn_kwargs) -> str:
         nonlocal _has_serialized_lmp
+        if not config._store:
+            return fn(*fn_args, **fn_kwargs)[0]
 
         # Compute the invocation id and hash the inputs for serialization.
         invocation_id = "invocation-" + secrets.token_hex(16)
         # Get the list of consumed lmps and clean the invocation paramns for serialization.
         cleaned_invocation_params, input_hash, consumes = prepare_invocation_params(fn_args, fn_kwargs)
-
+    
+        if hasattr(wrapper, "__ell_use_cache__"):
+            if wrapper.__ell_use_cache__:
+                cache_key = input_hash
+                # cached_invocation = store().get_cached_invocation(fn_hash, input_hash)
+                # return [d.deserialzie() for  d in cached_invocatiopn.result]
+                return NotImplemented
 
         if False and fn.__ell_use_cache__:
             cache_key = input_hash
@@ -62,47 +70,47 @@ def track(fn: Callable) -> Callable:
             completion_tokens=usage.get("completion_tokens", 0)
 
 
-            if config.has_store:
-                if not _has_serialized_lmp:
-                    fn_closure, _uses = ell.util.closure.lexically_closured_source(func_to_track)
+            if not _has_serialized_lmp:
+                fn_closure, _uses = ell.util.closure.lexically_closured_source(func_to_track)
+
+                # Compute commit messages if enabled
+                commit = None
+                lmps = config._store.get_lmps(name=_name)
+                version = 0
+                already_in_store =any(lmp['lmp_id'] == func_to_track.__ell_hash__ for lmp in lmps)
+                if not already_in_store:
+                    # Do auto commitng and versioning if previous versions exist.
+                    if len(lmps) > 0 :
+                        lmps.sort(key=lambda x: x['created_at'], reverse=True)
+                        latest_lmp = lmps[0]
 
 
-                    # Compute commit messages if enabled
-                    commit = None
-                    lmps = config._store.get_lmps(name=_name)
-                    version = 0
-                    if not any(lmp['lmp_id'] == func_to_track.__ell_hash__ for lmp in lmps):
-                        if len(lmps) > 0 :
-                            lmps.sort(key=lambda x: x['created_at'], reverse=True)
-                            latest_lmp = lmps[0]
+                        version = (latest_lmp['version_number']) + 1
+                        print(latest_lmp['version_number'], version)
+                        if config.autocommit:
+                        # Get the latest lmp
+                        # sort by created at  
+                            from ell.util.differ import write_commit_message_for_diff
+                            commit = str(write_commit_message_for_diff(f"{latest_lmp['dependencies']}\n\n{latest_lmp['source']}", f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
 
 
-                            version = (latest_lmp['version_number']) + 1
-                            print(latest_lmp['version_number'], version)
-                            if config.autocommit:
-                            # Get the latest lmp
-                            # sort by created at  
-                                from ell.util.differ import write_commit_message_for_diff
-                                commit = str(write_commit_message_for_diff(f"{latest_lmp['dependencies']}\n\n{latest_lmp['source']}", f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
-
-
-                        config._store.write_lmp(
-                            lmp_id=func_to_track.__ell_hash__,
-                            name=_name,
-                            created_at=datetime.now(),
-                            source=fn_closure[0],
-                            dependencies=fn_closure[1],
-                            commit_message=(commit),
-                            is_lmp=lmp,
-                            lm_kwargs=(
-                                (lm_kwargs)
-                                if lm_kwargs
-                                else None
-                            ),
-                            version_number=version,
-                            uses=_uses,
-                        )
-                        _has_serialized_lmp = True
+                    config._store.write_lmp(
+                        lmp_id=func_to_track.__ell_hash__,
+                        name=_name,
+                        created_at=datetime.now(),
+                        source=fn_closure[0],
+                        dependencies=fn_closure[1],
+                        commit_message=(commit),
+                        is_lmp=lmp,
+                        lm_kwargs=(
+                            (lm_kwargs)
+                            if lm_kwargs
+                            else None
+                        ),
+                        version_number=version,
+                        uses=_uses,
+                    )
+                    _has_serialized_lmp = True
 
                 config._store.write_invocation(id=invocation_id,
                     lmp_id=func_to_track.__ell_hash__,  created_at=datetime.now(),

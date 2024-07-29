@@ -1,12 +1,12 @@
 #  `ell` [WIP, unreleased, experimental] 
-[![](https://dcbadge.limes.pink/api/server/J2UhksbE?style=flat)](https://discord.gg/J2UhksbE)
-[![](https://dcbadge.limes.pink/api/server/J2UhksbE?style=flat)](https://discord.gg/J2UhksbE)
-[![](https://dcbadge.limes.pink/api/server/J2UhksbE?style=flat)](https://discord.gg/J2UhksbE)
-[![](https://dcbadge.limes.pink/api/server/J2UhksbE?style=flat)](https://discord.gg/J2UhksbE)
+[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/J2UhksbE)
+[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/J2UhksbE](https://discord.gg/Yqyga6Qr))
+[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/Yqyga6Qr)
+[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/Yqyga6Qr)
 
 > **IMPORTANT**: This repository is currently pre-v1.0, highly experimental, and not yet packaged for general use. It contains numerous bugs, and the schemas are subject to frequent changes. While we welcome contributions, please be aware that submitting pull requests at this stage is at your own discretion, as the codebase is rapidly evolving.
 
-> **[JOIN THE DISCORD](https://discord.gg/J2UhksbE)** We are developing this in public and I want all hands on deck regarding design decisions! Join us at [https://discord.gg/J2UhksbE](https://discord.gg/J2UhksbE)
+> **[JOIN THE DISCORD](https://discord.gg/Yqyga6Qr)** We are developing this in public and I want all hands on deck regarding design decisions! Join us at [https://discord.gg/Yqyga6Qr](https://discord.gg/Yqyga6Qr)
 
 # What is `ell`?
 
