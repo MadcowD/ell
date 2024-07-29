@@ -132,6 +132,8 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [o] Complete full trace implementation on invocation page
 - [x] Enhance UX around traces in dependency graphs
 - [o] Implement argument pass-through functionality
+- [ ] Working trace graph thing
+
 
 ## Version History
 - [x] Auto-document commit changes
@@ -140,6 +142,7 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [ ] Highlight changes in source when switching versions
 
 ## LM Functionality
+- [ ] Freezing and unfreezing LMPs
 - [ ] Support multimodal inputs
 - [ ] Implement function calling
 - [ ] Add persistent chatting capability
@@ -158,6 +161,7 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 
 ## DX (Developer Experience)
 - [x] Enhance UX for the LMP details page
+- [ ] Improve layout for the differnet parts
 - [ ] Add Dependency Graph on LMP page
 - [ ] Implement VSCode-style file explorer
 - [ ] Ensure and test Jupyter compatibility

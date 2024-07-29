@@ -4,7 +4,7 @@ import TraceDetailsSidebar from '../components/TraceDetailsSidebar';
 import TracesRunsPane from '../components/TracesRunsPane';
 import axios from 'axios';
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 
 const API_BASE_URL = "http://localhost:8080";
@@ -12,23 +12,35 @@ const Traces = () => {
   const [selectedTrace, setSelectedTrace] = useState(null);
   const [invocations, setInvocations] = useState([]);
   const [isPolling, setIsPolling] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const fetchInvocations = useCallback(async () => {
     try {
       const invocationsResponse = await axios.get(`${API_BASE_URL}/api/invocations`);
       const sortedInvocations = invocationsResponse.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       setInvocations(sortedInvocations);
+      
+      // Check for invocation ID in URL
+      const searchParams = new URLSearchParams(location.search);
+      const invocationId = searchParams.get('i');
+      if (invocationId) {
+        const selectedInvocation = sortedInvocations.find(inv => inv.id === invocationId);
+        if (selectedInvocation) {
+          setSelectedTrace(selectedInvocation);
+        }
+      }
     } catch (error) {
       console.error('Error fetching invocations:', error);
     }
-  }, []);
+  }, [location.search]);
 
   useEffect(() => {
     fetchInvocations(); // Initial fetch
 
     let intervalId;
     if (isPolling) {
-      intervalId = setInterval(fetchInvocations, 200); // Poll every second
+      intervalId = setInterval(fetchInvocations, 200); // Poll every 200ms
     }
 
     return () => {
@@ -38,6 +50,16 @@ const Traces = () => {
 
   const togglePolling = () => {
     setIsPolling(!isPolling);
+  };
+
+  const handleSelectTrace = (trace) => {
+    setSelectedTrace(trace);
+    navigate(`?i=${trace.id}`);
+  };
+
+  const handleCloseSidebar = () => {
+    setSelectedTrace(null);
+    navigate(location.pathname);
   };
 
   return (
@@ -110,12 +132,12 @@ const Traces = () => {
             Columns
           </button>
         </div>
-        <TracesRunsPane invocations={invocations} onSelectTrace={setSelectedTrace} />
+        <TracesRunsPane invocations={invocations} onSelectTrace={handleSelectTrace} />
       </div>
       {selectedTrace && (
         <TraceDetailsSidebar
-        invocation={selectedTrace}
-          onClose={() => setSelectedTrace(null)}
+          invocation={selectedTrace}
+          onClose={handleCloseSidebar}
         />
       )}
     </div>
