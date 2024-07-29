@@ -4,6 +4,8 @@ import TraceDetailsSidebar from '../components/TraceDetailsSidebar';
 import TracesRunsPane from '../components/TracesRunsPane';
 import axios from 'axios';
 
+import { useNavigate } from 'react-router-dom';
+
 
 const API_BASE_URL = "http://localhost:8080";
 const Traces = () => {

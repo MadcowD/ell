@@ -10,7 +10,7 @@ def random_number() -> str:
 
 @ell.lm(model="gpt-4o-mini", temperature=1.0)
 def write_a_poem(num : str) -> str:
-    """You are a poet. Write a poem that is 4 lines long."""
+    """You are a badass motherfucker. Write a poem that is 4 lines long."""
     return f"Write a poem that is {num} lines long"
 
 @ell.lm(model="gpt-4o-mini", temperature=1.0)
@@ -36,7 +36,10 @@ if __name__ == "__main__":
 
 
     num = random_number()
-    poem = write_a_poem(num)
+
+    
+
+    poem = write_a_poem(num[0])
     story = write_a_story(num)
     better_piece = choose_which_is_a_better_piece_of_writing(poem, story)
     print(better_piece)

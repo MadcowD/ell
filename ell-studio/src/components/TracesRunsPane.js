@@ -1,12 +1,18 @@
 import { LMPCardTitle } from './depgraph/LMPCardTitle';
 import HierarchicalTable from './HierarchicalTable';
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback  } from 'react';
 import { Card } from './Card';
 import { getTimeAgo } from '../utils/lmpUtils';
 import VersionBadge from './VersionBadge';
+import { useNavigate } from 'react-router-dom';
 import { lstrCleanStringify } from './lstrCleanStringify';
-
 const TracesRunsPane = ({ invocations, onSelectTrace }) => {
+
+  const navigate = useNavigate();
+
+  const onClickLMP = useCallback((lmp) => {
+    navigate(`/lmp/${lmp.name}/${lmp.lmp_id}`);
+  }, [navigate]);
   const traces = useMemo(() => {
     return invocations.map(inv => ({
       name: inv.lmp?.name || 'Unknown',
@@ -26,7 +32,10 @@ const TracesRunsPane = ({ invocations, onSelectTrace }) => {
       { 
         header: 'LMP', 
         key: 'name', 
-        render: (item) => <Card noMinW={true}><LMPCardTitle lmp={item.lmp} fontSize="sm" /></Card>, 
+        render: (item) => <Card noMinW={true}><LMPCardTitle lmp={item.lmp} fontSize="sm" onClick={(e) => {
+          e.stopPropagation();
+          onClickLMP(item.lmp);
+        }} /></Card>, 
         // maxWidth: 200,
         sortable: true
       },

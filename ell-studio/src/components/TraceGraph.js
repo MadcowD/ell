@@ -65,7 +65,6 @@ export const TraceGraph = ({ from }) => {
                 const formatTraceData = (trace) => {
                     return {
                         name: trace.consumed_lmp.name,
-                        icon: "🌀", // Placeholder icon
                         duration: trace.consumed.latency_ms,
                         tokens: trace.consumed.prompt_tokens + trace.consumed.completion_tokens,
                         tag: trace.consumed.lmp_id,
@@ -75,19 +74,7 @@ export const TraceGraph = ({ from }) => {
                 };
 
                 const formattedTraceData = traces.map(trace => formatTraceData(trace));
-                // Create a Map to store unique traces based on consumed.id
-                const uniqueTraces = new Map();
                 
-                formattedTraceData.forEach(trace => {
-                    if (!uniqueTraces.has(trace.invocation_id)) {
-                        uniqueTraces.set(trace.invocation_id, trace);
-                    }
-                });
-                
-                // Convert the Map back to an array, preserving the original order
-                const uniqueFormattedTraceData = formattedTraceData.filter(trace => 
-                    uniqueTraces.get(trace.invocation_id) === trace
-                );
                 setTraceData(formattedTraceData);
             } catch (error) {
                 console.error('Error fetching trace data:', error);

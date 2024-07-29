@@ -206,7 +206,15 @@ class SQLStore(ell.store.Store):
                     traces.append(trace)
                     queue.append((row.Invocation.id, depth + 1))
 
-            return traces
+            # Create a dictionary to store unique traces based on consumed.id
+            unique_traces = {}
+            for trace in traces:
+                consumed_id = trace['consumed']['id']
+                if consumed_id not in unique_traces:
+                    unique_traces[consumed_id] = trace
+            
+            # Convert the dictionary values back to a list
+            return list(unique_traces.values())
 
 
     def get_lmp_versions(self, name: str) -> List[Dict[str, Any]]:
