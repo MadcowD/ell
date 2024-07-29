@@ -1,13 +1,7 @@
-import os
-
 import ell
-import math
-import ell.decorators.lm
-
-from ell.stores.sql import SQLiteStore
 import numpy as np
 
-ell.config.verbose = True
+from ell.stores.sql import SQLiteStore
 
 
 def get_random_length():
@@ -23,9 +17,9 @@ def hello(world : str):
     return f"Say hello to {name} in {number_of_chars_in_name*2} characters or more!" # User prompt
 
 
-
 if __name__ == "__main__":
+    ell.config.verbose = True
     ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
-    
+
     greeting = hello("sam altman") # > "hello sama! ... "
 
