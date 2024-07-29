@@ -41,8 +41,8 @@ def chat(message_history : List[Tuple[str, str]], *, personality : str):
 
 if __name__ == "__main__":
     from ell.stores.sql import SQLiteStore
-    store = SQLiteStore('sqlite_example')
-    store.install(autocommit=True)
+    ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
+    
     messages : List[Tuple[str, str]]= []
     personalities = [create_personality(), create_personality()]
 

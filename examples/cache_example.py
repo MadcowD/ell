@@ -1,3 +1,4 @@
+from functools import lru_cache
 import ell
 from ell.stores.sql import SQLiteStore
 
@@ -14,14 +15,15 @@ def write_one_unit_test_for_class(class_def : str):
     """You are an expert python unit test programmer."""
     return "Write a single unit test for the following class definition:\n" + class_def
 
-if __name__ == "__main__":
-    store = SQLiteStore("sqlite_example")
-    store.install(autocommit=True)
 
+
+
+
+if __name__ == "__main__":
     ell.config.verbose = True
 
-    with store.cache(write_a_complete_python_class):
+    # If I'm using ell without a store then I don't 
+    with ell.get_store().cache(write_a_complete_python_class):
         cls_Def = write_a_complete_python_class("A class that represents a bank")
-
-        unit_test = write_one_unit_test_for_class(cls_Def)
+    unit_test = write_one_unit_test_for_class(cls_Def)
     

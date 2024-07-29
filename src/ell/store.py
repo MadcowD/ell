@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Dict, List, Set
-from ell.configurator import config
 from ell.lstr import lstr
 
 
@@ -114,11 +113,3 @@ class Store(ABC):
         :return: List of the latest LMPs.
         """
         pass
-
-    def install(self, autocommit=True):
-        """
-        Register the serializer with the ell config.
-        """
-        # Todo: Hae this wrap serializers
-        config.register_store(self, autocommit=autocommit)
-

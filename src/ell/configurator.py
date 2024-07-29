@@ -1,11 +1,13 @@
+from functools import wraps
 from typing import Dict, List, Optional, Union
 from dataclasses import dataclass, field
 import openai
 import logging
 from contextlib import contextmanager
 import threading
+from ell.store import Store
 
-logger = logging.getLogger(__name__)
+_config_logger = logging.getLogger(__name__)
 
 @dataclass
 class _Config:
@@ -13,7 +15,7 @@ class _Config:
     verbose: bool = False
     wrapped_logging: bool = True
     override_wrapped_logging_width: Optional[int] = None
-    store: Optional["Store"] = None
+    _store: Optional[Store] = None
     autocommit: bool = False
 
     def __post_init__(self):
@@ -26,7 +28,7 @@ class _Config:
 
     @property 
     def has_store(self) -> bool:
-        return self.store is not None
+        return self._store is not None
 
     @contextmanager
     def model_registry_override(self, overrides: Dict[str, openai.Client]):
@@ -48,7 +50,7 @@ class _Config:
         current_registry = self._local.stack[-1] if hasattr(self._local, 'stack') and self._local.stack else self.model_registry
         client = current_registry.get(model_name)
         if client is None:
-            logger.warning(f"Model '{model_name}' is not registered. Falling back to OpenAI client from environment variables.")
+            _config_logger.warning(f"Model '{model_name}' is not registered. Falling back to OpenAI client from environment variables.")
         return client
 
     def reset(self) -> None:
@@ -57,13 +59,21 @@ class _Config:
             if hasattr(self._local, 'stack'):
                 del self._local.stack
 
-    def register_store(self, store: "Store", autocommit: bool = False) -> None:
-        self.store = store
+    def set_store(self, store: Store, autocommit: bool = False) -> None:
+        self._store = store
         self.autocommit = autocommit or self.autocommit
+
+    def get_store(self) -> Store:
+        return self._store
 
 # Singleton instance
 config = _Config()
 
+# Todo: Is this write ot expose global helpers.
+@wraps(config.get_store)
+def get_store() -> Store:
+    return config.get_store()
 
-def store() -> "Store":
-    return config.store
+@wraps(config.set_store)
+def set_store(*args, **kwargs) -> None:
+    return config.set_store(*args, **kwargs)

@@ -1,5 +1,5 @@
 import ell.util.closure
-from ell.configurator import config, store
+from ell.configurator import config
 from ell.lstr import lstr
 
 
@@ -29,48 +29,19 @@ def track(fn: Callable) -> Callable:
 
     # see if it exists
     _name = func_to_track.__qualname__
-    _time = time.time()
     _has_serialized_lmp = False
+    _has_computed_lexical_closure_this_runtime = False
 
 
     @wraps(fn)
     def wrapper(*fn_args, **fn_kwargs) -> str:
         nonlocal _has_serialized_lmp
 
+        # Compute the invocation id and hash the inputs for serialization.
         invocation_id = "invocation-" + secrets.token_hex(16)
-        # Let's add an invocation
-        invocation_params = dict(
-            args=(fn_args),
-            kwargs=(fn_kwargs),
-        )
+        # Get the list of consumed lmps and clean the invocation paramns for serialization.
+        cleaned_invocation_params, input_hash, consumes = prepare_invocation_params(fn_args, fn_kwargs)
 
-        invocation_converter = cattrs.Converter()
-        consumes = set()
-
-        def process_lstr(obj):
-            consumes.update(obj._origin_trace)
-            return invocation_converter.unstructure(dict(content=str(obj), **obj.__dict__, __lstr=True))
-
-        invocation_converter.register_unstructure_hook(
-            np.ndarray,
-            lambda arr: arr.tolist()
-        )
-        invocation_converter.register_unstructure_hook(
-            lstr,
-            process_lstr
-        )
-        invocation_converter.register_unstructure_hook(
-            set,
-            lambda s: list(sorted(s))
-        )
-        invocation_converter.register_unstructure_hook(
-            frozenset,
-            lambda s: list(sorted(s))
-        )
-
-
-        cleaned_invocation_params = invocation_converter.unstructure(invocation_params)
-        input_hash = hashlib.sha256(json.dumps(cleaned_invocation_params, sort_keys=True).encode('utf-8')).hexdigest()
 
         if False and fn.__ell_use_cache__:
             cache_key = input_hash
@@ -87,7 +58,6 @@ def track(fn: Callable) -> Callable:
                 )
             latency_ms = (datetime.now() - _start_time).total_seconds() * 1000
             usage = metadata.get("usage", {})
-
             prompt_tokens=usage.get("prompt_tokens", 0)
             completion_tokens=usage.get("completion_tokens", 0)
 
@@ -99,7 +69,7 @@ def track(fn: Callable) -> Callable:
 
                     # Compute commit messages if enabled
                     commit = None
-                    lmps = config.store.get_lmps(name=_name)
+                    lmps = config._store.get_lmps(name=_name)
                     version = 0
                     if not any(lmp['lmp_id'] == func_to_track.__ell_hash__ for lmp in lmps):
                         if len(lmps) > 0 :
@@ -116,14 +86,13 @@ def track(fn: Callable) -> Callable:
                                 commit = str(write_commit_message_for_diff(f"{latest_lmp['dependencies']}\n\n{latest_lmp['source']}", f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
 
 
-                        config.store.write_lmp(
+                        config._store.write_lmp(
                             lmp_id=func_to_track.__ell_hash__,
                             name=_name,
                             created_at=datetime.now(),
                             source=fn_closure[0],
                             dependencies=fn_closure[1],
                             commit_message=(commit),
-
                             is_lmp=lmp,
                             lm_kwargs=(
                                 (lm_kwargs)
@@ -135,7 +104,7 @@ def track(fn: Callable) -> Callable:
                         )
                         _has_serialized_lmp = True
 
-                config.store.write_invocation(id=invocation_id,
+                config._store.write_invocation(id=invocation_id,
                     lmp_id=func_to_track.__ell_hash__,  created_at=datetime.now(),
                     latency_ms=latency_ms,
                     prompt_tokens=prompt_tokens,
@@ -152,3 +121,40 @@ def track(fn: Callable) -> Callable:
     wrapper.__ell_track = True
 
     return wrapper
+
+
+
+def prepare_invocation_params(fn_args, fn_kwargs):
+    invocation_params = dict(
+        args=(fn_args),
+        kwargs=(fn_kwargs),
+    )
+
+    invocation_converter = cattrs.Converter()
+    consumes = set()
+
+    def process_lstr(obj):
+        consumes.update(obj._origin_trace)
+        return invocation_converter.unstructure(dict(content=str(obj), **obj.__dict__, __lstr=True))
+
+    invocation_converter.register_unstructure_hook(
+        np.ndarray,
+        lambda arr: arr.tolist()
+    )
+    invocation_converter.register_unstructure_hook(
+        lstr,
+        process_lstr
+    )
+    invocation_converter.register_unstructure_hook(
+        set,
+        lambda s: list(sorted(s))
+    )
+    invocation_converter.register_unstructure_hook(
+        frozenset,
+        lambda s: list(sorted(s))
+    )
+
+    cleaned_invocation_params = invocation_converter.unstructure(invocation_params)
+    input_hash = hashlib.sha256(json.dumps(cleaned_invocation_params, sort_keys=True).encode('utf-8')).hexdigest()
+    return cleaned_invocation_params, input_hash, consumes
+
