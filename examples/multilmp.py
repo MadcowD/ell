@@ -43,5 +43,10 @@ if __name__ == "__main__":
     from ell.stores.sql import SQLiteStore
     store = SQLiteStore('sqlite_example')
     store.install()
-    story = write_a_really_good_story("a dog")
 
+
+    with ell.cache(write_a_really_good_story):
+        story = write_a_really_good_story("a dog")
+
+
+    ell.get_store()

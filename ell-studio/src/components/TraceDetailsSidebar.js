@@ -11,6 +11,7 @@ const InvocationDetailsSidebar = ({ invocation, onClose }) => {
   const [sidebarWidth, setSidebarWidth] = useState(document.body.clientWidth * 0.75);
   const resizeRef = useRef(null);
   const [showTraceView, setShowTraceView] = useState(true);
+  
 
   const argsLines = useMemo(() => {
     return invocation.args.length > 0 ? lstrCleanStringify(invocation.args, 1) : null;

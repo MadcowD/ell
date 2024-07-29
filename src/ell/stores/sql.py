@@ -56,6 +56,7 @@ class SQLStore(ell.store.Store):
     def write_invocation(self, id: str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], 
                          created_at: Optional[float], consumes: Set[str], prompt_tokens: Optional[int] = None,
                          completion_tokens: Optional[int] = None, latency_ms: Optional[float] = None,
+                         input_hash: Optional[str] = None,
                          cost_estimate: Optional[float] = None) -> Optional[Any]:
         with Session(self.engine) as session:
             if isinstance(result, lstr):
@@ -80,10 +81,11 @@ class SQLStore(ell.store.Store):
                 args=args,
                 kwargs=kwargs,
                 created_at=created_at,
-                invocation_kwargs=str(invocation_kwargs),
+                invocation_kwargs=invocation_kwargs,
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,
                 latency_ms=latency_ms,
+                input_hash=input_hash,
                 cost_estimate=cost_estimate
             )
 

@@ -92,6 +92,7 @@ class SerializedLMP(SQLModel, table=True):
     num_invocations : Optional[int] = Field(default=0)
     commit_message : Optional[str] = Field(default=None)
     version_number: Optional[int] = Field(default=None)
+    input_hash: Optional[str] = Field(default=None)
     
     class Config:
         table_name = "serializedlmp"
@@ -125,7 +126,7 @@ class Invocation(SQLModel, table=True):
 
     
     created_at: datetime = Field(default_factory=datetime.utcnow)  # Timestamp of when the invocation was created
-    invocation_kwargs: str  # Additional keyword arguments for the invocation
+    invocation_kwargs: dict = Field(default_factory=dict, sa_column=Column(JSON))  # Additional keyword arguments for the invocation
 
     # Relationships
     lmp: SerializedLMP = Relationship(back_populates="invocations")  # Relationship to the LMP that was invoked

@@ -34,6 +34,7 @@ class Store(ABC):
     def write_invocation(self, id: str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], 
                          created_at: Optional[float], consumes: Set[str], prompt_tokens: Optional[int] = None,
                          completion_tokens: Optional[int] = None, latency_ms: Optional[float] = None,
+                         input_hash: Optional[str] = None,
                          cost_estimate: Optional[float] = None) -> Optional[Any]:
         """
         Write an invocation of an LMP to the storage.
@@ -119,4 +120,5 @@ class Store(ABC):
         Register the serializer with the ell config.
         """
         # Todo: Hae this wrap serializers
-        config.register_serializer(self, autocommit=autocommit)
+        config.register_store(self, autocommit=autocommit)
+

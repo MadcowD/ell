@@ -2,6 +2,7 @@ import os
 
 import ell
 import math
+import ell.decorators.lm
 
 from ell.stores.sql import SQLiteStore
 import numpy as np

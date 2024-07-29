@@ -2,6 +2,8 @@ import ell
 import os
 import openai
 
+import ell.decorators.lm
+
 
 ell.config.verbose = True
 

@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union, Set
+from typing import Dict, List, Optional, Union
 from dataclasses import dataclass, field
 import openai
 import logging
@@ -8,12 +8,12 @@ import threading
 logger = logging.getLogger(__name__)
 
 @dataclass
-class Config:
+class _Config:
     model_registry: Dict[str, openai.Client] = field(default_factory=dict)
     verbose: bool = False
     wrapped_logging: bool = True
     override_wrapped_logging_width: Optional[int] = None
-    serializers: Set["Serializer"] = field(default_factory=set)
+    store: Optional["Store"] = None
     autocommit: bool = False
 
     def __post_init__(self):
@@ -25,8 +25,8 @@ class Config:
             self.model_registry[model_name] = client
 
     @property 
-    def has_serializers(self) -> bool:
-        return len(self.serializers) > 0
+    def has_store(self) -> bool:
+        return self.store is not None
 
     @contextmanager
     def model_registry_override(self, overrides: Dict[str, openai.Client]):
@@ -57,9 +57,13 @@ class Config:
             if hasattr(self._local, 'stack'):
                 del self._local.stack
 
-    def register_serializer(self, serializer: "Serializer", autocommit: bool = False) -> None:
-        self.serializers.add(serializer)
+    def register_store(self, store: "Store", autocommit: bool = False) -> None:
+        self.store = store
         self.autocommit = autocommit or self.autocommit
 
 # Singleton instance
-config = Config()
+config = _Config()
+
+
+def store() -> "Store":
+    return config.store

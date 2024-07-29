@@ -1,9 +1,9 @@
-from ell.decorators import lm
+from ell.decorators.lm import lm
 from ell.types import Message
 
 # registers all of the mdoels.
 import ell.models
-from ell.configurator import config
+from ell.configurator import *
 
 
 def system(content: str) -> Message:

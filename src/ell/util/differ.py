@@ -1,5 +1,5 @@
 
-from ell.decorators import lm
+from ell.decorators.lm import lm
 
 @lm("gpt-4o-mini", temperature=0.2, exempt_from_tracking=True)
 def write_commit_message_for_diff(old : str, new : str) -> str:

@@ -2,9 +2,10 @@
 Pytest for the LM function (mocks the openai api so we can pretend to generate completions through te typoical approach taken in the decorators (and adapters file.))
 """
 
+from ell.decorators.lm import lm
 import pytest
 from unittest.mock import patch, MagicMock
-from ell.decorators import DEFAULT_SYSTEM_PROMPT, lm
+from ell.decorators import DEFAULT_SYSTEM_PROMPT
 from ell.types import Message, LMPParams
 
 
