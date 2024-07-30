@@ -48,3 +48,4 @@ def npm_build():
 def main():
     npm_install()
     npm_build()
+    python_install()
