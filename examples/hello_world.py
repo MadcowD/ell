@@ -10,7 +10,6 @@ def get_random_length():
 @ell.lm(model="gpt-4o-mini")
 def hello(world : str):
     """Your goal is to charm the other guy""" # System prpmpt
-
     name = world.capitalize()
     number_of_chars_in_name = get_random_length()
 

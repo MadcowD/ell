@@ -1,29 +1,36 @@
 from functools import lru_cache
 import ell
+import ell.caching
 from ell.stores.sql import SQLiteStore
 
+CODE_INSTURCTIONS = """
 
-@ell.lm("gpt-4-turbo", temperature=0.1)
+Other Instructoons:
+- You only respond in code with no commentary (except in the and docstrings.) 
+- Do not respond in markdown just write code. 
+- It is extremely important that you don't start you code with ```python. """
+
+
+class Test:
+    a : int = 6
+    pass
+test = [Test() for _ in range(10)]
+
+
+@ell.lm("gpt-4o", temperature=0.1, max_tokens=6)
 def write_a_complete_python_class(user_spec : str):
-    """You are an expert python programmer capable of interpreting a user's spec and writing a python class to accomidate their request. You should document all your code, and you best practices.
-    """
-    return "Write a python class to accomidate the user's spec:\n" + user_spec
-
-
-@ell.lm("gpt-4o-mini", temperature=0.1)
-def write_one_unit_test_for_class(class_def : str):
-    """You are an expert python unit test programmer."""
-    return "Write a single unit test for the following class definition:\n" + class_def
-
-
+    return [ell.system(f"""You are an mid-tier python programmer capable of interpreting a user's spec and writing a python class to accomidate their request. You should document all your code, and you best practices.
+    {CODE_INSTURCTIONS} {test[0].a}
+    """), ell.user(user_spec)]
 
 
 
 if __name__ == "__main__":
     ell.config.verbose = True
+    ell.set_store(SQLiteStore("sqlite_example"), autocommit=True)
 
-    # If I'm using ell without a store then I don't 
-    with ell.get_store().cache(write_a_complete_python_class):
-        cls_Def = write_a_complete_python_class("A class that represents a bank")
-    unit_test = write_one_unit_test_for_class(cls_Def)
-    
+
+    cls_Def = write_a_complete_python_class("A class that represents a bank")
+
+
+    cls_Def = write_a_complete_python_class("A class that represents a bank")

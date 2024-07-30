@@ -17,6 +17,8 @@ class _Config:
     override_wrapped_logging_width: Optional[int] = None
     _store: Optional[Store] = None
     autocommit: bool = False
+    lazy_versioning : bool = False # Optimizes computation of versionoing to the initial invocaiton
+    # XXX: This might lead to incorrect serialization of globals/
 
     def __post_init__(self):
         self._lock = threading.Lock()
@@ -59,7 +61,7 @@ class _Config:
             if hasattr(self._local, 'stack'):
                 del self._local.stack
 
-    def set_store(self, store: Store, autocommit: bool = False) -> None:
+    def set_store(self, store: Store, autocommit: bool = True) -> None:
         self._store = store
         self.autocommit = autocommit or self.autocommit
 

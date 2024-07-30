@@ -31,6 +31,7 @@ def xD():
 import collections
 import ast
 import hashlib
+import json
 import os
 from typing import Any, Dict, Set, Tuple
 import dill
@@ -137,7 +138,6 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
     while hasattr(func, "__ell_func__"):
         func = func.__ell_func__
     
-    print("Getting source for", func)
     source = getsource(func, lstrip=True)
     already_closed.add(hash(func))
     # if func is nested func
@@ -223,7 +223,17 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
             # Ideally everything is static but this is indeed fucked :);
             # That is this is nto a reserializeable representation of the prompt
             # and we cannot use this in a produciton library.
-            dependencies.append(f"{var_name} = {repr(var_value)}")
+            
+            if isinstance(var_value, str) and '\n' in var_value:
+                dependencies.append(f"{var_name} = '''{var_value}'''")
+            else:
+                json_default = lambda x: f"<Object of type ({type(x).__name__})>"
+                clean_dump = json.dumps(
+                    var_value,
+                    default=json_default,
+                    indent=4
+                ).replace("\"<", "<").replace(">\"", ">")
+                dependencies.append(f"{var_name} = {clean_dump}")
 
     # We probably need to resovle things with topological sort & turn stuff into a dag but for now we can just do this
 
@@ -296,7 +306,7 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
         ).hexdigest()
     
     if hasattr(outer_ell_func, "__ell_func__"):
-        outer_ell_func.__ell_closure__ = (source, dsrc)
+        outer_ell_func.__ell_closure__ = (source, dsrc, global_vars, free_vars)
         outer_ell_func.__ell_hash__ = fn_hash
         outer_ell_func.__ell_uses__ = uses
 

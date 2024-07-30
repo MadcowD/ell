@@ -112,6 +112,8 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 
 - [ ] Design the metrics functionality. (maybe link WandB lol)
 
+
+
 ### Bugs
 
 - [ ] Fix weird rehashing issue of the main prompt whenever subprompt changes? Or just make commits more of a background deal.
@@ -140,6 +142,19 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [x] Implement version history diff view (possibly with automatic commit messages using GPT-4)
 - [ ] Add interactive diff view
 - [ ] Highlight changes in source when switching versions
+
+## Caching and versioning
+- [x] Get caching to work for bound global mutable types
+- [x] Bind global mutable at invocation, and update our Invocation database types
+- [ ] Come up with a nice way to expand and collapse stored globals in dependency scope.
+- [ ] Add max height to the dependencies.
+- [ ] Come up with a nice way to display bound globals of an invocation
+- [ ] Bind all arguments to their names in the function signature
+- [ ] Custom syntax highlighting for these bound mutable objects
+- [ ] Decide if version not change just because I invoke an LMP using a global that was mutated some where else in the program. (In example where we had test being global with a list of objects of type Test) that shouldn’t change the version number. My vote is that it shouldn’t change.
+- [ ] Compute type lexical closures as needed
+- [ ] Come up with a spec for serialization of bound types. 
+ 
 
 ## LM Functionality
 - [ ] Freezing and unfreezing LMPs
@@ -195,5 +210,7 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [ ] Consider developing as a VSCode plugin
 - [ ] Implement organization system for multiple prompts (e.g., by module)
 - [ ] Add live updates and new content indicators
+- [ ] Force stores ot use the pydantic data types and dont use model dumping by default.
+- [ ] Update the serializer so that we prefer stringliterals when serialziing globals
 
 - [x] Update stores to use schema type hints and serialize to model dump in Flask (or consider switching to FastAPI)

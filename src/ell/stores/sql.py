@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 from typing import Any, Optional, Dict, List, Set
 from sqlmodel import Session, SQLModel, create_engine, select
@@ -53,8 +54,9 @@ class SQLStore(ell.store.Store):
             session.commit()
         return None
 
-    def write_invocation(self, id: str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], 
-                         created_at: Optional[float], consumes: Set[str], prompt_tokens: Optional[int] = None,
+    def write_invocation(self, id: str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any],  
+                         global_vars: Dict[str, Any],
+                         free_vars: Dict[str, Any], created_at: Optional[float], consumes: Set[str], prompt_tokens: Optional[int] = None,
                          completion_tokens: Optional[int] = None, latency_ms: Optional[float] = None,
                          input_hash: Optional[str] = None,
                          cost_estimate: Optional[float] = None) -> Optional[Any]:
@@ -74,19 +76,19 @@ class SQLStore(ell.store.Store):
                 lmp.num_invocations = 1
             else:
                 lmp.num_invocations += 1
-            
             invocation = Invocation(
                 id=id,
                 lmp_id=lmp.lmp_id,
                 args=args,
                 kwargs=kwargs,
+                global_vars=json.loads(json.dumps(global_vars, default=str)),
+                free_vars=json.loads(json.dumps(free_vars, default=str)),
                 created_at=created_at,
                 invocation_kwargs=invocation_kwargs,
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,
                 latency_ms=latency_ms,
                 input_hash=input_hash,
-                cost_estimate=cost_estimate
             )
 
             for res in results:
@@ -135,6 +137,9 @@ class SQLStore(ell.store.Store):
                 for key, value in filters.items():
                     query = query.where(getattr(Invocation, key) == value)
             
+            # Sort from newest to oldest
+            query = query.order_by(Invocation.created_at.desc())
+            
             results = session.exec(query).all()
             
             invocations = {}
@@ -148,7 +153,6 @@ class SQLStore(ell.store.Store):
                     invocations[inv.id]['results'].append(dict(**lstr.model_dump(), __lstr=True))
             
             return list(invocations.values())
-        
 
     def get_traces(self):
         with Session(self.engine) as session:

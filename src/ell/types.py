@@ -87,12 +87,14 @@ class SerializedLMP(SQLModel, table=True):
         ),
     )
 
-
+    # Bound initial serialized free variables and globals
+    initial_free_vars : dict = Field(default_factory=dict, sa_column=Column(JSON))
+    initial_global_vars : dict = Field(default_factory=dict, sa_column=Column(JSON))
+    
     # Cached INfo
     num_invocations : Optional[int] = Field(default=0)
     commit_message : Optional[str] = Field(default=None)
     version_number: Optional[int] = Field(default=None)
-    input_hash: Optional[str] = Field(default=None)
     
     class Config:
         table_name = "serializedlmp"
@@ -120,9 +122,14 @@ class Invocation(SQLModel, table=True):
     lmp_id: str = Field(foreign_key="serializedlmp.lmp_id")  # ID of the LMP that was invoked
     args: List[Any] = Field(default_factory=list, sa_column=Column(JSON))  # Arguments used in the invocation
     kwargs: dict = Field(default_factory=dict, sa_column=Column(JSON))  # Keyword arguments used in the invocation
+
+    global_vars : dict = Field(default_factory=dict, sa_column=Column(JSON))  # Global variables used in the invocation
+    free_vars : dict = Field(default_factory=dict, sa_column=Column(JSON))  # Free variables used in the invocation
+
     latency_ms : float 
     prompt_tokens: Optional[int] = Field(default=None)
     completion_tokens: Optional[int] = Field(default=None)
+    input_hash: Optional[str] = Field(default=None)
 
     
     created_at: datetime = Field(default_factory=datetime.utcnow)  # Timestamp of when the invocation was created
@@ -165,3 +172,6 @@ class SerializedLStr(SQLModel, table=True):
     producer_invocation_id: Optional[int] = Field(default=None, foreign_key="invocation.id")  # ID of the Invocation that produced this LStr
     producer_invocation: Optional[Invocation] = Relationship(back_populates="results")  # Relationship to the Invocation that produced this LStr
 
+    # Convert an SerializedLStr to an lstr
+    def deserialize(self) -> lstr:
+        return lstr(self.content, logits=self.logits, _origin_trace=frozenset([self.producer_invocation_id]))

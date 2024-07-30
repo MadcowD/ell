@@ -3,6 +3,11 @@ from typing import Optional, Callable, Any
 
 from ell.types import InvocableLM
 
+
+# __is_caching_functions = {}
+# __cache_except = {}
+
+
 @contextmanager
 def cache(*lmps : InvocableLM):
     """
@@ -39,6 +44,7 @@ def cache_except(*lmps : InvocableLM):
     """
     try:
         # TODO: Implement cache lookup logic here
+        # TODO: This is why we actually dont want to store the cache on the function.
         yield
     finally:
         pass
