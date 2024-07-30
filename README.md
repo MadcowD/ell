@@ -59,6 +59,7 @@ To install `ell`, follow these steps:
    ```sh
    poetry install
    poetry run build-hook
+   poetry shell
    ```
 
 This will install `ell` and its dependencies, including building the necessary frontend components for `ell-studio`.
