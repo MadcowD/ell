@@ -98,6 +98,7 @@ To run `ell-studio` you must seperately run the backend and the front-end. To st
 ```
 cd ell-studio
 npm run dev
+npm run start:dev
 ```
 To start the backend: 
 ```
