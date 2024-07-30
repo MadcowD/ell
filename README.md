@@ -1,6 +1,7 @@
-#  `ell` [WIP, unreleased, experimental] 
+# `ell` [WIP, unreleased, experimental]
+
 [![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/J2UhksbE)
-[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/J2UhksbE](https://discord.gg/Yqyga6Qr))
+[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](<https://discord.gg/J2UhksbE](https://discord.gg/Yqyga6Qr)>)
 [![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/Yqyga6Qr)
 [![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/Yqyga6Qr)
 
@@ -10,10 +11,11 @@
 
 # What is `ell`?
 
- `ell` is a lightweight, functional prompt engineering framework built on a few core principles:
-### 1. Prompts are programs not strings.
-Prompts aren't just strings; they are all the code that leads to strings being sent to a language model. In `ell` we think of one particular way of using a language model as a discrete subroutine called a **language model program**. 
+`ell` is a lightweight, functional prompt engineering framework built on a few core principles:
 
+### 1. Prompts are programs not strings.
+
+Prompts aren't just strings; they are all the code that leads to strings being sent to a language model. In `ell` we think of one particular way of using a language model as a discrete subroutine called a **language model program**.
 
 ```python
 import ell
@@ -25,12 +27,13 @@ def hello(world : str):
 
 hello("sama")
 ```
+
 ![alt text](image.png)
 
 ### 2. Prompts are actually parameters of a machine learning model.
 
 - [ ] Add notes on serialization and lexical closures
-...
+      ...
 
 ### 3. Every call to a language model is worth its weight in credits.
 
@@ -41,30 +44,32 @@ hello("sama")
 To install `ell`, follow these steps:
 
 1. Clone the repository:
+
    ```
    git clone https://github.com/MadcowD/ell.git
    ```
 
 2. Navigate to the cloned directory:
+
    ```
    cd ell
    ```
 
 3. Install the package using pip:
-   ```
-   pip install .
+   ```sh
+   poetry install
+   poetry run build-hook
    ```
 
-This will install `ell` and its dependencies, including building the necessary frontend components for `ell-studio`. 
+This will install `ell` and its dependencies, including building the necessary frontend components for `ell-studio`.
 
 Note: Ensure you have Node.js and npm installed on your system, as they are required for building the frontend components during the installation process.
 
-
 ## Using `ell-studio`
 
-To visaulize and track your promtps over the course of prompt engineering you need to install a store into your project. 
+To visaulize and track your promtps over the course of prompt engineering you need to install a store into your project.
 
-```python 
+```python
 
 # The entry point to your program
 if __name__ == "__main__":
@@ -75,60 +80,63 @@ if __name__ == "__main__":
     your_language_model_program()
     print(greeting[::-1])
 
-``` 
+```
 
 Now you can visualize your prompt engineering process just like tensorboard by using `ell.studio`:
 
 ```
-python3 -m ell.studio --storage-dir ./sqlite_example 
+python3 -m ell.studio --storage-dir ./sqlite_example
 ```
 
 Then visit `http://localhost:8000` in your browser to see your prompt engineering process visualized.
-
 
 ## Contributing
 
 To contribute, install `ell` in development mode using:
 
 ```
-pip install -e .
+poetry install
+poetry run build-hook
 ```
 
 To run `ell-studio` you must seperately run the backend and the front-end. To start the front-end:
+
 ```
 cd ell-studio
 npm run dev
 npm run start:dev
 ```
-To start the backend: 
+
+To start the backend:
+
 ```
 python -m ell.studio --storage-dir ./sqlite_example --dev # the dev flag is important!
 ```
+
 You can then visualize your promtps by visiting the frontend on `http://localhost:3000`
 
 ## Todos
 
-
 ### Metrics
 
 - [ ] Design the metrics functionality. (maybe link WandB lol)
-
-
 
 ### Bugs
 
 - [ ] Fix weird rehashing issue of the main prompt whenever subprompt changes? Or just make commits more of a background deal.
 - [ ] Trace not writing on first invoc.
 - [ ] Rewrite lexical closures
-- [ ] Serialize lkstrs in the jkson dumps in pyhton the same way as the db serializers them for the frontend (__lstr vs SerialziedLstr) <- these are pydantic models and so we can reuse them
+- [ ] Serialize lkstrs in the jkson dumps in pyhton the same way as the db serializers them for the frontend (\_\_lstr vs SerialziedLstr) <- these are pydantic models and so we can reuse them
 - [ ] handle failure to serialize.
 
 ## Tests
+
 - [ ] Add comprehensive unit tests for all core functionalities.
 - [ ] Implement integration tests for end-to-end workflows.
 - [ ] Optimize backend performance and run benchmarks.
 
 ## Trace Functionality
+
 - [x] Visualize trace in graph
 - [x] Implement Langsmith-style invocations and traces
 - [x] Improve UX on traces
@@ -137,14 +145,15 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [o] Implement argument pass-through functionality
 - [ ] Working trace graph thing
 
-
 ## Version History
+
 - [x] Auto-document commit changes
 - [x] Implement version history diff view (possibly with automatic commit messages using GPT-4)
 - [ ] Add interactive diff view
 - [ ] Highlight changes in source when switching versions
 
 ## Caching and versioning
+
 - [x] Get caching to work for bound global mutable types
 - [x] Bind global mutable at invocation, and update our Invocation database types
 - [ ] Come up with a nice way to expand and collapse stored globals in dependency scope.
@@ -154,10 +163,10 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [ ] Custom syntax highlighting for these bound mutable objects
 - [ ] Decide if version not change just because I invoke an LMP using a global that was mutated some where else in the program. (In example where we had test being global with a list of objects of type Test) that shouldn’t change the version number. My vote is that it shouldn’t change.
 - [ ] Compute type lexical closures as needed
-- [ ] Come up with a spec for serialization of bound types. 
- 
+- [ ] Come up with a spec for serialization of bound types.
 
 ## LM Functionality
+
 - [ ] Freezing and unfreezing LMPs
 - [ ] Support multimodal inputs
 - [ ] Implement function calling
@@ -165,6 +174,7 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [ ] Integrate with various LLM providers
 
 ## Use Cases
+
 - [ ] Develop RAG (Retrieval-Augmented Generation) example
 - [ ] Implement embeddings functionality
 - [ ] Create examples for tool use and agents
@@ -172,10 +182,12 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [ ] Showcase optimization techniques
 
 ## Store
+
 - [ ] Improve developer experience around logging mechanisms
 - [ ] Drastically improve query runtime and performance test.
 
 ## DX (Developer Experience)
+
 - [x] Enhance UX for the LMP details page
 - [ ] Improve layout for the differnet parts
 - [ ] Add Dependency Graph on LMP page
@@ -189,8 +201,8 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [ ] Automatic API key management if not specified as a nice experience. Should ask for the api key and store it in the ~/.ell/api_keys directory for the user's convenience.
 - [ ] Need a cli for managing api keys etc
 
-
 ## Packaging
+
 - [ ] Write comprehensive documentation
 - [x] Prepare package for distribution
 - [ ] Refine and organize examples
@@ -198,6 +210,7 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [ ] Draft contribution guidelines
 
 ## Miscellaneous
+
 - [ ] Implement metric tracking system
 - [ ] Add built-ins for classifiers (e.g., logit debiasing)
 - [ ] Develop evaluator framework
