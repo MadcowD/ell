@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { FiLink, FiCopy, FiChevronDown, FiClock, FiTag } from "react-icons/fi";
 import { lstrCleanStringify } from './lstrCleanStringify';
-import { CodeSection } from './CodeSection';
+import { CodeSection } from './source/CodeSection';
 import { TraceGraph } from './TraceGraph';
 
 const InvocationDetailsSidebar = ({ invocation, onClose }) => {

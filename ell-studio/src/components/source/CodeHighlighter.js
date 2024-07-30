@@ -16,7 +16,7 @@ const BoundedVariableWrapper = ({ children }) => {
   return (
     <div className="relative rounded border border-gray-500 mt-2 pt-1 px-1 pb-1">
       <span className="absolute -top-2 left-2 bg-gray-800 px-1 text-[0.6rem] text-gray-400">
-        bound variable at definition
+        bound global at definition
       </span>
       {children}
     </div>

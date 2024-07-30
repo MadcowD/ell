@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiChevronDown, FiChevronRight } from 'react-icons/fi';
 import { CodeHighlighter } from './CodeHighlighter';
-import '../styles/SourceCodeView.css';
+import '../../styles/SourceCodeView.css';
 
 
 export function CodeSection({ 
@@ -10,12 +10,9 @@ export function CodeSection({
   showCode, 
   setShowCode, 
   lines, 
-  startingLineNumber = 1, 
   isDependent = false, 
   collapsedHeight = '150px',
-  showLineNumbers = true,
-  language = 'python',
-  highlighterStyle = {},
+  ...rest // Add rest operator to collect remaining props
 }) {
     const [isHovering, setIsHovering] = useState(false);
     const codeRef = useRef(null);
@@ -49,10 +46,7 @@ export function CodeSection({
         >
           <CodeHighlighter
             code={code}
-            language={language}
-            showLineNumbers={showLineNumbers}
-            startingLineNumber={startingLineNumber}
-            highlighterStyle={highlighterStyle}
+            {...rest} // Spread the remaining props to CodeHighlighter
           />
           {!showCode && (
             <div className="gradient-overlay">
