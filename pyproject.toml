@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "ell"
-version = "0.0.3"
-description = "mll - a functional language model programming framework"
+version = "0.0.1"
+description = "ell - a functional language model programming framework"
 authors = ["William Guss <will@lrsys.xyz>"]
 license = "MIT"
 readme = "README.md"
@@ -41,7 +41,7 @@ typing-extensions = "^4.12.2"
 pytest = "^8.3.2"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "setuptools", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
 build-backend = "poetry_dynamic_versioning.backend"
 
 [tool.poetry.plugins.build]
@@ -61,3 +61,5 @@ invoke = "^1.6.0"
 
 [tool.poetry-dynamic-versioning]
 enable = true
+metadata = true
+format = "{base}"

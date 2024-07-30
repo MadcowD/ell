@@ -2,13 +2,17 @@
 
 install: npm-install npm-build python-install
 
-python-install:
+sync-version:
+	git tag -f $(shell poetry version -s)
+
+python-install: sync-version
 	poetry self add poetry-dynamic-versioning
+	poetry dynamic-versioning enable
 	pip uninstall -y ell
 	poetry install
 	poetry build
 	cd dist && pip install *.whl
-	rm -rf build
+	rm -rf dist
 
 npm-install:
 	@echo "Running npm install"

@@ -1,16 +1,21 @@
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from ell.stores.sql import SQLiteStore
+from ell import __version__
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def create_app(storage_dir: Optional[str] = None):
     storage_path = storage_dir or os.environ.get("ELL_STORAGE_DIR") or os.getcwd()
     assert storage_path, "ELL_STORAGE_DIR must be set"
     serializer = SQLiteStore(storage_path)
-    app = FastAPI()
+
+    app = FastAPI(title="ELL Studio", version=__version__)
 
     # Enable CORS for all origins
     app.add_middleware(
