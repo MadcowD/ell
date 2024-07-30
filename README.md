@@ -96,7 +96,7 @@ To contribute, install `ell` in development mode using:
 
 ```
 poetry install
-poetry run build-hook
+poetry shell
 ```
 
 To run `ell-studio` you must seperately run the backend and the front-end. To start the front-end:
