@@ -527,17 +527,6 @@ files = [
 ]
 
 [[package]]
-name = "invoke"
-version = "1.7.3"
-description = "Pythonic task execution"
-optional = false
-python-versions = "*"
-files = [
-    {file = "invoke-1.7.3-py3-none-any.whl", hash = "sha256:d9694a865764dd3fd91f25f7e9a97fb41666e822bbb00e670091e3f43933574d"},
-    {file = "invoke-1.7.3.tar.gz", hash = "sha256:41b428342d466a82135d5ab37119685a989713742be46e42a3a399d685579314"},
-]
-
-[[package]]
 name = "jinja2"
 version = "3.1.4"
 description = "A very fast and expressive template engine."
@@ -1507,4 +1496,4 @@ npm-install = []
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<=3.12"
-content-hash = "16eb32779b18aa076347d68305cfaeedafc4b0e011d0bce084d0046a360ec9c2"
+content-hash = "fcc49e8756065f170a40167b31558b5823ada59ab36eaf7c714e5280639d66df"

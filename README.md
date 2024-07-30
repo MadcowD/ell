@@ -57,7 +57,8 @@ To install `ell`, follow these steps:
 
 3. Install the package using pip:
    ```sh
-   make install
+   poetry install
+   poetry run build-hook
    ```
 
 This will install `ell` and its dependencies, including building the necessary frontend components for `ell-studio`.
@@ -94,7 +95,8 @@ Then visit `http://localhost:8000` in your browser to see your prompt engineerin
 To contribute, install `ell` in development mode using:
 
 ```
-pip install -e .
+poetry install
+poetry run build-hook
 ```
 
 To run `ell-studio` you must seperately run the backend and the front-end. To start the front-end:

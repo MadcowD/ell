@@ -50,13 +50,11 @@ backend = "build:CustomBuildBackend"
 
 [tool.poetry.scripts]
 ell-studio = "ell.studio.__main__:main"
+build-hook = "build_hook:main"
 
 [tool.poetry.extras]
 npm_install = ["invoke"]
 npm_build = ["invoke"]
-
-[tool.poetry.dev-dependencies]
-invoke = "^1.6.0"
 
 
 [tool.poetry-dynamic-versioning]
