@@ -6,7 +6,6 @@ import '../../styles/SourceCodeView.css';
 
 export function CodeSection({ 
   title, 
-  code, 
   showCode, 
   setShowCode, 
   lines, 
@@ -45,7 +44,6 @@ export function CodeSection({
           onClick={() => !showCode && setShowCode(true)}
         >
           <CodeHighlighter
-            code={code}
             {...rest} // Spread the remaining props to CodeHighlighter
           />
           {!showCode && (

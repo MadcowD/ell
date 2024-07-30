@@ -35,10 +35,6 @@ function LMP() {
           .sort((a, b) => b.created_at - a.created_at)[0];
         setLmp(latest_lmp);
 
-        // Update page title
-        
-
-        console.log(lmpResponse.data)
         const versionHistoryResponse = await axios.get(`${API_BASE_URL}/api/lmps/${latest_lmp.name}`);
         console.log("versionHistoryResponse", versionHistoryResponse)
         setVersionHistory((versionHistoryResponse.data || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
@@ -137,6 +133,7 @@ function LMP() {
                   dependencies={lmp.dependencies.trim()}
                   source={lmp.source.trim()}
                   uses={lmp.uses}
+                  selectedInvocation={selectedTrace}
 
                   showDependenciesInitial={!!id}
                 />
