@@ -135,3 +135,22 @@ pre {
   text-align: right;
   user-select: none;
 }
+
+/* New styles for BoundVariable component */
+.bound-variable {
+  margin: 0.5em 0;
+}
+
+.bound-variable-toggle {
+  background-color: #2a2a2a;
+  color: #ddd;
+  border: none;
+  padding: 0.25em 0.5em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: monospace;
+}
+
+.bound-variable-toggle:hover {
+  background-color: #3a3a3a;
+}

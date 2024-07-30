@@ -190,7 +190,7 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
                 pass
 
     # Iterate over the global variables
-    for var_name, var_value in global_vars.items():
+    for var_name, var_value in {**global_vars, **free_vars}.items():
         # If the variable is a function, get its source code
         if isinstance(var_value, (types.FunctionType, type, types.MethodType)):
             if var_name not in FORBIDDEN_NAMES:
@@ -217,23 +217,16 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
             imports += [dill.source.getimport(var_value, alias=var_name)]
 
         else:
-            # FIXME: Doesn't work wit binary values. But does work with
-            # the actual current value of a fn so if a global changes a bunch duringexecution,
-            # Will have the repr value of the global at that time
-            # Ideally everything is static but this is indeed fucked :);
-            # That is this is nto a reserializeable representation of the prompt
-            # and we cannot use this in a produciton library.
-            
+            json_default = lambda x: f"<Object of type ({type(x).__name__})>"
             if isinstance(var_value, str) and '\n' in var_value:
-                dependencies.append(f"{var_name} = '''{var_value}'''")
+                clean_dump = f"'''{var_value}'''"
             else:
-                json_default = lambda x: f"<Object of type ({type(x).__name__})>"
                 clean_dump = json.dumps(
                     var_value,
                     default=json_default,
                     indent=4
                 ).replace("\"<", "<").replace(">\"", ">")
-                dependencies.append(f"{var_name} = {clean_dump}")
+            dependencies.append(f"#<BV>\n{var_name} = {clean_dump}\n#</BV>")
 
     # We probably need to resovle things with topological sort & turn stuff into a dag but for now we can just do this
 

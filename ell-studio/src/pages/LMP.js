@@ -137,6 +137,7 @@ function LMP() {
                   dependencies={lmp.dependencies.trim()}
                   source={lmp.source.trim()}
                   uses={lmp.uses}
+
                   showDependenciesInitial={!!id}
                 />
               </div>

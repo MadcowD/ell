@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { FiChevronDown, FiChevronRight, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
+import { FiChevronDown, FiChevronRight } from 'react-icons/fi';
+import { CodeHighlighter } from './CodeHighlighter';
 import '../styles/SourceCodeView.css';
+
 
 export function CodeSection({ 
   title, 
@@ -13,7 +13,9 @@ export function CodeSection({
   startingLineNumber = 1, 
   isDependent = false, 
   collapsedHeight = '150px',
-  showLineNumbers = true // New prop with default value
+  showLineNumbers = true,
+  language = 'python',
+  highlighterStyle = {},
 }) {
     const [isHovering, setIsHovering] = useState(false);
     const codeRef = useRef(null);
@@ -23,7 +25,7 @@ export function CodeSection({
         codeRef.current.style.maxHeight = showCode ? 'none' : collapsedHeight;
       }
     }, [showCode, collapsedHeight]);
-  
+
     return (
       <div className="code-section mb-4">
         <button
@@ -45,19 +47,13 @@ export function CodeSection({
           ref={codeRef}
           onClick={() => !showCode && setShowCode(true)}
         >
-          <SyntaxHighlighter
-            language="python"
-            style={atomDark}
+          <CodeHighlighter
+            code={code}
+            language={language}
             showLineNumbers={showLineNumbers}
             startingLineNumber={startingLineNumber}
-            customStyle={{
-              margin: 0,
-              padding: '1em',
-              borderRadius: '0 0 6px 6px',
-            }}
-          >
-            {code}
-          </SyntaxHighlighter>
+            highlighterStyle={highlighterStyle}
+          />
           {!showCode && (
             <div className="gradient-overlay">
               {isHovering && (

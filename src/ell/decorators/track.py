@@ -19,6 +19,9 @@ from functools import wraps
 from typing import Callable
 
 logger = logging.getLogger(__name__)
+def exclude_var(v):
+    # is module or is immutable
+    return inspect.ismodule(v)
 
 def track(fn: Callable) -> Callable:
     if hasattr(fn, "__ell_lm_kwargs__"):
@@ -117,6 +120,8 @@ def track(fn: Callable) -> Callable:
                     source=fn_closure[0],
                     dependencies=fn_closure[1],
                     commit_message=(commit),
+                    global_vars={k: v for k, v in func_to_track.__ell_closure__[2].items() if not exclude_var(v)},
+                free_vars={k: v for k, v in func_to_track.__ell_closure__[3].items() if not exclude_var(v)},
                     is_lmp=lmp,
                     lm_kwargs=(
                         (lm_kwargs)
@@ -128,9 +133,6 @@ def track(fn: Callable) -> Callable:
                 )
                 _has_serialized_lmp = True
 
-            def exclude_var(v):
-                # is module or is immutable
-                return inspect.ismodule(v) or (isinstance(v,  (int, float, str, bool, type(None))))
 
             config._store.write_invocation(id=invocation_id,
                 lmp_id=func_to_track.__ell_hash__,  created_at=datetime.now(),

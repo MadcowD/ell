@@ -36,6 +36,10 @@ const SourceCodeView = ({ dependencies, source, uses, showDependenciesInitial = 
           setShowCode={setShowDependencies}
           lines={dependencyLines}
           isDependent={true}
+          highlighterStyle={{
+            fontSize: '9pt',
+            overflow: 'auto',
+          }}
         />
       )}
       <CodeSection
@@ -45,6 +49,10 @@ const SourceCodeView = ({ dependencies, source, uses, showDependenciesInitial = 
         setShowCode={setShowSource}
         lines={sourceLines}
         startingLineNumber={dependencyLines + 1}
+        highlighterStyle={{
+          fontSize: '9pt',
+          overflow: 'auto',
+        }}
       />
     </div>
   );

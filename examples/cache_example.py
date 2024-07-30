@@ -11,26 +11,22 @@ Other Instructoons:
 - It is extremely important that you don't start you code with ```python. """
 
 
-class Test:
-    a : int = 6
-    pass
-test = [Test() for _ in range(10)]
+# 
+test = ["asd"]*10
 
+def get_lmp():
+    z = 6
+    @ell.lm("gpt-4o", temperature=0.1, max_tokens=6)
+    def write_a_complete_python_class(user_spec : str):
+        return [ell.system(f"""You are an mid-tier python programmer capable of interpreting a user's spec and writing a python class to accomidate their request. You should document all your code, and you best practices.
+        {CODE_INSTURCTIONS} {z} {test[0]}
+        """), ell.user(user_spec)]
 
-@ell.lm("gpt-4o", temperature=0.1, max_tokens=6)
-def write_a_complete_python_class(user_spec : str):
-    return [ell.system(f"""You are an mid-tier python programmer capable of interpreting a user's spec and writing a python class to accomidate their request. You should document all your code, and you best practices.
-    {CODE_INSTURCTIONS} {test[0].a}
-    """), ell.user(user_spec)]
-
-
+    return write_a_complete_python_class
 
 if __name__ == "__main__":
     ell.config.verbose = True
     ell.set_store(SQLiteStore("sqlite_example"), autocommit=True)
-
-
-    cls_Def = write_a_complete_python_class("A class that represents a bank")
-
-
-    cls_Def = write_a_complete_python_class("A class that represents a bank")
+    test[0] = "modified at execution :O"
+    w = get_lmp()
+    cls_Def = w("A class that represents a bank")
