@@ -1495,5 +1495,5 @@ npm-install = []
 
 [metadata]
 lock-version = "2.0"
-python-versions = ">=3.9,<=3.12"
-content-hash = "fcc49e8756065f170a40167b31558b5823ada59ab36eaf7c714e5280639d66df"
+python-versions = ">=3.9,<3.13"
+content-hash = "2c5131b749da66ec7107c64fbf113bfdb1e446408cdb1002fb5791e4929fe144"

@@ -51,7 +51,7 @@ if __name__ == "__main__":
     personalities = [create_personality(), create_personality()]
 
     names = []
-    backstories = []
+    backstories = []    
     for personality in personalities:
         parts = personality.split("\n")
         names.append(parts[0].split(": ")[1])
