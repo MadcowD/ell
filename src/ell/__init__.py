@@ -1,5 +1,6 @@
 from ell.decorators.lm import lm
 from ell.types import Message
+from ell.__version__ import __version__
 
 # registers all of the mdoels.
 import ell.models
@@ -45,4 +46,4 @@ def assistant(content: str) -> Message:
     return Message(role="assistant", content=content)
 
 
-__all__ = ["lm", "system", "user", "assistant", "config"]
+__all__ = ["lm", "system", "user", "assistant", "config", "__version__"]

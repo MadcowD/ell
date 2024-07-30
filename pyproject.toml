@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "ell"
-version = "0.0.1"
-description = "ell - a functional language model programming framework"
+version = "0.0.3"
+description = "mll - a functional language model programming framework"
 authors = ["William Guss <will@lrsys.xyz>"]
 license = "MIT"
 readme = "README.md"
@@ -18,7 +18,10 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9"
 ]
-include = ["ell.studio/static/*", "ell.studio/static/**/*"]
+include = [
+    { path = "src/ell/studio/static", format = ["sdist", "wheel"] },
+    { path = "src/ell/studio/static/**/*", format = ["sdist", "wheel"] }
+]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<=3.12"
@@ -38,10 +41,11 @@ typing-extensions = "^4.12.2"
 pytest = "^8.3.2"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0", "setuptools", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
 
-
+[tool.poetry.plugins.build]
+backend = "build:CustomBuildBackend"
 
 
 [tool.poetry.scripts]
@@ -54,3 +58,6 @@ npm_build = ["invoke"]
 [tool.poetry.dev-dependencies]
 invoke = "^1.6.0"
 
+
+[tool.poetry-dynamic-versioning]
+enable = true

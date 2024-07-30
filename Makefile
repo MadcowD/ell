@@ -1,6 +1,14 @@
 .PHONY: install npm-install npm-build
 
-install: npm-install npm-build
+install: npm-install npm-build python-install
+
+python-install:
+	poetry self add poetry-dynamic-versioning
+	pip uninstall -y ell
+	poetry install
+	poetry build
+	cd dist && pip install *.whl
+	rm -rf build
 
 npm-install:
 	@echo "Running npm install"
