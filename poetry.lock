@@ -764,7 +764,10 @@ files = [
 [package.dependencies]
 annotated-types = ">=0.4.0"
 pydantic-core = "2.20.1"
-typing-extensions = {version = ">=4.6.1", markers = "python_version < \"3.13\""}
+typing-extensions = [
+    {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
+    {version = ">=4.6.1", markers = "python_version < \"3.13\""},
+]
 
 [package.extras]
 email = ["email-validator (>=2.0.0)"]
@@ -1495,5 +1498,5 @@ npm-install = []
 
 [metadata]
 lock-version = "2.0"
-python-versions = ">=3.9,<3.13"
-content-hash = "2c5131b749da66ec7107c64fbf113bfdb1e446408cdb1002fb5791e4929fe144"
+python-versions = ">=3.9"
+content-hash = "5877feb54330301831212a72804ed9af0ccbe7bbebf5504e222c7f6d856ceea6"
