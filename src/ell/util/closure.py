@@ -139,200 +139,193 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False, recursio
 
     recursion_stack.append(func.__qualname__ if hasattr(func, '__qualname__') else str(func))
 
-    try:
-        outer_ell_func = func
-        while hasattr(func, "__ell_func__"):
-            func = func.__ell_func__
-        
-        source = getsource(func, lstrip=True)
-        already_closed.add(hash(func))
-        # if func is nested func
-        # Parse the source code into an AST
-        # tree = ast.parse(source)
-        # Find all the global variables and free variables in the function
-        global_vars = collections.OrderedDict(dill.detect.globalvars(func))
-        free_vars = collections.OrderedDict(dill.detect.freevars(func))
+    outer_ell_func = func
+    while hasattr(func, "__ell_func__"):
+        func = func.__ell_func__
+    
+    source = getsource(func, lstrip=True)
+    already_closed.add(hash(func))
+    # if func is nested func
+    # Parse the source code into an AST
+    # tree = ast.parse(source)
+    # Find all the global variables and free variables in the function
+    global_vars = collections.OrderedDict(dill.detect.globalvars(func))
+    free_vars = collections.OrderedDict(dill.detect.freevars(func))
 
-        # If func is a class we actually should check all the methods of the class for globalvars. Malekdiction (MSM) was here.
-        # Add the default aprameter tpes to depndencies if they are not builtins
+    # If func is a class we actually should check all the methods of the class for globalvars. Malekdiction (MSM) was here.
+    # Add the default aprameter tpes to depndencies if they are not builtins
 
-        if isinstance(func, type):
-            # Now we need to get all the global vars in the class
-            for name, method in collections.OrderedDict(func.__dict__).items():
-                if isinstance(method, types.FunctionType) or isinstance(
-                    method, types.MethodType
-                ):
-                    global_vars.update(
-                        collections.OrderedDict(dill.detect.globalvars(method))
+    if isinstance(func, type):
+        # Now we need to get all the global vars in the class
+        for name, method in collections.OrderedDict(func.__dict__).items():
+            if isinstance(method, types.FunctionType) or isinstance(
+                method, types.MethodType
+            ):
+                global_vars.update(
+                    collections.OrderedDict(dill.detect.globalvars(method))
+                )
+                free_vars.update(collections.OrderedDict(dill.detect.freevars(method)))
+
+    # Initialize a list to store the source code of the dependencies
+    dependencies = []
+    modules = deque()
+    imports = []
+
+    if isinstance(func, (types.FunctionType, types.MethodType)):
+        # Get all the the default kwargs
+        ps = inspect.signature(func).parameters
+        default_kwargs = collections.OrderedDict(
+            {
+                k: v.default
+                for k, v in ps.items()
+                if v.default is not inspect.Parameter.empty
+            }
+        )
+        for name, val in default_kwargs.items():
+            try:
+                if name not in FORBIDDEN_NAMES:
+                    dep, _,  dep_uses = lexical_closure(
+                        type(val), already_closed=already_closed,
+                        recursion_stack=recursion_stack.copy()
                     )
-                    free_vars.update(collections.OrderedDict(dill.detect.freevars(method)))
+                    dependencies.append(dep)
+                    uses.update(dep_uses)
 
-        # Initialize a list to store the source code of the dependencies
-        dependencies = []
-        modules = deque()
-        imports = []
+            except Exception as e:
+                error_msg = f"Failed to capture the lexical closure of default parameter {name}. Error: {str(e)}\n"
+                error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
+                raise Exception(error_msg)
 
-        if isinstance(func, (types.FunctionType, types.MethodType)):
-            # Get all the the default kwargs
-            ps = inspect.signature(func).parameters
-            default_kwargs = collections.OrderedDict(
-                {
-                    k: v.default
-                    for k, v in ps.items()
-                    if v.default is not inspect.Parameter.empty
-                }
-            )
-            for name, val in default_kwargs.items():
+    # Iterate over the global variables
+    for var_name, var_value in {**global_vars, **free_vars}.items():
+        # If the variable is a function, get its source code
+        if isinstance(var_value, (types.FunctionType, type, types.MethodType)):
+            if var_name not in FORBIDDEN_NAMES:
                 try:
-                    if name not in FORBIDDEN_NAMES:
-                        dep, _,  dep_uses = lexical_closure(
-                            type(val), already_closed=already_closed,
-                            recursion_stack=recursion_stack.copy()
-                        )
-                        dependencies.append(dep)
+                    ret = lexical_closure(
+                        var_value, already_closed=already_closed,
+                        recursion_stack=recursion_stack.copy()
+                    )
+                    dep, _, dep_uses = ret
+                    dependencies.append(dep)
+                    # See if the function was called at all in the source code of the func
+                    # This is wrong because if its a referred call it won't track the dependency; so we actually need to trace all dependencies that are not ell funcs to see if they call it as well.
+                    if is_function_called(var_name, source):
                         uses.update(dep_uses)
-
                 except Exception as e:
-                    error_msg = f"Failed to capture the lexical closure of default parameter {name}. Error: {str(e)}\n"
+                    error_msg = f"Failed to capture the lexical closure of global or free variablevariable {var_name}. Error: {str(e)}\n"
                     error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
-                    dependencies.append(f"# {error_msg}")
+                    raise Exception(error_msg)
 
-        # Iterate over the global variables
-        for var_name, var_value in {**global_vars, **free_vars}.items():
-            # If the variable is a function, get its source code
-            if isinstance(var_value, (types.FunctionType, type, types.MethodType)):
-                if var_name not in FORBIDDEN_NAMES:
-                    try:
-                        ret = lexical_closure(
-                            var_value, already_closed=already_closed,
-                            recursion_stack=recursion_stack.copy()
-                        )
-                        dep, _, dep_uses = ret
-                        dependencies.append(dep)
-                        # See if the function was called at all in the source code of the func
-                        # This is wrong because if its a referred call it won't track the dependency; so we actually need to trace all dependencies that are not ell funcs to see if they call it as well.
-                        if is_function_called(var_name, source):
-                            uses.update(dep_uses)
-                    except Exception as e:
-                        error_msg = f"Failed to capture the lexical closure of global or free variablevariable {var_name}. Error: {str(e)}\n"
-                        error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
-                        dependencies.append(f"# {error_msg}")
-
-            elif isinstance(var_value, types.ModuleType):
-                if should_import(var_value):
-                    imports += [dill.source.getimport(var_value, alias=var_name)]
-
-                else:
-                    # Now we need to find all the variables in this module that were referenced
-                    modules.append((var_name, var_value))
-            elif isinstance(var_value, types.BuiltinFunctionType):
-                # we need to get an import for it
-
+        elif isinstance(var_value, types.ModuleType):
+            if should_import(var_value):
                 imports += [dill.source.getimport(var_value, alias=var_name)]
 
             else:
-                json_default = lambda x: f"<Object of type ({type(x).__name__})>"
-                if isinstance(var_value, str) and '\n' in var_value:
-                    clean_dump = f"'''{var_value}'''"
-                else:
-                    clean_dump = json.dumps(
-                        var_value,
-                        default=json_default,
-                        indent=4
-                    ).replace("\"<", "<").replace(">\"", ">")
-                dependencies.append(f"#<BV>\n{var_name} = {clean_dump}\n#</BV>")
+                # Now we need to find all the variables in this module that were referenced
+                modules.append((var_name, var_value))
+        elif isinstance(var_value, types.BuiltinFunctionType):
+            # we need to get an import for it
 
-        # We probably need to resovle things with topological sort & turn stuff into a dag but for now we can just do this
+            imports += [dill.source.getimport(var_value, alias=var_name)]
 
-        cur_src = (
-            DELIM
-            + "\n"
-            + f"\n{DELIM}\n".join(imports + dependencies)
-            + "\n"
-            + DELIM
-            + "\n"
-            + source
-            + "\n"
-            + DELIM
-            + "\n"
-        )
+        else:
+            json_default = lambda x: f"<Object of type ({type(x).__name__})>"
+            if isinstance(var_value, str) and '\n' in var_value:
+                clean_dump = f"'''{var_value}'''"
+            else:
+                clean_dump = json.dumps(
+                    var_value,
+                    default=json_default,
+                    indent=4
+                ).replace("\"<", "<").replace(">\"", ">")
+            dependencies.append(f"#<BV>\n{var_name} = {clean_dump}\n#</BV>")
 
-        reverse_module_src = deque()
-        while len(modules) > 0:
-            mname, mval = modules.popleft()
-            mdeps = []
-            attrs_to_extract = get_referenced_names(cur_src.replace(DELIM, ""), mname)
-            for attr in attrs_to_extract:
-                val = getattr(mval, attr)
-                if isinstance(val, (types.FunctionType, type, types.MethodType)):
-                    try:
-                        dep, _, dep_uses = lexical_closure(
-                            val, already_closed=already_closed,
-                            recursion_stack=recursion_stack.copy()
-                        )
-                        mdeps.append(dep)
-                        uses.update(dep_uses)
-                    except Exception as e:
-                        error_msg = f"Failed to capture the lexical closure of {mname}.{attr}. Error: {str(e)}\n"
-                        error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
-                        mdeps.append(f"# {error_msg}")
-                elif isinstance(val, types.ModuleType):
-                    modules.append((attr, val))
-                else:
-                    # If its another module we need to add it to the list of modules
-                    mdeps.append(f"{attr} = {repr(val)}")
+    # We probably need to resovle things with topological sort & turn stuff into a dag but for now we can just do this
 
-            mdeps.insert(0, f"# Extracted from module: {mname}")
+    cur_src = (
+        DELIM
+        + "\n"
+        + f"\n{DELIM}\n".join(imports + dependencies)
+        + "\n"
+        + DELIM
+        + "\n"
+        + source
+        + "\n"
+        + DELIM
+        + "\n"
+    )
 
-            # Now let's dereference all the module names in our cur_src
-            for attr in attrs_to_extract:
-                # Go throught hte dependencies and replace all the module names with the attr
-                source = source.replace(f"{mname}.{attr}", attr)
-                dependencies = [
-                    dep.replace(f"{mname}.{attr}", attr) for dep in dependencies
-                ]
-            # Now add all the module dependencies to the top of the list
-            reverse_module_src.appendleft("\n".join(mdeps))
+    reverse_module_src = deque()
+    while len(modules) > 0:
+        mname, mval = modules.popleft()
+        mdeps = []
+        attrs_to_extract = get_referenced_names(cur_src.replace(DELIM, ""), mname)
+        for attr in attrs_to_extract:
+            val = getattr(mval, attr)
+            if isinstance(val, (types.FunctionType, type, types.MethodType)):
+                try:
+                    dep, _, dep_uses = lexical_closure(
+                        val, already_closed=already_closed,
+                        recursion_stack=recursion_stack.copy()
+                    )
+                    mdeps.append(dep)
+                    uses.update(dep_uses)
+                except Exception as e:
+                    error_msg = f"Failed to capture the lexical closure of {mname}.{attr}. Error: {str(e)}\n"
+                    error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
+                    mdeps.append(f"# {error_msg}")
+            elif isinstance(val, types.ModuleType):
+                modules.append((attr, val))
+            else:
+                # If its another module we need to add it to the list of modules
+                mdeps.append(f"{attr} = {repr(val)}")
 
-        # Now we need to add the module dependencies to the top of the source
-        # Sort the dependencies
-        dependencies = sorted(dependencies)
-        imports = sorted(imports)
-        reverse_module_src = sorted(reverse_module_src)
-        seperated_dependencies = (
-            imports
-            + list(reverse_module_src)
-            + dependencies
-            + [source]
-        )
-        # Remove duplicates and preserve order
-        seperated_dependencies = list(dict.fromkeys(seperated_dependencies))
+        mdeps.insert(0, f"# Extracted from module: {mname}")
 
-        dirty_src = DELIM + "\n" + f"\n{DELIM}\n".join(seperated_dependencies) + "\n" + DELIM + "\n" 
-        dirty_src_without_func = DELIM + "\n" + f"\n{DELIM}\n".join(seperated_dependencies[:-1]) + "\n" + DELIM + "\n"
+        # Now let's dereference all the module names in our cur_src
+        for attr in attrs_to_extract:
+            # Go throught hte dependencies and replace all the module names with the attr
+            source = source.replace(f"{mname}.{attr}", attr)
+            dependencies = [
+                dep.replace(f"{mname}.{attr}", attr) for dep in dependencies
+            ]
+        # Now add all the module dependencies to the top of the list
+        reverse_module_src.appendleft("\n".join(mdeps))
 
-        CLOSURE_SOURCE[hash(func)] = dirty_src 
+    # Now we need to add the module dependencies to the top of the source
+    # Sort the dependencies
+    dependencies = sorted(dependencies)
+    imports = sorted(imports)
+    reverse_module_src = sorted(reverse_module_src)
+    seperated_dependencies = (
+        imports
+        + list(reverse_module_src)
+        + dependencies
+        + [source]
+    )
+    # Remove duplicates and preserve order
+    seperated_dependencies = list(dict.fromkeys(seperated_dependencies))
 
-        dsrc = _clean_src(dirty_src_without_func)
-        fn_hash = "lmp-" + hashlib.md5(
-                "\n".join((source, dsrc, func.__qualname__)).encode()
-            ).hexdigest()
-        
-        if hasattr(outer_ell_func, "__ell_func__"):
-            outer_ell_func.__ell_closure__ = (source, dsrc, global_vars, free_vars)
-            outer_ell_func.__ell_hash__ = fn_hash
-            outer_ell_func.__ell_uses__ = uses
+    dirty_src = DELIM + "\n" + f"\n{DELIM}\n".join(seperated_dependencies) + "\n" + DELIM + "\n" 
+    dirty_src_without_func = DELIM + "\n" + f"\n{DELIM}\n".join(seperated_dependencies[:-1]) + "\n" + DELIM + "\n"
+
+    CLOSURE_SOURCE[hash(func)] = dirty_src 
+
+    dsrc = _clean_src(dirty_src_without_func)
+    fn_hash = "lmp-" + hashlib.md5(
+            "\n".join((source, dsrc, func.__qualname__)).encode()
+        ).hexdigest()
+    
+    if hasattr(outer_ell_func, "__ell_func__"):
+        outer_ell_func.__ell_closure__ = (source, dsrc, global_vars, free_vars)
+        outer_ell_func.__ell_hash__ = fn_hash
+        outer_ell_func.__ell_uses__ = uses
 
 
-        return (dirty_src, (source, dsrc), ({fn_hash}  if not initial_call and hasattr(outer_ell_func, "__ell_func__") else uses))
+    return (dirty_src, (source, dsrc), ({fn_hash}  if not initial_call and hasattr(outer_ell_func, "__ell_func__") else uses))
 
-    except Exception as e:
-        error_msg = f"Failed to capture the lexical closure of {func.__qualname__ if hasattr(func, '__qualname__') else str(func)}. Error: {str(e)}\n"
-        error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
-        return f"# {error_msg}", ("", ""), set()
 
-    finally:
-        recursion_stack.pop()
 
 def lexically_closured_source(func):
     _, fnclosure, uses = lexical_closure(func, initial_call=True, recursion_stack=[])
