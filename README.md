@@ -1,7 +1,7 @@
 # `ell` [WIP, unreleased, experimental]
 
-[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/J2UhksbE)
-[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](<https://discord.gg/J2UhksbE](https://discord.gg/Yqyga6Qr)>)
+[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/Yqyga6Qr)
+[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/Yqyga6Qr)
 [![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/Yqyga6Qr)
 [![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/Yqyga6Qr)
 
