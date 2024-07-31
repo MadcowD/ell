@@ -72,8 +72,11 @@ def should_import(module: types.ModuleType):
     # Get the module's spec
     spec = importlib.util.find_spec(module.__name__)
 
+    if not module.__name__.startswith("ell"):
+        return True
+    
     # Return False if the spec is None or if the spec's origin starts with the local directory
-    if spec is None or spec.origin.startswith(DIRECTORY_TO_WATCH):
+    if spec is None or (spec.origin is not None and spec.origin.startswith(DIRECTORY_TO_WATCH)):
         return False
 
     # Otherwise, return True
