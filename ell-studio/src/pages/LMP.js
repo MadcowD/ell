@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useTheme } from '../contexts/ThemeContext';
 import TracesRunsPane from '../components/TracesRunsPane';
 import DependencyGraphPane from '../components/DependencyGraphPane';
-import SourceCodeView from '../components/source/LMPSourceView';
+import LMPSourceView from '../components/source/LMPSourceView';
 import { FiCopy, FiFilter, FiColumns } from 'react-icons/fi';
 import VersionHistoryPane from '../components/VersionHistoryPane';
 import LMPDetailsSidePanel from '../components/LMPDetailsSidePanel';
@@ -129,10 +129,8 @@ function LMP() {
                 </div>
               </div>
               <div className="overflow-hidden">
-                <SourceCodeView
-                  dependencies={lmp.dependencies.trim()}
-                  source={lmp.source.trim()}
-                  uses={lmp.uses}
+                <LMPSourceView
+                  lmp={lmp}
                   selectedInvocation={selectedTrace}
 
                   showDependenciesInitial={!!id}

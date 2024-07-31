@@ -124,10 +124,11 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 ### Bugs
 
 - [ ] Fix weird rehashing issue of the main prompt whenever subprompt changes? Or just make commits more of a background deal.
-- [ ] Trace not writing on first invoc.
+- [x] Trace not writing on first invoc.
 - [ ] Rewrite lexical closures
 - [ ] Serialize lkstrs in the jkson dumps in pyhton the same way as the db serializers them for the frontend (\_\_lstr vs SerialziedLstr) <- these are pydantic models and so we can reuse them
 - [ ] handle failure to serialize.
+- [ ] Unify cattrs deserialziation and serialization its fucked right now.
 
 ## Tests
 

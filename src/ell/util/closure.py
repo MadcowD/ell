@@ -52,7 +52,7 @@ import re
 DELIM = "$$$$$$$$$$$$$$$$$$$$$$$$$"
 SEPERATOR = "#------------------------"
 FORBIDDEN_NAMES = ["ell", "lstr"]
-def is_immutable(value):
+def is_immutable_variable(value):
     """
     Check if a value is immutable.
     
@@ -76,18 +76,8 @@ def is_immutable(value):
         int, float, complex, str, bytes,
         tuple, frozenset, type(None),
         bool,  # booleans are immutable
-        types.FunctionType,  # functions are immutable
-        types.BuiltinFunctionType,  # built-in functions are immutable
-        types.MethodType,  # bound methods are immutable
-        types.ModuleType,  # modules are effectively immutable
-        types.CodeType,  # code objects are immutable
-        types.MappingProxyType,  # read-only proxy of a mapping
-        types.SimpleNamespace,  # simple object for attribute access
         range,  # range objects are immutable
         slice,  # slice objects are immutable
-        property,  # property objects are immutable
-        classmethod,  # classmethod objects are immutable
-        staticmethod,  # staticmethod objects are immutable
     )
     
     if isinstance(value, immutable_types):
@@ -95,7 +85,7 @@ def is_immutable(value):
     
     # Check for immutable instances of mutable types
     if isinstance(value, (tuple, frozenset)):
-        return all(is_immutable(item) for item in value)
+        return all(is_immutable_variable(item) for item in value)
     
     return False
 
@@ -198,8 +188,10 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False, recursio
     # Parse the source code into an AST
     # tree = ast.parse(source)
     # Find all the global variables and free variables in the function
-    global_vars = collections.OrderedDict(dill.detect.globalvars(func))
-    free_vars = collections.OrderedDict(dill.detect.freevars(func))
+
+    # These are not global variables these are globals, and other shit is actualy in cluded here
+    _globals = collections.OrderedDict(dill.detect.globalvars(func))
+    _frees = collections.OrderedDict(dill.detect.freevars(func))
 
     # If func is a class we actually should check all the methods of the class for globalvars. Malekdiction (MSM) was here.
     # Add the default aprameter tpes to depndencies if they are not builtins
@@ -210,10 +202,10 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False, recursio
             if isinstance(method, types.FunctionType) or isinstance(
                 method, types.MethodType
             ):
-                global_vars.update(
+                _globals.update(
                     collections.OrderedDict(dill.detect.globalvars(method))
                 )
-                free_vars.update(collections.OrderedDict(dill.detect.freevars(method)))
+                _frees.update(collections.OrderedDict(dill.detect.freevars(method)))
 
     # Initialize a list to store the source code of the dependencies
     dependencies = []
@@ -246,12 +238,10 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False, recursio
                 raise Exception(error_msg)
 
     # Iterate over the global variables
-    for var_name, var_value in {**global_vars, **free_vars}.items():
+    for var_name, var_value in {**_globals, **_frees}.items():
         # If the variable is a function, get its source code
         if isinstance(var_value, (types.FunctionType, type, types.MethodType)):
-            if var_name not in FORBIDDEN_NAMES and (
-
-            ):
+            if var_name not in FORBIDDEN_NAMES:
                 try:
                     ret = lexical_closure(
                         var_value, already_closed=already_closed,
@@ -281,15 +271,16 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False, recursio
             imports += [dill.source.getimport(var_value, alias=var_name)]
 
         else:
-            json_default = lambda x: f"<Object of type ({type(x).__name__})>"
+            json_default = lambda x: f"<Object of type ()>"
             if isinstance(var_value, str) and '\n' in var_value:
                 clean_dump = f"'''{var_value}'''"
             else:
                 # if is immutable
-                if is_immutable(var_value):
+                if is_immutable_variable(var_value):
                     dependencies.append(f"#<BV>\n{var_name} = {repr(var_value)}\n#</BV>")
                 else:
-                    dependencies.append(f"#<BmV>\n{var_name} = {str(var_value)}\n#</BmV>")
+
+                    dependencies.append(f"#<BmV>\n{var_name} = <{type(var_value).__name__} object>\n#</BmV>")
 
     # We probably need to resovle things with topological sort & turn stuff into a dag but for now we can just do this
 
@@ -368,7 +359,7 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False, recursio
         ).hexdigest()
     
     if hasattr(outer_ell_func, "__ell_func__"):
-        outer_ell_func.__ell_closure__ = (source, dsrc, global_vars, free_vars)
+        outer_ell_func.__ell_closure__ = (source, dsrc, _globals, _frees)
         outer_ell_func.__ell_hash__ = fn_hash
         outer_ell_func.__ell_uses__ = uses
 

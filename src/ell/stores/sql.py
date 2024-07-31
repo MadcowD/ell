@@ -34,13 +34,14 @@ class SQLStore(ell.store.Store):
                 # Already added to the DB.
                 return lmp
             else:
-                print(version_number)
                 lmp = SerializedLMP(
                     lmp_id=lmp_id,
                     name=name,
                     version_number=version_number,
                     source=source,
                     dependencies=dependencies,
+                    initial_global_vars=global_vars,
+                    initial_free_vars=free_vars,
                     created_at= created_at or datetime.datetime.utcnow(),
                     is_lm=is_lmp,
                     lm_kwargs=lm_kwargs,

@@ -97,7 +97,7 @@ def track(fn: Callable) -> Callable:
             lmps = config._store.get_lmps(name=_name)
             version = 0
             already_in_store =any(lmp['lmp_id'] == func_to_track.__ell_hash__ for lmp in lmps)
-            if not already_in_store:
+            if not already_in_store :
                 # Do auto commitng and versioning if previous versions exist.
                 if len(lmps) > 0 :
                     lmps.sort(key=lambda x: x['created_at'], reverse=True)
@@ -105,13 +105,11 @@ def track(fn: Callable) -> Callable:
 
 
                     version = (latest_lmp['version_number']) + 1
-                    print(latest_lmp['version_number'], version)
                     if config.autocommit:
                     # Get the latest lmp
                     # sort by created at  
                         from ell.util.differ import write_commit_message_for_diff
                         commit = str(write_commit_message_for_diff(f"{latest_lmp['dependencies']}\n\n{latest_lmp['source']}", f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
-
 
                 config._store.write_lmp(
                     lmp_id=func_to_track.__ell_hash__,
@@ -120,8 +118,8 @@ def track(fn: Callable) -> Callable:
                     source=fn_closure[0],
                     dependencies=fn_closure[1],
                     commit_message=(commit),
-                    global_vars={k: v for k, v in func_to_track.__ell_closure__[2].items() if not exclude_var(v)},
-                free_vars={k: v for k, v in func_to_track.__ell_closure__[3].items() if not exclude_var(v)},
+                    global_vars={k: v for k, v in func_to_track.__ell_closure__[2].items() if ell.util.closure.is_immutable_variable(v)},
+                    free_vars={k: v for k, v in func_to_track.__ell_closure__[3].items() if ell.util.closure.is_immutable_variable(v)},
                     is_lmp=lmp,
                     lm_kwargs=(
                         (lm_kwargs)
@@ -134,16 +132,16 @@ def track(fn: Callable) -> Callable:
                 _has_serialized_lmp = True
 
 
-            config._store.write_invocation(id=invocation_id,
-                lmp_id=func_to_track.__ell_hash__,  created_at=datetime.now(),
-                global_vars={k: v for k, v in func_to_track.__ell_closure__[2].items() if not exclude_var(v)},
-                free_vars={k: v for k, v in func_to_track.__ell_closure__[3].items() if not exclude_var(v)},
-                latency_ms=latency_ms,
-                prompt_tokens=prompt_tokens,
-                completion_tokens=completion_tokens,
-                input_hash=input_hash,
-                invocation_kwargs=invocation_kwargs,
-                **cleaned_invocation_params, consumes=consumes, result=result)
+        config._store.write_invocation(id=invocation_id,
+            lmp_id=func_to_track.__ell_hash__,  created_at=datetime.now(),
+            global_vars={k: v for k, v in func_to_track.__ell_closure__[2].items() if ell.util.closure.is_immutable_variable(v)},
+            free_vars={k: v for k, v in func_to_track.__ell_closure__[3].items() if ell.util.closure.is_immutable_variable(v)},
+            latency_ms=latency_ms,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            input_hash=input_hash,
+            invocation_kwargs=invocation_kwargs,
+            **cleaned_invocation_params, consumes=consumes, result=result)
 
         return result
 

@@ -7,21 +7,34 @@ import '../../styles/SourceCodeView.css';
 import { CodeSection } from './CodeSection';
 import { CodeHighlighter } from './CodeHighlighter';
 
-const BoundedVariableWrapper = ({ children, selectedInvocation, content }) => {
+const BoundedVariableWrapper = ({ children, selectedInvocation,  content, merged_initial_bound_vars }) => {
   const var_name = content.split('=')[0].trim();
-  const formattedInvocationValue = selectedInvocation?.global_vars?.[var_name] ? `${var_name} = ${JSON.stringify(selectedInvocation?.global_vars?.[var_name], null, 2)}` : '';
+  const mergedInvocationBoundVars = useMemo(() => selectedInvocation ? { ...selectedInvocation.global_vars, ...selectedInvocation.free_vars } : merged_initial_bound_vars, [selectedInvocation, merged_initial_bound_vars]);
+  const value = mergedInvocationBoundVars?.[var_name];
+  const formattedValue = `${var_name} = ${JSON.stringify(value)}`;
   return (
-    <div className="relative rounded border border-gray-500 mt-2 pt-1 px-1 pb-1">
-      <span className="absolute -top-2 left-2 bg-gray-800 px-1 text-[0.6rem] text-gray-400">
+    <div className="relative rounded border border-gray-500 mt-2 py-2">
+      <span className="absolute -top-2 left-2 bg-gray-800  text-[0.6rem]  text-gray-400">
         bound global {!selectedInvocation ?  'at definition' : `at invocation ${selectedInvocation.id}`}
       </span>
-      {!selectedInvocation ? children : <CodeHighlighter code={formattedInvocationValue} showLineNumbers={false} defaultRowPadding='' />}
+       <div className='ml-5'>
+       <CodeHighlighter code={formattedValue} showLineNumbers={false} defaultRowPadding='' highlighterStyle={{
+          padding: '0px'
+        }} />
+       </div>
     </div>
   );
 };
 
 
-const SourceCodeView = ({ dependencies, source, uses, showDependenciesInitial = false, selectedInvocation = null }) => {
+const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocation = null }) => {
+  const { dependencies, source, uses, initial_global_vars, initial_free_vars } = lmp;
+
+  console.log(lmp)
+  const merged_initial_bound_vars = useMemo(() => {
+    return { ...initial_global_vars, ...initial_free_vars };
+  }, [initial_global_vars, initial_free_vars]);
+
   const [showDependencies, setShowDependencies] = useState(showDependenciesInitial);
   const [showSource, setShowSource] = useState(true);
 
@@ -31,25 +44,23 @@ const SourceCodeView = ({ dependencies, source, uses, showDependenciesInitial = 
   const dependentLMPs = uses.length;
 
   const boundedVariableHooks = useMemo(() => {
+    const wrapper = ({ children, key, content }) => (  
+      <BoundedVariableWrapper key={key} selectedInvocation={selectedInvocation} content={content} merged_initial_bound_vars={merged_initial_bound_vars} >
+        {children}
+      </BoundedVariableWrapper>
+      );
+
     return [{
     name: 'boundedVariable',
     startTag: '#<BV>',
     endTag: '#</BV>',
-    wrapper: ({ children, key, content }) => (  
-      <BoundedVariableWrapper key={key} selectedInvocation={selectedInvocation} content={content}>
-        {children}
-      </BoundedVariableWrapper>
-      )
+    wrapper
     },
     {
       name: 'boundedMutableVariable',
       startTag: '#<BmV>',
       endTag: '#</BmV>',
-      wrapper: ({ children, key, content }) => (  
-        <BoundedVariableWrapper key={key} selectedInvocation={selectedInvocation} content={content}>
-          {children}
-        </BoundedVariableWrapper>
-        )
+      wrapper
     }
   ];
   }, [selectedInvocation]);
@@ -76,6 +87,7 @@ const SourceCodeView = ({ dependencies, source, uses, showDependenciesInitial = 
           lines={dependencyLines}
           isDependent={true}
           customHooks={boundedVariableHooks}
+
           highlighterStyle={{
             fontSize: '9pt',
             overflow: 'auto',
@@ -98,4 +110,4 @@ const SourceCodeView = ({ dependencies, source, uses, showDependenciesInitial = 
   );
 };
 
-export default SourceCodeView;
+export default LMPSourceView;
