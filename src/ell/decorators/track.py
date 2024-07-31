@@ -212,7 +212,12 @@ def prepare_invocation_params(fn_args, fn_kwargs):
         frozenset,
         lambda s: list(sorted(s))
     )
+ 
 
     cleaned_invocation_params = invocation_converter.unstructure(invocation_params)
-    input_hash = hashlib.sha256(json.dumps(cleaned_invocation_params, sort_keys=True).encode('utf-8')).hexdigest()
-    return cleaned_invocation_params, input_hash, consumes
+    jstr = json.dumps(cleaned_invocation_params, sort_keys=True, default=repr)
+    input_hash = hashlib.sha256(jstr.encode('utf-8')).hexdigest()
+    #  TODO: This is a hack fix it.
+    # XXX:  Unify this with above so that we don't have to do this.
+    # XXX: I really think there is some standard var explorer we can leverage from from ipython or someshit.
+    return json.loads(jstr), input_hash, consumes
