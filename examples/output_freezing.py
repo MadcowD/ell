@@ -19,7 +19,7 @@ def create_a_python_class(user_spec : str):
 def write_unit_for_a_class(class_def : str):
     return [
         ell.system(
-            f"{BASE_PROMPT}\n\nYour goal is to write unit tests for a specific class definition."
+            f"{BASE_PROMPT}\n\nYour goal is to write only a single unit test for a specific class definition. Don't use `unittest` package"
         ),
         ell.user(
             f"Here is the class definition: {class_def}"
@@ -27,17 +27,9 @@ def write_unit_for_a_class(class_def : str):
     ]
 
 
-def somewhere_else_I_want_to_cache():
-    store = ell.get_store()
-    with store.freeze(create_a_python_class):
-        _class_def = create_a_python_class("A class that represents a bank")
-    return _class_def
-
-
 if __name__ == "__main__":
     store = SQLiteStore("sqlite_example")
     ell.set_store(store, autocommit=True)
-    
 
     with store.freeze(create_a_python_class):
         _class_def = create_a_python_class("A class that represents a bank")

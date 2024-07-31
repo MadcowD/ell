@@ -115,6 +115,20 @@ python -m ell.studio --storage-dir ./sqlite_example --dev # the dev flag is impo
 
 You can then visualize your promtps by visiting the frontend on `http://localhost:3000`
 
+
+## v1 release todos
+- LMP UX Finished entirely
+- Postgres backend
+- Clean all of the pydantic schema serialziation santiziation etc that we do throughout the codebase
+- Full version history UX
+- Package on pypy
+- Docs 
+- Jupyter compatability
+- Tests
+- Convert all of our todos into issues and milestones
+- Multimodality
+- Output parsing.
+
 ## Todos
 
 ### Metrics
@@ -172,7 +186,7 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 
 ## LM Functionality
 
-- [ ] Freezing and unfreezing LMPs
+- [x] Freezing and unfreezing LMPs
 - [ ] Support multimodal inputs
 - [ ] Implement function calling
 - [ ] Add persistent chatting capability
