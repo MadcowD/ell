@@ -80,7 +80,7 @@ class _Config:
 # Singleton instance
 config = _Config()
 
-# Todo: Is this write ot expose global helpers.
+# Todo: Is this the right way to expose global helpers.
 @wraps(config.get_store)
 def get_store() -> Store:
     return config.get_store()

@@ -155,16 +155,30 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 ## Caching and versioning
 
 - [x] Get caching to work for bound global mutable types
+- [x] Decide if version not change just because I invoke an LMP using a global that was mutated some where else in the program. (In example where we had test being global with a list of objects of type Test) that shouldn’t change the version number. My vote is that it shouldn’t change.
 - [x] Bind global mutable at invocation, and update our Invocation database types
-- [ ] Come up with a nice way to expand and collapse stored globals in dependency scope.
-- [ ] Add max height to the dependencies.
-- [ ] Come up with a nice way to display bound globals of an invocation
-- [ ] Bind all arguments to their names in the function signature
-- [ ] Custom syntax highlighting for these bound mutable objects
-- [ ] Decide if version not change just because I invoke an LMP using a global that was mutated some where else in the program. (In example where we had test being global with a list of objects of type Test) that shouldn’t change the version number. My vote is that it shouldn’t change.
-- [ ] Compute type lexical closures as needed
-- [ ] Come up with a spec for serialization of bound types.
+- [x] Come up with a nice way to expand and collapse stored globals in dependency scope.disc
+- [x] Serialize globals free variables at time of definition
+- [x] Come up with a nice way to display bound globals of an invocation
+- [x] Custom syntax highlighting for these bound mutable objects
 
+- [x] When we click invocation, the global if its overridden at the time execution needs to be updated.
+
+- [ ] Decide where the line between program state and program version changes. If we had a global variable which was a list of [“asd”]*10000 do we include the contents of this shit in the version.
+
+IF ITS MUTABLE TYPE ITS NOT A PART OF THE VERSION..
+
+- [ ] Better definition disclosure (and hiding) for bound global variables
+- [ ] Design or steal vs-code’s debug instance widget
+
+- [ ] Bind all arguments to their names in the function signature (pre v1)
+- [ ] Compute type lexical closures as needed (post v1)
+
+- [ ] Commit cosine similarity graph for browsing.
+- [ ] Profiel closures code.
+- [ ] Add max height to the dependencies.
+- [ ] Source code graph refractor (source & dependencies should be json tree of source code)
+ 
 ## LM Functionality
 
 - [ ] Freezing and unfreezing LMPs
