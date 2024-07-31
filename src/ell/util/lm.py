@@ -10,15 +10,12 @@ from typing import Any, Dict, Iterable, Optional, Tuple, Union
 from ell.util.verbosity import model_usage_logger_post_end, model_usage_logger_post_intermediate, model_usage_logger_post_start
 
 
-DEFAULT_SYSTEM_PROMPT = "You are a helpful AI assistant."
-DEFAULT_LM_PARAMS: Dict[str, Any] = dict()
-
 
 def _get_lm_kwargs(lm_kwargs: Dict[str, Any], lm_params: LMPParams) -> Dict[str, Any]:
     """
     Helper function to combine the default LM parameters with the provided LM parameters and the parameters passed to the LMP.
     """
-    final_lm_kwargs = dict(**DEFAULT_LM_PARAMS)
+    final_lm_kwargs = dict(**config.default_lm_params)
     final_lm_kwargs.update(**lm_kwargs)
     final_lm_kwargs.update(**lm_params)
     return final_lm_kwargs
@@ -29,7 +26,7 @@ def _get_messages(res: Union[str, list[MessageOrDict]], fn: LMP) -> list[Message
     """
     if isinstance(res, str):
         return [
-            Message(role="system", content=(fn.__doc__) or DEFAULT_SYSTEM_PROMPT),
+            Message(role="system", content=(fn.__doc__) or config.default_system_prompt),
             Message(role="user", content=res),
         ]
     else:
