@@ -72,7 +72,7 @@ def should_import(module: types.ModuleType):
     # Get the module's spec
     spec = importlib.util.find_spec(module.__name__)
 
-    if not module.__name__.startswith("ell"):
+    if module.__name__.startswith("ell"):
         return True
     
     # Return False if the spec is None or if the spec's origin starts with the local directory
@@ -218,7 +218,7 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False, recursio
                     if is_function_called(var_name, source):
                         uses.update(dep_uses)
                 except Exception as e:
-                    error_msg = f"Failed to capture the lexical closure of global or free variablevariable {var_name}. Error: {str(e)}\n"
+                    error_msg = f"Failed to capture the lexical closure of global or free variabl evariable {var_name}. Error: {str(e)}\n"
                     error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
                     raise Exception(error_msg)
 
