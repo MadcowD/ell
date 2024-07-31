@@ -191,6 +191,7 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False, recursio
 
     # These are not global variables these are globals, and other shit is actualy in cluded here
     _globals = collections.OrderedDict(dill.detect.globalvars(func))
+    print(_globals)
     _frees = collections.OrderedDict(dill.detect.freevars(func))
 
     # If func is a class we actually should check all the methods of the class for globalvars. Malekdiction (MSM) was here.
@@ -239,6 +240,7 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False, recursio
 
     # Iterate over the global variables
     for var_name, var_value in {**_globals, **_frees}.items():
+        is_free = var_name in _frees
         # If the variable is a function, get its source code
         if isinstance(var_value, (types.FunctionType, type, types.MethodType)):
             if var_name not in FORBIDDEN_NAMES:
@@ -271,12 +273,12 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False, recursio
             imports += [dill.source.getimport(var_value, alias=var_name)]
 
         else:
-            json_default = lambda x: f"<Object of type ()>"
+            json_default = lambda x: f"<Object of type {type(x).__name__}>"
             if isinstance(var_value, str) and '\n' in var_value:
-                clean_dump = f"'''{var_value}'''"
+                dependencies.append(f"{var_name} = '''{var_value}'''")
             else:
                 # if is immutable
-                if is_immutable_variable(var_value):
+                if is_immutable_variable(var_value) and not is_free:
                     dependencies.append(f"#<BV>\n{var_name} = {repr(var_value)}\n#</BV>")
                 else:
 

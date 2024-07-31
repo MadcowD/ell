@@ -66,6 +66,7 @@ def track(fn: Callable) -> Callable:
             ))
 
             if len(cached_invocations) > 0:
+                # TODO THis is bad?
                 results =  [SerializedLStr(**d).deserialize() for  d in cached_invocations[0]['results']]
                 if len(results) == 1:
                     return results[0]
@@ -90,58 +91,15 @@ def track(fn: Callable) -> Callable:
 
 
         if not _has_serialized_lmp:
-            if not hasattr(func_to_track, "__ell_hash__")  and config.lazy_versioning:
+            if not hasattr(func_to_track, "__ell_hash__") and config.lazy_versioning:
                 fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
-            # Compute commit messages if enabled
-            commit = None
-            lmps = config._store.get_lmps(name=_name)
-            version = 0
-            already_in_store =any(lmp['lmp_id'] == func_to_track.__ell_hash__ for lmp in lmps)
-            if not already_in_store :
-                # Do auto commitng and versioning if previous versions exist.
-                if len(lmps) > 0 :
-                    lmps.sort(key=lambda x: x['created_at'], reverse=True)
-                    latest_lmp = lmps[0]
+            
+            _serialize_lmp(func_to_track, _name, fn_closure, lmp, lm_kwargs)
+            _has_serialized_lmp = True
 
 
-                    version = (latest_lmp['version_number']) + 1
-                    if config.autocommit:
-                    # Get the latest lmp
-                    # sort by created at  
-                        from ell.util.differ import write_commit_message_for_diff
-                        commit = str(write_commit_message_for_diff(f"{latest_lmp['dependencies']}\n\n{latest_lmp['source']}", f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
-
-                config._store.write_lmp(
-                    lmp_id=func_to_track.__ell_hash__,
-                    name=_name,
-                    created_at=datetime.now(),
-                    source=fn_closure[0],
-                    dependencies=fn_closure[1],
-                    commit_message=(commit),
-                    global_vars={k: v for k, v in func_to_track.__ell_closure__[2].items() if ell.util.closure.is_immutable_variable(v)},
-                    free_vars={k: v for k, v in func_to_track.__ell_closure__[3].items() if ell.util.closure.is_immutable_variable(v)},
-                    is_lmp=lmp,
-                    lm_kwargs=(
-                        (lm_kwargs)
-                        if lm_kwargs
-                    else None
-                    ),
-                    version_number=version,
-                    uses=func_to_track.__ell_uses__,
-                )
-                _has_serialized_lmp = True
-
-
-        config._store.write_invocation(id=invocation_id,
-            lmp_id=func_to_track.__ell_hash__,  created_at=datetime.now(),
-            global_vars={k: v for k, v in func_to_track.__ell_closure__[2].items() if ell.util.closure.is_immutable_variable(v)},
-            free_vars={k: v for k, v in func_to_track.__ell_closure__[3].items() if ell.util.closure.is_immutable_variable(v)},
-            latency_ms=latency_ms,
-            prompt_tokens=prompt_tokens,
-            completion_tokens=completion_tokens,
-            input_hash=input_hash,
-            invocation_kwargs=invocation_kwargs,
-            **cleaned_invocation_params, consumes=consumes, result=result)
+        _write_invocation(func_to_track, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
+                         input_hash, invocation_kwargs, cleaned_invocation_params, consumes, result)
 
         return result
 
@@ -152,7 +110,78 @@ def track(fn: Callable) -> Callable:
 
     return wrapper
 
+def _serialize_lmp(func, name, fn_closure, is_lmp, lm_kwargs):
+    lmps = config._store.get_lmps(name=name)
+    version = 0
+    already_in_store = any(lmp['lmp_id'] == func.__ell_hash__ for lmp in lmps)
+    
+    if not already_in_store:
+        if lmps:
+            latest_lmp = max(lmps, key=lambda x: x['created_at'])
+            version = latest_lmp['version_number'] + 1
+            if config.autocommit:
+                from ell.util.differ import write_commit_message_for_diff
+                commit = str(write_commit_message_for_diff(
+                    f"{latest_lmp['dependencies']}\n\n{latest_lmp['source']}", 
+                    f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
+        else:
+            commit = None
 
+        config._store.write_lmp(
+            lmp_id=func.__ell_hash__,
+            name=name,
+            created_at=datetime.now(),
+            source=fn_closure[0],
+            dependencies=fn_closure[1],
+            commit_message=commit,
+            global_vars=get_immutable_vars(func.__ell_closure__[2]),
+            free_vars=get_immutable_vars(func.__ell_closure__[3]),
+            is_lmp=is_lmp,
+            lm_kwargs=lm_kwargs if lm_kwargs else None,
+            version_number=version,
+            uses=func.__ell_uses__,
+        )
+
+def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
+                     input_hash, invocation_kwargs, cleaned_invocation_params, consumes, result):
+    config._store.write_invocation(
+        id=invocation_id,
+        lmp_id=func.__ell_hash__,
+        created_at=datetime.now(),
+        global_vars=get_immutable_vars(func.__ell_closure__[2]),
+        free_vars=get_immutable_vars(func.__ell_closure__[3]),
+        latency_ms=latency_ms,
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        input_hash=input_hash,
+        invocation_kwargs=invocation_kwargs,
+        **cleaned_invocation_params,
+        consumes=consumes,
+        result=result
+    )
+
+# TODO: If you are contributo this is a massive place to optimize jesus christ.
+# Consider using VS-code's prefered method or gdb's prefered method of strifying symbols recursively.
+def get_immutable_vars(vars_dict):
+    converter = cattrs.Converter()
+
+    def handle_complex_types(obj):
+        if isinstance(obj, (int, float, str, bool, type(None))):
+            return obj
+        elif isinstance(obj, (list, tuple)):
+            return [handle_complex_types(item) if not isinstance(item, (int, float, str, bool, type(None))) else item for item in obj]
+        elif isinstance(obj, dict):
+            return {k: handle_complex_types(v) if not isinstance(v, (int, float, str, bool, type(None))) else v for k, v in obj.items()}
+        elif isinstance(obj, (set, frozenset)):
+            return list(sorted(handle_complex_types(item) if not isinstance(item, (int, float, str, bool, type(None))) else item for item in obj))
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return f"<Object of type {type(obj).__name__}>"
+
+    converter.register_unstructure_hook(object, handle_complex_types)
+    x = converter.unstructure(vars_dict)
+    return x
 
 def prepare_invocation_params(fn_args, fn_kwargs):
     invocation_params = dict(
@@ -187,4 +216,3 @@ def prepare_invocation_params(fn_args, fn_kwargs):
     cleaned_invocation_params = invocation_converter.unstructure(invocation_params)
     input_hash = hashlib.sha256(json.dumps(cleaned_invocation_params, sort_keys=True).encode('utf-8')).hexdigest()
     return cleaned_invocation_params, input_hash, consumes
-

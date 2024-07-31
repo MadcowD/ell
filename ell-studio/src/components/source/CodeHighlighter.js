@@ -13,6 +13,7 @@ export function CodeHighlighter({
   startingLineNumber = 1,
   customHooks = [], // New prop for custom hooks
   defaultRowPadding = 1, // New parameter for default row padding
+  offset: indentOffset = 35,
 }) {
   const { cleanedCode, hookRanges } = useMemo(() => {
     const hookRanges = customHooks.map(() => []);
@@ -60,8 +61,6 @@ export function CodeHighlighter({
     return { cleanedCode, hookRanges };
   }, [code, customHooks]);
 
-  console.log("hoohkhookRanges", hookRanges);
-
   const renderer = useCallback(
     ({ rows, stylesheet, useInlineStyles }) => {
       const rowsElements = rows.map((node, i) =>
@@ -75,13 +74,13 @@ export function CodeHighlighter({
 
       const rowTree = [];
       const activeHooks = customHooks.map(() => null);
-      const offset = 35;
+
       for (var i = 0; i < rowsElements.length; i++) {
         var currentElement = (
           <div
             style={{
-              paddingLeft: `${offset + defaultRowPadding}px`,
-              textIndent: `-${offset}px`,
+              paddingLeft: `${indentOffset + defaultRowPadding}px`,
+              textIndent: `-${indentOffset}px`,
             }}
             key={i}
           >
@@ -117,7 +116,6 @@ export function CodeHighlighter({
             activeHooks[hookIndex] = null;
           }
         }
-        console.log(i, currentElement);
 
         if (currentElement) {
           rowTree.push(currentElement);
@@ -127,13 +125,7 @@ export function CodeHighlighter({
       customHooks.forEach((hook, hookIndex) => {
         if (activeHooks[hookIndex] !== null) {
           const range = hookRanges[hookIndex][hookRanges[hookIndex].length - 1];
-          console.log(
-            "range",
-            range,
-            i,
-            hookRanges[hookIndex],
-            activeHooks[hookIndex]
-          );
+
           rowTree.push(
             hook.wrapper({
               children: activeHooks[hookIndex],
