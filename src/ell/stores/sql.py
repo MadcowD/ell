@@ -61,7 +61,7 @@ class SQLStore(ell.store.Store):
                          global_vars: Dict[str, Any],
                          free_vars: Dict[str, Any], created_at: Optional[float], consumes: Set[str], prompt_tokens: Optional[int] = None,
                          completion_tokens: Optional[int] = None, latency_ms: Optional[float] = None,
-                         input_hash: Optional[str] = None,
+                         state_cache_key: Optional[str] = None,
                          cost_estimate: Optional[float] = None) -> Optional[Any]:
         with Session(self.engine) as session:
             if isinstance(result, lstr):
@@ -91,7 +91,7 @@ class SQLStore(ell.store.Store):
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,
                 latency_ms=latency_ms,
-                input_hash=input_hash,
+                state_cache_key=state_cache_key,
             )
 
             for res in results:

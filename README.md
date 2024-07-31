@@ -125,7 +125,6 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 
 - [ ] Fix weird rehashing issue of the main prompt whenever subprompt changes? Or just make commits more of a background deal.
 - [x] Trace not writing on first invoc.
-- [ ] Rewrite lexical closures
 - [ ] Serialize lkstrs in the jkson dumps in pyhton the same way as the db serializers them for the frontend (\_\_lstr vs SerialziedLstr) <- these are pydantic models and so we can reuse them
 - [ ] handle failure to serialize.
 - [ ] Unify cattrs deserialziation and serialization its fucked right now.
@@ -163,24 +162,14 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [x] Serialize globals free variables at time of definition
 - [x] Come up with a nice way to display bound globals of an invocation
 - [x] Custom syntax highlighting for these bound mutable objects
-
 - [x] When we click invocation, the global if its overridden at the time execution needs to be updated.
-
-- [ ] Decide where the line between program state and program version changes. If we had a global variable which was a list of [“asd”]*10000 do we include the contents of this shit in the version.
-
-IF ITS MUTABLE TYPE ITS NOT A PART OF THE VERSION..
+- [x] Decide where the line between program state and program version changes. If we had a global variable which was a list of [“asd”]*10000 do we include the contents of this shit in the version.
 
 - [ ] Better definition disclosure (and hiding) for bound global variables
 - [ ] Design or steal vs-code’s debug instance widget
-
 - [ ] Bind all arguments to their names in the function signature (pre v1)
 - [ ] Compute type lexical closures as needed (post v1)
 
-- [ ] Commit cosine similarity graph for browsing.
-- [ ] Profiel closures code.
-- [ ] Add max height to the dependencies.
-- [ ] Source code graph refractor (source & dependencies should be json tree of source code)
- 
 ## LM Functionality
 
 - [ ] Freezing and unfreezing LMPs
@@ -224,9 +213,14 @@ IF ITS MUTABLE TYPE ITS NOT A PART OF THE VERSION..
 - [ ] Refine and organize examples
 - [x] Create production build for ell studio
 - [ ] Draft contribution guidelines
+- [ ] Document the code
 
-## Miscellaneous
 
+## Misc 
+- [ ] Commit cosine similarity graph for browsing.
+- [ ] Profile closures code.
+- [ ] Add max height to the dependencies.
+- [ ] Source code graph refractor (source & dependencies should be json tree of source code)
 - [ ] Implement metric tracking system
 - [ ] Add built-ins for classifiers (e.g., logit debiasing)
 - [ ] Develop evaluator framework
@@ -242,5 +236,4 @@ IF ITS MUTABLE TYPE ITS NOT A PART OF THE VERSION..
 - [ ] Add live updates and new content indicators
 - [ ] Force stores ot use the pydantic data types and dont use model dumping by default.
 - [ ] Update the serializer so that we prefer stringliterals when serialziing globals
-
 - [x] Update stores to use schema type hints and serialize to model dump in Flask (or consider switching to FastAPI)
