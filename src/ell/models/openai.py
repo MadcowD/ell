@@ -18,4 +18,4 @@ try:
     default_client = openai.Client()
     register_openai_models(default_client)
 except Exception as e:
-    logger.info(f"Error registering default OpenAI models: {e}. This is likely because you don't have an OpenAI key set. You need to reregister the models with a new client.")
+    logger.error(f"Error registering default OpenAI models: {e}. This is likely because you don't have an OpenAI key set. You need to reregister the models with a new client.")
