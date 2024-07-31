@@ -89,7 +89,6 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
           customHooks={boundedVariableHooks}
 
           highlighterStyle={{
-            fontSize: '9pt',
             overflow: 'auto',
           }}
         />
@@ -102,8 +101,9 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
         lines={sourceLines}
         startingLineNumber={dependencyLines + 1}
         highlighterStyle={{
-          fontSize: '9pt',
           overflow: 'auto',
+          textIndent: '-20px',
+          paddingLeft: '20px',
         }}
       />
     </div>

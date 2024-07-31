@@ -5,13 +5,11 @@ from ell.stores.sql import SQLiteStore
 
 CODE_INSTURCTIONS = """
 
-Other Instructoons:
+Other Instructions:
 - You only respond in code with no commentary (except in the and docstrings.) 
 - Do not respond in markdown just write code. 
 - It is extremely important that you don't start you code with ```python. """
 
-
-# 
 test = ["asd"]*10
 
 def get_lmp():

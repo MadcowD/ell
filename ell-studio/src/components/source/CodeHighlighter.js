@@ -1,24 +1,18 @@
-import React, { useMemo, useCallback } from 'react';
-import { Prism as SyntaxHighlighter, createElement } from 'react-syntax-highlighter';
-import { atomDark as theme } from 'react-syntax-highlighter/dist/esm/styles/prism';
-
-const highlightLine = (lineNumber, markLines, color = "#293645") => {
-  const style = { display: "block", width: "fit-content" };
-  if (markLines.includes(lineNumber)) {
-    style.backgroundColor = color;
-    style.color = "#90cdf4";
-  }
-  return { style };
-};
+import React, { useMemo, useCallback } from "react";
+import {
+  Prism as SyntaxHighlighter,
+  createElement,
+} from "react-syntax-highlighter";
+import { atomDark as theme } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export function CodeHighlighter({
   code,
   highlighterStyle = {},
-  language = 'python',
+  language = "python",
   showLineNumbers = true,
   startingLineNumber = 1,
   customHooks = [], // New prop for custom hooks
-  defaultRowPadding = 'px-1', // New parameter for default row padding
+  defaultRowPadding = 1, // New parameter for default row padding
 }) {
   const { cleanedCode, hookRanges } = useMemo(() => {
     const hookRanges = customHooks.map(() => []);
@@ -54,59 +48,96 @@ export function CodeHighlighter({
     return { cleanedCode, hookRanges };
   }, [code, customHooks]);
 
-  const renderer = useCallback(({ rows, stylesheet, useInlineStyles }) => {
-    const rowsElements = rows.map((node, i) => 
-      createElement({
-        node,
-        stylesheet,
-        useInlineStyles,
-        key: `code-segment${i}`,
-      })
-    );
+  console.log("hoohkhookRanges", hookRanges);
 
-    const rowTree = [];
-    const activeHooks = customHooks.map(() => null);
+  const renderer = useCallback(
+    ({ rows, stylesheet, useInlineStyles }) => {
+      const rowsElements = rows.map((node, i) =>
+        createElement({
+          node,
+          stylesheet,
+          useInlineStyles,
+          key: `code-segment${i}`,
+        })
+      );
 
-    for (var i = 0; i < rowsElements.length; i++) {
-      let currentElement = <div className={defaultRowPadding} key={i}>{rowsElements[i]}</div>;
+      const rowTree = [];
+      const activeHooks = customHooks.map(() => null);
+      const offset = 35;
+      for (var i = 0; i < rowsElements.length; i++) {
+        var currentElement = (
+          <div
+            style={{
+              paddingLeft: `${offset + defaultRowPadding}px`,
+              textIndent: `-${offset}px`,
+            }}
+            key={i}
+          >
+            {rowsElements[i]}
+          </div>
+        );
 
-      // eslint-disable-next-line no-loop-func
-      customHooks.forEach((hook, hookIndex) => {
-        const containingInterval = hookRanges[hookIndex].some(([start, end, _]) => start <= i && i <= end);
+          // TODO: Fix render
+        customHooks.forEach((hook, hookIndex) => {
+          const containingInterval = hookRanges[hookIndex].some(
+            ([start, end, _]) => start <= i && i <= end
+          );
 
-        if (containingInterval) {
-          if (activeHooks[hookIndex] === null) {
-            activeHooks[hookIndex] = [];
+          if (containingInterval) {
+            if (activeHooks[hookIndex] === null) {
+              activeHooks[hookIndex] = [];
+            }
+            activeHooks[hookIndex].push(currentElement);
+            currentElement = null;
+          } else {
+            if (activeHooks[hookIndex] !== null) {
+              const rangeOfLastHook = hookRanges[hookIndex].find(
+                ([start, end, contents]) => start <= i - 1 && i - 1 <= end
+              );
+              console.log("rangeOfLastHook", rangeOfLastHook);
+
+              rowTree.push(
+                hook.wrapper({
+                  children: activeHooks[hookIndex],
+                  content: rangeOfLastHook[2],
+                  key: `${hook.name}-${i}`,
+                })
+              );
+              activeHooks[hookIndex] = null;
+            }
+            
           }
-          activeHooks[hookIndex].push(currentElement);
-          currentElement = null;
-        } else if (activeHooks[hookIndex] !== null) {
-          currentElement = hook.wrapper({
-            children: activeHooks[hookIndex],
-            content: hookRanges[hookIndex].find(([start, end, contents]) => start <= i && i <= end)[2],
-            key: `${hook.name}-${i}`,
-          });
-          activeHooks[hookIndex] = null;
+        });
+        if (currentElement) {
+          rowTree.push(currentElement);
+        }
+      }
+      
+
+      customHooks.forEach((hook, hookIndex) => {
+        if (activeHooks[hookIndex] !== null) {
+          const range = hookRanges[hookIndex][hookRanges[hookIndex].length - 1]
+          console.log(
+            "range",
+            range,
+            i,
+            hookRanges[hookIndex],
+            activeHooks[hookIndex]
+          );
+          rowTree.push(
+            hook.wrapper({
+              children: activeHooks[hookIndex],
+              key: `${hook.name}-end`,
+              content: range[2],
+            })
+          );
         }
       });
 
-      if (currentElement) {
-        rowTree.push(currentElement);
-      }
-    }
-
-    customHooks.forEach((hook, hookIndex) => {
-      if (activeHooks[hookIndex] !== null) {
-         rowTree.push(hook.wrapper({
-          children: activeHooks[hookIndex],
-          key: `${hook.name}-end`,
-          content: hookRanges[hookIndex].find(([start, end, contents]) => start <= i )[2],
-        }));
-      }
-    });
-
-    return rowTree;
-  }, [hookRanges, customHooks, defaultRowPadding]); // Add defaultRowPadding to dependencies
+      return rowTree;
+    },
+    [hookRanges, customHooks, defaultRowPadding]
+  ); // Add defaultRowPadding to dependencies
 
   return (
     <SyntaxHighlighter
@@ -116,8 +147,8 @@ export function CodeHighlighter({
       startingLineNumber={startingLineNumber}
       customStyle={{
         margin: 0,
-        padding: '1em',
-        borderRadius: '0 0 6px 6px',
+        padding: "1em",
+        borderRadius: "0 0 6px 6px",
         ...highlighterStyle,
       }}
       wrapLines
