@@ -30,8 +30,8 @@ const SourceCodeView = ({ dependencies, source, uses, showDependenciesInitial = 
   const sourceLines = source.split('\n').length;
   const dependentLMPs = uses.length;
 
-  const boundedVariableHook = useMemo(() => {
-    return {
+  const boundedVariableHooks = useMemo(() => {
+    return [{
     name: 'boundedVariable',
     startTag: '#<BV>',
     endTag: '#</BV>',
@@ -40,7 +40,18 @@ const SourceCodeView = ({ dependencies, source, uses, showDependenciesInitial = 
         {children}
       </BoundedVariableWrapper>
       )
-    };
+    },
+    {
+      name: 'boundedMutableVariable',
+      startTag: '#<BmV>',
+      endTag: '#</BmV>',
+      wrapper: ({ children, key, content }) => (  
+        <BoundedVariableWrapper key={key} selectedInvocation={selectedInvocation} content={content}>
+          {children}
+        </BoundedVariableWrapper>
+        )
+    }
+  ];
   }, [selectedInvocation]);
 
   useEffect(() => {
@@ -64,7 +75,7 @@ const SourceCodeView = ({ dependencies, source, uses, showDependenciesInitial = 
           setShowCode={setShowDependencies}
           lines={dependencyLines}
           isDependent={true}
-          customHooks={[boundedVariableHook]}
+          customHooks={boundedVariableHooks}
           highlighterStyle={{
             fontSize: '9pt',
             overflow: 'auto',

@@ -52,6 +52,52 @@ import re
 DELIM = "$$$$$$$$$$$$$$$$$$$$$$$$$"
 SEPERATOR = "#------------------------"
 FORBIDDEN_NAMES = ["ell", "lstr"]
+def is_immutable(value):
+    """
+    Check if a value is immutable.
+    
+    This function determines whether the given value is of an immutable type in Python.
+    Immutable types are objects whose state cannot be modified after they are created.
+    
+    Args:
+        value: Any Python object to check for immutability.
+    
+    Returns:
+        bool: True if the value is immutable, False otherwise.
+    
+    Note:
+        - This function checks for common immutable types in Python.
+        - Custom classes are considered mutable unless they explicitly implement
+          immutability (which this function doesn't check for).
+        - For some types like tuple, immutability is shallow (i.e., the tuple itself
+          is immutable, but its contents might not be).
+    """
+    immutable_types = (
+        int, float, complex, str, bytes,
+        tuple, frozenset, type(None),
+        bool,  # booleans are immutable
+        types.FunctionType,  # functions are immutable
+        types.BuiltinFunctionType,  # built-in functions are immutable
+        types.MethodType,  # bound methods are immutable
+        types.ModuleType,  # modules are effectively immutable
+        types.CodeType,  # code objects are immutable
+        types.MappingProxyType,  # read-only proxy of a mapping
+        types.SimpleNamespace,  # simple object for attribute access
+        range,  # range objects are immutable
+        slice,  # slice objects are immutable
+        property,  # property objects are immutable
+        classmethod,  # classmethod objects are immutable
+        staticmethod,  # staticmethod objects are immutable
+    )
+    
+    if isinstance(value, immutable_types):
+        return True
+    
+    # Check for immutable instances of mutable types
+    if isinstance(value, (tuple, frozenset)):
+        return all(is_immutable(item) for item in value)
+    
+    return False
 
 
 def should_import(module: types.ModuleType):
@@ -239,12 +285,11 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False, recursio
             if isinstance(var_value, str) and '\n' in var_value:
                 clean_dump = f"'''{var_value}'''"
             else:
-                clean_dump = json.dumps(
-                    var_value,
-                    default=json_default,
-                    indent=4
-                ).replace("\"<", "<").replace(">\"", ">")
-            dependencies.append(f"#<BV>\n{var_name} = {clean_dump}\n#</BV>")
+                # if is immutable
+                if is_immutable(var_value):
+                    dependencies.append(f"#<BV>\n{var_name} = {repr(var_value)}\n#</BV>")
+                else:
+                    dependencies.append(f"#<BmV>\n{var_name} = {str(var_value)}\n#</BmV>")
 
     # We probably need to resovle things with topological sort & turn stuff into a dag but for now we can just do this
 
