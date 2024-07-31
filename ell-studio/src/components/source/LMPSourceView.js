@@ -19,7 +19,7 @@ const BoundedVariableWrapper = ({ children, selectedInvocation,  content, merged
       </span>
        <div className='ml-5'>
        <CodeHighlighter code={formattedValue} showLineNumbers={false} defaultRowPadding='' highlighterStyle={{
-          padding: '0px'
+          padding: '0px 0px 0px 20px'
         }} />
        </div>
     </div>

@@ -16,7 +16,7 @@ export function CodeHighlighter({
 }) {
   const { cleanedCode, hookRanges } = useMemo(() => {
     const hookRanges = customHooks.map(() => []);
-    const lines = code.split('\n');
+    const lines = code.split("\n");
     const cleanedLines = [];
     let cleanedLineIndex = 0;
 
@@ -29,11 +29,23 @@ export function CodeHighlighter({
         if (line.includes(hook.startTag)) {
           hookRanges[hookIndex].push([cleanedLineIndex]);
           skipLine = true;
-        } else if (line.includes(hook.endTag) && hookRanges[hookIndex][hookRanges[hookIndex].length - 1]?.length === 1) {
-          hookRanges[hookIndex][hookRanges[hookIndex].length - 1].push(cleanedLineIndex - 1);
+        } else if (
+          line.includes(hook.endTag) &&
+          hookRanges[hookIndex][hookRanges[hookIndex].length - 1]?.length === 1
+        ) {
+          hookRanges[hookIndex][hookRanges[hookIndex].length - 1].push(
+            cleanedLineIndex - 1
+          );
           // also push all of the clean code in the hook range
-          const contentHook = cleanedLines.slice(hookRanges[hookIndex][hookRanges[hookIndex].length - 1][0], cleanedLineIndex).join('\n');
-          hookRanges[hookIndex][hookRanges[hookIndex].length - 1].push(contentHook);
+          const contentHook = cleanedLines
+            .slice(
+              hookRanges[hookIndex][hookRanges[hookIndex].length - 1][0],
+              cleanedLineIndex
+            )
+            .join("\n");
+          hookRanges[hookIndex][hookRanges[hookIndex].length - 1].push(
+            contentHook
+          );
           skipLine = true;
         }
       });
@@ -44,7 +56,7 @@ export function CodeHighlighter({
       }
     }
 
-    const cleanedCode = cleanedLines.join('\n');
+    const cleanedCode = cleanedLines.join("\n");
     return { cleanedCode, hookRanges };
   }, [code, customHooks]);
 
@@ -77,46 +89,44 @@ export function CodeHighlighter({
           </div>
         );
 
-          // TODO: Fix render
-        customHooks.forEach((hook, hookIndex) => {
+        // TODO: Fix render
+        for (let hookIndex = 0; hookIndex < customHooks.length; hookIndex++) {
+          const hook = customHooks[hookIndex];
+
           const containingInterval = hookRanges[hookIndex].some(
             ([start, end, _]) => start <= i && i <= end
           );
-
           if (containingInterval) {
             if (activeHooks[hookIndex] === null) {
               activeHooks[hookIndex] = [];
             }
             activeHooks[hookIndex].push(currentElement);
             currentElement = null;
-          } else {
-            if (activeHooks[hookIndex] !== null) {
-              const rangeOfLastHook = hookRanges[hookIndex].find(
-                ([start, end, contents]) => start <= i - 1 && i - 1 <= end
-              );
-              console.log("rangeOfLastHook", rangeOfLastHook);
+          } else if (activeHooks[hookIndex] !== null) {
+            const rangeOfLastHook = hookRanges[hookIndex].find(
+              ([start, end, contents]) => start <= i - 1 && i - 1 <= end
+            );
 
-              rowTree.push(
-                hook.wrapper({
-                  children: activeHooks[hookIndex],
-                  content: rangeOfLastHook[2],
-                  key: `${hook.name}-${i}`,
-                })
-              );
-              activeHooks[hookIndex] = null;
-            }
-            
+            rowTree.push(
+              hook.wrapper({
+                children: activeHooks[hookIndex],
+                content: rangeOfLastHook[2],
+                key: `${hook.name}-${i}`,
+              })
+            );
+            activeHooks[hookIndex] = null;
           }
-        });
+        }
+        console.log(i, currentElement);
+
         if (currentElement) {
           rowTree.push(currentElement);
         }
       }
-      
 
       customHooks.forEach((hook, hookIndex) => {
         if (activeHooks[hookIndex] !== null) {
-          const range = hookRanges[hookIndex][hookRanges[hookIndex].length - 1]
+          const range = hookRanges[hookIndex][hookRanges[hookIndex].length - 1];
           console.log(
             "range",
             range,
