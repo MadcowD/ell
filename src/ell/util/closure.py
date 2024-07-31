@@ -51,7 +51,7 @@ import re
 
 DELIM = "$$$$$$$$$$$$$$$$$$$$$$$$$"
 SEPERATOR = "#------------------------"
-FORBIDDEN_NAMES = ["ell", "Ell", "lstr"]
+FORBIDDEN_NAMES = ["ell", "lstr"]
 
 
 def should_import(module: types.ModuleType):
@@ -200,7 +200,9 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False, recursio
     for var_name, var_value in {**global_vars, **free_vars}.items():
         # If the variable is a function, get its source code
         if isinstance(var_value, (types.FunctionType, type, types.MethodType)):
-            if var_name not in FORBIDDEN_NAMES:
+            if var_name not in FORBIDDEN_NAMES and (
+
+            ):
                 try:
                     ret = lexical_closure(
                         var_value, already_closed=already_closed,
@@ -274,7 +276,7 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False, recursio
                 except Exception as e:
                     error_msg = f"Failed to capture the lexical closure of {mname}.{attr}. Error: {str(e)}\n"
                     error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
-                    mdeps.append(f"# {error_msg}")
+                    raise Exception(error_msg)
             elif isinstance(val, types.ModuleType):
                 modules.append((attr, val))
             else:
