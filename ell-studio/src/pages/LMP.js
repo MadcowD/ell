@@ -48,10 +48,6 @@ function LMP() {
   // Add the abiltiy to update the urlq ueyr params using react router
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setSelectedTrace(null);
-  }, [name, id]);
-
 
   const API_BASE_URL = "http://localhost:8080";
 
@@ -86,15 +82,18 @@ function LMP() {
         );
         setInvocations(sortedInvocations);
 
-        const usesIds = lmpResponse.data.uses;
+        
+        const usesIds = latest_lmp.uses;
+        console.log(usesIds);
         const uses = await Promise.all(
           usesIds.map(async (use) => {
             const useResponse = await axios.get(
               `${API_BASE_URL}/api/lmps/${use}`
             );
-            return useResponse.data;
+            return useResponse.data[0];
           })
         );
+      
         setUses(uses);
       } catch (error) {
         console.error("Error fetching LMP details:", error);
@@ -108,6 +107,12 @@ function LMP() {
   const requestedInvocation = useMemo(() => invocations.find(
     (invocation) => invocation.id === requestedInvocationId
   ), [invocations, requestedInvocationId]);
+
+
+  useEffect(() => {
+    setSelectedTrace(requestedInvocation);
+  }, [requestedInvocation]);
+
 
 
   const handleCopyCode = () => {
@@ -244,10 +249,9 @@ function LMP() {
                       producingLmp={lmp}
                       onSelectTrace={(trace) => {
                         setSelectedTrace(trace);
-                        // update the router to have ?i=trace.id
-                        //navigate(`/lmp/${name}/${id || lmp.lmp_id}?i=${trace.id}`);
                         setSearchParams({ i: trace.id });
                       }}
+                      currentlySelectedTrace={selectedTrace}
                     />
                   </>
                 )}
@@ -255,7 +259,7 @@ function LMP() {
                   <VersionHistoryPane versions={versionHistory}/>
                 )}
                 {activeTab === "dependency_graph" && (
-                  <DependencyGraphPane uses={uses} />
+                  <DependencyGraphPane lmp={lmp} uses={uses} />
                 )}
               </div>
             </div>

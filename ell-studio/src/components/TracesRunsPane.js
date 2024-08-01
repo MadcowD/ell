@@ -6,12 +6,12 @@ import { getTimeAgo } from '../utils/lmpUtils';
 import VersionBadge from './VersionBadge';
 import { useNavigate } from 'react-router-dom';
 import { lstrCleanStringify } from './lstrCleanStringify';
-const TracesRunsPane = ({ invocations, onSelectTrace }) => {
+const TracesRunsPane = ({ invocations, onSelectTrace, currentlySelectedTrace }) => {
 
   const navigate = useNavigate();
 
-  const onClickLMP = useCallback((lmp) => {
-    navigate(`/lmp/${lmp.name}/${lmp.lmp_id}`);
+  const onClickLMP = useCallback(({lmp, id : invocationId}) => {
+    navigate(`/lmp/${lmp.name}/${lmp.lmp_id}?i=${invocationId}`);
   }, [navigate]);
   const traces = useMemo(() => {
     return invocations.map(inv => ({
@@ -34,7 +34,7 @@ const TracesRunsPane = ({ invocations, onSelectTrace }) => {
         key: 'name', 
         render: (item) => <Card noMinW={true}><LMPCardTitle lmp={item.lmp} fontSize="sm" onClick={(e) => {
           e.stopPropagation();
-          onClickLMP(item.lmp);
+          onClickLMP(item);
         }} /></Card>, 
         // maxWidth: 200,
         sortable: true
@@ -80,6 +80,9 @@ const TracesRunsPane = ({ invocations, onSelectTrace }) => {
       data={traces}
       onRowClick={onSelectTrace}
       initialSortConfig={initialSortConfig}
+      rowClassName={(item) => 
+        item.id === currentlySelectedTrace?.id ? 'bg-gray-800 bg-opacity-50' : ''
+      }
     />
   );
 };

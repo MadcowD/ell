@@ -132,7 +132,11 @@ const Traces = () => {
             Columns
           </button>
         </div>
-        <TracesRunsPane invocations={invocations} onSelectTrace={handleSelectTrace} />
+        <TracesRunsPane 
+          invocations={invocations} 
+          onSelectTrace={handleSelectTrace} 
+          currentlySelectedTrace={selectedTrace}
+        />
       </div>
       {selectedTrace && (
         <TraceDetailsSidebar

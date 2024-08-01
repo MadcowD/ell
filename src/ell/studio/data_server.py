@@ -31,17 +31,23 @@ def create_app(storage_dir: Optional[str] = None):
         lmps = serializer.get_lmps()
         return lmps
 
-    @app.get("/api/lmps/{name:path}")
-    def get_lmp(name: str):
+    @app.get("/api/lmps/{name_or_id:path}")
+    def get_lmp(name_or_id: str):
         # Remove any leading slash if present
-        name = name.lstrip("/")
+        name_or_id = name_or_id.lstrip("/")
 
         # First, try to get by name
-        lmps_by_name = serializer.get_lmps(name=name)
+        lmps_by_name = serializer.get_lmps(name=name_or_id)
         if lmps_by_name:
             return list(lmps_by_name)
-        # If not found by name, check if the last part of the path is a valid lmp_id
-        name_parts = name.split("/")
+        
+        # If not found by name, try to get by ID
+        lmp_by_id = serializer.get_lmps(lmp_id=name_or_id)
+        if lmp_by_id:
+            return list(lmp_by_id)
+        
+        # If still not found, check if the last part of the path is a valid lmp_id
+        name_parts = name_or_id.split("/")
         if len(name_parts) > 1:
             potential_lmp_id = name_parts[-1]
             potential_name = "/".join(name_parts[:-1])
