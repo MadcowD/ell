@@ -30,10 +30,19 @@ const ResizableSidebar = ({ children, onResize, initialWidth = window.innerWidth
     const resizer = document.getElementById("sidebar-resizer");
     resizer.addEventListener("mousedown", handleMouseDown);
 
+    const handleWindowResize = () => {
+      const newWidth = Math.max(minWidth, sidebarWidth);
+      setSidebarWidth(newWidth);
+      onResize(newWidth);
+    };
+
+    window.addEventListener("resize", handleWindowResize);
+
     return () => {
       resizer.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("resize", handleWindowResize);
     };
-  }, [onResize, minWidth]);
+  }, [onResize, minWidth, sidebarWidth]);
 
   return (
     <div 

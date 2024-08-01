@@ -1,7 +1,7 @@
 import React from 'react';
 import { FiFilter } from 'react-icons/fi';
 
-const TraceWidget = ({ trace }) => {
+const TraceDetailsPain = ({ trace }) => {
   return (
     <div className="w-64 bg-[#0d1117] border-l border-gray-800 p-4 text-sm">
       <h2 className="text-lg font-semibold mb-4">TRACE</h2>
@@ -33,4 +33,4 @@ const TraceWidget = ({ trace }) => {
   );
 };
 
-export default TraceWidget;
+export default TraceDetailsPain;

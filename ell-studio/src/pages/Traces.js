@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FiCopy, FiZap, FiEdit2, FiFilter, FiClock, FiColumns, FiPause, FiPlay } from 'react-icons/fi';
-import TracesRunsPane from '../components/TracesRunsPane';
+import InvocationsTable from '../components/invocations/InvocationsTable';
 import axios from 'axios';
-import PageWithTracesLayout from '../components/PageWithTracesLayout';
+import InvocationsLayout from '../components/invocations/InvocationsLayout';
 
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -58,11 +58,13 @@ const Traces = () => {
   };
 
   return (
-    <PageWithTracesLayout 
-      selectedTrace={selectedTrace} 
+
+      <InvocationsLayout 
+        selectedTrace={selectedTrace} 
       setSelectedTrace={setSelectedTrace}
       showSidebar={true}
-    >
+      containerClass={'p-6'}
+      >
       <div className="flex items-center mb-6">
         <div className="flex items-center space-x-2 text-sm text-gray-400">
           <span>Personal</span>
@@ -130,12 +132,13 @@ const Traces = () => {
           Columns
         </button>
       </div>
-      <TracesRunsPane 
+      <InvocationsTable 
         invocations={invocations} 
         onSelectTrace={handleSelectTrace} 
         currentlySelectedTrace={selectedTrace}
       />
-    </PageWithTracesLayout>
+      
+    </InvocationsLayout>
   );
 };
 

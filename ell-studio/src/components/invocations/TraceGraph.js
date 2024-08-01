@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { FiChevronDown, FiChevronRight, FiZap } from 'react-icons/fi';
-import { LMPCardTitle } from './depgraph/LMPCardTitle';
+import { LMPCardTitle } from '../depgraph/LMPCardTitle';
 import { useEffect } from 'react';
 import axios from 'axios';
 

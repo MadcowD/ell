@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useTheme } from "../contexts/ThemeContext";
-import TracesRunsPane from "../components/TracesRunsPane";
+import InvocationsTable from "../components/invocations/InvocationsTable";
 import DependencyGraphPane from "../components/DependencyGraphPane";
 import LMPSourceView from "../components/source/LMPSourceView";
 import { FiCopy, FiFilter, FiColumns } from "react-icons/fi";
@@ -10,12 +10,12 @@ import VersionHistoryPane from "../components/VersionHistoryPane";
 import LMPDetailsSidePanel from "../components/LMPDetailsSidePanel";
 import toast, { Toaster } from "react-hot-toast";
 import { Link } from "react-router-dom";
-import TraceDetailsSidebar from "../components/TraceDetailsSidebar";
+import InvocationDetailsSidevar from "../components/invocations/InvocationDetailsSidebar";
 import VersionBadge from "../components/VersionBadge";
 import { LMPCardTitle } from "../components/depgraph/LMPCardTitle";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
-import PageWithTracesLayout from "../components/PageWithTracesLayout";
+import InvocationsLayout from "../components/invocations/InvocationsLayout";
 
 const ChevronSlop = () => {
   return (
@@ -131,14 +131,16 @@ function LMP() {
       </div>
     );
 
+  const omitColumns = ['name']; // We want to omit the 'LMP' column on the LMP page
+
   return (
-    <PageWithTracesLayout 
+    <InvocationsLayout 
       selectedTrace={selectedTrace} 
       setSelectedTrace={setSelectedTrace}
       showSidebar={true}
     >
       <header className="bg-[#1c1f26] p-4 flex justify-between items-center">
-        <h1 className="text-xl font-semibold">
+        <h1 className="text-lg font-semibold">
           <Link
             to={`/lmp/${lmp.name}`}
           >
@@ -235,7 +237,7 @@ function LMP() {
                       <FiColumns className="w-4 h-4" />
                     </button>
                   </div>
-                  <TracesRunsPane
+                  <InvocationsTable
                     invocations={invocations}
                     producingLmp={lmp}
                     onSelectTrace={(trace) => {
@@ -243,6 +245,7 @@ function LMP() {
                       setSearchParams({ i: trace.id });
                     }}
                     currentlySelectedTrace={selectedTrace}
+                    omitColumns={omitColumns}
                   />
                 </>
               )}
@@ -256,7 +259,7 @@ function LMP() {
           </div>
         </main>
       </div>
-    </PageWithTracesLayout>
+    </InvocationsLayout>
   );
 }
 
