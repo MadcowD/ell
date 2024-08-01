@@ -40,7 +40,6 @@ const BoundedVariableWrapper = ({ children, selectedInvocation, content, initial
 const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocation = null }) => {
   const { dependencies, source, uses, initial_global_vars, initial_free_vars } = lmp;
 
-  console.log(lmp)
   const [showDependencies, setShowDependencies] = useState(showDependenciesInitial);
   const [showSource, setShowSource] = useState(true);
 

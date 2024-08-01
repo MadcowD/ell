@@ -2,21 +2,7 @@ import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { FiChevronRight, FiChevronDown, FiArrowUp, FiArrowDown } from 'react-icons/fi';
 import { HierarchicalTableProvider, useHierarchicalTable } from './HierarchicalTableContext';
 
-const MeasureCell = ({ content, onMeasure }) => {
-  const ref = useRef(null);
 
-  useEffect(() => {
-    if (ref.current) {
-      onMeasure(ref.current.offsetWidth);
-    }
-  }, [content, onMeasure]);
-
-  return (
-    <div ref={ref} style={{ position: 'absolute', visibility: 'hidden', whiteSpace: 'nowrap' }}>
-      {content}
-    </div>
-  );
-};
 
 const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWidth, rowClassName }) => {
   const { expandedRows, selectedRows, toggleRow, toggleSelection, isItemSelected } = useHierarchicalTable();
@@ -65,10 +51,6 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
               >
                 {content}
               </td>
-              <MeasureCell 
-                content={content} 
-                onMeasure={(width) => updateWidth(column.key, width, maxWidth)} 
-              />
             </React.Fragment>
           );
         })}
@@ -116,10 +98,6 @@ const TableHeader = ({ schema, columnWidths, updateWidth }) => {
                   {sortIcon}
                 </div>
               </th>
-              <MeasureCell 
-                content={column.header} 
-                onMeasure={(width) => updateWidth(column.key, width, maxWidth)} 
-              />
             </React.Fragment>
           );
         })}

@@ -48,6 +48,7 @@ function LMP() {
   // Add the abiltiy to update the urlq ueyr params using react router
   const navigate = useNavigate();
 
+  const [sidebarWidth, setSidebarWidth] = useState(window.innerWidth / 2);
 
   const API_BASE_URL = "http://localhost:8080";
 
@@ -67,7 +68,6 @@ function LMP() {
         const versionHistoryResponse = await axios.get(
           `${API_BASE_URL}/api/lmps/${latest_lmp.name}`
         );
-        console.log("versionHistoryResponse", versionHistoryResponse);
         setVersionHistory(
           (versionHistoryResponse.data || []).sort(
             (a, b) => new Date(b.created_at) - new Date(a.created_at)
@@ -134,6 +134,21 @@ function LMP() {
       });
   };
 
+  const handleSidebarResize = (newWidth) => {
+    setSidebarWidth(newWidth);
+  };
+
+  const mainContentStyle = useMemo(() => {
+    if (selectedTrace) {
+      const mainWidth = window.innerWidth - sidebarWidth - 64;
+      if (mainWidth < ((window.innerWidth - 64) / 2)) {
+        return { width: '50%' };
+      }
+      return { width: `${mainWidth}px` };
+    }
+    return {};
+  }, [selectedTrace, sidebarWidth]);
+
   if (!lmp)
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900 text-gray-100">
@@ -142,7 +157,8 @@ function LMP() {
     );
 
   return (
-    <div className="min-h-screen bg-[#13151a] text-gray-200">
+    <>
+    <div className="min-h-screen bg-[#13151a] text-gray-200" style={mainContentStyle}>
       <Toaster />
       <div className="flex flex-col h-screen">
         <header className="bg-[#1c1f26] p-4 flex justify-between items-center">
@@ -172,12 +188,12 @@ function LMP() {
                     Language Model Program
                   </h2>
                   {/* irrespective of if id specified  */}
-                  {(id || requestedInvocationId) && (
+                  { (id || requestedInvocationId) && (
                     <>
                       <span className="text-gray-500 mx-2">@</span>
                       <VersionBadge
-                        version={id ? lmp.version_number + 1 : requestedInvocation.lmp.version_number + 1}
-                        hash={id ? lmp.lmp_id : requestedInvocation.lmp_id}
+                        version={id ? lmp.version_number + 1 : requestedInvocation?.lmp.version_number + 1}
+                        hash={id ? lmp.lmp_id : requestedInvocation?.lmp_id}
                       />
                     </>
                   )}
@@ -259,26 +275,26 @@ function LMP() {
                   <VersionHistoryPane versions={versionHistory}/>
                 )}
                 {activeTab === "dependency_graph" && (
-                  <DependencyGraphPane lmp={lmp} uses={uses} />
+                  <DependencyGraphPane   key={uses.map(lmp => lmp.lmp_id).sort().join('-')} lmp={lmp} uses={uses} />
                 )}
               </div>
             </div>
           </main>
-          {/* 
-          <LMPDetailsSidePanel
-            lmp={lmp}
-            versionHistory={versionHistory}
-            onSeeAllClick={handleSeeAllClick}
-          /> */}
-          {selectedTrace && (
-            <TraceDetailsSidebar
-              invocation={selectedTrace}
-              onClose={() => setSelectedTrace(null)}
-            />
-          )}
+
         </div>
       </div>
     </div>
+    {selectedTrace && (
+      <TraceDetailsSidebar
+        invocation={selectedTrace}
+        onClose={() => {
+          setSelectedTrace(null);
+          setSearchParams({});
+        }}
+        onResize={handleSidebarResize}
+      />
+    )}
+    </>
   );
 }
 

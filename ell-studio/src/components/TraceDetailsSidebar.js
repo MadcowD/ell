@@ -3,15 +3,14 @@ import { FiLink, FiCopy, FiChevronDown, FiClock, FiTag } from "react-icons/fi";
 import { lstrCleanStringify } from './lstrCleanStringify';
 import { CodeSection } from './source/CodeSection';
 import { TraceGraph } from './TraceGraph';
+import ResizableSidebar from './ResizableSidebar';
 
-const InvocationDetailsSidebar = ({ invocation, onClose }) => {
+const TraceDetailsSidebar = ({ invocation, onClose, onResize }) => {
   const [activeTab, setActiveTab] = useState("Details");
   const [inputExpanded, setInputExpanded] = useState(true);
   const [outputExpanded, setOutputExpanded] = useState(true);
-  const [sidebarWidth, setSidebarWidth] = useState(document.body.clientWidth * 0.75);
-  const resizeRef = useRef(null);
   const [showTraceView, setShowTraceView] = useState(true);
-  
+  const [isClicked, setIsClicked] = useState(false);
 
   const argsLines = useMemo(() => {
     return invocation.args.length > 0 ? lstrCleanStringify(invocation.args, 1) : null;
@@ -31,43 +30,13 @@ const InvocationDetailsSidebar = ({ invocation, onClose }) => {
     }
   }, [argsLines, kwargsLines, hasKwargs]);
 
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (resizeRef.current) {
-        const newWidth = document.body.clientWidth - e.clientX;
-        setSidebarWidth(Math.max(800, newWidth));
-      }
-    };
-
-    const handleMouseUp = () => {
-      resizeRef.current = null;
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    const handleMouseDown = (e) => {
-      resizeRef.current = e.target;
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    };
-
-    const resizer = document.getElementById("sidebar-resizer");
-    resizer.addEventListener("mousedown", handleMouseDown);
-
-    return () => {
-      resizer.removeEventListener("mousedown", handleMouseDown);
-    };
-  }, []);
-
-
+  const handleSidebarClick = () => {
+    setIsClicked(!isClicked);
+  };
 
   return (
-    <>
-      <div id="sidebar-resizer" className="w-1 bg-gray-600 cursor-col-resize" />
-      <div
-        className="bg-[#0d1117] border-l border-gray-800 overflow-y-auto flex flex-col hide-scrollbar"
-        style={{ width: sidebarWidth }}
-      >
+    <ResizableSidebar onResize={onResize}>
+      <div className="flex-grow overflow-y-auto hide-scrollbar">
         <div className="flex items-center justify-between p-4 border-b border-gray-800">
           <div className="flex items-center space-x-2">
             <FiLink className="text-blue-400" />
@@ -215,8 +184,8 @@ const InvocationDetailsSidebar = ({ invocation, onClose }) => {
           </div>
         </div>
       </div>
-    </>
+    </ResizableSidebar>
   );
 };
 
-export default InvocationDetailsSidebar;
+export default TraceDetailsSidebar;

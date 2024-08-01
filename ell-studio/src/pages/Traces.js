@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { FiCopy, FiZap, FiEdit2, FiFilter, FiClock, FiColumns, FiPause, FiPlay } from 'react-icons/fi';
 import TraceDetailsSidebar from '../components/TraceDetailsSidebar';
 import TracesRunsPane from '../components/TracesRunsPane';
@@ -14,6 +14,7 @@ const Traces = () => {
   const [isPolling, setIsPolling] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const [sidebarWidth, setSidebarWidth] = useState(window.innerWidth / 2);
 
   const fetchInvocations = useCallback(async () => {
     try {
@@ -62,8 +63,23 @@ const Traces = () => {
     navigate(location.pathname);
   };
 
+  const handleSidebarResize = (newWidth) => {
+    setSidebarWidth(newWidth);
+  };
+
+  const mainContentStyle = useMemo(() => {
+    if (selectedTrace) {
+      const mainWidth = window.innerWidth - sidebarWidth - 64;
+      if (mainWidth < ((window.innerWidth - 64) / 2)) {
+        return { width: '50%' };
+      }
+      return { width: `${mainWidth}px` };
+    }
+    return {};
+  }, [selectedTrace, sidebarWidth]);
+  
   return (
-    <div className="flex bg-[#0d1117] text-gray-300 h-screen overflow-hidden">
+    <div className="flex bg-[#0d1117] text-gray-300 h-screen overflow-hidden" style={mainContentStyle}>
       <div className="flex-grow p-6 overflow-y-auto hide-scrollbar">
         <div className="flex items-center mb-6">
           <div className="flex items-center space-x-2 text-sm text-gray-400">
@@ -142,6 +158,7 @@ const Traces = () => {
         <TraceDetailsSidebar
           invocation={selectedTrace}
           onClose={handleCloseSidebar}
+          onResize={handleSidebarResize}
         />
       )}
     </div>
