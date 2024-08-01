@@ -163,6 +163,7 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 ## Ell Studio
 - [ ] Optimize front-end data fetching & api structure
 - [ ] Add websockets for live updates.
+- [ ] Add a section for the actual LLM call
 
 ## Version History
 
