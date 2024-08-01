@@ -1,5 +1,5 @@
 from ell.configurator import config
-import openai
+import ollama
 import requests
 import logging
 
@@ -8,17 +8,16 @@ client = None
 
 def register(base_url):
     global client
-    client = openai.Client(base_url=base_url)
+    client = ollama.Client(host=base_url)
     
     try:
-        response = requests.get(f"{base_url}/api/tags")
-        response.raise_for_status()
-        models = response.json().get("models", [])
+        models = client.list()
         
-        for model in models:
-            config.register_model(model["name"], client)
-    except requests.RequestException as e:
-        logger.error(f"Failed to fetch models from {base_url}: {e}")
+        if 'models' in models:
+            for model in models['models']:
+                config.register_model(model['name'], client)
+            logger.info(f"Registered {len(models['models'])} Ollama models")
+        else:
+            logger.warning("No models found in Ollama response")
     except Exception as e:
-        logger.error(f"An error occurred: {e}")
-
+        logger.error(f"An error occurred while registering Ollama models: {e}")
