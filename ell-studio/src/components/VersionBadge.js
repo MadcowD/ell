@@ -2,21 +2,34 @@ import React from 'react';
 
 const getColorFromVersion = (version) => {
   const hue = (version * 137.508) % 360; // Golden angle approximation
-  return `hsl(${hue}, 40%, 70%)`; // Reduced saturation, increased lightness
+  return `hsl(${hue}, 40%, 70%)`; // Base color
 };
 
-const VersionBadge = ({ version, lmpId, className = '' }) => {
-  const backgroundColor = getColorFromVersion(version);
-  const textColor = 'text-gray-900'; // Always use dark text for better contrast
+const VersionBadge = ({ version, hash, className = '' }) => {
+  const baseColor = getColorFromVersion(version);
+  const lighterColor = `hsl(${baseColor.match(/\d+/)[0]}, 40%, 75%)`; // Slightly lighter
+  const textColor = 'text-gray-900'; // Dark text for contrast
 
   return (
-    <span 
-      className={`text-xs font-medium px-2 py-1 rounded-full ${textColor} ${className}`}
-      style={{ backgroundColor }}
-      title={lmpId ? `LMP ID: ${lmpId}` : undefined}
+    <div 
+      className={`inline-flex items-center text-xs font-medium rounded-full overflow-hidden ${className}`}
+      title={hash ? `Hash: ${hash}` : undefined}
     >
-      Version {version}
-    </span>
+      <div
+        className={`px-2 py-1 ${textColor}`}
+        style={{ backgroundColor: baseColor }}
+      >
+        Version {version}
+      </div>
+      {hash && (
+        <div
+          className={`px-2 py-1 ${textColor} font-mono`}
+          style={{ backgroundColor: lighterColor }}
+        >
+          {hash.substring(0, 9)}
+        </div>
+      )}
+    </div>
   );
 };
 

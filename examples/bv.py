@@ -1,6 +1,5 @@
 from functools import lru_cache
 import ell
-import ell.caching
 from ell.stores.sql import SQLiteStore
 
 CODE_INSTURCTIONS = """

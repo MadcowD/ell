@@ -3,7 +3,7 @@ import { FiGitCommit, FiClock, FiCopy, FiChevronRight } from 'react-icons/fi';
 import { useNavigate, useParams } from 'react-router-dom';
 import VersionBadge from './VersionBadge';
 
-const VersionHistoryPane = ({ versions }) => {
+const VersionHistoryPane = ({ versions, onSelect }) => {
   const navigate = useNavigate();
   const { id: currentLmpId } = useParams();
 
@@ -38,6 +38,13 @@ const VersionHistoryPane = ({ versions }) => {
   const groupedVersions = groupVersionsByDate(versions);
   let totalIndex = 0;
 
+  const handleVersionClick = (version) => {
+    navigate(`/lmp/${version.name}/${version.lmp_id}`);
+    if (onSelect) {
+      onSelect(version);
+    }
+  };
+
   return (
     <div className="text-gray-200 p-4">
       {Object.entries(groupedVersions).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, dateVersions]) => (
@@ -51,7 +58,7 @@ const VersionHistoryPane = ({ versions }) => {
             return (
             <div key={version.lmp_id} className="mb-2 border border-gray-700 rounded-lg overflow-hidden">
               <div className={`bg-gray-800 p-3 flex items-center justify-between cursor-pointer hover:bg-gray-750 ${version.lmp_id === currentLmpId ? 'bg-blue-900' : ''}`}
-                   onClick={() => navigate(`/lmp/${version.name}/${version.lmp_id}`)}>
+                   onClick={() => handleVersionClick(version)}>
                 <div>
                   <div className="flex items-center mb-1">
                     <FiGitCommit className="text-blue-400 mr-2" />

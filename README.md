@@ -166,6 +166,7 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [x] Implement version history diff view (possibly with automatic commit messages using GPT-4)
 - [ ] Add interactive diff view
 - [ ] Highlight changes in source when switching versions
+- [ ] Automatically format python code on serialization (version doesnt change just because formatting does.)
 
 ## Caching and versioning
 
