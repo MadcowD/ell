@@ -51,7 +51,43 @@ import re
 
 DELIM = "$$$$$$$$$$$$$$$$$$$$$$$$$"
 SEPERATOR = "#------------------------"
-FORBIDDEN_NAMES = ["ell", "Ell", "lstr"]
+FORBIDDEN_NAMES = ["ell", "lstr"]
+def is_immutable_variable(value):
+    """
+    Check if a value is immutable.
+    
+    This function determines whether the given value is of an immutable type in Python.
+    Immutable types are objects whose state cannot be modified after they are created.
+    
+    Args:
+        value: Any Python object to check for immutability.
+    
+    Returns:
+        bool: True if the value is immutable, False otherwise.
+    
+    Note:
+        - This function checks for common immutable types in Python.
+        - Custom classes are considered mutable unless they explicitly implement
+          immutability (which this function doesn't check for).
+        - For some types like tuple, immutability is shallow (i.e., the tuple itself
+          is immutable, but its contents might not be).
+    """
+    immutable_types = (
+        int, float, complex, str, bytes,
+        tuple, frozenset, type(None),
+        bool,  # booleans are immutable
+        range,  # range objects are immutable
+        slice,  # slice objects are immutable
+    )
+    
+    if isinstance(value, immutable_types):
+        return True
+    
+    # Check for immutable instances of mutable types
+    if isinstance(value, (tuple, frozenset)):
+        return all(is_immutable_variable(item) for item in value)
+    
+    return False
 
 
 def should_import(module: types.ModuleType):
@@ -72,8 +108,11 @@ def should_import(module: types.ModuleType):
     # Get the module's spec
     spec = importlib.util.find_spec(module.__name__)
 
+    if module.__name__.startswith("ell"):
+        return True
+    
     # Return False if the spec is None or if the spec's origin starts with the local directory
-    if spec is None or spec.origin.startswith(DIRECTORY_TO_WATCH):
+    if spec is None or (spec.origin is not None and spec.origin.startswith(DIRECTORY_TO_WATCH)):
         return False
 
     # Otherwise, return True
@@ -109,7 +148,7 @@ def get_referenced_names(code: str, module_name: str):
 CLOSURE_SOURCE: Dict[str, str] = {}
 
 
-def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple[str, Tuple[str, str], Set[str]]:
+def lexical_closure(func: Any, already_closed=None, initial_call=False, recursion_stack=None) -> Tuple[str, Tuple[str, str], Set[str]]:
     """
     This function takes a function or any callable as input and returns a string representation of its lexical closure.
     The lexical closure includes the source code of the function itself, as well as the source code of any global variables,
@@ -122,6 +161,9 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
 
     Parameters:
     func (Callable): The function or callable whose lexical closure is to be found.
+    already_closed (set): Set of already processed functions to avoid infinite recursion.
+    initial_call (bool): Whether this is the initial call to the function.
+    recursion_stack (list): Stack to keep track of the recursion path.
 
     Returns:
     str: A string representation of the lexical closure of the input function.
@@ -129,10 +171,12 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
 
     already_closed = already_closed or set()
     uses = set()
+    recursion_stack = recursion_stack or []
 
     if hash(func) in already_closed:
         return "", ("", ""), {}
 
+    recursion_stack.append(func.__qualname__ if hasattr(func, '__qualname__') else str(func))
 
     outer_ell_func = func
     while hasattr(func, "__ell_func__"):
@@ -144,8 +188,11 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
     # Parse the source code into an AST
     # tree = ast.parse(source)
     # Find all the global variables and free variables in the function
-    global_vars = collections.OrderedDict(dill.detect.globalvars(func))
-    free_vars = collections.OrderedDict(dill.detect.freevars(func))
+
+    # These are not global variables these are globals, and other shit is actualy in cluded here
+    _globals = collections.OrderedDict(dill.detect.globalvars(func))
+    print(_globals)
+    _frees = collections.OrderedDict(dill.detect.freevars(func))
 
     # If func is a class we actually should check all the methods of the class for globalvars. Malekdiction (MSM) was here.
     # Add the default aprameter tpes to depndencies if they are not builtins
@@ -156,10 +203,10 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
             if isinstance(method, types.FunctionType) or isinstance(
                 method, types.MethodType
             ):
-                global_vars.update(
+                _globals.update(
                     collections.OrderedDict(dill.detect.globalvars(method))
                 )
-                free_vars.update(collections.OrderedDict(dill.detect.freevars(method)))
+                _frees.update(collections.OrderedDict(dill.detect.freevars(method)))
 
     # Initialize a list to store the source code of the dependencies
     dependencies = []
@@ -181,28 +228,37 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
                 if name not in FORBIDDEN_NAMES:
                     dep, _,  dep_uses = lexical_closure(
                         type(val), already_closed=already_closed,
+                        recursion_stack=recursion_stack.copy()
                     )
                     dependencies.append(dep)
                     uses.update(dep_uses)
 
-            except (IOError, TypeError):
-                # If it's a builtin we can just ignore it
-                pass
+            except Exception as e:
+                error_msg = f"Failed to capture the lexical closure of default parameter {name}. Error: {str(e)}\n"
+                error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
+                raise Exception(error_msg)
 
     # Iterate over the global variables
-    for var_name, var_value in {**global_vars, **free_vars}.items():
+    for var_name, var_value in {**_globals, **_frees}.items():
+        is_free = var_name in _frees
         # If the variable is a function, get its source code
         if isinstance(var_value, (types.FunctionType, type, types.MethodType)):
             if var_name not in FORBIDDEN_NAMES:
-                ret = lexical_closure(
-                    var_value, already_closed=already_closed,
-                )
-                dep, _, dep_uses = ret
-                dependencies.append(dep)
-                # See if the function was called at all in the source code of the func
-                # This is wrong because if its a referred call it won't track the dependency; so we actually need to trace all dependencies that are not ell funcs to see if they call it as well.
-                if is_function_called(var_name, source):
-                    uses.update(dep_uses)
+                try:
+                    ret = lexical_closure(
+                        var_value, already_closed=already_closed,
+                        recursion_stack=recursion_stack.copy()
+                    )
+                    dep, _, dep_uses = ret
+                    dependencies.append(dep)
+                    # See if the function was called at all in the source code of the func
+                    # This is wrong because if its a referred call it won't track the dependency; so we actually need to trace all dependencies that are not ell funcs to see if they call it as well.
+                    if is_function_called(var_name, source):
+                        uses.update(dep_uses)
+                except Exception as e:
+                    error_msg = f"Failed to capture the lexical closure of global or free variabl evariable {var_name}. Error: {str(e)}\n"
+                    error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
+                    raise Exception(error_msg)
 
         elif isinstance(var_value, types.ModuleType):
             if should_import(var_value):
@@ -217,16 +273,16 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
             imports += [dill.source.getimport(var_value, alias=var_name)]
 
         else:
-            json_default = lambda x: f"<Object of type ({type(x).__name__})>"
+            json_default = lambda x: f"<Object of type {type(x).__name__}>"
             if isinstance(var_value, str) and '\n' in var_value:
-                clean_dump = f"'''{var_value}'''"
+                dependencies.append(f"{var_name} = '''{var_value}'''")
             else:
-                clean_dump = json.dumps(
-                    var_value,
-                    default=json_default,
-                    indent=4
-                ).replace("\"<", "<").replace(">\"", ">")
-            dependencies.append(f"#<BV>\n{var_name} = {clean_dump}\n#</BV>")
+                # if is immutable
+                if is_immutable_variable(var_value) and not is_free:
+                    dependencies.append(f"#<BV>\n{var_name} = {repr(var_value)}\n#</BV>")
+                else:
+
+                    dependencies.append(f"#<BmV>\n{var_name} = <{type(var_value).__name__} object>\n#</BmV>")
 
     # We probably need to resovle things with topological sort & turn stuff into a dag but for now we can just do this
 
@@ -251,11 +307,17 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
         for attr in attrs_to_extract:
             val = getattr(mval, attr)
             if isinstance(val, (types.FunctionType, type, types.MethodType)):
-                dep, _,  dep_uses = lexical_closure(
-                    val, already_closed=already_closed
-                )
-                mdeps.append(dep)
-                uses.update(dep_uses)
+                try:
+                    dep, _, dep_uses = lexical_closure(
+                        val, already_closed=already_closed,
+                        recursion_stack=recursion_stack.copy()
+                    )
+                    mdeps.append(dep)
+                    uses.update(dep_uses)
+                except Exception as e:
+                    error_msg = f"Failed to capture the lexical closure of {mname}.{attr}. Error: {str(e)}\n"
+                    error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
+                    raise Exception(error_msg)
             elif isinstance(val, types.ModuleType):
                 modules.append((attr, val))
             else:
@@ -299,15 +361,17 @@ def lexical_closure(func: Any, already_closed=None, initial_call=False) -> Tuple
         ).hexdigest()
     
     if hasattr(outer_ell_func, "__ell_func__"):
-        outer_ell_func.__ell_closure__ = (source, dsrc, global_vars, free_vars)
+        outer_ell_func.__ell_closure__ = (source, dsrc, _globals, _frees)
         outer_ell_func.__ell_hash__ = fn_hash
         outer_ell_func.__ell_uses__ = uses
 
 
     return (dirty_src, (source, dsrc), ({fn_hash}  if not initial_call and hasattr(outer_ell_func, "__ell_func__") else uses))
 
+
+
 def lexically_closured_source(func):
-    _, fnclosure, uses = lexical_closure(func, initial_call=True)
+    _, fnclosure, uses = lexical_closure(func, initial_call=True, recursion_stack=[])
     return fnclosure, uses
 
 import ast

@@ -1,126 +1,162 @@
-import React, { useMemo } from 'react';
-import { Prism as SyntaxHighlighter, createElement } from 'react-syntax-highlighter';
-import { atomDark as theme } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { useCallback } from 'react';
-
-const highlightLine = (lineNumber, markLines, color = "#293645") => {
-  const style = { display: "block", width: "fit-content" };
-  if (markLines.includes(lineNumber)) {
-    style.backgroundColor = color;
-    style.color = "#90cdf4";
-  }
-  return { style };
-};
-
-const BoundedVariableWrapper = ({ children }) => {
-  return (
-    <div className="relative rounded border border-gray-500 mt-2 pt-1 px-1 pb-1">
-      <span className="absolute -top-2 left-2 bg-gray-800 px-1 text-[0.6rem] text-gray-400">
-        bound global at definition
-      </span>
-      {children}
-    </div>
-  );
-};
+import React, { useMemo, useCallback } from "react";
+import {
+  Prism as SyntaxHighlighter,
+  createElement,
+} from "react-syntax-highlighter";
+import { atomDark as theme } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export function CodeHighlighter({
   code,
   highlighterStyle = {},
-  language = 'python',
+  language = "python",
   showLineNumbers = true,
   startingLineNumber = 1,
+  customHooks = [], // New prop for custom hooks
+  defaultRowPadding = 1, // New parameter for default row padding
+  offset: indentOffset = 35,
 }) {
-    const { cleanedCode, bvLines } = useMemo(() => {
-        const bvLines = [];
-        const lines = code.split('\n');
-        const cleanedLines = []
-        let cleanedLineIndex = 0;
-        for (let index = 0; index < lines.length; index++) {
-            const line = lines[index];
-            if (line.includes("#<BV>")) {
-                bvLines.push([cleanedLineIndex]);
-            } else if (line.includes("#</BV>") && bvLines[bvLines.length - 1]?.length === 1) {
-                bvLines[bvLines.length - 1].push(cleanedLineIndex - 1);
-            } else {
-                cleanedLines.push(line);
-                cleanedLineIndex++;
-            }
+  const { cleanedCode, hookRanges } = useMemo(() => {
+    const hookRanges = customHooks.map(() => []);
+    const lines = code.split("\n");
+    const cleanedLines = [];
+    let cleanedLineIndex = 0;
+
+    for (let index = 0; index < lines.length; index++) {
+      const line = lines[index];
+      let skipLine = false;
+
+      // eslint-disable-next-line no-loop-func
+      customHooks.forEach((hook, hookIndex) => {
+        if (line.includes(hook.startTag)) {
+          hookRanges[hookIndex].push([cleanedLineIndex]);
+          skipLine = true;
+        } else if (
+          line.includes(hook.endTag) &&
+          hookRanges[hookIndex][hookRanges[hookIndex].length - 1]?.length === 1
+        ) {
+          hookRanges[hookIndex][hookRanges[hookIndex].length - 1].push(
+            cleanedLineIndex - 1
+          );
+          // also push all of the clean code in the hook range
+          const contentHook = cleanedLines
+            .slice(
+              hookRanges[hookIndex][hookRanges[hookIndex].length - 1][0],
+              cleanedLineIndex
+            )
+            .join("\n");
+          hookRanges[hookIndex][hookRanges[hookIndex].length - 1].push(
+            contentHook
+          );
+          skipLine = true;
         }
-        const cleanedCode = cleanedLines.join('\n');
-        return { cleanedCode, bvLines };
-    }, [code]);
+      });
 
-    const renderer = useCallback(({ rows, stylesheet, useInlineStyles }) => {
-        // list of tuples in which source lienbs are contained wihtin "#<BV>" and #</BV>
-        const rowsElements =  rows.map((node, i) => {
-          const transformNodes = (node) => {
+      if (!skipLine) {
+        cleanedLines.push(line);
+        cleanedLineIndex++;
+      }
+    }
 
-            return node;
-          };
-          node = transformNodes(node);
+    const cleanedCode = cleanedLines.join("\n");
+    return { cleanedCode, hookRanges };
+  }, [code, customHooks]);
 
-    
-          return createElement({
-            node,
-            stylesheet,
-            useInlineStyles,
-            key: `code-segement${i}`,
-          });
+  const renderer = useCallback(
+    ({ rows, stylesheet, useInlineStyles }) => {
+      const rowsElements = rows.map((node, i) =>
+        createElement({
+          node,
+          stylesheet,
+          useInlineStyles,
+          key: `code-segment${i}`,
         })
-        // Group rows by BV (Bounded Variable) intervals
-        const rowTree = [];
-        let curBvSubtree = null;
+      );
 
-        for (let i = 0; i < rowsElements.length; i++) {
-            
-            const containingBvInterval = bvLines.some(([start, end]) => start <= i && i <= end);
-            console.log(i, containingBvInterval)
-            if ((!containingBvInterval)) {
-                if (curBvSubtree !== null) {
-                    console.log("HI IM DOING MA", curBvSubtree)
-                    rowTree.push(
-                        <BoundedVariableWrapper key={`bv-${i}`}>
-                            {curBvSubtree}
-                        </BoundedVariableWrapper>
-                    );
-                    curBvSubtree = null;
-                }
-                rowTree.push(<div className='px-1' key={i}>{rowsElements[i]}</div>);
-            } else {
-                if (curBvSubtree === null) {
-                    curBvSubtree = [];
-                }
-                curBvSubtree.push(rowsElements[i]);
+      const rowTree = [];
+      const activeHooks = customHooks.map(() => null);
+
+      for (var i = 0; i < rowsElements.length; i++) {
+        var currentElement = (
+          <div
+            style={{
+              paddingLeft: `${indentOffset + defaultRowPadding}px`,
+              textIndent: `-${indentOffset}px`,
+            }}
+            key={i}
+          >
+            {rowsElements[i]}
+          </div>
+        );
+
+        // TODO: Fix render
+        for (let hookIndex = 0; hookIndex < customHooks.length; hookIndex++) {
+          const hook = customHooks[hookIndex];
+
+          const containingInterval = hookRanges[hookIndex].some(
+            ([start, end, _]) => start <= i && i <= end
+          );
+          if (containingInterval) {
+            if (activeHooks[hookIndex] === null) {
+              activeHooks[hookIndex] = [];
             }
-        }
-        if(curBvSubtree !== null) {
-            rowTree.push(
-                <BoundedVariableWrapper key={`bv-end`}>
-                    {curBvSubtree}
-                </BoundedVariableWrapper>
+            activeHooks[hookIndex].push(currentElement);
+            currentElement = null;
+          } else if (activeHooks[hookIndex] !== null) {
+            const rangeOfLastHook = hookRanges[hookIndex].find(
+              ([start, end, contents]) => start <= i - 1 && i - 1 <= end
             );
+
+            rowTree.push(
+              hook.wrapper({
+                children: activeHooks[hookIndex],
+                content: rangeOfLastHook[2],
+                key: `${hook.name}-${i}`,
+              })
+            );
+            activeHooks[hookIndex] = null;
+          }
         }
 
-        return rowTree;
+        if (currentElement) {
+          rowTree.push(currentElement);
+        }
+      }
 
-      }, [bvLines]);
+      customHooks.forEach((hook, hookIndex) => {
+        if (activeHooks[hookIndex] !== null) {
+          const range = hookRanges[hookIndex][hookRanges[hookIndex].length - 1];
+
+          rowTree.push(
+            hook.wrapper({
+              children: activeHooks[hookIndex],
+              key: `${hook.name}-end`,
+              content: range[2],
+            })
+          );
+        }
+      });
+
+      return rowTree;
+    },
+    [hookRanges, customHooks, defaultRowPadding]
+  ); // Add defaultRowPadding to dependencies
 
   return (
-      <SyntaxHighlighter
-        language={language}
-        style={theme}
-        showLineNumbers={showLineNumbers}
-        startingLineNumber={startingLineNumber}
-        customStyle={{
-          margin: 0,
-          padding: '1em',
-          borderRadius: '0 0 6px 6px',
+    <SyntaxHighlighter
+      language={language}
+      style={theme}
+      showLineNumbers={showLineNumbers}
+      startingLineNumber={startingLineNumber}
+      customStyle={{
+        margin: 0,
+        padding: "1em",
+        borderRadius: "0 0 6px 6px",
         ...highlighterStyle,
-        }}
-        wrapLines
-        renderer={renderer}
-      >
-        {cleanedCode}
-      </SyntaxHighlighter>
+      }}
+      wrapLines
+      renderer={renderer}
+    >
+      {cleanedCode}
+    </SyntaxHighlighter>
   );
 }

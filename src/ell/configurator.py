@@ -1,5 +1,5 @@
 from functools import wraps
-from typing import Dict, List, Optional, Union
+from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
 import openai
 import logging
@@ -19,6 +19,8 @@ class _Config:
     autocommit: bool = False
     lazy_versioning : bool = False # Optimizes computation of versionoing to the initial invocaiton
     # XXX: This might lead to incorrect serialization of globals/
+    default_lm_params: Dict[str, Any] = field(default_factory=dict)
+    default_system_prompt: str = "You are a helpful AI assistant."
 
     def __post_init__(self):
         self._lock = threading.Lock()
@@ -67,11 +69,18 @@ class _Config:
 
     def get_store(self) -> Store:
         return self._store
+    
+    def set_default_lm_params(self, **params: Dict[str, Any]) -> None:
+        self.default_lm_params = params
+    
+    def set_default_system_prompt(self, prompt: str) -> None:
+        self.default_system_prompt = prompt
+
 
 # Singleton instance
 config = _Config()
 
-# Todo: Is this write ot expose global helpers.
+# Todo: Is this the right way to expose global helpers.
 @wraps(config.get_store)
 def get_store() -> Store:
     return config.get_store()
@@ -79,3 +88,11 @@ def get_store() -> Store:
 @wraps(config.set_store)
 def set_store(*args, **kwargs) -> None:
     return config.set_store(*args, **kwargs)
+
+@wraps(config.set_default_lm_params)
+def set_default_lm_params(*args, **kwargs) -> None:
+    return config.set_default_lm_params(*args, **kwargs)
+
+@wraps(config.set_default_system_prompt)
+def set_default_system_prompt(*args, **kwargs) -> None:
+    return config.set_default_system_prompt(*args, **kwargs)

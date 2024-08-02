@@ -118,7 +118,7 @@ function getLayout(nodes, edges) {
     // for each node at this level, set its x coordinate to be the index of the node
 
     nodesAtLevel.forEach((node, i) => {
-      node.position.y = -level * 100 + Math.random() * 10;
+      node.position.y = (-level * 100 + Math.random() * 10);
     });
   });
 }
@@ -146,7 +146,7 @@ export const useLayoutedElements = () => {
       "link",
       forceLink(edges)
         .id((d) => d.id)
-        .strength(0.0)
+        .strength(0.10)
         .distance(100)
     );
 

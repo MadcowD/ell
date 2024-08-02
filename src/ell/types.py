@@ -129,7 +129,7 @@ class Invocation(SQLModel, table=True):
     latency_ms : float 
     prompt_tokens: Optional[int] = Field(default=None)
     completion_tokens: Optional[int] = Field(default=None)
-    input_hash: Optional[str] = Field(default=None)
+    state_cache_key: Optional[str] = Field(default=None)
 
     
     created_at: datetime = Field(default_factory=datetime.utcnow)  # Timestamp of when the invocation was created

@@ -2,32 +2,20 @@ import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { FiChevronRight, FiChevronDown, FiArrowUp, FiArrowDown } from 'react-icons/fi';
 import { HierarchicalTableProvider, useHierarchicalTable } from './HierarchicalTableContext';
 
-const MeasureCell = ({ content, onMeasure }) => {
-  const ref = useRef(null);
 
-  useEffect(() => {
-    if (ref.current) {
-      onMeasure(ref.current.offsetWidth);
-    }
-  }, [content, onMeasure]);
 
-  return (
-    <div ref={ref} style={{ position: 'absolute', visibility: 'hidden', whiteSpace: 'nowrap' }}>
-      {content}
-    </div>
-  );
-};
-
-const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWidth }) => {
+const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWidth, rowClassName }) => {
   const { expandedRows, selectedRows, toggleRow, toggleSelection, isItemSelected } = useHierarchicalTable();
   const hasChildren = item.children && item.children.length > 0;
   const isExpanded = expandedRows[item.id];
   const isSelected = isItemSelected(item);
 
+  const customRowClassName = rowClassName ? rowClassName(item) : '';
+
   return (
     <React.Fragment>
       <tr
-        className={`border-b border-gray-800 hover:bg-gray-800/30 cursor-pointer ${isSelected ? 'bg-blue-900/30' : ''}`}
+        className={`border-b border-gray-800 hover:bg-gray-800/30 cursor-pointer transition-colors duration-500 ease-in-out ${isSelected ? 'bg-blue-900/30' : ''} ${customRowClassName}`}
         onClick={() => {
           if (onRowClick) onRowClick(item);
         }}
@@ -63,16 +51,12 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
               >
                 {content}
               </td>
-              <MeasureCell 
-                content={content} 
-                onMeasure={(width) => updateWidth(column.key, width, maxWidth)} 
-              />
             </React.Fragment>
           );
         })}
       </tr>
       {hasChildren && isExpanded && item.children.map(child => (
-        <TableRow key={child.id} item={child} schema={schema} level={level + 1} onRowClick={onRowClick} columnWidths={columnWidths} updateWidth={updateWidth} />
+        <TableRow key={child.id} item={child} schema={schema} level={level + 1} onRowClick={onRowClick} columnWidths={columnWidths} updateWidth={updateWidth} rowClassName={rowClassName} />
       ))}
     </React.Fragment>
   );
@@ -114,10 +98,6 @@ const TableHeader = ({ schema, columnWidths, updateWidth }) => {
                   {sortIcon}
                 </div>
               </th>
-              <MeasureCell 
-                content={column.header} 
-                onMeasure={(width) => updateWidth(column.key, width, maxWidth)} 
-              />
             </React.Fragment>
           );
         })}
@@ -126,7 +106,7 @@ const TableHeader = ({ schema, columnWidths, updateWidth }) => {
   );
 };
 
-const TableBody = ({ schema, onRowClick, columnWidths, updateWidth }) => {
+const TableBody = ({ schema, onRowClick, columnWidths, updateWidth, rowClassName }) => {
   const { sortedData } = useHierarchicalTable();
 
   return (
@@ -139,13 +119,14 @@ const TableBody = ({ schema, onRowClick, columnWidths, updateWidth }) => {
           onRowClick={onRowClick} 
           columnWidths={columnWidths} 
           updateWidth={updateWidth}
+          rowClassName={rowClassName}
         />
       ))}
     </tbody>
   );
 };
 
-const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig }) => {
+const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName }) => {
   const [columnWidths, setColumnWidths] = useState({});
   const updateWidth = (key, width, maxWidth) => {
     setColumnWidths(prev => ({
@@ -180,6 +161,7 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
             onRowClick={onRowClick} 
             columnWidths={columnWidths} 
             updateWidth={updateWidth}
+            rowClassName={rowClassName}
           />
         </table>
       </div>

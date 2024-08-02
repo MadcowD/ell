@@ -1,7 +1,7 @@
 # `ell` [WIP, unreleased, experimental]
 
-[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/J2UhksbE)
-[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](<https://discord.gg/J2UhksbE](https://discord.gg/Yqyga6Qr)>)
+[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/Yqyga6Qr)
+[![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/Yqyga6Qr)
 [![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/Yqyga6Qr)
 [![](https://dcbadge.limes.pink/api/server/Yqyga6Qr?style=flat)](https://discord.gg/Yqyga6Qr)
 
@@ -97,7 +97,7 @@ To contribute, install `ell` in development mode using:
 
 ```
 poetry install
-poetry run build-hook
+poetry shell
 ```
 
 To run `ell-studio` you must seperately run the backend and the front-end. To start the front-end:
@@ -116,6 +116,20 @@ python -m ell.studio --storage-dir ./sqlite_example --dev # the dev flag is impo
 
 You can then visualize your promtps by visiting the frontend on `http://localhost:3000`
 
+
+## v1 release todos
+- LMP UX Finished entirely
+- Postgres backend
+- Clean all of the pydantic schema serialziation santiziation etc that we do throughout the codebase
+- Full version history UX
+- Package on pypy
+- Docs 
+- Jupyter compatability
+- Tests
+- Convert all of our todos into issues and milestones
+- Multimodality
+- Output parsing.
+
 ## Todos
 
 ### Metrics
@@ -125,10 +139,11 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 ### Bugs
 
 - [ ] Fix weird rehashing issue of the main prompt whenever subprompt changes? Or just make commits more of a background deal.
-- [ ] Trace not writing on first invoc.
-- [ ] Rewrite lexical closures
+- [x] Trace not writing on first invoc.
 - [ ] Serialize lkstrs in the jkson dumps in pyhton the same way as the db serializers them for the frontend (\_\_lstr vs SerialziedLstr) <- these are pydantic models and so we can reuse them
 - [ ] handle failure to serialize.
+- [ ] Unify cattrs deserialziation and serialization its fucked right now.
+- [ ] Fix URL not changing on invocation click
 
 ## Tests
 
@@ -146,29 +161,39 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [o] Implement argument pass-through functionality
 - [ ] Working trace graph thing
 
+## Ell Studio
+- [ ] Optimize front-end data fetching & api structure
+- [ ] Add websockets for live updates.
+- [ ] Add a section for the actual LLM call
+
 ## Version History
 
 - [x] Auto-document commit changes
 - [x] Implement version history diff view (possibly with automatic commit messages using GPT-4)
 - [ ] Add interactive diff view
 - [ ] Highlight changes in source when switching versions
+- [ ] Automatically format python code on serialization (version doesnt change just because formatting does.)
 
 ## Caching and versioning
 
 - [x] Get caching to work for bound global mutable types
+- [x] Decide if version not change just because I invoke an LMP using a global that was mutated some where else in the program. (In example where we had test being global with a list of objects of type Test) that shouldn’t change the version number. My vote is that it shouldn’t change.
 - [x] Bind global mutable at invocation, and update our Invocation database types
-- [ ] Come up with a nice way to expand and collapse stored globals in dependency scope.
-- [ ] Add max height to the dependencies.
-- [ ] Come up with a nice way to display bound globals of an invocation
-- [ ] Bind all arguments to their names in the function signature
-- [ ] Custom syntax highlighting for these bound mutable objects
-- [ ] Decide if version not change just because I invoke an LMP using a global that was mutated some where else in the program. (In example where we had test being global with a list of objects of type Test) that shouldn’t change the version number. My vote is that it shouldn’t change.
-- [ ] Compute type lexical closures as needed
-- [ ] Come up with a spec for serialization of bound types.
+- [x] Come up with a nice way to expand and collapse stored globals in dependency scope.disc
+- [x] Serialize globals free variables at time of definition
+- [x] Come up with a nice way to display bound globals of an invocation
+- [x] Custom syntax highlighting for these bound mutable objects
+- [x] When we click invocation, the global if its overridden at the time execution needs to be updated.
+- [x] Decide where the line between program state and program version changes. If we had a global variable which was a list of [“asd”]*10000 do we include the contents of this shit in the version.
+
+- [ ] Better definition disclosure (and hiding) for bound global variables
+- [ ] Design or steal vs-code’s debug instance widget
+- [ ] Bind all arguments to their names in the function signature (pre v1)
+- [ ] Compute type lexical closures as needed (post v1)
 
 ## LM Functionality
 
-- [ ] Freezing and unfreezing LMPs
+- [x] Freezing and unfreezing LMPs
 - [ ] Support multimodal inputs
 - [ ] Implement function calling
 - [ ] Add persistent chatting capability
@@ -198,7 +223,7 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [x] Update LMP Details to be function-based for easier result viewing
 - [ ] Implement easy navigation similar to VSCode (cmd+shift+p or spotlight)
 - [x] Optimize display of dependencies on prompt pages
-- [ ] Explore alternative backend options
+
 - [ ] Automatic API key management if not specified as a nice experience. Should ask for the api key and store it in the ~/.ell/api_keys directory for the user's convenience.
 - [ ] Need a cli for managing api keys etc
 
@@ -209,9 +234,14 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [ ] Refine and organize examples
 - [x] Create production build for ell studio
 - [ ] Draft contribution guidelines
+- [ ] Document the code
 
-## Miscellaneous
 
+## Misc 
+- [ ] Commit cosine similarity graph for browsing.
+- [ ] Profile closures code.
+- [ ] Add max height to the dependencies.
+- [ ] Source code graph refractor (source & dependencies should be json tree of source code)
 - [ ] Implement metric tracking system
 - [ ] Add built-ins for classifiers (e.g., logit debiasing)
 - [ ] Develop evaluator framework
@@ -227,5 +257,4 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - [ ] Add live updates and new content indicators
 - [ ] Force stores ot use the pydantic data types and dont use model dumping by default.
 - [ ] Update the serializer so that we prefer stringliterals when serialziing globals
-
 - [x] Update stores to use schema type hints and serialize to model dump in Flask (or consider switching to FastAPI)

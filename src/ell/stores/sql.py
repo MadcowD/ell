@@ -34,13 +34,14 @@ class SQLStore(ell.store.Store):
                 # Already added to the DB.
                 return lmp
             else:
-                print(version_number)
                 lmp = SerializedLMP(
                     lmp_id=lmp_id,
                     name=name,
                     version_number=version_number,
                     source=source,
                     dependencies=dependencies,
+                    initial_global_vars=global_vars,
+                    initial_free_vars=free_vars,
                     created_at= created_at or datetime.datetime.utcnow(),
                     is_lm=is_lmp,
                     lm_kwargs=lm_kwargs,
@@ -60,7 +61,7 @@ class SQLStore(ell.store.Store):
                          global_vars: Dict[str, Any],
                          free_vars: Dict[str, Any], created_at: Optional[float], consumes: Set[str], prompt_tokens: Optional[int] = None,
                          completion_tokens: Optional[int] = None, latency_ms: Optional[float] = None,
-                         input_hash: Optional[str] = None,
+                         state_cache_key: Optional[str] = None,
                          cost_estimate: Optional[float] = None) -> Optional[Any]:
         with Session(self.engine) as session:
             if isinstance(result, lstr):
@@ -90,7 +91,7 @@ class SQLStore(ell.store.Store):
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,
                 latency_ms=latency_ms,
-                input_hash=input_hash,
+                state_cache_key=state_cache_key,
             )
 
             for res in results:
@@ -110,9 +111,9 @@ class SQLStore(ell.store.Store):
             session.commit()
     def get_lmps(self, **filters: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
         with Session(self.engine) as session:
-            query = select(SerializedLMP, SerializedLMPUses.lmp_using_id).outerjoin(
+            query = select(SerializedLMP, SerializedLMPUses.lmp_user_id).outerjoin(
                 SerializedLMPUses,
-                SerializedLMP.lmp_id == SerializedLMPUses.lmp_user_id
+                SerializedLMP.lmp_id == SerializedLMPUses.lmp_using_id
             ).order_by(SerializedLMP.created_at.desc())  # Sort by created_at in descending order
             
             if filters:

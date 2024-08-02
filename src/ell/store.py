@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from typing import Any, Optional, Dict, List, Set
 from ell.lstr import lstr
+from ell.types import InvocableLM
 
 
 class Store(ABC):
@@ -33,7 +35,7 @@ class Store(ABC):
     def write_invocation(self, id: str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], 
                          created_at: Optional[float], consumes: Set[str], prompt_tokens: Optional[int] = None,
                          completion_tokens: Optional[int] = None, latency_ms: Optional[float] = None,
-                         input_hash: Optional[str] = None,
+                         state_cache_key: Optional[str] = None,
                          cost_estimate: Optional[float] = None) -> Optional[Any]:
         """
         Write an invocation of an LMP to the storage.
@@ -113,3 +115,29 @@ class Store(ABC):
         :return: List of the latest LMPs.
         """
         pass
+
+
+    @contextmanager
+    def freeze(self, *lmps : InvocableLM):
+        """
+        A context manager for caching operations using a particular store.
+
+        Args:
+            key (Optional[str]): The cache key. If None, a default key will be generated.
+            condition (Optional[Callable[..., bool]]): A function that determines whether to cache or not.
+
+        Yields:
+            None
+        """
+        old_cache_values = {}
+        try:
+            for lmp in lmps:
+                old_cache_values[lmp] = getattr(lmp, '__ell_use_cache__', None)
+                setattr(lmp, '__ell_use_cache__', self)
+            yield
+        finally:
+            # TODO: Implement cache storage logic here
+            for lmp in lmps:
+                lmp.__ell_use_cache__ = old_cache_values.get(lmp, None)
+
+
