@@ -1,6 +1,8 @@
 import os
 import subprocess
 import shutil
+import sys
+import toml
 
 
 def run_command(command, cwd=None):
@@ -12,9 +14,13 @@ def run_command(command, cwd=None):
 
 
 def sync_version():
-    version = (
-        subprocess.check_output(["poetry", "version", "-s"]).strip().decode("utf-8")
-    )
+    with open("pyproject.toml", "r") as f:
+        pyproject = toml.load(f)
+    version = pyproject.get("tool", {}).get("poetry", {}).get("version")
+    if not version:
+        raise ValueError("Version not found in pyproject.toml")
+    version = "v" + version
+    print(f"setting {version=}")
     run_command(f"git tag -f {version}")
 
 
@@ -25,8 +31,16 @@ def python_install():
     run_command("pip uninstall -y ell")
     run_command("poetry install")
     run_command("poetry build")
-    run_command("pip install dist/*.whl")
-    shutil.rmtree("dist", ignore_errors=True)
+    # Use a wildcard pattern that works on both Windows and Unix-like systems
+    dist_dir = "dist"
+    dist_files = [
+        os.path.join(dist_dir, f) for f in os.listdir(dist_dir) if f.endswith(".whl")
+    ]
+    if not dist_files:
+        raise RuntimeError("No .whl files found in dist directory")
+    for file in dist_files:
+        run_command(f"pip install {file}")
+    shutil.rmtree(dist_dir, ignore_errors=True)
 
 
 def npm_install():
@@ -49,3 +63,7 @@ def main():
     npm_install()
     npm_build()
     python_install()
+
+
+if __name__ == "__main__":
+    main()
