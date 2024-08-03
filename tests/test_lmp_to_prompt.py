@@ -2,10 +2,10 @@
 Pytest for the LM function (mocks the openai api so we can pretend to generate completions through the typical approach taken in the decorators (and adapters file.))
 """
 
+import ell
 from ell.decorators.lm import lm
 import pytest
 from unittest.mock import patch, MagicMock
-from ell.util.lm import DEFAULT_SYSTEM_PROMPT
 from ell.types import Message, LMPParams
 
 
@@ -47,7 +47,7 @@ def test_lm_decorator_with_params(client_mock):
     client_mock.assert_called_with(
         model="gpt-4-turbo",
         messages=[
-            Message(role="system", content=DEFAULT_SYSTEM_PROMPT),
+            Message(role="system", content=ell.config.default_system_prompt),
             Message(role="user", content="Test user prompt"),
         ],
         temperature=0.5,
