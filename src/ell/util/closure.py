@@ -40,6 +40,7 @@ from dill.source import getsource
 import importlib.util
 import re
 from collections import deque
+import black
 
 DELIM = "$$$$$$$$$$$$$$$$$$$$$$$$$"
 FORBIDDEN_NAMES = ["ell", "lstr"]
@@ -94,11 +95,25 @@ def lexical_closure(
     CLOSURE_SOURCE[hash(func)] = dirty_src 
 
     dsrc = _clean_src(dirty_src_without_func)
+
+    # Format the sorce and dsrc soruce using Black
+    source = _format_source(source)
+    dsrc = _format_source(dsrc)
+
     fn_hash = _generate_function_hash(source, dsrc, func.__qualname__)
     
     _update_ell_func(outer_ell_func, source, dsrc, globals_and_frees['globals'], globals_and_frees['frees'], fn_hash, uses)
 
     return (dirty_src, (source, dsrc), ({fn_hash} if not initial_call and hasattr(outer_ell_func, "__ell_func__") else uses))
+
+
+def _format_source(source: str) -> str:
+    """Format the source code using Black."""
+    try:
+        return black.format_str(source, mode=black.Mode())
+    except:
+        # If Black formatting fails, return the original source
+        return source
 
 def _get_globals_and_frees(func: Callable) -> Dict[str, Dict]:
     """Get global and free variables for a function."""
@@ -331,7 +346,10 @@ CLOSURE_SOURCE: Dict[str, str] = {}
 
 def lexically_closured_source(func):
     _, fnclosure, uses = lexical_closure(func, initial_call=True, recursion_stack=[])
-    return fnclosure, uses
+    source, dsrc = fnclosure
+    formatted_source = _format_source(source)
+    formatted_dsrc = _format_source(dsrc)
+    return (formatted_source, formatted_dsrc), uses
 
 import ast
 

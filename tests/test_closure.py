@@ -78,13 +78,13 @@ def test_get_referenced_names():
 
 def test_is_function_called():
     code = """
-    def foo():
-        pass
-    
-    def bar():
-        foo()
-    
-    x = 1 + 2
+def foo():
+    pass
+
+def bar():
+    foo()
+
+x = 1 + 2
     """
     assert is_function_called("foo", code)
     assert not is_function_called("bar", code)

@@ -35,13 +35,13 @@ def format_message_history(message_history : List[Tuple[str, str]]) -> str:
 @ell.lm(model="gpt-4o-mini", temperature=0.3, max_tokens=20)
 def chat(message_history : List[Tuple[str, str]], *, personality : str):
 
-    return [
-        ell.system(f"""You are
-    {personality}. 
+        return [
+            ell.system(f"""Here is your description.
+{personality}. 
 
-    Your goal is to come up with a response to a chat. Only respond in one sentence (should be like a text message in informality.) Never use Emojis."""),
-        ell.user(format_message_history(message_history)),
-    ]
+Your goal is to come up with a response to a chat. Only respond in one sentence (should be like a text message in informality.) Never use Emojis."""),
+            ell.user(format_message_history(message_history)),
+        ]
 
 
 
