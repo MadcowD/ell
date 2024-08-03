@@ -22,6 +22,7 @@
     "react-scripts": "^5.0.1",
     "react-syntax-highlighter": "^15.5.0",
     "reactflow": "^11.11.4",
+    "unidiff": "^1.0.4",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

@@ -1,21 +1,20 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { useTheme } from "../contexts/ThemeContext";
 import InvocationsTable from "../components/invocations/InvocationsTable";
 import DependencyGraphPane from "../components/DependencyGraphPane";
 import LMPSourceView from "../components/source/LMPSourceView";
 import { FiCopy, FiFilter, FiColumns } from "react-icons/fi";
 import VersionHistoryPane from "../components/VersionHistoryPane";
-import LMPDetailsSidePanel from "../components/LMPDetailsSidePanel";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
-import InvocationDetailsSidevar from "../components/invocations/InvocationDetailsSidebar";
+
 import VersionBadge from "../components/VersionBadge";
 import { LMPCardTitle } from "../components/depgraph/LMPCardTitle";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import InvocationsLayout from "../components/invocations/InvocationsLayout";
+import ToggleSwitch from "../components/common/ToggleSwitch";
 
 const ChevronSlop = () => {
   return (
@@ -43,10 +42,12 @@ function LMP() {
   const [versionHistory, setVersionHistory] = useState([]);
   const [invocations, setInvocations] = useState([]);
   const [uses, setUses] = useState([]);
+  const [previousVersion, setPreviousVersion] = useState(null);
 
   const [activeTab, setActiveTab] = useState("runs");
   const [selectedTrace, setSelectedTrace] = useState(null);
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState('Source');
 
   const API_BASE_URL = "http://localhost:8080";
 
@@ -65,11 +66,15 @@ function LMP() {
         const versionHistoryResponse = await axios.get(
           `${API_BASE_URL}/api/lmps/${latest_lmp.name}`
         );
-        setVersionHistory(
-          (versionHistoryResponse.data || []).sort(
-            (a, b) => new Date(b.created_at) - new Date(a.created_at)
-          )
+        const sortedVersionHistory = (versionHistoryResponse.data || []).sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
         );
+        setVersionHistory(sortedVersionHistory);
+        if (sortedVersionHistory.length > 1) {
+          setPreviousVersion(sortedVersionHistory[1]);
+        }
+
+        
 
         const invocationsResponse = await axios.get(
           `${API_BASE_URL}/api/invocations/${name}${id ? `/${id}` : ""}`
@@ -124,6 +129,10 @@ function LMP() {
       });
   };
 
+  const handleViewModeToggle = () => {
+    setViewMode(prevMode => prevMode === 'Source' ? 'Diff' : 'Source');
+  };
+
   if (!lmp)
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900 text-gray-100">
@@ -175,7 +184,13 @@ function LMP() {
                   </>
                 )}
               </div>
-              <div className="flex space-x-2">
+              <div className="flex space-x-4 items-center">
+                <ToggleSwitch
+                  leftLabel="Source"
+                  rightLabel="Diff"
+                  isRight={viewMode === 'Diff'}
+                  onToggle={handleViewModeToggle}
+                />
                 <button
                   className="p-1 rounded bg-[#2a2f3a] hover:bg-[#3a3f4b] transition-colors"
                   onClick={handleCopyCode}
@@ -189,6 +204,8 @@ function LMP() {
                 lmp={lmp}
                 selectedInvocation={selectedTrace}
                 showDependenciesInitial={!!id}
+                previousVersion={previousVersion}
+                viewMode={viewMode}
               />
             </div>
           </div>

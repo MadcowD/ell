@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
@@ -7,6 +7,7 @@ import Traces from './pages/Traces';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './styles/globals.css';
 import './styles/sourceCode.css';
+import refractor from 'refractor'
 
 function App() {
   return (

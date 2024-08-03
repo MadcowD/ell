@@ -1,160 +1,87 @@
 import React, { useMemo, useCallback } from "react";
-import {
-  Prism as SyntaxHighlighter,
-  createElement,
-} from "react-syntax-highlighter";
+import { Prism as SyntaxHighlighter, createElement } from "react-syntax-highlighter";
 import { atomDark as theme } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { diffLines, formatLines } from 'unidiff';
+import { cleanCode } from './codeCleanerUtils';
+import { StandardRenderer } from './StandardRenderer';
+import { DiffRenderer } from './DiffRenderer';
 
 export function CodeHighlighter({
   code,
+  previousCode,
+  isDiffView,
   highlighterStyle = {},
   language = "python",
   showLineNumbers = true,
   startingLineNumber = 1,
-  customHooks = [], // New prop for custom hooks
-  defaultRowPadding = 1, // New parameter for default row padding
+  customHooks = [],
+  defaultRowPadding = 1,
   offset: indentOffset = 35,
 }) {
-  const { cleanedCode, hookRanges } = useMemo(() => {
-    const hookRanges = customHooks.map(() => []);
-    const lines = code.split("\n");
-    const cleanedLines = [];
-    let cleanedLineIndex = 0;
+  const { cleanedCode, hookRanges } = useMemo(() => 
+    cleanCode(code, customHooks), [code, customHooks]);
+  const commonProps = useMemo(() => {
+    return {
+    language,
+    style: theme,
+    customStyle: {
+      margin: 0,
+      padding: "1em",
+      borderRadius: "0 0 6px 6px",
+        ...highlighterStyle,
+      },
+    };
+  }, [language, highlighterStyle]);
 
-    for (let index = 0; index < lines.length; index++) {
-      const line = lines[index];
-      let skipLine = false;
+  const standardRenderer = useCallback(
+    ({ rows, stylesheet, useInlineStyles }) => 
+      StandardRenderer({
+        rows,
+        stylesheet,
+        useInlineStyles,
+        customHooks,
+        hookRanges,
+        indentOffset,
+        defaultRowPadding
+      }),
+    [customHooks, hookRanges, indentOffset, defaultRowPadding]
+  );
 
-      // eslint-disable-next-line no-loop-func
-      customHooks.forEach((hook, hookIndex) => {
-        if (line.includes(hook.startTag)) {
-          hookRanges[hookIndex].push([cleanedLineIndex]);
-          skipLine = true;
-        } else if (
-          line.includes(hook.endTag) &&
-          hookRanges[hookIndex][hookRanges[hookIndex].length - 1]?.length === 1
-        ) {
-          hookRanges[hookIndex][hookRanges[hookIndex].length - 1].push(
-            cleanedLineIndex - 1
-          );
-          // also push all of the clean code in the hook range
-          const contentHook = cleanedLines
-            .slice(
-              hookRanges[hookIndex][hookRanges[hookIndex].length - 1][0],
-              cleanedLineIndex
-            )
-            .join("\n");
-          hookRanges[hookIndex][hookRanges[hookIndex].length - 1].push(
-            contentHook
-          );
-          skipLine = true;
-        }
-      });
+  const diffRenderer = useCallback(
+  ({ stylesheet, useInlineStyles }) => 
+    DiffRenderer({
+        previousCode: code,
+        code: previousCode,
+        stylesheet,
+        useInlineStyles,
+        startingLineNumber,
+        commonProps
+      }),
+    [previousCode, code, startingLineNumber, commonProps]
+  );
 
-      if (!skipLine) {
-        cleanedLines.push(line);
-        cleanedLineIndex++;
-      }
-    }
 
-    const cleanedCode = cleanedLines.join("\n");
-    return { cleanedCode, hookRanges };
-  }, [code, customHooks]);
+  if (isDiffView && previousCode && code) {
 
-  const renderer = useCallback(
-    ({ rows, stylesheet, useInlineStyles }) => {
-      const rowsElements = rows.map((node, i) =>
-        createElement({
-          node,
-          stylesheet,
-          useInlineStyles,
-          key: `code-segment${i}`,
-        })
-      );
-
-      const rowTree = [];
-      const activeHooks = customHooks.map(() => null);
-
-      for (var i = 0; i < rowsElements.length; i++) {
-        var currentElement = (
-          <div
-            style={{
-              paddingLeft: `${indentOffset + defaultRowPadding}px`,
-              textIndent: `-${indentOffset}px`,
-            }}
-            key={i}
-          >
-            {rowsElements[i]}
-          </div>
-        );
-
-        // TODO: Fix render
-        for (let hookIndex = 0; hookIndex < customHooks.length; hookIndex++) {
-          const hook = customHooks[hookIndex];
-
-          const containingInterval = hookRanges[hookIndex].some(
-            ([start, end, _]) => start <= i && i <= end
-          );
-          if (containingInterval) {
-            if (activeHooks[hookIndex] === null) {
-              activeHooks[hookIndex] = [];
-            }
-            activeHooks[hookIndex].push(currentElement);
-            currentElement = null;
-          } else if (activeHooks[hookIndex] !== null) {
-            const rangeOfLastHook = hookRanges[hookIndex].find(
-              ([start, end, contents]) => start <= i - 1 && i - 1 <= end
-            );
-
-            rowTree.push(
-              hook.wrapper({
-                children: activeHooks[hookIndex],
-                content: rangeOfLastHook[2],
-                key: `${hook.name}-${i}`,
-              })
-            );
-            activeHooks[hookIndex] = null;
-          }
-        }
-
-        if (currentElement) {
-          rowTree.push(currentElement);
-        }
-      }
-
-      customHooks.forEach((hook, hookIndex) => {
-        if (activeHooks[hookIndex] !== null) {
-          const range = hookRanges[hookIndex][hookRanges[hookIndex].length - 1];
-
-          rowTree.push(
-            hook.wrapper({
-              children: activeHooks[hookIndex],
-              key: `${hook.name}-end`,
-              content: range[2],
-            })
-          );
-        }
-      });
-
-      return rowTree;
-    },
-    [hookRanges, customHooks, defaultRowPadding]
-  ); // Add defaultRowPadding to dependencies
+    return (
+      <SyntaxHighlighter
+        {...commonProps}
+        showLineNumbers={false}
+        renderer={diffRenderer}
+        language="python"
+      >
+        {""}
+      </SyntaxHighlighter>
+    );
+  }
 
   return (
     <SyntaxHighlighter
-      language={language}
-      style={theme}
+      {...commonProps}
       showLineNumbers={showLineNumbers}
       startingLineNumber={startingLineNumber}
-      customStyle={{
-        margin: 0,
-        padding: "1em",
-        borderRadius: "0 0 6px 6px",
-        ...highlighterStyle,
-      }}
       wrapLines
-      renderer={renderer}
+      renderer={standardRenderer}
     >
       {cleanedCode}
     </SyntaxHighlighter>

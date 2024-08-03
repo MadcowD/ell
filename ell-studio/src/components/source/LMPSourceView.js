@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { FiChevronDown, FiChevronRight, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
+import { FiChevronDown, FiChevronRight, FiMaximize2, FiMinimize2, FiCopy, FiRefreshCw } from 'react-icons/fi';
 import '../../styles/SourceCodeView.css';
 
 import { CodeSection } from './CodeSection';
@@ -37,7 +37,7 @@ const BoundedVariableWrapper = ({ children, selectedInvocation, content, initial
 };
 
 
-const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocation = null }) => {
+const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocation = null, previousVersion = null, viewMode }) => {
   const { dependencies, source, uses, initial_global_vars, initial_free_vars } = lmp;
 
   const [showDependencies, setShowDependencies] = useState(showDependenciesInitial);
@@ -87,9 +87,8 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
     if(showDependenciesInitial) setShowDependencies(showDependenciesInitial);
   }, [showDependenciesInitial]);
 
-
   return (
-    <div className="source-code-container">
+    <div className="source-code-container bg-gray-900 text-gray-100">
       {trimmedDependencies && (
         <CodeSection
           title="Dependencies"
@@ -99,7 +98,8 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
           lines={dependencyLines}
           isDependent={true}
           customHooks={boundedVariableHooks}
-
+          isDiffView={viewMode === 'Diff'}
+          previousCode={previousVersion?.dependencies}
           highlighterStyle={{
             overflow: 'auto',
           }}
@@ -111,6 +111,8 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
         showCode={showSource}
         setShowCode={setShowSource}
         lines={sourceLines}
+        isDiffView={viewMode === 'Diff'}
+        previousCode={previousVersion?.source}
         startingLineNumber={dependencyLines + 1}
         highlighterStyle={{
           overflow: 'auto',
