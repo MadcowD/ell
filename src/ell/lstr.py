@@ -14,8 +14,8 @@ from typing import (
     Tuple,
     Any,
     Callable,
-    override,
 )
+from typing_extensions import override
 
 
 class lstr(str):
