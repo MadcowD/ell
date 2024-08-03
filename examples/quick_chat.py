@@ -1,55 +1,65 @@
 import random
 from typing import List, Tuple
 import ell
+
 ell.config.verbose = True
 
 
-names_list = [
-    "Alice",
-    "Bob",
-    "Charlie",
-    "Diana",
-    "Eve",
-    "George",
-    "Grace",
-    "Hank",
-    "Ivy",
-    "Jack",
-]
-
+names_list = ["Peter Pan", "George Washington", "Albert Einstein"]
 
 
 @ell.lm(model="gpt-4o-mini", temperature=1.0)
 def create_personality() -> str:
+<<<<<<< Updated upstream
     """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.
+=======
+    """
+    You are backstoryGPT. You come up with a backstory for a character incljuding name.
+    Choose a completely random name from the list.
+    Format as 'Name: <name>\nBackstory: <3 sentence backstory>'
+    """  # System prompt
+
+    return "Come up with a backstory about " + random.choice(names_list)  # User prompt
+>>>>>>> Stashed changes
 
 Name: <name>
 Backstory: <3 sentence backstory>'""" # System prompt
 
-    return "Come up with a backstory about " + random.choice(names_list) # User prompt
-
-
-def format_message_history(message_history : List[Tuple[str, str]]) -> str:
+def format_message_history(message_history: List[Tuple[str, str]]) -> str:
     return "\n".join([f"{name}: {message}" for name, message in message_history])
 
+
 @ell.lm(model="gpt-4o-mini", temperature=0.3, max_tokens=20)
-def chat(message_history : List[Tuple[str, str]], *, personality : str):
+def chat(message_history: List[Tuple[str, str]], *, personality: str):
 
     return [
-        ell.system(f"""You are
+        ell.system(
+            f"""You are
     {personality}. 
 
+<<<<<<< Updated upstream
     Your goal is to come up with a response to a chat. Only respond in one sentence (should be like a text message in informality.) Never use Emojis."""),
+=======
+    Your goal is to come up with a response to a chat. 
+    Only respond in one sentence (should be like a text message in informality.)"""
+        ),
+>>>>>>> Stashed changes
         ell.user(format_message_history(message_history)),
     ]
 
 
-
 if __name__ == "__main__":
     from ell.stores.sql import SQLiteStore
+<<<<<<< Updated upstream
     ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
         
     messages : List[Tuple[str, str]]= []
+=======
+
+    ell.set_store(SQLiteStore("sqlite_example"), autocommit=True)
+
+    messages: List[Tuple[str, str]] = []
+>>>>>>> Stashed changes
     personalities = [create_personality(), create_personality()]
 
     names = []
@@ -59,12 +69,13 @@ if __name__ == "__main__":
         names.append(parts[0].split(": ")[1])
         backstories.append(parts[1].split(": ")[1])
     print(names)
-    whos_turn = 0 
+    whos_turn = 0
     for _ in range(10):
 
         personality_talking = personalities[whos_turn]
         messages.append(
-            (names[whos_turn], chat(messages, personality=personality_talking)))
-        
+            (names[whos_turn], chat(messages, personality=personality_talking))
+        )
+
         whos_turn = (whos_turn + 1) % len(personalities)
     print(messages)
