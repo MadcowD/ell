@@ -70,11 +70,9 @@ function LMP() {
           (a, b) => new Date(b.created_at) - new Date(a.created_at)
         );
         setVersionHistory(sortedVersionHistory);
-        if (sortedVersionHistory.length > 1) {
-          setPreviousVersion(sortedVersionHistory[1]);
-        }
-
-        
+        const currentVersionIndex = sortedVersionHistory.findIndex(v => v.lmp_id === latest_lmp.lmp_id);
+        const hasPreviousVersion = sortedVersionHistory.length > 1 && currentVersionIndex < sortedVersionHistory.length - 1;
+        setPreviousVersion(hasPreviousVersion ? sortedVersionHistory[currentVersionIndex + 1] : null);
 
         const invocationsResponse = await axios.get(
           `${API_BASE_URL}/api/invocations/${name}${id ? `/${id}` : ""}`
@@ -133,6 +131,8 @@ function LMP() {
     setViewMode(prevMode => prevMode === 'Source' ? 'Diff' : 'Source');
   };
 
+  
+
   if (!lmp)
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900 text-gray-100">
@@ -185,12 +185,12 @@ function LMP() {
                 )}
               </div>
               <div className="flex space-x-4 items-center">
-                <ToggleSwitch
+                {previousVersion && <ToggleSwitch
                   leftLabel="Source"
                   rightLabel="Diff"
                   isRight={viewMode === 'Diff'}
                   onToggle={handleViewModeToggle}
-                />
+                /> }
                 <button
                   className="p-1 rounded bg-[#2a2f3a] hover:bg-[#3a3f4b] transition-colors"
                   onClick={handleCopyCode}
@@ -205,7 +205,7 @@ function LMP() {
                 selectedInvocation={selectedTrace}
                 showDependenciesInitial={!!id}
                 previousVersion={previousVersion}
-                viewMode={viewMode}
+                viewMode={previousVersion ? viewMode : 'Source'}
               />
             </div>
           </div>

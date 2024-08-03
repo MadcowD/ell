@@ -36,8 +36,6 @@ export function DiffRenderer({
   let oldRowIndex = 0;
   let newRowIndex = 0;
 
-  console.log("PREVIOUS CODE ROWS", previousCodeRows)
-  console.log("CURRENT CODE ROWS", currentCodeRows)
   diff.forEach((part, partIndex) => {
     const { added, removed, value } = part;
     const lines = value.split('\n')
@@ -45,7 +43,6 @@ export function DiffRenderer({
       lines.pop()
     }
 
-    console.log("DIF PART", value, lines)
     
     lines.forEach((line, lineIndex) => {
       const diffIndicator = added ? '+' : (removed ? '-' : ' ');
