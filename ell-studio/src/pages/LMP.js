@@ -4,7 +4,7 @@ import axios from "axios";
 import InvocationsTable from "../components/invocations/InvocationsTable";
 import DependencyGraphPane from "../components/DependencyGraphPane";
 import LMPSourceView from "../components/source/LMPSourceView";
-import { FiCopy, FiFilter, FiColumns } from "react-icons/fi";
+import { FiCopy, FiFilter, FiColumns, FiGitCommit } from "react-icons/fi";
 import VersionHistoryPane from "../components/VersionHistoryPane";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
@@ -176,7 +176,9 @@ function LMP() {
                 </h2>
                 { (id || requestedInvocationId) && (
                   <>
-                    <span className="text-gray-500 mx-2">@</span>
+                    <span className="text-gray-500 mx-2">
+                    •
+                    </span>
                     <VersionBadge
                       version={id ? lmp.version_number + 1 : requestedInvocation?.lmp.version_number + 1}
                       hash={id ? lmp.lmp_id : requestedInvocation?.lmp_id}
@@ -185,12 +187,22 @@ function LMP() {
                 )}
               </div>
               <div className="flex space-x-4 items-center">
-                {previousVersion && <ToggleSwitch
-                  leftLabel="Source"
-                  rightLabel="Diff"
-                  isRight={viewMode === 'Diff'}
-                  onToggle={handleViewModeToggle}
-                /> }
+                {previousVersion && (
+                  <>
+                    {viewMode === 'Diff' && (
+                      <div className="flex items-center text-sm text-gray-400">
+                        <FiGitCommit className="mr-2" />
+                        <span className='mr-2'>Comparing to{" "} </span><VersionBadge version={previousVersion.version_number + 1} hash={previousVersion.lmp_id}  className="opacity-40 " />
+                      </div>
+                    )}
+                    <ToggleSwitch
+                      leftLabel="Source"  
+                      rightLabel="Diff"
+                      isRight={viewMode === 'Diff'}
+                      onToggle={handleViewModeToggle}
+                    />
+                  </>
+                )}
                 <button
                   className="p-1 rounded bg-[#2a2f3a] hover:bg-[#3a3f4b] transition-colors"
                   onClick={handleCopyCode}
