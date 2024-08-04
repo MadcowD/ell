@@ -3,10 +3,6 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { fetchLMPs, getTimeAgo, fetchTraces } from '../utils/lmpUtils';
 import { DependencyGraph } from '../components/depgraph/DependencyGraph';
-import { Button } from "components/common/Button";
-
-
-
 
 function Home() {
   const [lmps, setLmps] = useState([]);
@@ -46,9 +42,6 @@ function Home() {
     <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen`}>
       <div className="container mx-auto px-4 py-8">
         <h1 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Language Model Programs</h1>
-        <Button variant="outline">
-          Create New LMP
-        </Button>
         {loaded && <DependencyGraph lmps={lmps} traces={traces}/>}
         <div className="space-y-4">
           {lmps.map((lmp) => (
