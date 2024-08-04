@@ -109,7 +109,7 @@ function CustomControls() {
         <Maximize className="w-4 h-4" />
       </Button>
       <Button onClick={handleToggleNodeLock} variant="secondary" size="sm">
-        {nodesLocked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+        {nodesLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
       </Button>
     </div>
   );

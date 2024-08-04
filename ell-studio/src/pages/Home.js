@@ -46,7 +46,7 @@ function Home() {
     <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen`}>
       <ResizablePanelGroup direction="horizontal" className="w-full h-screen">
         <ResizablePanel defaultSize={70} minSize={30}>
-          <div className="flex flex-col h-full border-r">
+          <div className="flex flex-col h-full">
             <div className={`flex items-center justify-between border-b p-2 py-4`}>
               <span className={`text-xl font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'} flex items-center`}>
                 <Code className="w-6 h-6 mr-2" />
@@ -73,7 +73,7 @@ function Home() {
               {lmps.map((lmp) => (
                 <Card 
                   key={lmp.name} 
-                  className={`${darkMode ? 'bg-gray-800' : 'bg-white'} cursor-pointer`}
+                  className="cursor-pointer"
                   onClick={(e) => toggleExpand(lmp.name, e)}
                 >
                   <CardHeader>
@@ -86,16 +86,15 @@ function Home() {
                         {truncateId(lmp.name)}
                       </Link>
                       <div className="flex flex-wrap gap-2">
-                      <span className={`text-xs px-2 py-1 rounded-full ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
+                      <Badge variant="secondary">
                         ID: {truncateId(lmp.versions[0].lmp_id)}
-                      </span>
-
-                      <span className={`text-xs px-2 py-1 rounded-full ml-2 ${darkMode ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800'}`}>
+                      </Badge>
+                      <Badge variant="secondary" className={`ml-2 ${darkMode ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800'}`}>
                         Latest
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${darkMode ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-800'}`}>
+                      </Badge>
+                      <Badge variant="default" className="font-medium">
                         {lmp.versions.length} Version{lmp.versions.length > 1 ? 's' : ''}
-                      </span>
+                      </Badge>
                       </div>
                     </div>
                   </CardHeader>

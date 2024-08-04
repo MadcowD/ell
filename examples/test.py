@@ -1,15 +1,12 @@
 
 import ell
-
-import random
 import numpy as np
-
 from ell.stores.sql import SQLiteStore
 
 
 @ell.lm(model="gpt-4o-mini")
 def come_up_with_a_premise_for_a_joke_about(topic : str):
-    """You are an incredibly funny comedian named Ell. Come up with a premise for a joke about topic"""
+    """You are an incredibly funny comedian. Come up with a premise for a joke about topic"""
     return f"come up with a premise for a joke about {topic}"
 
 
@@ -24,7 +21,6 @@ def joke(topic : str):
 
 
 if __name__ == "__main__":
-
     ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
     # Todo: Figure configuration for automcommititng.
     joke("minecraft") # <The joke>
