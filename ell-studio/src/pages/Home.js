@@ -4,9 +4,6 @@ import { useTheme } from '../contexts/ThemeContext';
 import { fetchLMPs, getTimeAgo, fetchTraces } from '../utils/lmpUtils';
 import { DependencyGraph } from '../components/depgraph/DependencyGraph';
 
-
-
-
 function Home() {
   const [lmps, setLmps] = useState([]);
   const [loaded, setLoaded] = useState(false);

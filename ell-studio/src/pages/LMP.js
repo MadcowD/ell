@@ -8,7 +8,6 @@ import { FiCopy, FiFilter, FiColumns, FiGitCommit } from "react-icons/fi";
 import VersionHistoryPane from "../components/VersionHistoryPane";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
-
 import VersionBadge from "../components/VersionBadge";
 import { LMPCardTitle } from "../components/depgraph/LMPCardTitle";
 import { useNavigate } from "react-router-dom";
