@@ -21,7 +21,8 @@ import { LMPCardTitle } from "./LMPCardTitle"; // Add this import
 import { Card } from "../Card";
 import "reactflow/dist/style.css";
 import { useZoomPanHelper } from 'react-flow-renderer';
-
+import { ZoomIn, ZoomOut, Lock, Maximize, Unlock } from 'lucide-react';
+import { Button } from "components/common/Button";
 
 import { useLayoutedElements, getInitialGraph } from "./graphUtils";
 
@@ -66,22 +67,19 @@ const LayoutFlow = ({ initialNodes, initialEdges }) => {
   const nodeTypes = useMemo(() => ({ lmp: LMPNode }), []);
 
   return (
-    
-    <div style={{ height: 600 }}>
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      nodeTypes={nodeTypes}
-      // fitView
-    >
-      <Panel>
-      </Panel>
-      <Controls />
-      <CustomControls />
-      <Background />
-    </ReactFlow>
+    <div className="h-full relative">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+      >
+        <Panel>
+        </Panel>
+        <Background />
+        <CustomControls />
+      </ReactFlow>
     </div>
   );
 };
@@ -101,13 +99,23 @@ function CustomControls() {
   };
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-      <button onClick={handleZoomIn} className="px-3 py-1 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors">Zoom In</button>
-      <button onClick={handleZoomOut} className="px-3 py-1 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors">Zoom Out</button>
-      <button onClick={handleFitView} className="px-3 py-1 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors">Fit View</button>
-      <button onClick={handleToggleNodeLock} className="px-3 py-1 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors">
+    <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+      <Button onClick={handleZoomIn} variant="secondary" size="sm">
+        <ZoomIn className="w-4 h-4 mr-2" />
+        Zoom In
+      </Button>
+      <Button onClick={handleZoomOut} variant="secondary" size="sm">
+        <ZoomOut className="w-4 h-4 mr-2" />
+        Zoom Out
+      </Button>
+      <Button onClick={handleFitView} variant="secondary" size="sm">
+        <Maximize className="w-4 h-4 mr-2" />
+        Fit View
+      </Button>
+      <Button onClick={handleToggleNodeLock} variant="secondary" size="sm">
+        {nodesLocked ? <Unlock className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
         {nodesLocked ? 'Unlock Nodes' : 'Lock Nodes'}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -121,7 +129,7 @@ export function DependencyGraph({ lmps, traces, ...rest }) {
 
   return (
     <div
-      className="h-600px w-full rounded-lg border border-gray-700"
+      className="h-full w-full border-gray-700"
       {...rest}
     >
       <ReactFlowProvider>

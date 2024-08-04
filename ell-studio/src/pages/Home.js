@@ -4,6 +4,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { fetchLMPs, getTimeAgo, fetchTraces } from '../utils/lmpUtils';
 import { DependencyGraph } from '../components/depgraph/DependencyGraph';
 
+
 function Home() {
   const [lmps, setLmps] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -40,9 +41,14 @@ function Home() {
 
   return (
     <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen`}>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Language Model Programs</h1>
-        {loaded && <DependencyGraph lmps={lmps} traces={traces}/>}
+      <div className="flex w-full h-full">
+        <div className="flex flex-col min-h-screen w-[70%]">
+          <div className={`flex items-center border-b p-2 py-4`}>
+            <span className={`text-xl font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Language Model Programs</span>
+          </div>
+          {loaded && <DependencyGraph lmps={lmps} traces={traces}/>}
+        </div>
+        <div className="flex flex-col w-[30%]">
         <div className="space-y-4">
           {lmps.map((lmp) => (
             <div 
@@ -100,6 +106,7 @@ function Home() {
               )}
             </div>
           ))}
+        </div>
         </div>
       </div>
     </div>
