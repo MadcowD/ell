@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { fetchLMPs, getTimeAgo, fetchTraces } from '../utils/lmpUtils';
 import { DependencyGraph } from '../components/depgraph/DependencyGraph';
-import { Button } from "../components/common/Button";
+import { Button } from "components/common/Button";
 
 
 
