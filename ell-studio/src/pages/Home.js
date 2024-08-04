@@ -62,8 +62,8 @@ function Home() {
           </div>
           {loaded && <DependencyGraph lmps={lmps} traces={traces}/>}
         </div>
-        <ScrollArea className="flex flex-col w-[30%] h-screen">
-          <div className="space-y-4 p-4">
+        <ScrollArea className="flex flex-col gap-2 w-[30%] h-screen">
+          <div className="space-y-2 p-4">
             {lmps.map((lmp) => (
               <Card 
                 key={lmp.name} 
@@ -71,24 +71,25 @@ function Home() {
                 onClick={(e) => toggleExpand(lmp.name, e)}
               >
                 <CardHeader>
-                  <div className="flex flex-col space-y-2">
+                  <div className="flex justify-between">
                     <Link 
                       to={`/lmp/${lmp.name}`} 
                       className={`text-xl font-semibold ${darkMode ? 'text-gray-100 hover:text-blue-300' : 'text-gray-800 hover:text-blue-600'} break-words`}
                       onClick={(e) => e.stopPropagation()} // Prevent card expansion when clicking the link
                     >
-                      {lmp.name}
+                      {truncateId(lmp.name)}
                     </Link>
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary">
-                        ID: {truncateId(lmp.versions[0].lmp_id)}
-                      </Badge>
-                      <Badge variant="success">
-                        Latest
-                      </Badge>
-                      <Badge variant="primary">
-                        {lmp.versions.length} Version{lmp.versions.length > 1 ? 's' : ''}
-                      </Badge>
+                    <span className={`text-xs px-2 py-1 rounded-full ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
+                      ID: {truncateId(lmp.versions[0].lmp_id)}
+                    </span>
+
+                    <span className={`text-xs px-2 py-1 rounded-full ml-2 ${darkMode ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800'}`}>
+                      Latest
+                    </span>
+                    <span className={`text-xs px-2 py-1 rounded-full ${darkMode ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-800'}`}>
+                      {lmp.versions.length} Version{lmp.versions.length > 1 ? 's' : ''}
+                    </span>
                     </div>
                   </div>
                 </CardHeader>
