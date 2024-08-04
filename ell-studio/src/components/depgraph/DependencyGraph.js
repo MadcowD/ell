@@ -20,7 +20,6 @@ import { Link } from "react-router-dom";
 import { LMPCardTitle } from "./LMPCardTitle"; // Add this import
 import { Card } from "../Card";
 import "reactflow/dist/style.css";
-import { useZoomPanHelper } from 'react-flow-renderer';
 import { ZoomIn, ZoomOut, Lock, Maximize, Unlock } from 'lucide-react';
 import { Button } from "components/common/Button";
 
