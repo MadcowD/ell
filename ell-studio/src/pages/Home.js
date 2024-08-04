@@ -89,7 +89,7 @@ function Home() {
                       <Badge variant="secondary">
                         ID: {truncateId(lmp.versions[0].lmp_id)}
                       </Badge>
-                      <Badge variant="secondary" className={`ml-2 ${darkMode ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800'}`}>
+                      <Badge variant="success" className={`ml-2 ${darkMode ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}>
                         Latest
                       </Badge>
                       <Badge variant="default" className="font-medium">
