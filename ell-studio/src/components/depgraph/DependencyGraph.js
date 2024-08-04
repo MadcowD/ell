@@ -98,22 +98,18 @@ function CustomControls() {
   };
 
   return (
-    <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+    <div className="absolute top-4 left-4 flex space-x-2 z-10">
       <Button onClick={handleZoomIn} variant="secondary" size="sm">
-        <ZoomIn className="w-4 h-4 mr-2" />
-        Zoom In
+        <ZoomIn className="w-4 h-4" />
       </Button>
       <Button onClick={handleZoomOut} variant="secondary" size="sm">
-        <ZoomOut className="w-4 h-4 mr-2" />
-        Zoom Out
+        <ZoomOut className="w-4 h-4" />
       </Button>
       <Button onClick={handleFitView} variant="secondary" size="sm">
-        <Maximize className="w-4 h-4 mr-2" />
-        Fit View
+        <Maximize className="w-4 h-4" />
       </Button>
       <Button onClick={handleToggleNodeLock} variant="secondary" size="sm">
-        {nodesLocked ? <Unlock className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
-        {nodesLocked ? 'Unlock Nodes' : 'Lock Nodes'}
+        {nodesLocked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
       </Button>
     </div>
   );
