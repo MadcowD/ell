@@ -1,3 +1,4 @@
+from functools import wraps
 import pytest
 import math
 from typing import Set, Any
@@ -9,6 +10,8 @@ from ell.util.closure import (
     get_referenced_names,
     is_function_called,
 )
+import ell
+
 
 def test_lexical_closure_simple_function():
     def simple_func(x):
@@ -45,6 +48,7 @@ def test_lexical_closure_with_default_args():
 
     result, _, _ = lexical_closure(func_with_default)
     print(result)
+    
     assert "def func_with_default(x=10):" in result
 
 @pytest.mark.parametrize("value, expected", [
@@ -68,8 +72,8 @@ def test_should_import():
 
 def test_get_referenced_names():
     code = """
-    import math
-    result = math.sin(x) + math.cos(y)
+import math
+result = math.sin(x) + math.cos(y)
     """
     referenced = get_referenced_names(code, "math")
     print(referenced)
@@ -106,3 +110,30 @@ def test_lexical_closure_uses_type():
     _, _, uses = lexical_closure(dummy_func, initial_call=True)
     assert isinstance(uses, Set)
     # You might want to add a more specific check for the content of 'uses'
+
+
+def test_lexical_closure_uses():
+
+    @ell.lm(model="gpt-4")
+    def dependency_func():
+        return "42"
+    
+
+    @ell.lm(model="gpt-4")
+    def main_func():
+        return dependency_func() 
+
+    
+    # Check that uses is a set
+    assert isinstance(main_func.__ell_uses__, set)
+    
+    # Check that the set contains exactly one item
+    assert  dependency_func.__ell_hash__ in main_func.__ell_uses__
+    assert len(main_func.__ell_uses__) == 1
+    # Check that the item in the set starts with 'lmp-'
+    assert list(main_func.__ell_uses__)[0].startswith('lmp-')
+    assert len(dependency_func.__ell_uses__) == 0
+    
+
+if __name__ == "__main__":
+    test_lexical_closure_uses()

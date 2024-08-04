@@ -24,6 +24,7 @@ def lm(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=
         fn: LMP,
     ) -> InvocableLM:
         color = compute_color(fn)
+        _under_fn = fn
 
         @wraps(fn)
         def wrapper(
@@ -48,7 +49,7 @@ def lm(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=
 
         # TODO: # we'll deal with type safety here later
         wrapper.__ell_lm_kwargs__ = lm_kwargs
-        wrapper.__ell_func__ = fn
+        wrapper.__ell_func__ = _under_fn
         wrapper.__ell_lm = True
         wrapper.__ell_exempt_from_tracking = exempt_from_tracking
         if exempt_from_tracking:
