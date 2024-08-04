@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { fetchLMPs, getTimeAgo, fetchTraces } from '../utils/lmpUtils';
 import { DependencyGraph } from '../components/depgraph/DependencyGraph';
+import { Code } from 'lucide-react';
 
 
 function Home() {
@@ -42,9 +43,20 @@ function Home() {
   return (
     <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen`}>
       <div className="flex w-full h-full">
-        <div className="flex flex-col min-h-screen w-[70%]">
-          <div className={`flex items-center border-b p-2 py-4`}>
-            <span className={`text-xl font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Language Model Programs</span>
+        <div className="flex flex-col min-h-screen w-[70%] border-r">
+          <div className={`flex items-center justify-between border-b p-2 py-4`}>
+            <span className={`text-xl font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'} flex items-center`}>
+              <Code className="w-6 h-6 mr-2" />
+              Language Model Programs
+            </span>
+            <div className="flex items-center">
+              <span className={`mr-4 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Total LMPs: {lmps.length}
+              </span>
+              <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Last Updated: {lmps.length > 0 ? getTimeAgo(lmps[0].versions[0].created_at) : 'N/A'}
+              </span>
+            </div>
           </div>
           {loaded && <DependencyGraph lmps={lmps} traces={traces}/>}
         </div>
