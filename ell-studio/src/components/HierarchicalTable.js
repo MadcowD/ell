@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { FiChevronRight, FiChevronDown, FiArrowUp, FiArrowDown } from 'react-icons/fi';
 import { HierarchicalTableProvider, useHierarchicalTable } from './HierarchicalTableContext';
-
+import { Checkbox } from "components/common/Checkbox"
 
 
 const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWidth, rowClassName }) => {
@@ -21,10 +21,9 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
         }}
       >
         <td className="py-3 px-4 w-12">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={isSelected}
-            onChange={(e) => toggleSelection(item, e.target.checked)}
+            onCheckedChange={(checked) => toggleSelection(item, checked)}
             onClick={(e) => e.stopPropagation()}
           />
         </td>
@@ -69,10 +68,9 @@ const TableHeader = ({ schema, columnWidths, updateWidth }) => {
     <thead>
       <tr className="text-left text-xs text-gray-400 border-t border-b border-l border-r border-gray-800 bg-gray-800/30">
         <th className="py-2 px-4 w-12">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={isAllSelected()}
-            onChange={(e) => toggleAllSelection(e.target.checked)}
+            onCheckedChange={(checked) => toggleAllSelection(checked)}
           />
         </th>
         <th className="py-2 px-4 w-12">
