@@ -3,7 +3,8 @@
       "jsx": "react",
       "baseUrl": "src",
       "paths": {
-        "*": ["*"]
+        "*": ["*"],
+        "@/*": ["./*"]
       }
     },
     "include": ["src"]
