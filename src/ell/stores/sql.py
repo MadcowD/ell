@@ -1,7 +1,7 @@
 import datetime
 import json
 import os
-from typing import Any, Optional, Dict, List, Set
+from typing import Any, Optional, Dict, List, Set, Union
 from sqlmodel import Session, SQLModel, create_engine, select
 import ell.store
 import cattrs
@@ -57,7 +57,7 @@ class SQLStore(ell.store.Store):
             session.commit()
         return None
 
-    def write_invocation(self, id: str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any],  
+    def write_invocation(self, id: str, lmp_id: str, args: str, kwargs: str, result: Union[lstr, List[lstr]], invocation_kwargs: Dict[str, Any],  
                          global_vars: Dict[str, Any],
                          free_vars: Dict[str, Any], created_at: Optional[float], consumes: Set[str], prompt_tokens: Optional[int] = None,
                          completion_tokens: Optional[int] = None, latency_ms: Optional[float] = None,

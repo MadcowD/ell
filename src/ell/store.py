@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import Any, Optional, Dict, List, Set
+from typing import Any, Optional, Dict, List, Set, Union
 from ell.lstr import lstr
 from ell.types import InvocableLM
 
@@ -32,7 +32,7 @@ class Store(ABC):
         pass
 
     @abstractmethod
-    def write_invocation(self, id: str, lmp_id: str, args: str, kwargs: str, result: lstr | List[lstr], invocation_kwargs: Dict[str, Any], 
+    def write_invocation(self, id: str, lmp_id: str, args: str, kwargs: str, result: Union[lstr, List[lstr]], invocation_kwargs: Dict[str, Any], 
                          created_at: Optional[float], consumes: Set[str], prompt_tokens: Optional[int] = None,
                          completion_tokens: Optional[int] = None, latency_ms: Optional[float] = None,
                          state_cache_key: Optional[str] = None,
@@ -118,7 +118,7 @@ class Store(ABC):
 
 
     @contextmanager
-    def freeze(self, *lmps : InvocableLM):
+    def freeze(self, *lmps: InvocableLM):
         """
         A context manager for caching operations using a particular store.
 
@@ -138,6 +138,7 @@ class Store(ABC):
         finally:
             # TODO: Implement cache storage logic here
             for lmp in lmps:
-                lmp.__ell_use_cache__ = old_cache_values.get(lmp, None)
-
-
+                if lmp in old_cache_values:
+                    setattr(lmp, '__ell_use_cache__', old_cache_values[lmp])
+                else:
+                    delattr(lmp, '__ell_use_cache__')
