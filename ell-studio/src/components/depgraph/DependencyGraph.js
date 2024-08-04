@@ -16,13 +16,11 @@ import ReactFlow, {
   ReactFlowProvider,
 } from "reactflow";
 import { getBezierPath } from 'reactflow';
-
-
 import { Link } from "react-router-dom";
 import { LMPCardTitle } from "./LMPCardTitle"; // Add this import
-
 import { Card } from "../Card";
 import "reactflow/dist/style.css";
+import { useZoomPanHelper } from 'react-flow-renderer';
 
 
 import { useLayoutedElements, getInitialGraph } from "./graphUtils";
@@ -81,13 +79,38 @@ const LayoutFlow = ({ initialNodes, initialEdges }) => {
       <Panel>
       </Panel>
       <Controls />
-
+      <CustomControls />
       <Background />
     </ReactFlow>
     </div>
   );
 };
 
+function CustomControls() {
+  const { zoomIn, zoomOut, fitView, setNodes } = useReactFlow();
+  const [nodesLocked, setNodesLocked] = useState(false);
+
+  const handleZoomIn = () => zoomIn({ duration: 300, step: 0.5 });
+  const handleZoomOut = () => zoomOut({ duration: 300, step: 0.5 });
+  const handleFitView = () => fitView({ duration: 500, padding: 0.1 });
+  const handleToggleNodeLock = () => {
+    setNodes((nodes) =>
+      nodes.map((node) => ({ ...node, draggable: nodesLocked }))
+    );
+    setNodesLocked(!nodesLocked);
+  };
+
+  return (
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+      <button onClick={handleZoomIn} className="px-3 py-1 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors">Zoom In</button>
+      <button onClick={handleZoomOut} className="px-3 py-1 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors">Zoom Out</button>
+      <button onClick={handleFitView} className="px-3 py-1 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors">Fit View</button>
+      <button onClick={handleToggleNodeLock} className="px-3 py-1 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors">
+        {nodesLocked ? 'Unlock Nodes' : 'Lock Nodes'}
+      </button>
+    </div>
+  );
+}
 
 export function DependencyGraph({ lmps, traces, ...rest }) {
   // construct ndoes from LMPS
