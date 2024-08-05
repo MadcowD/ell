@@ -33,6 +33,16 @@ def create_app(storage_dir: Optional[str] = None):
     ):
         lmps = serializer.get_lmps(skip=skip, limit=limit)
         return lmps
+    
+    @app.get("/api/latest/lmps")
+    def get_latest_lmps(
+        skip: int = Query(0, ge=0),
+        limit: int = Query(100, ge=1, le=100)
+    ):
+        lmps = serializer.get_latest_lmps(
+            skip=skip, limit=limit,
+            )
+        return lmps
 
     @app.get("/api/lmps/{name_or_id:path}")
     def get_lmp(
@@ -107,3 +117,4 @@ def create_app(storage_dir: Optional[str] = None):
         return traces
 
     return app
+

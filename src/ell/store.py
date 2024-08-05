@@ -97,15 +97,6 @@ class Store(ABC):
     #     """
     #     pass
 
-    @abstractmethod
-    def get_lmp_versions(self, lmp_id: str) -> List[Dict[str, Any]]:
-        """
-        Retrieve all versions of an LMP from the storage.
-
-        :param lmp_id: Unique identifier for the LMP.
-        :return: List of LMP versions.
-        """
-        pass
 
     @abstractmethod
     def get_latest_lmps(self) -> List[Dict[str, Any]]:

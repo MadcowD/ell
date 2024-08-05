@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useSearchParams, useNavigate, Link } from "react-router-dom";
-import { useLMPDetails, useVersionHistory, useInvocations, useUses } from "../hooks/useBackend";
+import { useLMPs,  useInvocations, useMultipleLMPs } from "../hooks/useBackend";
 import InvocationsTable from "../components/invocations/InvocationsTable";
 import DependencyGraphPane from "../components/DependencyGraphPane";
 import LMPSourceView from "../components/source/LMPSourceView";
@@ -34,7 +34,7 @@ function LMP() {
   let [searchParams, setSearchParams] = useSearchParams();
   const requestedInvocationId = searchParams.get("i");
 
-  const { data: versionHistory, isLoading: isLoadingLMP } = useLMPDetails(name);
+  const { data: versionHistory, isLoading: isLoadingLMP } = useLMPs(name);
   const lmp = useMemo(() => {
     if (!versionHistory) return null;
     if (id) {
@@ -46,7 +46,8 @@ function LMP() {
 
   console.log(name,id)
   const { data: invocations } = useInvocations(name, id);
-  const { data: uses } = useUses(lmp?.uses);
+  const { data: uses } = useMultipleLMPs(lmp?.uses);
+  console.log(uses)
 
   const [activeTab, setActiveTab] = useState("runs");
   const [selectedTrace, setSelectedTrace] = useState(null);

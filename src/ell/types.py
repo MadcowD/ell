@@ -62,10 +62,10 @@ class SerializedLMP(SQLModel, table=True):
     This class is used to store and retrieve LMP information in the database.
     """
     lmp_id: Optional[str] = Field(default=None, primary_key=True)  # Unique identifier for the LMP, now an index
-    name: str  # Name of the LMP
+    name: str = Field(index=True)  # Name of the LMP
     source: str  # Source code or reference for the LMP
     dependencies: str  # List of dependencies for the LMP, stored as a string
-    created_at: datetime = Field(default_factory=datetime.utcnow)  # Timestamp of when the LMP was created
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)  # Timestamp of when the LMP was created
     is_lm: bool  # Boolean indicating if it is an LM (Language Model) or an LMP
     lm_kwargs: dict  = Field(sa_column=Column(JSON)) # Additional keyword arguments for the LMP
 

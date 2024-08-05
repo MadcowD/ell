@@ -1,10 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import axios from 'axios';
 
 
 const API_BASE_URL = "http://localhost:8080";
 
-export const useLMPDetails = (name, id) => {
+export const useLMPs = (name, id) => {
   return useQuery({
     queryKey: ['lmpDetails', name, id],
     queryFn: async () => {
@@ -28,19 +28,20 @@ export const useInvocations = (name, id, page = 0, pageSize = 100) => {
   });
 };
 
-export const useUses = (usesIds) => {
-  return useQuery({
-    queryKey: ['uses', usesIds],
-    queryFn: async () => {
-      return Promise.all(
-        usesIds.map(async (use) => {
-          const useResponse = await axios.get(`${API_BASE_URL}/api/lmps/${use}`);
-          return useResponse.data[0];
-        })
-      );
-    },
-    enabled: !!usesIds && usesIds.length > 0,
+export const useMultipleLMPs = (usesIds) => {
+  const multipleLMPs = useQueries({
+    queries: (usesIds || []).map(use => ({
+      queryKey: ['lmp', use],
+      queryFn: async () => {
+        const useResponse = await axios.get(`${API_BASE_URL}/api/lmps/${use}`);
+        return useResponse.data[0];
+      },
+      enabled: !!use,
+    })),
   });
+  const isLoading = multipleLMPs.some(query => query.isLoading);
+  const data = multipleLMPs.map(query => query.data);
+  return { isLoading, data };
 };
 
 export const useAllInvocations = (page = 0, pageSize = 100) => {
@@ -60,31 +61,10 @@ export const useAllLMPs = (page = 0, pageSize = 100) => {
     queryKey: ['allLMPs', page, pageSize],
     queryFn: async () => {
       const skip = page * pageSize;
-      const response = await axios.get(`${API_BASE_URL}/api/lmps?skip=${skip}&limit=${pageSize}`);
+      const response = await axios.get(`${API_BASE_URL}/api/latest/lmps?skip=${skip}&limit=${pageSize}`);
       const lmps = response.data;
-
-      // Group LMPs by name
-      const lmpGroups = lmps.reduce((acc, lmp) => {
-        if (!acc[lmp.name]) {
-          acc[lmp.name] = [];
-        }
-        acc[lmp.name].push(lmp);
-        return acc;
-      }, {});
-
-      // Process each group
-      return Object.values(lmpGroups).map(group => {
-        const sortedVersions = group.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        const latestVersion = sortedVersions[0];
-
-        return {
-          ...latestVersion,
-          versions: sortedVersions.map(version => ({
-            ...version,
-            created_at: new Date(version.created_at),
-          })),
-        };
-      });
+  
+      return lmps;
     }
   });
 };

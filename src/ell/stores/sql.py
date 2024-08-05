@@ -110,17 +110,41 @@ class SQLStore(ell.store.Store):
 
             session.commit()
     
-    def get_lmps(self, skip: int = 0, limit: int = 10, **filters: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def get_latest_lmps(self, skip: int = 0, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Gets all the lmps grouped by unique name with the highest created at
+        """
+        subquery = (
+            select(SerializedLMP.name, func.max(SerializedLMP.created_at).label("max_created_at"))
+            .group_by(SerializedLMP.name)
+            .subquery()
+        )
+        
+        filters = {
+            "name": subquery.c.name,
+            "created_at": subquery.c.max_created_at
+        }
+        
+        return self.get_lmps(skip=skip, limit=limit, subquery=subquery, **filters)
+
+    def get_lmps(self, skip: int = 0, limit: int = 10, subquery=None, **filters: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
         with Session(self.engine) as session:
             query = select(SerializedLMP, SerializedLMPUses.lmp_user_id).outerjoin(
                 SerializedLMPUses,
                 SerializedLMP.lmp_id == SerializedLMPUses.lmp_using_id
-            ).order_by(SerializedLMP.created_at.desc())  # Sort by created_at in descending order
+            )
+            
+            if subquery is not None:
+                query = query.join(subquery, and_(
+                    SerializedLMP.name == subquery.c.name,
+                    SerializedLMP.created_at == subquery.c.max_created_at
+                ))
             
             if filters:
                 for key, value in filters.items():
                     query = query.where(getattr(SerializedLMP, key) == value)
             
+            query = query.order_by(SerializedLMP.created_at.desc())  # Sort by created_at in descending order
             query = query.offset(skip).limit(limit)
             results = session.exec(query).all()
             
@@ -227,12 +251,6 @@ class SQLStore(ell.store.Store):
             # Convert the dictionary values back to a list
             return list(unique_traces.values())
 
-
-    def get_lmp_versions(self, name: str) -> List[Dict[str, Any]]:
-        return self.get_lmps(name=name)
-
-    def get_latest_lmps(self) -> List[Dict[str, Any]]:
-        raise NotImplementedError()
 
     def search_invocations(self, q: str, skip: int = 0, limit: int = 10) -> List[Dict[str, Any]]:
         with Session(self.engine) as session:
