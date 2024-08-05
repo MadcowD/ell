@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { FiChevronRight, FiChevronDown, FiArrowUp, FiArrowDown } from 'react-icons/fi';
+import {  FiChevronDown, FiArrowUp, FiArrowDown, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
 import { HierarchicalTableProvider, useHierarchicalTable } from './HierarchicalTableContext';
 import { Checkbox } from "components/common/Checkbox"
 
@@ -124,7 +124,57 @@ const TableBody = ({ schema, onRowClick, columnWidths, updateWidth, rowClassName
   );
 };
 
-const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName }) => {
+const PaginationControls = ({ currentPage, totalPages, onPageChange, pageSize, totalItems }) => {
+  // const startItem = currentPage * pageSize + 1;
+  // const endItem = Math.min((currentPage + 1) * pageSize, totalItems);
+
+  return (
+    <div className="flex justify-between items-center mt-4 text-sm">
+      <div className="text-gray-400">
+        {/* Showing {startItem} to {endItem} of {totalItems} items */}
+      </div>
+      <div className="flex items-center">
+        <button
+          onClick={() => onPageChange(0)}
+          disabled={currentPage === 0}
+          className="p-2 rounded-md text-gray-400 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="First Page"
+        >
+          <FiChevronsLeft />
+        </button>
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 0}
+          className="p-2 rounded-md text-gray-400 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed ml-2"
+          title="Previous Page"
+        >
+          <FiChevronLeft />
+        </button>
+        <span className="mx-4 text-gray-400">
+          Page {currentPage + 1}
+        </span>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages - 1}
+          className="p-2 rounded-md text-gray-400 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed mr-2"
+          title="Next Page"
+        >
+          <FiChevronRight />
+        </button>
+        <button
+          onClick={() => onPageChange(totalPages - 1)}
+          disabled={currentPage === totalPages - 1}
+          className="p-2 rounded-md text-gray-400 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Last Page"
+        >
+          <FiChevronsRight />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName, currentPage, onPageChange, pageSize, totalItems }) => {
   const [columnWidths, setColumnWidths] = useState({});
   const updateWidth = (key, width, maxWidth) => {
     setColumnWidths(prev => ({
@@ -140,6 +190,8 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
     });
     setColumnWidths(initialWidths);
   }, [schema]);
+
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   return (
     <HierarchicalTableProvider 
@@ -163,6 +215,15 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
           />
         </table>
       </div>
+      {onPageChange && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          pageSize={pageSize}
+          totalItems={totalItems}
+        />
+      )}
     </HierarchicalTableProvider>
   );
 };

@@ -1,17 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
+import { useParams, useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useLMPs,  useInvocations, useMultipleLMPs } from "../hooks/useBackend";
 import InvocationsTable from "../components/invocations/InvocationsTable";
 import DependencyGraphPane from "../components/DependencyGraphPane";
 import LMPSourceView from "../components/source/LMPSourceView";
 import { FiCopy, FiFilter, FiColumns, FiGitCommit } from "react-icons/fi";
 import VersionHistoryPane from "../components/VersionHistoryPane";
 import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
 import VersionBadge from "../components/VersionBadge";
 import { LMPCardTitle } from "../components/depgraph/LMPCardTitle";
-import { useNavigate } from "react-router-dom";
-import { useSearchParams } from "react-router-dom";
 import InvocationsLayout from "../components/invocations/InvocationsLayout";
 import ToggleSwitch from "../components/common/ToggleSwitch";
 
@@ -36,70 +33,39 @@ function LMP() {
   const { name, id } = useParams();
   let [searchParams, setSearchParams] = useSearchParams();
   const requestedInvocationId = searchParams.get("i");
+  
+  const [currentPage, setCurrentPage] = useState(0);
 
-  const [lmp, setLmp] = useState(null);
-  const [versionHistory, setVersionHistory] = useState([]);
-  const [invocations, setInvocations] = useState([]);
-  const [uses, setUses] = useState([]);
-  const [previousVersion, setPreviousVersion] = useState(null);
+  // TODO: Could be expensive if you have a funct on of versions.
+  const { data: versionHistory, isLoading: isLoadingLMP } = useLMPs(name);
+  const lmp = useMemo(() => {
+    if (!versionHistory) return null;
+    if (id) {
+      return versionHistory.find(v => v.lmp_id === id);
+    } else {
+      return versionHistory[0];
+    }
+  }, [versionHistory, id]);
+
+  const { data: invocations } = useInvocations(name, id);
+  const { data: uses } = useMultipleLMPs(lmp?.uses);
+
+  
 
   const [activeTab, setActiveTab] = useState("runs");
   const [selectedTrace, setSelectedTrace] = useState(null);
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState('Source');
 
-  const API_BASE_URL = "http://localhost:8080";
+  const previousVersion = useMemo(() => {
+    if (!versionHistory) return null;
+    const currentVersionIndex = versionHistory.findIndex(v => v.lmp_id === lmp?.lmp_id);
+    return versionHistory.length > 1 && currentVersionIndex < versionHistory.length - 1
+      ? versionHistory[currentVersionIndex + 1]
+      : null;
+  }, [versionHistory, lmp]);
 
-  useEffect(() => {
-    const fetchLMPDetails = async () => {
-      try {
-        const lmpResponse = await axios.get(
-          `${API_BASE_URL}/api/lmps/${name}${id ? `/${id}` : ""}`
-        );
-        const all_lmps_matching = lmpResponse.data;
-        const latest_lmp = all_lmps_matching
-          .map((lmp) => ({ ...lmp, created_at: new Date(lmp.created_at) }))
-          .sort((a, b) => b.created_at - a.created_at)[0];
-        setLmp(latest_lmp);
-
-        const versionHistoryResponse = await axios.get(
-          `${API_BASE_URL}/api/lmps/${latest_lmp.name}`
-        );
-        const sortedVersionHistory = (versionHistoryResponse.data || []).sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        );
-        setVersionHistory(sortedVersionHistory);
-        const currentVersionIndex = sortedVersionHistory.findIndex(v => v.lmp_id === latest_lmp.lmp_id);
-        const hasPreviousVersion = sortedVersionHistory.length > 1 && currentVersionIndex < sortedVersionHistory.length - 1;
-        setPreviousVersion(hasPreviousVersion ? sortedVersionHistory[currentVersionIndex + 1] : null);
-
-        const invocationsResponse = await axios.get(
-          `${API_BASE_URL}/api/invocations/${name}${id ? `/${id}` : ""}`
-        );
-        const sortedInvocations = invocationsResponse.data.sort(
-          (a, b) => b.created_at - a.created_at
-        );
-        setInvocations(sortedInvocations);
-
-        const usesIds = latest_lmp.uses;
-        console.log(usesIds);
-        const uses = await Promise.all(
-          usesIds.map(async (use) => {
-            const useResponse = await axios.get(
-              `${API_BASE_URL}/api/lmps/${use}`
-            );
-            return useResponse.data[0];
-          })
-        );
-        setUses(uses);
-      } catch (error) {
-        console.error("Error fetching LMP details:", error);
-      }
-    };
-    fetchLMPDetails();
-  }, [name, id, API_BASE_URL]);
-
-  const requestedInvocation = useMemo(() => invocations.find(
+  const requestedInvocation = useMemo(() => invocations?.find(
     (invocation) => invocation.id === requestedInvocationId
   ), [invocations, requestedInvocationId]);
 
@@ -107,8 +73,9 @@ function LMP() {
     setSelectedTrace(requestedInvocation);
   }, [requestedInvocation]);
 
+
   const handleCopyCode = () => {
-    const fullCode = `${lmp.dependencies.trim()}\n\n${lmp.source.trim()}`;
+    const fullCode = `${lmp?.dependencies.trim()}\n\n${lmp?.source.trim()}`;
     navigator.clipboard
       .writeText(fullCode)
       .then(() => {
@@ -130,16 +97,14 @@ function LMP() {
     setViewMode(prevMode => prevMode === 'Source' ? 'Diff' : 'Source');
   };
 
-  
-
-  if (!lmp)
+  if (isLoadingLMP)
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900 text-gray-100">
         Loading...
       </div>
     );
 
-  const omitColumns = ['name']; // We want to omit the 'LMP' column on the LMP page
+  const omitColumns = ['name'];
 
   return (
     <InvocationsLayout 
@@ -150,7 +115,7 @@ function LMP() {
       <header className="bg-[#1c1f26] p-4 flex justify-between items-center">
         <h1 className="text-lg font-semibold">
           <Link
-            to={`/lmp/${lmp.name}`}
+            to={`/lmp/${lmp?.name}`}
           >
             <LMPCardTitle lmp={lmp} />
           </Link>
@@ -179,8 +144,8 @@ function LMP() {
                     •
                     </span>
                     <VersionBadge
-                      version={id ? lmp.version_number + 1 : requestedInvocation?.lmp.version_number + 1}
-                      hash={id ? lmp.lmp_id : requestedInvocation?.lmp_id}
+                      version={id ? lmp?.version_number + 1 : requestedInvocation?.lmp.version_number + 1}
+                      hash={id ? lmp?.lmp_id : requestedInvocation?.lmp_id}
                     />
                   </>
                 )}
@@ -267,6 +232,8 @@ function LMP() {
                   </div>
                   <InvocationsTable
                     invocations={invocations}
+                    currentPage={currentPage}
+                    setCurrentPage={setCurrentPage}
                     producingLmp={lmp}
                     onSelectTrace={(trace) => {
                       setSelectedTrace(trace);
@@ -280,8 +247,8 @@ function LMP() {
               {activeTab === "version_history" && (
                 <VersionHistoryPane versions={versionHistory}/>
               )}
-              {activeTab === "dependency_graph" && (
-                <DependencyGraphPane   key={uses.map(lmp => lmp.lmp_id).sort().join('-')} lmp={lmp} uses={uses} />
+              {activeTab === "dependency_graph" && !!uses && (
+                <DependencyGraphPane   key={uses?.map(lmp => lmp.lmp_id).sort().join('-')} lmp={lmp} uses={uses} />
               )}
             </div>
           </div>

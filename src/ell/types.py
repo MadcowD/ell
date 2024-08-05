@@ -50,8 +50,8 @@ class SerializedLMPUses(SQLModel, table=True):
     This class is used to track which LMPs use or are used by other LMPs.
     """
 
-    lmp_user_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id", primary_key=True)  # ID of the LMP that is being used
-    lmp_using_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id", primary_key=True)  # ID of the LMP that is using the other LMP
+    lmp_user_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id", primary_key=True, index=True)  # ID of the LMP that is being used
+    lmp_using_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id", primary_key=True, index=True)  # ID of the LMP that is using the other LMP
 
 
 
@@ -62,10 +62,10 @@ class SerializedLMP(SQLModel, table=True):
     This class is used to store and retrieve LMP information in the database.
     """
     lmp_id: Optional[str] = Field(default=None, primary_key=True)  # Unique identifier for the LMP, now an index
-    name: str  # Name of the LMP
+    name: str = Field(index=True)  # Name of the LMP
     source: str  # Source code or reference for the LMP
     dependencies: str  # List of dependencies for the LMP, stored as a string
-    created_at: datetime = Field(default_factory=datetime.utcnow)  # Timestamp of when the LMP was created
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)  # Timestamp of when the LMP was created
     is_lm: bool  # Boolean indicating if it is an LM (Language Model) or an LMP
     lm_kwargs: dict  = Field(sa_column=Column(JSON)) # Additional keyword arguments for the LMP
 
@@ -108,8 +108,8 @@ class InvocationTrace(SQLModel, table=True):
 
     This class is used to keep track of when an invocation consumes a in its kwargs or args a result of another invocation.
     """
-    invocation_consumer_id: str = Field(foreign_key="invocation.id", primary_key=True)  # ID of the Invocation that is consuming another Invocation
-    invocation_consuming_id: str = Field(foreign_key="invocation.id", primary_key=True)  # ID of the Invocation that is being consumed by another Invocation
+    invocation_consumer_id: str = Field(foreign_key="invocation.id", primary_key=True, index=True)  # ID of the Invocation that is consuming another Invocation
+    invocation_consuming_id: str = Field(foreign_key="invocation.id", primary_key=True, index=True)  # ID of the Invocation that is being consumed by another Invocation
 
 
 class Invocation(SQLModel, table=True):
@@ -119,7 +119,7 @@ class Invocation(SQLModel, table=True):
     This class is used to store information about each time an LMP is called.
     """
     id: Optional[str] = Field(default=None, primary_key=True)  # Unique identifier for the invocation
-    lmp_id: str = Field(foreign_key="serializedlmp.lmp_id")  # ID of the LMP that was invoked
+    lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)  # ID of the LMP that was invoked
     args: List[Any] = Field(default_factory=list, sa_column=Column(JSON))  # Arguments used in the invocation
     kwargs: dict = Field(default_factory=dict, sa_column=Column(JSON))  # Keyword arguments used in the invocation
 
@@ -169,7 +169,7 @@ class SerializedLStr(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)  # Unique identifier for the LStr
     content: str  # The actual content of the LStr
     logits: List[float] = Field(default_factory=list, sa_column=Column(JSON))  # Logits associated with the LStr, if available
-    producer_invocation_id: Optional[int] = Field(default=None, foreign_key="invocation.id")  # ID of the Invocation that produced this LStr
+    producer_invocation_id: Optional[int] = Field(default=None, foreign_key="invocation.id", index=True)  # ID of the Invocation that produced this LStr
     producer_invocation: Optional[Invocation] = Relationship(back_populates="results")  # Relationship to the Invocation that produced this LStr
 
     # Convert an SerializedLStr to an lstr

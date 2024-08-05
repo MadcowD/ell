@@ -29,7 +29,7 @@ export function LMPCardTitle({
             <code className={`px-2 py-1 rounded-md ${lmp.is_lmp ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'} text-${fontSize} font-medium`}>
                 {lmp.name}()
             </code>
-            {displayVersion && <VersionBadge version={lmp.version_number + 1} lmpId={lmp.id} />}
+            {displayVersion && <VersionBadge version={lmp.version_number + 1} lmpId={lmp.lmp_id} />}
         </div>
     );
 }
