@@ -252,34 +252,6 @@ class SQLStore(ell.store.Store):
             return list(unique_traces.values())
 
 
-    def search_invocations(self, q: str, skip: int = 0, limit: int = 10) -> List[Dict[str, Any]]:
-        with Session(self.engine) as session:
-            query = select(Invocation, SerializedLStr, SerializedLMP).join(SerializedLMP).outerjoin(SerializedLStr)
-            query = query.where(
-                or_(
-                    Invocation.args.contains(q),
-                    Invocation.kwargs.contains(q),
-                    SerializedLStr.content.contains(q),
-                    SerializedLMP.name.contains(q)
-                )
-            )
-            query = query.order_by(Invocation.created_at.desc()).offset(skip).limit(limit)
-            
-            results = session.exec(query).all()
-            
-            invocations = {}
-            for inv, lstr, lmp in results:
-                if inv.id not in invocations:
-                    inv_dict = inv.model_dump()
-                    inv_dict['lmp'] = lmp.model_dump()
-                    invocations[inv.id] = inv_dict
-                    invocations[inv.id]['results'] = []
-                if lstr:
-                    invocations[inv.id]['results'].append(dict(**lstr.model_dump(), __lstr=True))
-            
-            return list(invocations.values())
-
-
 class SQLiteStore(SQLStore):
     def __init__(self, storage_dir: str):
         os.makedirs(storage_dir, exist_ok=True)

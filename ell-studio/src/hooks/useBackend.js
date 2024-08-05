@@ -70,36 +70,35 @@ export const useLatestLMPs = (page = 0, pageSize = 100) => {
 };
 
 
- const fetchTraces = async (lmps) => {
-  const baseUrl = API_BASE_URL
-  const response = await axios.get(`${baseUrl}/api/traces`);
-  // Filter out duplicate traces based on consumed and consumer
-  const uniqueTraces = response.data.reduce((acc, trace) => {
-    const key = `${trace.consumed}-${trace.consumer}`;
-    if (!acc[key]) {
-      acc[key] = trace;
-    }
-    return acc;
-  }, {});
-
-  // Convert the object of unique traces back to an array
-  const uniqueTracesArray = Object.values(uniqueTraces);
-
-  // Filter out traces between LMPs that are not on the graph
-  const lmpIds = new Set(lmps.map(lmp => lmp.lmp_id));
-  const filteredTraces = uniqueTracesArray.filter(trace => 
-    lmpIds.has(trace.consumed) && lmpIds.has(trace.consumer)
-  );
-  
-  return filteredTraces;
-}
 
 
 
 export const useTraces = (lmps) => {
     return useQuery({
       queryKey: ['traces', lmps],
-      queryFn: () => fetchTraces(lmps),
+      queryFn: async () => {
+        const baseUrl = API_BASE_URL
+        const response = await axios.get(`${baseUrl}/api/traces`);
+        // Filter out duplicate traces based on consumed and consumer
+        const uniqueTraces = response.data.reduce((acc, trace) => {
+          const key = `${trace.consumed}-${trace.consumer}`;
+          if (!acc[key]) {
+            acc[key] = trace;
+          }
+          return acc;
+        }, {});
+      
+        // Convert the object of unique traces back to an array
+        const uniqueTracesArray = Object.values(uniqueTraces);
+      
+        // Filter out traces between LMPs that are not on the graph
+        const lmpIds = new Set(lmps.map(lmp => lmp.lmp_id));
+        const filteredTraces = uniqueTracesArray.filter(trace => 
+          lmpIds.has(trace.consumed) && lmpIds.has(trace.consumer)
+        );
+        
+        return filteredTraces;
+      },
       enabled: !!lmps && lmps.length > 0,
     });
   };
