@@ -103,15 +103,3 @@ export const useTraces = (lmps) => {
     });
   };
 
-// New function for searching invocations
-export const useSearchInvocations = (query, page = 0, pageSize = 100) => {
-  return useQuery({
-    queryKey: ['searchInvocations', query, page, pageSize],
-    queryFn: async () => {
-      const skip = page * pageSize;
-      const response = await axios.post(`${API_BASE_URL}/api/invocations/search?q=${encodeURIComponent(query)}&skip=${skip}&limit=${pageSize}`);
-      return response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    },
-    enabled: !!query,
-  });
-};
