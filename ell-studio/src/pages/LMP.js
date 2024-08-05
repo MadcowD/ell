@@ -34,8 +34,16 @@ function LMP() {
   let [searchParams, setSearchParams] = useSearchParams();
   const requestedInvocationId = searchParams.get("i");
 
-  const { data: lmp, isLoading: isLoadingLMP } = useLMPDetails(name, id);
-  const { data: versionHistory } = useVersionHistory(name);
+  const { data: versionHistory, isLoading: isLoadingLMP } = useLMPDetails(name);
+  const lmp = useMemo(() => {
+    if (!versionHistory) return null;
+    if (id) {
+      return versionHistory.find(v => v.lmp_id === id);
+    } else {
+      return versionHistory[0];
+    }
+  }, [versionHistory, id]);
+
   console.log(name,id)
   const { data: invocations } = useInvocations(name, id);
   const { data: uses } = useUses(lmp?.uses);

@@ -12,18 +12,7 @@ export const useLMPDetails = (name, id) => {
       const all_lmps_matching = lmpResponse.data;
       return all_lmps_matching
         .map((lmp) => ({ ...lmp, created_at: new Date(lmp.created_at) }))
-        .sort((a, b) => b.created_at - a.created_at)[0];
-    }
-  });
-};
-
-export const useVersionHistory = (name, page = 0, pageSize = 100) => {
-  return useQuery({
-    queryKey: ['versionHistory', name, page, pageSize],
-    queryFn: async () => {
-      const skip = page * pageSize;
-      const response = await axios.get(`${API_BASE_URL}/api/lmps/${name}?skip=${skip}&limit=${pageSize}`);
-      return (response.data || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        .sort((a, b) => b.created_at - a.created_at);
     }
   });
 };
