@@ -33,7 +33,10 @@ function LMP() {
   const { name, id } = useParams();
   let [searchParams, setSearchParams] = useSearchParams();
   const requestedInvocationId = searchParams.get("i");
+  
+  const [currentPage, setCurrentPage] = useState(0);
 
+  // TODO: Could be expensive if you have a funct on of versions.
   const { data: versionHistory, isLoading: isLoadingLMP } = useLMPs(name);
   const lmp = useMemo(() => {
     if (!versionHistory) return null;
@@ -44,10 +47,10 @@ function LMP() {
     }
   }, [versionHistory, id]);
 
-  console.log(name,id)
   const { data: invocations } = useInvocations(name, id);
   const { data: uses } = useMultipleLMPs(lmp?.uses);
-  console.log(uses)
+
+  
 
   const [activeTab, setActiveTab] = useState("runs");
   const [selectedTrace, setSelectedTrace] = useState(null);
@@ -69,9 +72,7 @@ function LMP() {
   useEffect(() => {
     setSelectedTrace(requestedInvocation);
   }, [requestedInvocation]);
-  
-  const [currentPage, setCurrentPage] = useState(0);
-  const pageSize = 10;
+
 
   const handleCopyCode = () => {
     const fullCode = `${lmp?.dependencies.trim()}\n\n${lmp?.source.trim()}`;

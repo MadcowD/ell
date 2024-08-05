@@ -8,7 +8,11 @@ export const useLMPs = (name, id) => {
   return useQuery({
     queryKey: ['lmpDetails', name, id],
     queryFn: async () => {
-      const lmpResponse = await axios.get(`${API_BASE_URL}/api/lmps/${name}${id ? `/${id}` : ""}`);
+      const params = new URLSearchParams();
+      if (name) params.append('name', name);
+      if (id) params.append('lmp_id', id);
+
+      const lmpResponse = await axios.get(`${API_BASE_URL}/api/lmps?${params.toString()}`);
       const all_lmps_matching = lmpResponse.data;
       return all_lmps_matching
         .map((lmp) => ({ ...lmp, created_at: new Date(lmp.created_at) }))
@@ -17,12 +21,19 @@ export const useLMPs = (name, id) => {
   });
 };
 
-export const useInvocations = (name, id, page = 0, pageSize = 100) => {
+export const useInvocations = (name, id, page = 0, pageSize = 50) => {
   return useQuery({
     queryKey: ['invocations', name, id, page, pageSize],
     queryFn: async () => {
       const skip = page * pageSize;
-      const response = await axios.get(`${API_BASE_URL}/api/invocations/${name ? name : ""}${name && id ? `/${id}` : ""}?skip=${skip}&limit=${pageSize}`);
+      const params = new URLSearchParams();
+      if (name) params.append('name', name);
+      if (id) params.append('lmp_id', id);
+      params.append('skip', skip);
+      params.append('limit', pageSize);
+      const response = await axios.get(`${API_BASE_URL}/api/invocations?${params.toString()}`);
+
+
       return response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
   });
@@ -33,8 +44,8 @@ export const useMultipleLMPs = (usesIds) => {
     queries: (usesIds || []).map(use => ({
       queryKey: ['lmp', use],
       queryFn: async () => {
-        const useResponse = await axios.get(`${API_BASE_URL}/api/lmps/${use}`);
-        return useResponse.data[0];
+        const useResponse = await axios.get(`${API_BASE_URL}/api/lmp/${use}`);
+        return useResponse.data;
       },
       enabled: !!use,
     })),
@@ -44,16 +55,7 @@ export const useMultipleLMPs = (usesIds) => {
   return { isLoading, data };
 };
 
-export const useAllInvocations = (page = 0, pageSize = 100) => {
-  return useQuery({
-    queryKey: ['allInvocations', page, pageSize],
-    queryFn: async () => {
-      const skip = page * pageSize;
-      const response = await axios.get(`${API_BASE_URL}/api/invocations?skip=${skip}&limit=${pageSize}`);
-      return response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    }
-  });
-};
+
 
 
 export const useLatestLMPs = (page = 0, pageSize = 100) => {
@@ -102,4 +104,3 @@ export const useTraces = (lmps) => {
       enabled: !!lmps && lmps.length > 0,
     });
   };
-

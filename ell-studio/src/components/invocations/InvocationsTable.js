@@ -6,7 +6,6 @@ import { getTimeAgo } from '../../utils/lmpUtils';
 import VersionBadge from '../VersionBadge';
 import { useNavigate } from 'react-router-dom';
 import { lstrCleanStringify } from '../../utils/lstrCleanStringify';
-import { useInvocations } from '../../hooks/useBackend';
 
 const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, onSelectTrace, currentlySelectedTrace, omitColumns = [] }) => {
   const navigate = useNavigate();

@@ -3,7 +3,7 @@ import { FiCopy, FiZap, FiEdit2, FiFilter, FiClock, FiColumns, FiPause, FiPlay }
 import InvocationsTable from '../components/invocations/InvocationsTable';
 import InvocationsLayout from '../components/invocations/InvocationsLayout';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAllInvocations } from '../hooks/useBackend';
+import { useInvocations } from '../hooks/useBackend';
 
 const Traces = () => {
   const [selectedTrace, setSelectedTrace] = useState(null);
@@ -11,10 +11,10 @@ const Traces = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { data: invocations, refetch , isLoading } = useAllInvocations();
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 10;
 
+  const { data: invocations, refetch , isLoading } = useInvocations(null, null, currentPage, pageSize);
   
   useEffect(() => {
     let intervalId;

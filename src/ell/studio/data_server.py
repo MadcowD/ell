@@ -44,54 +44,67 @@ def create_app(storage_dir: Optional[str] = None):
             )
         return lmps
 
-    @app.get("/api/lmps/{name_or_id:path}")
+    # TOOD: Create a get endpoint to efficient get on the index with /api/lmp/<lmp_id>
+    @app.get("/api/lmp/{lmp_id}")
+    def get_lmp_by_id(lmp_id: str):
+        lmp = serializer.get_lmps(lmp_id=lmp_id)[0]
+        return lmp
+
+
+    @app.get("/api/lmps")
     def get_lmp(
-        name_or_id: str,
+        lmp_id: Optional[str] = Query(None),
+        name: Optional[str] = Query(None),
         skip: int = Query(0, ge=0),
         limit: int = Query(100, ge=1, le=100)
     ):
-        # Remove any leading slash if present
-        name_or_id = name_or_id.lstrip("/")
-
-        # First, try to get by name
-        lmps_by_name = serializer.get_lmps(name=name_or_id, skip=skip, limit=limit)
-        if lmps_by_name:
-            return list(lmps_by_name)
         
-        # If not found by name, try to get by ID
-        lmp_by_id = serializer.get_lmps(lmp_id=name_or_id)
-        if lmp_by_id:
-            return list(lmp_by_id)
-        
-        # If still not found, check if the last part of the path is a valid lmp_id
-        name_parts = name_or_id.split("/")
-        if len(name_parts) > 1:
-            potential_lmp_id = name_parts[-1]
-            potential_name = "/".join(name_parts[:-1])
-            lmps = serializer.get_lmps(name=potential_name, lmp_id=potential_lmp_id, skip=skip, limit=limit)
-            if lmps:
-                return list(lmps)
+        filters = {}
+        if name:
+            filters['name'] = name
+        if lmp_id:
+            filters['lmp_id'] = lmp_id
 
-        raise HTTPException(status_code=404, detail="LMP not found")
+        lmps = serializer.get_lmps(skip=skip, limit=limit, **filters)
+        
+        if not lmps:
+            raise HTTPException(status_code=404, detail="LMP not found")
+        
+        return lmps
+
+
+
+    @app.get("/api/invocation/{invocation_id}")
+    def get_invocation(
+        invocation_id: str,
+    ):
+        invocation = serializer.get_invocations(id=invocation_id)[0]
+        return invocation
 
     @app.get("/api/invocations")
-    @app.get("/api/invocations/{name:path}")
     def get_invocations(
-        name: Optional[str] = None,
+        id: Optional[str] = Query(None),
         skip: int = Query(0, ge=0),
-        limit: int = Query(100, ge=1, le=100)
+        limit: int = Query(100, ge=1, le=100),
+        lmp_name: Optional[str] = Query(None),
+        lmp_id: Optional[str] = Query(None),
     ):
         lmp_filters = {}
-        if name:
-            name = name.lstrip("/")
-            name_parts = name.split("/")
+        if lmp_name:
+            lmp_filters["name"] = lmp_name
+        if lmp_id:
+            lmp_filters["lmp_id"] = lmp_id
 
-            lmp_filters["name"] = name_parts[0]
-            if len(name_parts) > 1:
-                potential_lmp_id = name_parts[-1]
-                lmp_filters["lmp_id"] = potential_lmp_id
+        invocation_filters = {}
+        if id:
+            invocation_filters["id"] = id
 
-        invocations = serializer.get_invocations(lmp_filters=lmp_filters, skip=skip, limit=limit)
+        invocations = serializer.get_invocations(
+            lmp_filters=lmp_filters,
+            filters=invocation_filters,
+            skip=skip,
+            limit=limit
+        )
         return invocations
 
     @app.post("/api/invocations/search")
