@@ -3,7 +3,7 @@ import { FiCopy, FiZap, FiEdit2, FiFilter, FiClock, FiColumns, FiPause, FiPlay }
 import InvocationsTable from '../components/invocations/InvocationsTable';
 import InvocationsLayout from '../components/invocations/InvocationsLayout';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useInvocations } from '../hooks/useBackend';
+import { useInvocationsFromLMP } from '../hooks/useBackend';
 
 const Traces = () => {
   const [selectedTrace, setSelectedTrace] = useState(null);
@@ -11,21 +11,13 @@ const Traces = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+
+  // TODO Unify invocation search behaviour with the LMP page.
   const [currentPage, setCurrentPage] = useState(0);
-  const pageSize = 10;
+  const pageSize = 50;
 
-  const { data: invocations, refetch , isLoading } = useInvocations(null, null, currentPage, pageSize);
+  const { data: invocations , isLoading } = useInvocationsFromLMP(null, null, currentPage, pageSize);
   
-  useEffect(() => {
-    let intervalId;
-    if (isPolling) {
-      intervalId = setInterval(refetch, 200); // Poll every 200ms
-    }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [isPolling, refetch]);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);

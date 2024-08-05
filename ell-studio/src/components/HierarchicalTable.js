@@ -9,13 +9,24 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
   const hasChildren = item.children && item.children.length > 0;
   const isExpanded = expandedRows[item.id];
   const isSelected = isItemSelected(item);
+  const [isNew, setIsNew] = useState(true);
 
   const customRowClassName = rowClassName ? rowClassName(item) : '';
+
+  useEffect(() => {
+    if (isNew) {
+      const timer = setTimeout(() => setIsNew(false), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isNew]);
 
   return (
     <React.Fragment>
       <tr
-        className={`border-b border-gray-800 hover:bg-gray-800/30 cursor-pointer transition-colors duration-500 ease-in-out ${isSelected ? 'bg-blue-900/30' : ''} ${customRowClassName}`}
+        className={`border-b border-gray-800 hover:bg-gray-800/30 cursor-pointer transition-all duration-500 ease-in-out 
+          ${isSelected ? 'bg-blue-900/30' : ''} 
+          ${customRowClassName}
+          ${isNew ? 'animate-fade-in bg-green-900/30' : ''}`}
         onClick={() => {
           if (onRowClick) onRowClick(item);
         }}

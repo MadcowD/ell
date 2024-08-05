@@ -1,8 +1,45 @@
-import { useQuery, useQueries } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import axios from 'axios';
-
+import { useEffect, useState } from 'react';
 
 const API_BASE_URL = "http://localhost:8080";
+const WS_URL = "ws://localhost:8080/ws";
+
+export const useWebSocketConnection = () => {
+  const queryClient = useQueryClient();
+  const [isConnected, setIsConnected] = useState(false);
+  useEffect(() => {
+    const socket = new WebSocket(WS_URL);
+
+    socket.onopen = () => {
+      console.log('WebSocket connected');
+      setIsConnected(true);
+    };
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.entity === 'database_updated') {
+        // Invalidate relevant queries
+        queryClient.invalidateQueries({queryKey: ['traces']});
+        queryClient.invalidateQueries({queryKey: ['latestLMPs']});
+        queryClient.invalidateQueries({queryKey: ['invocations']})  ;
+        queryClient.invalidateQueries({queryKey: ['lmpDetails']});
+        console.log('Database updated, invalidating queries');
+      }
+    };
+
+    socket.onclose = () => {
+      console.log('WebSocket disconnected');
+      setIsConnected(false);
+    };
+
+    return () => {
+      console.log('WebSocket connection closed');
+      socket.close();
+    };
+  }, [queryClient]);
+  return { isConnected };
+};
 
 export const useLMPs = (name, id) => {
   return useQuery({
@@ -21,7 +58,7 @@ export const useLMPs = (name, id) => {
   });
 };
 
-export const useInvocations = (name, id, page = 0, pageSize = 50) => {
+export const useInvocationsFromLMP = (name, id, page = 0, pageSize = 50) => {
   return useQuery({
     queryKey: ['invocations', name, id, page, pageSize],
     queryFn: async () => {
@@ -39,6 +76,18 @@ export const useInvocations = (name, id, page = 0, pageSize = 50) => {
   });
 };
 
+export const useInvocation = (id) => {
+  return useQuery({
+    queryKey: ['invocation', id],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/api/invocation/${id}`);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+}
+
+
 export const useMultipleLMPs = (usesIds) => {
   const multipleLMPs = useQueries({
     queries: (usesIds || []).map(use => ({
@@ -55,25 +104,16 @@ export const useMultipleLMPs = (usesIds) => {
   return { isLoading, data };
 };
 
-
-
-
 export const useLatestLMPs = (page = 0, pageSize = 100) => {
   return useQuery({
-    queryKey: ['allLMPs', page, pageSize],
+    queryKey: ['latestLMPs', page, pageSize],
     queryFn: async () => {
       const skip = page * pageSize;
       const response = await axios.get(`${API_BASE_URL}/api/latest/lmps?skip=${skip}&limit=${pageSize}`);
-      const lmps = response.data;
-  
-      return lmps;
+      return response.data;
     }
   });
 };
-
-
-
-
 
 export const useTraces = (lmps) => {
     return useQuery({
