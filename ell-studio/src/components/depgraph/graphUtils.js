@@ -190,8 +190,9 @@ export const useLayoutedElements = () => {
     return [true, { toggle, isRunning }];
   }, [initialised]);
 };
-
 export function getInitialGraph(lmps, traces) {
+  const lmpIds = new Set(lmps.map(lmp => lmp.lmp_id));
+
   const initialNodes =
     lmps
       .filter((x) => !!x)
@@ -203,6 +204,21 @@ export function getInitialGraph(lmps, traces) {
           position: { x: 0, y: 0 },
         };
       }) || [];
+
+  // Create dead nodes for missing LMPs
+  const deadNodes = lmps
+    .filter((x) => !!x)
+    .flatMap((lmp) => 
+      (lmp.uses || []).filter(use => !lmpIds.has(use)).map(use => ({
+        id: `${use}`,
+        type: "lmp",
+        data: { label: `Unknown LMP (${use})`, lmp: { lmp_id: use, name: `Out of Date LMP (${use})`, version_number: -2 } },
+        position: { x: 0, y: 0 },
+        style: { opacity: 0.5 }, // Make dead nodes visually distinct
+      }))
+    );
+
+  initialNodes.push(...deadNodes);
 
   const initialEdges =
     lmps

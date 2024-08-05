@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { getTimeAgo } from '../utils/lmpUtils';
 import { DependencyGraph } from '../components/depgraph/DependencyGraph';
-import { useAllLMPs, useTraces } from '../hooks/useBackend';
+import { useLatestLMPs, useTraces } from '../hooks/useBackend';
 import VersionBadge from '../components/VersionBadge';
 function Home() {
   const [expandedLMP, setExpandedLMP] = useState(null);
   const { darkMode } = useTheme();
-  const { data: lmps, isLoading: isLoadingLMPs } = useAllLMPs();
+  const { data: lmps, isLoading: isLoadingLMPs } = useLatestLMPs();
   const { data: traces, isLoading: isLoadingTraces } = useTraces(lmps);
 
   const toggleExpand = (lmpName, event) => {

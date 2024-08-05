@@ -56,7 +56,7 @@ export const useAllInvocations = (page = 0, pageSize = 100) => {
 };
 
 
-export const useAllLMPs = (page = 0, pageSize = 100) => {
+export const useLatestLMPs = (page = 0, pageSize = 100) => {
   return useQuery({
     queryKey: ['allLMPs', page, pageSize],
     queryFn: async () => {
