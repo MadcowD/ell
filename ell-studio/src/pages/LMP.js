@@ -237,7 +237,7 @@ function LMP() {
               {activeTab === "version_history" && (
                 <VersionHistoryPane versions={versionHistory}/>
               )}
-              {activeTab === "dependency_graph" && (
+              {activeTab === "dependency_graph" && !!uses && (
                 <DependencyGraphPane   key={uses?.map(lmp => lmp.lmp_id).sort().join('-')} lmp={lmp} uses={uses} />
               )}
             </div>
