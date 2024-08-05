@@ -141,6 +141,7 @@ class SQLStore(ell.store.Store):
                 ))
             
             if filters:
+                print(f"Filters: {filters}")
                 for key, value in filters.items():
                     query = query.where(getattr(SerializedLMP, key) == value)
             

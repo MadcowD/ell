@@ -11,7 +11,6 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
   const navigate = useNavigate();
 
 
-
   const onClickLMP = useCallback(({lmp, id : invocationId}) => {
     navigate(`/lmp/${lmp.name}/${lmp.lmp_id}?i=${invocationId}`);
   }, [navigate]);

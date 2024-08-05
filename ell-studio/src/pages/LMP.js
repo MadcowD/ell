@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useSearchParams, useNavigate, Link } from "react-router-dom";
-import { useLMPs,  useInvocations, useMultipleLMPs } from "../hooks/useBackend";
+import { useLMPs,  useInvocationsFromLMP, useMultipleLMPs, useInvocation } from "../hooks/useBackend";
 import InvocationsTable from "../components/invocations/InvocationsTable";
 import DependencyGraphPane from "../components/DependencyGraphPane";
 import LMPSourceView from "../components/source/LMPSourceView";
@@ -35,6 +35,7 @@ function LMP() {
   const requestedInvocationId = searchParams.get("i");
   
   const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 50;
 
   // TODO: Could be expensive if you have a funct on of versions.
   const { data: versionHistory, isLoading: isLoadingLMP } = useLMPs(name);
@@ -47,7 +48,7 @@ function LMP() {
     }
   }, [versionHistory, id]);
 
-  const { data: invocations } = useInvocations(name, id);
+  const { data: invocations } = useInvocationsFromLMP(name, id, currentPage, pageSize);
   const { data: uses } = useMultipleLMPs(lmp?.uses);
 
   
@@ -65,9 +66,14 @@ function LMP() {
       : null;
   }, [versionHistory, lmp]);
 
-  const requestedInvocation = useMemo(() => invocations?.find(
-    (invocation) => invocation.id === requestedInvocationId
-  ), [invocations, requestedInvocationId]);
+  const {data: requestedInvocationQueryData} = useInvocation(requestedInvocationId);
+  const requestedInvocation = useMemo(() => {
+    if (!requestedInvocationQueryData)
+      return invocations?.find(i => i.id === requestedInvocationId);
+    else 
+      return requestedInvocationQueryData;
+    
+  }, [requestedInvocationQueryData, invocations, requestedInvocationId]);
 
   useEffect(() => {
     setSelectedTrace(requestedInvocation);
@@ -233,6 +239,7 @@ function LMP() {
                   <InvocationsTable
                     invocations={invocations}
                     currentPage={currentPage}
+                    pageSize={pageSize}
                     setCurrentPage={setCurrentPage}
                     producingLmp={lmp}
                     onSelectTrace={(trace) => {

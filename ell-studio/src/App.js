@@ -8,22 +8,41 @@ import Traces from './pages/Traces';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './styles/globals.css';
 import './styles/sourceCode.css';
+import { useWebSocketConnection } from './hooks/useBackend';
+import { Toaster, toast } from 'react-hot-toast';
+
+const WebSocketConnectionProvider = ({children}) => {
+  const { isConnected } = useWebSocketConnection();
+
+  React.useEffect(() => {
+    if (isConnected) {
+      toast.success('Store connected', {
+        duration: 1000,
+      });
+    } else {
+      toast('Connecting to store...', {
+        icon: '🔄',
+        duration: 500,
+      });
+    }
+  }, [isConnected]);
+
+  return (
+    <>
+      {children}
+      <Toaster position="top-right" />
+    </>
+  );
+};
 
 // Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false, // default: true
-      retry: false, // default: 3
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
+        <WebSocketConnectionProvider>
         <Router>
           <div className="flex min-h-screen max-h-screen bg-gray-900 text-gray-100">
             <Sidebar />
@@ -38,6 +57,7 @@ function App() {
             </div>
           </div>
         </Router>
+        </WebSocketConnectionProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
