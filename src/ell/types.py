@@ -6,7 +6,7 @@ from typing import Any
 from ell.lstr import lstr
 from ell.util.dict_sync_meta import DictSyncMeta
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, List, Optional
 from sqlmodel import Field, SQLModel, Relationship, JSON, ARRAY, Column, Float
 
@@ -43,6 +43,14 @@ LMP = Union[OneTurn, MultiTurnLMP, ChatLMP]
 InvocableLM = Callable[..., _lstr_generic]
 
 
+def utc_now() -> datetime:
+    """
+    Returns the current UTC timestamp.
+    Serializes to ISO-8601.
+    """
+    return datetime.now(tz=timezone.utc)
+
+
 class SerializedLMPUses(SQLModel, table=True):
     """
     Represents the many-to-many relationship between SerializedLMPs.
@@ -65,7 +73,7 @@ class SerializedLMP(SQLModel, table=True):
     name: str  # Name of the LMP
     source: str  # Source code or reference for the LMP
     dependencies: str  # List of dependencies for the LMP, stored as a string
-    created_at: datetime = Field(default_factory=datetime.utcnow)  # Timestamp of when the LMP was created
+    created_at: datetime = Field(default_factory=utc_now)  # Timestamp of when the LMP was created
     is_lm: bool  # Boolean indicating if it is an LM (Language Model) or an LMP
     lm_kwargs: dict  = Field(sa_column=Column(JSON)) # Additional keyword arguments for the LMP
 
@@ -132,7 +140,7 @@ class Invocation(SQLModel, table=True):
     state_cache_key: Optional[str] = Field(default=None)
 
     
-    created_at: datetime = Field(default_factory=datetime.utcnow)  # Timestamp of when the invocation was created
+    created_at: datetime = Field(default_factory=utc_now)  # Timestamp of when the invocation was created
     invocation_kwargs: dict = Field(default_factory=dict, sa_column=Column(JSON))  # Additional keyword arguments for the invocation
 
     # Relationships
