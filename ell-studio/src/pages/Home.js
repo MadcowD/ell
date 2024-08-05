@@ -1,34 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
-import { fetchLMPs, getTimeAgo, fetchTraces } from '../utils/lmpUtils';
+import { getTimeAgo } from '../utils/lmpUtils';
 import { DependencyGraph } from '../components/depgraph/DependencyGraph';
+import { useAllLMPs, useTraces } from '../hooks/useBackend';
 
 function Home() {
-  const [lmps, setLmps] = useState([]);
-  const [loaded, setLoaded] = useState(false);
-  const { darkMode } = useTheme();
   const [expandedLMP, setExpandedLMP] = useState(null);
-  const [traces, setTraces] = useState([]);
-
-  useEffect(() => {
-    const getLMPs = async () => {
-      try {
-        const aggregatedLMPs = await fetchLMPs();
-        const traces = await fetchTraces(aggregatedLMPs);
-        setLmps(aggregatedLMPs);
-        setTraces(traces);
-
-        setLoaded(true);
-      } catch (error) {
-        console.error('Error fetching LMPs:', error);
-      }
-    };
-    getLMPs();
-  }, []);
+  const { darkMode } = useTheme();
+  const { data: lmps, isLoading: isLoadingLMPs } = useAllLMPs();
+  const { data: traces, isLoading: isLoadingTraces } = useTraces(lmps);
 
   const toggleExpand = (lmpName, event) => {
-    // Prevent toggling when clicking on the link
     if (event.target.tagName.toLowerCase() !== 'a') {
       setExpandedLMP(expandedLMP === lmpName ? null : lmpName);
     }
@@ -38,11 +21,17 @@ function Home() {
     return id.length > 8 ? `${id.substring(0, 8)}...` : id;
   };
 
+  if (isLoadingLMPs || isLoadingTraces) {
+    return <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen flex items-center justify-center`}>
+      <p className={`text-${darkMode ? 'white' : 'black'}`}>Loading...</p>
+    </div>;
+  }
+
   return (
     <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen`}>
       <div className="container mx-auto px-4 py-8">
         <h1 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Language Model Programs</h1>
-        {loaded && <DependencyGraph lmps={lmps} traces={traces}/>}
+        {lmps && traces && <DependencyGraph lmps={lmps} traces={traces}/>}
         <div className="space-y-4">
           {lmps.map((lmp) => (
             <div 
@@ -107,4 +96,3 @@ function Home() {
 }
 
 export default Home;
-

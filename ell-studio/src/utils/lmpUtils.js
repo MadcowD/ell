@@ -1,16 +1,5 @@
 import axios from 'axios';
 
-const API_BASE_URL = "http://localhost:8080"
-export const fetchLMPs = async () => {
-  try {
-    const baseUrl = API_BASE_URL
-    const response = await axios.get(`${baseUrl}/api/lmps`);
-    return aggregateLMPsByName(response.data);
-  } catch (error) {
-    console.error('Error fetching LMPs:', error);
-    throw error;
-  }
-};
 
 export const aggregateLMPsByName = (lmpList) => {
   const lmpsByName = new Map()
@@ -48,29 +37,6 @@ export const aggregateLMPsByName = (lmpList) => {
   return latestLMPs
 };
 
-export const fetchTraces = async (lmps) => {
-  const baseUrl = API_BASE_URL
-  const response = await axios.get(`${baseUrl}/api/traces`);
-  // Filter out duplicate traces based on consumed and consumer
-  const uniqueTraces = response.data.reduce((acc, trace) => {
-    const key = `${trace.consumed}-${trace.consumer}`;
-    if (!acc[key]) {
-      acc[key] = trace;
-    }
-    return acc;
-  }, {});
-
-  // Convert the object of unique traces back to an array
-  const uniqueTracesArray = Object.values(uniqueTraces);
-
-  // Filter out traces between LMPs that are not on the graph
-  const lmpIds = new Set(lmps.map(lmp => lmp.lmp_id));
-  const filteredTraces = uniqueTracesArray.filter(trace => 
-    lmpIds.has(trace.consumed) && lmpIds.has(trace.consumer)
-  );
-  
-  return filteredTraces;
-}
 
 
 export function getTimeAgo(date) {

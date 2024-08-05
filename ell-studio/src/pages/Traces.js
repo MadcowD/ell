@@ -1,52 +1,39 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiCopy, FiZap, FiEdit2, FiFilter, FiClock, FiColumns, FiPause, FiPlay } from 'react-icons/fi';
 import InvocationsTable from '../components/invocations/InvocationsTable';
-import axios from 'axios';
 import InvocationsLayout from '../components/invocations/InvocationsLayout';
-
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAllInvocations } from '../hooks/useBackend';
 
-
-const API_BASE_URL = "http://localhost:8080";
 const Traces = () => {
   const [selectedTrace, setSelectedTrace] = useState(null);
-  const [invocations, setInvocations] = useState([]);
   const [isPolling, setIsPolling] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const fetchInvocations = useCallback(async () => {
-    try {
-      const invocationsResponse = await axios.get(`${API_BASE_URL}/api/invocations`);
-      const sortedInvocations = invocationsResponse.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      setInvocations(sortedInvocations);
-      
-      // Check for invocation ID in URL
-      const searchParams = new URLSearchParams(location.search);
-      const invocationId = searchParams.get('i');
-      if (invocationId) {
-        const selectedInvocation = sortedInvocations.find(inv => inv.id === invocationId);
-        if (selectedInvocation) {
-          setSelectedTrace(selectedInvocation);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching invocations:', error);
-    }
-  }, [location.search]);
+  const { data: invocations, refetch } = useAllInvocations();
 
   useEffect(() => {
-    fetchInvocations(); // Initial fetch
-
     let intervalId;
     if (isPolling) {
-      intervalId = setInterval(fetchInvocations, 200); // Poll every 200ms
+      intervalId = setInterval(refetch, 200); // Poll every 200ms
     }
 
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [isPolling, fetchInvocations]);
+  }, [isPolling, refetch]);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const invocationId = searchParams.get('i');
+    if (invocationId && invocations) {
+      const selectedInvocation = invocations.find(inv => inv.id === invocationId);
+      if (selectedInvocation) {
+        setSelectedTrace(selectedInvocation);
+      }
+    }
+  }, [location.search, invocations]);
 
   const togglePolling = () => {
     setIsPolling(!isPolling);
