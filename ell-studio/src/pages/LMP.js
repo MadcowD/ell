@@ -36,6 +36,7 @@ function LMP() {
 
   const { data: lmp, isLoading: isLoadingLMP } = useLMPDetails(name, id);
   const { data: versionHistory } = useVersionHistory(name);
+  console.log(name,id)
   const { data: invocations } = useInvocations(name, id);
   const { data: uses } = useUses(lmp?.uses);
 
@@ -59,6 +60,9 @@ function LMP() {
   useEffect(() => {
     setSelectedTrace(requestedInvocation);
   }, [requestedInvocation]);
+  
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
 
   const handleCopyCode = () => {
     const fullCode = `${lmp?.dependencies.trim()}\n\n${lmp?.source.trim()}`;
@@ -218,6 +222,8 @@ function LMP() {
                   </div>
                   <InvocationsTable
                     invocations={invocations}
+                    currentPage={currentPage}
+                    setCurrentPage={setCurrentPage}
                     producingLmp={lmp}
                     onSelectTrace={(trace) => {
                       setSelectedTrace(trace);

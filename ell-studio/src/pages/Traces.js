@@ -11,8 +11,11 @@ const Traces = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { data: invocations, refetch } = useAllInvocations();
+  const { data: invocations, refetch , isLoading } = useAllInvocations();
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
 
+  
   useEffect(() => {
     let intervalId;
     if (isPolling) {
@@ -43,6 +46,10 @@ const Traces = () => {
     setSelectedTrace(trace);
     navigate(`?i=${trace.id}`);
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
 
@@ -121,6 +128,9 @@ const Traces = () => {
       </div>
       <InvocationsTable 
         invocations={invocations} 
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        pageSize={pageSize}
         onSelectTrace={handleSelectTrace} 
         currentlySelectedTrace={selectedTrace}
       />

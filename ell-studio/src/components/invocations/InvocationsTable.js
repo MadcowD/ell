@@ -1,20 +1,27 @@
 import { LMPCardTitle } from '../depgraph/LMPCardTitle';
 import HierarchicalTable from '../HierarchicalTable';
-import React, { useMemo, useCallback, useEffect } from 'react';
+import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import { Card } from '../Card';
 import { getTimeAgo } from '../../utils/lmpUtils';
 import VersionBadge from '../VersionBadge';
 import { useNavigate } from 'react-router-dom';
 import { lstrCleanStringify } from '../../utils/lstrCleanStringify';
+import { useInvocations } from '../../hooks/useBackend';
 
-const InvocationsTable = ({ invocations, onSelectTrace, currentlySelectedTrace, omitColumns = [] }) => {
+const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, onSelectTrace, currentlySelectedTrace, omitColumns = [] }) => {
   const navigate = useNavigate();
+
+
 
   const onClickLMP = useCallback(({lmp, id : invocationId}) => {
     navigate(`/lmp/${lmp.name}/${lmp.lmp_id}?i=${invocationId}`);
   }, [navigate]);
 
+  const isLoading = !invocations;
+
+
   const traces = useMemo(() => {
+    if (!invocations) return [];
     return invocations.map(inv => ({
       name: inv.lmp?.name || 'Unknown',
       input: lstrCleanStringify(inv.args.length === 1 ? inv.args[0] : inv.args),
@@ -107,6 +114,10 @@ const InvocationsTable = ({ invocations, onSelectTrace, currentlySelectedTrace, 
 
   const initialSortConfig = { key: 'created_at', direction: 'desc' };
 
+  const hasNextPage = traces.length === pageSize;
+
+  if (isLoading) return <div>Loading...</div>;
+
   return (
     <HierarchicalTable
       schema={schema}
@@ -116,6 +127,10 @@ const InvocationsTable = ({ invocations, onSelectTrace, currentlySelectedTrace, 
       rowClassName={(item) => 
         item.id === currentlySelectedTrace?.id ? 'bg-blue-600 bg-opacity-30' : ''
       }
+      currentPage={currentPage}
+      onPageChange={setCurrentPage}
+      pageSize={pageSize}
+      hasNextPage={hasNextPage}
     />
   );
 };

@@ -17,21 +17,23 @@ export const useLMPDetails = (name, id) => {
   });
 };
 
-export const useVersionHistory = (name) => {
+export const useVersionHistory = (name, page = 0, pageSize = 100) => {
   return useQuery({
-    queryKey: ['versionHistory', name],
+    queryKey: ['versionHistory', name, page, pageSize],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE_URL}/api/lmps/${name}`);
+      const skip = page * pageSize;
+      const response = await axios.get(`${API_BASE_URL}/api/lmps/${name}?skip=${skip}&limit=${pageSize}`);
       return (response.data || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
   });
 };
 
-export const useInvocations = (name, id) => {
+export const useInvocations = (name, id, page = 0, pageSize = 100) => {
   return useQuery({
-    queryKey: ['invocations', name, id],
+    queryKey: ['invocations', name, id, page, pageSize],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE_URL}/api/invocations/${name}${id ? `/${id}` : ""}`);
+      const skip = page * pageSize;
+      const response = await axios.get(`${API_BASE_URL}/api/invocations/${name ? name : ""}${name && id ? `/${id}` : ""}?skip=${skip}&limit=${pageSize}`);
       return response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
   });
@@ -52,22 +54,24 @@ export const useUses = (usesIds) => {
   });
 };
 
-export const useAllInvocations = () => {
+export const useAllInvocations = (page = 0, pageSize = 100) => {
   return useQuery({
-    queryKey: ['allInvocations'],
+    queryKey: ['allInvocations', page, pageSize],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE_URL}/api/invocations`);
+      const skip = page * pageSize;
+      const response = await axios.get(`${API_BASE_URL}/api/invocations?skip=${skip}&limit=${pageSize}`);
       return response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
   });
 };
 
 
-export const useAllLMPs = () => {
+export const useAllLMPs = (page = 0, pageSize = 100) => {
   return useQuery({
-    queryKey: ['allLMPs'],
+    queryKey: ['allLMPs', page, pageSize],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE_URL}/api/lmps`);
+      const skip = page * pageSize;
+      const response = await axios.get(`${API_BASE_URL}/api/lmps?skip=${skip}&limit=${pageSize}`);
       const lmps = response.data;
 
       // Group LMPs by name
@@ -130,3 +134,16 @@ export const useTraces = (lmps) => {
       enabled: !!lmps && lmps.length > 0,
     });
   };
+
+// New function for searching invocations
+export const useSearchInvocations = (query, page = 0, pageSize = 100) => {
+  return useQuery({
+    queryKey: ['searchInvocations', query, page, pageSize],
+    queryFn: async () => {
+      const skip = page * pageSize;
+      const response = await axios.post(`${API_BASE_URL}/api/invocations/search?q=${encodeURIComponent(query)}&skip=${skip}&limit=${pageSize}`);
+      return response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    },
+    enabled: !!query,
+  });
+};

@@ -109,7 +109,8 @@ class SQLStore(ell.store.Store):
                 ))
 
             session.commit()
-    def get_lmps(self, **filters: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    
+    def get_lmps(self, skip: int = 0, limit: int = 10, **filters: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
         with Session(self.engine) as session:
             query = select(SerializedLMP, SerializedLMPUses.lmp_user_id).outerjoin(
                 SerializedLMPUses,
@@ -119,6 +120,8 @@ class SQLStore(ell.store.Store):
             if filters:
                 for key, value in filters.items():
                     query = query.where(getattr(SerializedLMP, key) == value)
+            
+            query = query.offset(skip).limit(limit)
             results = session.exec(query).all()
             
             lmp_dict = {lmp.lmp_id: {**lmp.model_dump(), 'uses': []} for lmp, _ in results}
@@ -127,7 +130,7 @@ class SQLStore(ell.store.Store):
                     lmp_dict[lmp.lmp_id]['uses'].append(using_id)
             return list(lmp_dict.values())
 
-    def get_invocations(self, lmp_filters: Dict[str, Any], filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def get_invocations(self, lmp_filters: Dict[str, Any], skip: int = 0, limit: int = 10, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         with Session(self.engine) as session:
             query = select(Invocation, SerializedLStr, SerializedLMP).join(SerializedLMP).outerjoin(SerializedLStr)
             
@@ -141,7 +144,7 @@ class SQLStore(ell.store.Store):
                     query = query.where(getattr(Invocation, key) == value)
             
             # Sort from newest to oldest
-            query = query.order_by(Invocation.created_at.desc())
+            query = query.order_by(Invocation.created_at.desc()).offset(skip).limit(limit)
             
             results = session.exec(query).all()
             
@@ -206,7 +209,6 @@ class SQLStore(ell.store.Store):
                     .where(InvocationTrace.invocation_consumer_id == current_invocation_id)
                 ).all()
                 for row in results:
-                    print(row)
                     trace = {
                         'consumer_id': row.InvocationTrace.invocation_consumer_id,
                         'consumed': {key: value for key, value in row.Invocation.__dict__.items() if key not in ['invocation_consumer_id', 'invocation_consuming_id']},
@@ -214,7 +216,7 @@ class SQLStore(ell.store.Store):
                     }
                     traces.append(trace)
                     queue.append((row.Invocation.id, depth + 1))
-
+                    
             # Create a dictionary to store unique traces based on consumed.id
             unique_traces = {}
             for trace in traces:
@@ -231,6 +233,33 @@ class SQLStore(ell.store.Store):
 
     def get_latest_lmps(self) -> List[Dict[str, Any]]:
         raise NotImplementedError()
+
+    def search_invocations(self, q: str, skip: int = 0, limit: int = 10) -> List[Dict[str, Any]]:
+        with Session(self.engine) as session:
+            query = select(Invocation, SerializedLStr, SerializedLMP).join(SerializedLMP).outerjoin(SerializedLStr)
+            query = query.where(
+                or_(
+                    Invocation.args.contains(q),
+                    Invocation.kwargs.contains(q),
+                    SerializedLStr.content.contains(q),
+                    SerializedLMP.name.contains(q)
+                )
+            )
+            query = query.order_by(Invocation.created_at.desc()).offset(skip).limit(limit)
+            
+            results = session.exec(query).all()
+            
+            invocations = {}
+            for inv, lstr, lmp in results:
+                if inv.id not in invocations:
+                    inv_dict = inv.model_dump()
+                    inv_dict['lmp'] = lmp.model_dump()
+                    invocations[inv.id] = inv_dict
+                    invocations[inv.id]['results'] = []
+                if lstr:
+                    invocations[inv.id]['results'].append(dict(**lstr.model_dump(), __lstr=True))
+            
+            return list(invocations.values())
 
 
 class SQLiteStore(SQLStore):

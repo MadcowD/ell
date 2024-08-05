@@ -45,6 +45,3 @@ if __name__ == "__main__":
 
     # with ell.cache(write_a_really_good_story):
     story = write_a_really_good_story("a dog")
-
-
-    ell.get_store()
