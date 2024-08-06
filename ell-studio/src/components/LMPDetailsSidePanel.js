@@ -19,6 +19,7 @@ function StatItem({ icon: Icon, label, value }) {
 }
 
 function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
+  // TODO: update this for all versions aswell..
   const { data: invocations } = useInvocationsFromLMP(lmp.name, lmp.lmp_id, 0, 100);
 
   const chartData = useMemo(() => {
