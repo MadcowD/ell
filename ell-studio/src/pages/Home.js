@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { getTimeAgo } from '../utils/lmpUtils';
 import { DependencyGraph } from '../components/depgraph/DependencyGraph';
 import { useLatestLMPs, useTraces } from '../hooks/useBackend';
 import VersionBadge from '../components/VersionBadge';
+const MemoizedDependencyGraph = React.memo(DependencyGraph);
 function Home() {
   const [expandedLMP, setExpandedLMP] = useState(null);
   const { darkMode } = useTheme();
   const { data: lmps, isLoading: isLoadingLMPs } = useLatestLMPs();
   const { data: traces, isLoading: isLoadingTraces } = useTraces(lmps);
+  
 
   const toggleExpand = (lmpName, event) => {
     if (event.target.tagName.toLowerCase() !== 'a') {
@@ -21,7 +23,22 @@ function Home() {
     return id.length > 8 ? `${id.substring(0, 8)}...` : id;
   };
 
-  if (isLoadingLMPs || isLoadingTraces) {
+  const [firstTraces, setFirstTraces] = useState(traces);
+  const [firstLMPs, setFirstLMPs] = useState(lmps);
+
+  useEffect(() => {
+    if((!firstTraces || !firstLMPs) && traces && lmps) {
+      console.log("Setting first traces and lmps");
+      setFirstTraces(traces);
+      setFirstLMPs(lmps);
+    }
+  }, [traces, firstTraces, lmps, firstLMPs]);
+  
+  // TODO: Make graph dynamically update.
+  const memoizedTraces = useMemo(() => firstTraces, [firstTraces]);
+  const memoizedLMPs = useMemo(() => firstLMPs, [firstLMPs]);
+
+  if (!memoizedLMPs || !memoizedTraces) {
     return <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen flex items-center justify-center`}>
       <p className={`text-${darkMode ? 'white' : 'black'}`}>Loading...</p>
     </div>;
@@ -31,7 +48,7 @@ function Home() {
     <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen`}>
       <div className="container mx-auto px-4 py-8">
         <h1 className={`text-3xl font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Language Model Programs</h1>
-        {lmps && traces && <DependencyGraph lmps={lmps} traces={traces}/>}
+       <MemoizedDependencyGraph lmps={memoizedLMPs} traces={memoizedTraces} key={memoizedLMPs.length + memoizedTraces.length}/>
         <div className="space-y-4">
           {lmps.map((lmp) => (
             <div 
