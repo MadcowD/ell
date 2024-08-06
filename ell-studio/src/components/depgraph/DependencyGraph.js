@@ -16,14 +16,12 @@ import ReactFlow, {
   ReactFlowProvider,
 } from "reactflow";
 import { getBezierPath } from 'reactflow';
-
-
 import { Link } from "react-router-dom";
 import { LMPCardTitle } from "./LMPCardTitle"; // Add this import
-
 import { Card } from "../Card";
 import "reactflow/dist/style.css";
-
+import { ZoomIn, ZoomOut, Lock, Maximize, Unlock } from 'lucide-react';
+import { Button } from "components/common/Button";
 
 import { useLayoutedElements, getInitialGraph } from "./graphUtils";
 
@@ -68,26 +66,54 @@ const LayoutFlow = ({ initialNodes, initialEdges }) => {
   const nodeTypes = useMemo(() => ({ lmp: LMPNode }), []);
 
   return (
-    
-    <div style={{ height: 600 }}>
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      nodeTypes={nodeTypes}
-      // fitView
-    >
-      <Panel>
-      </Panel>
-      <Controls />
-
-      <Background />
-    </ReactFlow>
+    <div className="h-full relative">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+      >
+        <Panel>
+        </Panel>
+        <Background />
+        <CustomControls />
+      </ReactFlow>
     </div>
   );
 };
 
+function CustomControls() {
+  const { zoomIn, zoomOut, fitView, setNodes } = useReactFlow();
+  const [nodesLocked, setNodesLocked] = useState(false);
+
+  const handleZoomIn = () => zoomIn({ duration: 300, step: 0.5 });
+  const handleZoomOut = () => zoomOut({ duration: 300, step: 0.5 });
+  const handleFitView = () => fitView({ duration: 500, padding: 0.1 });
+  const handleToggleNodeLock = () => {
+    setNodes((nodes) =>
+      nodes.map((node) => ({ ...node, draggable: nodesLocked }))
+    );
+    setNodesLocked(!nodesLocked);
+  };
+
+  return (
+    <div className="absolute top-4 left-4 flex space-x-2 z-10">
+      <Button onClick={handleZoomIn} variant="secondary" size="sm">
+        <ZoomIn className="w-4 h-4" />
+      </Button>
+      <Button onClick={handleZoomOut} variant="secondary" size="sm">
+        <ZoomOut className="w-4 h-4" />
+      </Button>
+      <Button onClick={handleFitView} variant="secondary" size="sm">
+        <Maximize className="w-4 h-4" />
+      </Button>
+      <Button onClick={handleToggleNodeLock} variant="secondary" size="sm">
+        {nodesLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+      </Button>
+    </div>
+  );
+}
 
 export function DependencyGraph({ lmps, traces, ...rest }) {
   // construct ndoes from LMPS
@@ -98,7 +124,7 @@ export function DependencyGraph({ lmps, traces, ...rest }) {
 
   return (
     <div
-      className="h-600px w-full rounded-lg border border-gray-700"
+      className="h-full w-full border-gray-700"
       {...rest}
     >
       <ReactFlowProvider>

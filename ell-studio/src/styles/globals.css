@@ -62,6 +62,14 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none; /* Chrome, Safari, and Opera */
   }
+
+  .react-flow__panel.react-flow__attribution.bottom.right {
+    @apply bg-background p-2 rounded-tl-md rounded-br-md transition-colors duration-300 hover:bg-background/80;
+  }
+
+  .react-flow__panel.react-flow__attribution.bottom.right a {
+    @apply text-foreground;
+  }
 }
 
 
