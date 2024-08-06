@@ -301,3 +301,5 @@ dist
 
 # Ignore static files
 static/
+*.db-shm
+*.db-wal

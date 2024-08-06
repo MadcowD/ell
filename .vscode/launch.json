@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "name": "studio:server:dev",
+            "type": "python",
+            "request": "launch",
+            "module": "ell.studio",
+            "args": [
+                "--storage-dir",
+                "${workspaceFolder}/sqlite_example",
+                "--dev"
+            ],
+            "justMyCode": false
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "studio:client:dev",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "start:dev"
+            ],
+            "cwd": "${workspaceFolder}/ell-studio",
+            "console": "integratedTerminal"
+        }
+    ]
+}
