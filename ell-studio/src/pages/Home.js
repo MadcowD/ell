@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
-import { fetchLMPs, getTimeAgo, fetchTraces } from '../utils/lmpUtils';
+import { getTimeAgo } from '../utils/lmpUtils';
 import { DependencyGraph } from '../components/depgraph/DependencyGraph';
+import { useLatestLMPs, useTraces } from '../hooks/useBackend';
+import VersionBadge from '../components/VersionBadge';
 import { Code } from 'lucide-react';
 import { Card, CardHeader, CardContent } from 'components/common/Card';
 import { ScrollArea } from 'components/common/ScrollArea';
@@ -10,30 +12,12 @@ import { Badge } from 'components/common/Badge';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from 'components/common/Resizable';
 
 function Home() {
-  const [lmps, setLmps] = useState([]);
-  const [loaded, setLoaded] = useState(false);
-  const { darkMode } = useTheme();
   const [expandedLMP, setExpandedLMP] = useState(null);
-  const [traces, setTraces] = useState([]);
-
-  useEffect(() => {
-    const getLMPs = async () => {
-      try {
-        const aggregatedLMPs = await fetchLMPs();
-        const traces = await fetchTraces(aggregatedLMPs);
-        setLmps(aggregatedLMPs);
-        setTraces(traces);
-
-        setLoaded(true);
-      } catch (error) {
-        console.error('Error fetching LMPs:', error);
-      }
-    };
-    getLMPs();
-  }, []);
+  const { darkMode } = useTheme();
+  const { data: lmps, isLoading: isLoadingLMPs } = useLatestLMPs();
+  const { data: traces, isLoading: isLoadingTraces } = useTraces(lmps);
 
   const toggleExpand = (lmpName, event) => {
-    // Prevent toggling when clicking on the link
     if (event.target.tagName.toLowerCase() !== 'a') {
       setExpandedLMP(expandedLMP === lmpName ? null : lmpName);
     }
@@ -42,6 +26,13 @@ function Home() {
   const truncateId = (id) => {
     return id.length > 8 ? `${id.substring(0, 8)}...` : id;
   };
+
+  if (isLoadingLMPs || isLoadingTraces) {
+    return <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen flex items-center justify-center`}>
+      <p className={`text-${darkMode ? 'white' : 'black'}`}>Loading...</p>
+    </div>;
+  }
+
   return (
     <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen`}>
       <ResizablePanelGroup direction="horizontal" className="w-full h-screen">
@@ -57,12 +48,12 @@ function Home() {
                   Total LMPs: {lmps.length}
                 </span>
                 <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Last Updated: {lmps.length > 0 ? getTimeAgo(lmps[0].versions[0].created_at) : 'N/A'}
+                  Last Updated: {lmps[0] && lmps[0].versions && lmps[0].versions[0] ? getTimeAgo(lmps[0].versions[0].created_at) : 'N/A'}
                 </span>
               </div>
             </div>
             <div className="w-full h-full">
-              {loaded && <DependencyGraph lmps={lmps} traces={traces}/>}
+              {lmps && traces && <DependencyGraph lmps={lmps} traces={traces}/>}
             </div>
           </div>
         </ResizablePanel>
@@ -81,33 +72,31 @@ function Home() {
                       <Link 
                         to={`/lmp/${lmp.name}`} 
                         className={`text-xl font-semibold ${darkMode ? 'text-gray-100 hover:text-blue-300' : 'text-gray-800 hover:text-blue-600'} break-words`}
-                        onClick={(e) => e.stopPropagation()} // Prevent card expansion when clicking the link
+                        onClick={(e) => e.stopPropagation()}
                       >
                         {truncateId(lmp.name)}
                       </Link>
                       <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary">
-                        ID: {truncateId(lmp.versions[0].lmp_id)}
-                      </Badge>
-                      <Badge variant="success" className={`ml-2 ${darkMode ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}>
-                        Latest
-                      </Badge>
-                      <Badge variant="default" className="font-medium">
-                        {lmp.versions.length} Version{lmp.versions.length > 1 ? 's' : ''}
-                      </Badge>
+                        <Badge variant="secondary">
+                          ID: {truncateId(lmp.lmp_id)}
+                        </Badge>
+                        <Badge variant="success" className={`ml-2 ${darkMode ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}>
+                          Latest
+                        </Badge>
+                        <VersionBadge version={(lmp.version_number || 0) + 1} hash={lmp.lmp_id} />
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className={`bg-${darkMode ? 'gray-700' : 'gray-100'} rounded p-3 mb-4 overflow-x-auto`}>
                       <code className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'} whitespace-pre-wrap break-words`}>
-                        {lmp.source.length > 100 ? `${lmp.source.substring(0, 100)}...` : lmp.source}
+                        {lmp.source && lmp.source.length > 100 ? `${lmp.source.substring(0, 100)}...` : lmp.source}
                       </code>
                     </div>
                     <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      Last Updated: {getTimeAgo(lmp.versions[0].created_at)}
+                      Last Updated: {lmp.versions && lmp.versions[0] ? getTimeAgo(lmp.versions[0].created_at) : 'N/A'}
                     </p>
-                    {expandedLMP === lmp.name && lmp.versions.length > 1 && (
+                    {expandedLMP === lmp.name && lmp.versions && lmp.versions.length > 1 && (
                       <div className={`mt-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                         <h3 className="text-sm font-semibold mb-2">Version History:</h3>
                         <ul className="space-y-4">

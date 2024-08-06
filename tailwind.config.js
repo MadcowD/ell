@@ -8,6 +8,15 @@ module.exports = {
           850: '#22272e',
         },
       },
+      keyframes: {
+        highlight: {
+          '0%': { backgroundColor: 'rgba(59, 130, 246, 0.5)' },
+          '100%': { backgroundColor: 'rgba(59, 130, 246, 0)' },
+        }
+      },
+      animation: {
+        highlight: 'highlight 1s ease-in-out',
+      }
     },
   },
   plugins: [

@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { FiChevronRight, FiChevronDown, FiArrowUp, FiArrowDown } from 'react-icons/fi';
+import {  FiChevronDown, FiArrowUp, FiArrowDown, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
 import { HierarchicalTableProvider, useHierarchicalTable } from './HierarchicalTableContext';
-
+import { Checkbox } from "components/common/Checkbox"
 
 
 const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWidth, rowClassName }) => {
@@ -9,22 +9,32 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
   const hasChildren = item.children && item.children.length > 0;
   const isExpanded = expandedRows[item.id];
   const isSelected = isItemSelected(item);
+  const [isNew, setIsNew] = useState(true);
 
   const customRowClassName = rowClassName ? rowClassName(item) : '';
+
+  useEffect(() => {
+    if (isNew) {
+      const timer = setTimeout(() => setIsNew(false), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isNew]);
 
   return (
     <React.Fragment>
       <tr
-        className={`border-b border-gray-800 hover:bg-gray-800/30 cursor-pointer transition-colors duration-500 ease-in-out ${isSelected ? 'bg-blue-900/30' : ''} ${customRowClassName}`}
+        className={`border-b border-gray-800 hover:bg-gray-800/30 cursor-pointer transition-all duration-500 ease-in-out 
+          ${isSelected ? 'bg-blue-900/30' : ''} 
+          ${customRowClassName}
+          ${isNew ? 'animate-fade-in bg-green-900/30' : ''}`}
         onClick={() => {
           if (onRowClick) onRowClick(item);
         }}
       >
         <td className="py-3 px-4 w-12">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={isSelected}
-            onChange={(e) => toggleSelection(item, e.target.checked)}
+            onCheckedChange={(checked) => toggleSelection(item, checked)}
             onClick={(e) => e.stopPropagation()}
           />
         </td>
@@ -69,10 +79,9 @@ const TableHeader = ({ schema, columnWidths, updateWidth }) => {
     <thead>
       <tr className="text-left text-xs text-gray-400 border-t border-b border-l border-r border-gray-800 bg-gray-800/30">
         <th className="py-2 px-4 w-12">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={isAllSelected()}
-            onChange={(e) => toggleAllSelection(e.target.checked)}
+            onCheckedChange={(checked) => toggleAllSelection(checked)}
           />
         </th>
         <th className="py-2 px-4 w-12">
@@ -126,7 +135,57 @@ const TableBody = ({ schema, onRowClick, columnWidths, updateWidth, rowClassName
   );
 };
 
-const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName }) => {
+const PaginationControls = ({ currentPage, totalPages, onPageChange, pageSize, totalItems }) => {
+  // const startItem = currentPage * pageSize + 1;
+  // const endItem = Math.min((currentPage + 1) * pageSize, totalItems);
+
+  return (
+    <div className="flex justify-between items-center mt-4 text-sm">
+      <div className="text-gray-400">
+        {/* Showing {startItem} to {endItem} of {totalItems} items */}
+      </div>
+      <div className="flex items-center">
+        <button
+          onClick={() => onPageChange(0)}
+          disabled={currentPage === 0}
+          className="p-2 rounded-md text-gray-400 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="First Page"
+        >
+          <FiChevronsLeft />
+        </button>
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 0}
+          className="p-2 rounded-md text-gray-400 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed ml-2"
+          title="Previous Page"
+        >
+          <FiChevronLeft />
+        </button>
+        <span className="mx-4 text-gray-400">
+          Page {currentPage + 1}
+        </span>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages - 1}
+          className="p-2 rounded-md text-gray-400 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed mr-2"
+          title="Next Page"
+        >
+          <FiChevronRight />
+        </button>
+        <button
+          onClick={() => onPageChange(totalPages - 1)}
+          disabled={currentPage === totalPages - 1}
+          className="p-2 rounded-md text-gray-400 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Last Page"
+        >
+          <FiChevronsRight />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName, currentPage, onPageChange, pageSize, totalItems }) => {
   const [columnWidths, setColumnWidths] = useState({});
   const updateWidth = (key, width, maxWidth) => {
     setColumnWidths(prev => ({
@@ -142,6 +201,8 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
     });
     setColumnWidths(initialWidths);
   }, [schema]);
+
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   return (
     <HierarchicalTableProvider 
@@ -165,6 +226,15 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
           />
         </table>
       </div>
+      {onPageChange && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          pageSize={pageSize}
+          totalItems={totalItems}
+        />
+      )}
     </HierarchicalTableProvider>
   );
 };
