@@ -28,7 +28,7 @@ function VersionItem({ version, index, totalVersions, currentLmpId }) {
           {isLatest && <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded">Latest</span>}
         </div>
         <div className="text-xs text-gray-500 mt-1">
-          {getTimeAgo(new Date(version.created_at + "Z"))}
+          {getTimeAgo(new Date(version.created_at))}
         </div>
       </Link>
     </div>
