@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import json
 import os
 from typing import Any, Optional, Dict, List, Set, Union
@@ -7,7 +7,7 @@ import ell.store
 import cattrs
 import numpy as np
 from sqlalchemy.sql import text
-from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLMPUses, SerializedLStr
+from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLMPUses, SerializedLStr, utc_now
 from ell.lstr import lstr
 from sqlalchemy import or_, func, and_
 
@@ -26,7 +26,7 @@ class SQLStore(ell.store.Store):
                   global_vars: Dict[str, Any],
                   free_vars: Dict[str, Any],
                   commit_message: Optional[str] = None,
-                  created_at: Optional[float]=None) -> Optional[Any]:
+                  created_at: Optional[datetime]=None) -> Optional[Any]:
         with Session(self.engine) as session:
             lmp = session.query(SerializedLMP).filter(SerializedLMP.lmp_id == lmp_id).first()
             
@@ -42,7 +42,7 @@ class SQLStore(ell.store.Store):
                     dependencies=dependencies,
                     initial_global_vars=global_vars,
                     initial_free_vars=free_vars,
-                    created_at= created_at or datetime.datetime.utcnow(),
+                    created_at= created_at or utc_now(),
                     is_lm=is_lmp,
                     lm_kwargs=lm_kwargs,
                     commit_message=commit_message

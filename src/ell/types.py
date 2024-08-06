@@ -1,14 +1,15 @@
 # Let's define the core types.
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Union
+from typing import Callable, Dict, List, Union, Any, Optional
 
-from typing import Any
 from ell.lstr import lstr
 from ell.util.dict_sync_meta import DictSyncMeta
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, List, Optional
-from sqlmodel import Field, SQLModel, Relationship, JSON, ARRAY, Column, Float
+from sqlmodel import Field, SQLModel, Relationship, JSON, Column
+from sqlalchemy import func
+import sqlalchemy.types as types
 
 _lstr_generic = Union[lstr, str]
 
@@ -43,6 +44,14 @@ LMP = Union[OneTurn, MultiTurnLMP, ChatLMP]
 InvocableLM = Callable[..., _lstr_generic]
 
 
+def utc_now() -> datetime:
+    """
+    Returns the current UTC timestamp.
+    Serializes to ISO-8601.
+    """
+    return datetime.now(tz=timezone.utc)
+
+
 class SerializedLMPUses(SQLModel, table=True):
     """
     Represents the many-to-many relationship between SerializedLMPs.
@@ -53,6 +62,16 @@ class SerializedLMPUses(SQLModel, table=True):
     lmp_user_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id", primary_key=True, index=True)  # ID of the LMP that is being used
     lmp_using_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id", primary_key=True, index=True)  # ID of the LMP that is using the other LMP
 
+
+class UTCTimestamp(types.TypeDecorator[datetime]):
+    impl = types.TIMESTAMP
+    def process_result_value(self, value: datetime, dialect:Any):
+        return value.replace(tzinfo=timezone.utc)
+
+def UTCTimestampField(index:bool=False, **kwargs:Any):
+    return Field(
+        sa_column= Column(UTCTimestamp(timezone=True),index=index, **kwargs))
+        
 
 
 class SerializedLMP(SQLModel, table=True):
@@ -65,7 +84,11 @@ class SerializedLMP(SQLModel, table=True):
     name: str = Field(index=True)  # Name of the LMP
     source: str  # Source code or reference for the LMP
     dependencies: str  # List of dependencies for the LMP, stored as a string
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)  # Timestamp of when the LMP was created
+    # Timestamp of when the LMP was created
+    created_at: datetime = UTCTimestampField(
+        index=True,
+        nullable=False
+    )
     is_lm: bool  # Boolean indicating if it is an LM (Language Model) or an LMP
     lm_kwargs: dict  = Field(sa_column=Column(JSON)) # Additional keyword arguments for the LMP
 
@@ -131,8 +154,8 @@ class Invocation(SQLModel, table=True):
     completion_tokens: Optional[int] = Field(default=None)
     state_cache_key: Optional[str] = Field(default=None)
 
-    
-    created_at: datetime = Field(default_factory=datetime.utcnow)  # Timestamp of when the invocation was created
+    # Timestamp of when the invocation was created
+    created_at: datetime = UTCTimestampField(default=func.now(), nullable=False)
     invocation_kwargs: dict = Field(default_factory=dict, sa_column=Column(JSON))  # Additional keyword arguments for the invocation
 
     # Relationships

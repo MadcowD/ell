@@ -1,5 +1,5 @@
 import logging
-from ell.types import SerializedLStr
+from ell.types import SerializedLStr, utc_now
 import ell.util.closure
 from ell.configurator import config
 from ell.lstr import lstr
@@ -86,7 +86,7 @@ def track(fn: Callable) -> Callable:
                 logger.info(f"Attempted to use cache on {func_to_track.__qualname__} but it was not cached, or did not exist in the store. Refreshing cache...")
         
         
-        _start_time = datetime.now()
+        _start_time = utc_now()
 
         # XXX: thread saftey note, if I prevent yielding right here and get the global context I should be fine re: cache key problem
 
@@ -96,7 +96,7 @@ def track(fn: Callable) -> Callable:
             if not lmp
             else fn(*fn_args, _invocation_origin=invocation_id, **fn_kwargs, )
             )
-        latency_ms = (datetime.now() - _start_time).total_seconds() * 1000
+        latency_ms = (utc_now() - _start_time).total_seconds() * 1000
         usage = metadata.get("usage", {})
         prompt_tokens=usage.get("prompt_tokens", 0)
         completion_tokens=usage.get("completion_tokens", 0)
@@ -145,7 +145,7 @@ def _serialize_lmp(func, name, fn_closure, is_lmp, lm_kwargs):
         config._store.write_lmp(
             lmp_id=func.__ell_hash__,
             name=name,
-            created_at=datetime.now(),
+            created_at=utc_now(),
             source=fn_closure[0],
             dependencies=fn_closure[1],
             commit_message=commit,
@@ -162,7 +162,7 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
     config._store.write_invocation(
         id=invocation_id,
         lmp_id=func.__ell_hash__,
-        created_at=datetime.now(),
+        created_at=utc_now(),
         global_vars=get_immutable_vars(func.__ell_closure__[2]),
         free_vars=get_immutable_vars(func.__ell_closure__[3]),
         latency_ms=latency_ms,

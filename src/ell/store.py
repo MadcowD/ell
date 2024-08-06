@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from datetime import datetime
 from typing import Any, Optional, Dict, List, Set, Union
 from ell.lstr import lstr
 from ell.types import InvocableLM
@@ -15,7 +16,7 @@ class Store(ABC):
                   version_number: int,
                   uses: Dict[str, Any], 
                   commit_message: Optional[str] = None,
-                  created_at: Optional[float]=None) -> Optional[Any]:
+                  created_at: Optional[datetime]=None) -> Optional[Any]:
         """
         Write an LMP (Language Model Package) to the storage.
 
@@ -33,7 +34,7 @@ class Store(ABC):
 
     @abstractmethod
     def write_invocation(self, id: str, lmp_id: str, args: str, kwargs: str, result: Union[lstr, List[lstr]], invocation_kwargs: Dict[str, Any], 
-                         created_at: Optional[float], consumes: Set[str], prompt_tokens: Optional[int] = None,
+                         created_at: Optional[datetime], consumes: Set[str], prompt_tokens: Optional[int] = None,
                          completion_tokens: Optional[int] = None, latency_ms: Optional[float] = None,
                          state_cache_key: Optional[str] = None,
                          cost_estimate: Optional[float] = None) -> Optional[Any]:
