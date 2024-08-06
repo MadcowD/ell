@@ -1,13 +1,17 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 
 const HierarchicalTableContext = createContext();
 
 export const useHierarchicalTable = () => useContext(HierarchicalTableContext);
 
-export const HierarchicalTableProvider = ({ children, data, onSelectionChange, initialSortConfig }) => {
+export const HierarchicalTableProvider = ({ children, data, onSelectionChange, initialSortConfig, setIsExpanded}) => {
   const [expandedRows, setExpandedRows] = useState({});
   const [selectedRows, setSelectedRows] = useState({});
   const [sortConfig, setSortConfig] = useState(initialSortConfig || { key: null, direction: 'asc' });
+  useEffect(() => {
+    const allParentRowsCollapsed = data.every(item => !expandedRows[item.id]);
+    setIsExpanded(!allParentRowsCollapsed);
+  }, [expandedRows, setIsExpanded, data]);
 
   const toggleRow = useCallback((rowId) => {
     setExpandedRows(prev => ({

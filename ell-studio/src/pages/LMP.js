@@ -11,6 +11,7 @@ import VersionBadge from "../components/VersionBadge";
 import { LMPCardTitle } from "../components/depgraph/LMPCardTitle";
 import InvocationsLayout from "../components/invocations/InvocationsLayout";
 import ToggleSwitch from "../components/common/ToggleSwitch";
+import LMPDetailsSidePanel from "../components/LMPDetailsSidePanel";
 
 const ChevronSlop = () => {
   return (
@@ -260,6 +261,7 @@ function LMP() {
             </div>
           </div>
         </main>
+        {!selectedTrace && <LMPDetailsSidePanel lmp={lmp} uses={uses} versionHistory={versionHistory}/>}
       </div>
     </InvocationsLayout>
   );

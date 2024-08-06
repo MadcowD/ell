@@ -20,16 +20,23 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
 
   const traces = useMemo(() => {
     if (!invocations) return [];
-    return invocations.map(inv => ({
-      name: inv.lmp?.name || 'Unknown',
-      input: lstrCleanStringify(inv.args.length === 1 ? inv.args[0] : inv.args),
-      output: lstrCleanStringify(inv.results.length === 1 ? inv.results[0] : inv.results),
-      version: inv.lmp.version_number + 1,
-      created_at: new Date(inv.created_at),
-      latency: inv.latency_ms / 1000,
-      total_tokens: (inv.prompt_tokens || 0) + (inv.completion_tokens || 0),
-      ...inv
-    }));
+    return invocations.map(inv => {
+      const mapInvocation = (invocation) => ({
+        name: invocation.lmp?.name || 'Unknown',
+        input: lstrCleanStringify(invocation.args.length === 1 ? invocation.args[0] : invocation.args),
+        output: lstrCleanStringify(invocation.results.length === 1 ? invocation.results[0] : invocation.results),
+        version: invocation.lmp.version_number + 1,
+        created_at: new Date(invocation.created_at),
+        latency: invocation.latency_ms / 1000,
+        children: invocation.uses ? invocation.uses.map(mapInvocation) : [],
+        total_tokens: (invocation.prompt_tokens || 0) + (invocation.completion_tokens || 0),
+        ...invocation
+      });
+
+      const mappedInv = mapInvocation(inv);
+      
+      return mappedInv;
+    });
   }, [invocations]);
 
   useEffect(() => {
@@ -58,7 +65,8 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
         <Card noMinW={true}>
           <LMPCardTitle 
             lmp={item.lmp} 
-            fontSize="sm" 
+            paddingClassOverride='pl-2'
+            fontSize="xs" 
             onClick={(e) => {
               e.stopPropagation();
               onClickLMP(item);
@@ -93,7 +101,7 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
     { 
       header: 'Latency', 
       key: 'latency', 
-      render: (item) => <span className="text-red-400">{item.latency.toFixed(2)}s</span>, 
+      render: (item) => <span className="text-red-400">{item.latency?.toFixed(2)}s</span>, 
       maxWidth: 100,
       sortable: true
     },
@@ -106,9 +114,7 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
     },
   ];
 
-  const schema = {
-    columns: defaultColumns.filter(column => !omitColumns.includes(column.key))
-  };
+
 
   const initialSortConfig = { key: 'created_at', direction: 'desc' };
 
@@ -118,7 +124,10 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
 
   return (
     <HierarchicalTable
-      schema={schema}
+      schema={{
+        columns: defaultColumns
+      }}
+      omitColumns={omitColumns}
       data={traces}
       onRowClick={onSelectTrace}
       initialSortConfig={initialSortConfig}

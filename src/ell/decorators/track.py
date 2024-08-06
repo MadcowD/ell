@@ -1,4 +1,5 @@
 import logging
+import threading
 from ell.types import SerializedLStr, utc_now
 import ell.util.closure
 from ell.configurator import config
@@ -16,7 +17,27 @@ import secrets
 import time
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, OrderedDict, Tuple
+from typing import Any, Callable, Optional, OrderedDict, Tuple
+
+
+# Thread-local storage for the invocation stack
+_invocation_stack = threading.local()
+
+def get_current_invocation() -> Optional[str]:
+    if not hasattr(_invocation_stack, 'stack'):
+        _invocation_stack.stack = []
+    return _invocation_stack.stack[-1] if _invocation_stack.stack else None
+
+def push_invocation(invocation_id: str):
+    if not hasattr(_invocation_stack, 'stack'):
+        _invocation_stack.stack = []
+    _invocation_stack.stack.append(invocation_id)
+
+def pop_invocation():
+    if hasattr(_invocation_stack, 'stack') and _invocation_stack.stack:
+        _invocation_stack.stack.pop()
+
+
 
 logger = logging.getLogger(__name__)
 def exclude_var(v):
@@ -42,6 +63,9 @@ def track(fn: Callable) -> Callable:
     if not hasattr(func_to_track, "__ell_hash__") and not config.lazy_versioning:
         fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
 
+
+
+
     @wraps(fn)
     def wrapper(*fn_args, **fn_kwargs) -> str:
         # XXX: Cache keys and global variable binding is not thread safe.
@@ -53,69 +77,73 @@ def track(fn: Callable) -> Callable:
         if not config._store:
             return fn(*fn_args, **fn_kwargs, _invocation_origin=invocation_id)[0]
 
+        parent_invocation_id = get_current_invocation()
+        try:
+            push_invocation(invocation_id)
+            # Get the list of consumed lmps and clean the invocation paramns for serialization.
+            cleaned_invocation_params, ipstr, consumes = prepare_invocation_params(fn_args, fn_kwargs)
 
-        # Get the list of consumed lmps and clean the invocation paramns for serialization.
-        cleaned_invocation_params, ipstr, consumes = prepare_invocation_params(fn_args, fn_kwargs)
+            try_use_cache = hasattr(func_to_track.__wrapper__, "__ell_use_cache__")
 
-        try_use_cache = hasattr(func_to_track.__wrapper__, "__ell_use_cache__")
+            if  try_use_cache:
+                # Todo: add nice logging if verbose for when using a cahced invocaiton. IN a different color with thar args..
+                if not hasattr(func_to_track, "__ell_hash__")  and config.lazy_versioning:
+                    fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
 
-        if  try_use_cache:
-            # Todo: add nice logging if verbose for when using a cahced invocaiton. IN a different color with thar args..
-            if not hasattr(func_to_track, "__ell_hash__")  and config.lazy_versioning:
-                fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
+                # compute the state cachekey
+                state_cache_key = compute_state_cache_key(ipstr, func_to_track.__ell_closure__)
+                
+                cache_store = func_to_track.__wrapper__.__ell_use_cache__
+                cached_invocations = cache_store.get_invocations(lmp_filters=dict(lmp_id=func_to_track.__ell_hash__), filters=dict(
+                    state_cache_key=state_cache_key
+                ))
 
-            # compute the state cachekey
-            state_cache_key = compute_state_cache_key(ipstr, func_to_track.__ell_closure__)
-            
-            cache_store = func_to_track.__wrapper__.__ell_use_cache__
-            cached_invocations = cache_store.get_invocations(lmp_filters=dict(lmp_id=func_to_track.__ell_hash__), filters=dict(
-                state_cache_key=state_cache_key
-            ))
+                if len(cached_invocations) > 0:
+                    # TODO THis is bad?
+                    results =  [SerializedLStr(**d).deserialize() for  d in cached_invocations[0]['results']]
 
-            if len(cached_invocations) > 0:
-                # TODO THis is bad?
-                results =  [SerializedLStr(**d).deserialize() for  d in cached_invocations[0]['results']]
-
-                logger.info(f"Using cached result for {func_to_track.__qualname__} with state cache key: {state_cache_key}")
-                if len(results) == 1:
-                    return results[0]
+                    logger.info(f"Using cached result for {func_to_track.__qualname__} with state cache key: {state_cache_key}")
+                    if len(results) == 1:
+                        return results[0]
+                    else:
+                        return results
+                    # Todo: Unfiy this with the non-cached case. We should go through the same code pathway.
                 else:
-                    return results
-                # Todo: Unfiy this with the non-cached case. We should go through the same code pathway.
-            else:
-                logger.info(f"Attempted to use cache on {func_to_track.__qualname__} but it was not cached, or did not exist in the store. Refreshing cache...")
-        
-        
-        _start_time = utc_now()
-
-        # XXX: thread saftey note, if I prevent yielding right here and get the global context I should be fine re: cache key problem
-
-        # get the prompt
-        (result, invocation_kwargs, metadata) = (
-            (fn(*fn_args, **fn_kwargs), None)
-            if not lmp
-            else fn(*fn_args, _invocation_origin=invocation_id, **fn_kwargs, )
-            )
-        latency_ms = (utc_now() - _start_time).total_seconds() * 1000
-        usage = metadata.get("usage", {})
-        prompt_tokens=usage.get("prompt_tokens", 0)
-        completion_tokens=usage.get("completion_tokens", 0)
-
-
-        if not _has_serialized_lmp:
-            if not hasattr(func_to_track, "__ell_hash__") and config.lazy_versioning:
-                fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
+                    logger.info(f"Attempted to use cache on {func_to_track.__qualname__} but it was not cached, or did not exist in the store. Refreshing cache...")
             
-            _serialize_lmp(func_to_track, _name, fn_closure, lmp, lm_kwargs)
-            _has_serialized_lmp = True
+            
+            _start_time = utc_now()
 
-        if not state_cache_key:
-            state_cache_key = compute_state_cache_key(ipstr, func_to_track.__ell_closure__)
+            # XXX: thread saftey note, if I prevent yielding right here and get the global context I should be fine re: cache key problem
 
-        _write_invocation(func_to_track, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
-                         state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result)
+            # get the prompt
+            (result, invocation_kwargs, metadata) = (
+                (fn(*fn_args, **fn_kwargs), None)
+                if not lmp
+                else fn(*fn_args, _invocation_origin=invocation_id, **fn_kwargs, )
+                )
+            latency_ms = (utc_now() - _start_time).total_seconds() * 1000
+            usage = metadata.get("usage", {})
+            prompt_tokens=usage.get("prompt_tokens", 0)
+            completion_tokens=usage.get("completion_tokens", 0)
 
-        return result
+
+            if not _has_serialized_lmp:
+                if not hasattr(func_to_track, "__ell_hash__") and config.lazy_versioning:
+                    fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
+                
+                _serialize_lmp(func_to_track, _name, fn_closure, lmp, lm_kwargs)
+                _has_serialized_lmp = True
+
+            if not state_cache_key:
+                state_cache_key = compute_state_cache_key(ipstr, func_to_track.__ell_closure__)
+
+            _write_invocation(func_to_track, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
+                            state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result, parent_invocation_id)
+
+            return result
+        finally:
+            pop_invocation()
 
 
     fn.__wrapper__  = wrapper
@@ -158,7 +186,7 @@ def _serialize_lmp(func, name, fn_closure, is_lmp, lm_kwargs):
         )
 
 def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
-                     state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result):
+                     state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result, parent_invocation_id):
     config._store.write_invocation(
         id=invocation_id,
         lmp_id=func.__ell_hash__,
@@ -172,7 +200,8 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         invocation_kwargs=invocation_kwargs,
         **cleaned_invocation_params,
         consumes=consumes,
-        result=result
+        result=result,
+        parent_invocation_id=parent_invocation_id
     )
 
 

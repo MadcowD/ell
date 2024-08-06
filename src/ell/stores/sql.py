@@ -62,7 +62,8 @@ class SQLStore(ell.store.Store):
                          free_vars: Dict[str, Any], created_at: Optional[float], consumes: Set[str], prompt_tokens: Optional[int] = None,
                          completion_tokens: Optional[int] = None, latency_ms: Optional[float] = None,
                          state_cache_key: Optional[str] = None,
-                         cost_estimate: Optional[float] = None) -> Optional[Any]:
+                         cost_estimate: Optional[float] = None,
+                         parent_invocation_id: Optional[str] = None) -> Optional[Any]:
         with Session(self.engine) as session:
             if isinstance(result, lstr):
                 results = [result]
@@ -89,9 +90,10 @@ class SQLStore(ell.store.Store):
                 created_at=created_at,
                 invocation_kwargs=invocation_kwargs,
                 prompt_tokens=prompt_tokens,
-                completion_tokens=completion_tokens,
+                completion_tokens=completion_tokens,    
                 latency_ms=latency_ms,
                 state_cache_key=state_cache_key,
+                used_by_id=parent_invocation_id,
             )
 
             for res in results:
@@ -155,35 +157,48 @@ class SQLStore(ell.store.Store):
                     lmp_dict[lmp.lmp_id]['uses'].append(using_id)
             return list(lmp_dict.values())
 
-    def get_invocations(self, lmp_filters: Dict[str, Any], skip: int = 0, limit: int = 10, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def get_invocations(self, lmp_filters: Dict[str, Any], skip: int = 0, limit: int = 10, filters: Optional[Dict[str, Any]] = None, hierarchical: bool = False) -> List[Dict[str, Any]]:
         with Session(self.engine) as session:
-            query = select(Invocation, SerializedLStr, SerializedLMP).join(SerializedLMP).outerjoin(SerializedLStr)
-            
+            def fetch_invocation(inv_id, depth=0):
+                if depth > 10:  # Prevent infinite recursion
+                    return None
+
+                print(inv_id, depth)
+                query = select(Invocation, SerializedLStr, SerializedLMP).join(SerializedLMP).outerjoin(SerializedLStr).where(Invocation.id == inv_id)
+                results = session.exec(query).all()
+
+                if not results:
+                    return None
+
+                inv, lstr, lmp = results[0]
+                inv_dict = inv.model_dump()
+                inv_dict['lmp'] = lmp.model_dump()
+                inv_dict['results'] = [dict(**l.model_dump(), __lstr=True) for l in [r[1] for r in results if r[1]]]
+
+                if hierarchical:
+                    inv_dict['uses'] = [fetch_invocation(used.id, depth + 1) for used in inv.uses if used]
+
+                return inv_dict
+
+            query = select(Invocation.id).join(SerializedLMP)
+
             # Apply LMP filters
             for key, value in lmp_filters.items():
                 query = query.where(getattr(SerializedLMP, key) == value)
-            
+
             # Apply invocation filters
             if filters:
                 for key, value in filters.items():
                     query = query.where(getattr(Invocation, key) == value)
-            
+
             # Sort from newest to oldest
             query = query.order_by(Invocation.created_at.desc()).offset(skip).limit(limit)
-            
-            results = session.exec(query).all()
-            
-            invocations = {}
-            for inv, lstr, lmp in results:
-                if inv.id not in invocations:
-                    inv_dict = inv.model_dump()
-                    inv_dict['lmp'] = lmp.model_dump()
-                    invocations[inv.id] = inv_dict
-                    invocations[inv.id]['results'] = []
-                if lstr:
-                    invocations[inv.id]['results'].append(dict(**lstr.model_dump(), __lstr=True))
-            
-            return list(invocations.values())
+
+            invocation_ids = session.exec(query).all()
+
+            invocations = [fetch_invocation(inv_id) for inv_id in invocation_ids if inv_id]
+
+            return invocations
 
     def get_traces(self):
         with Session(self.engine) as session:

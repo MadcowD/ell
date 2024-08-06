@@ -38,10 +38,14 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
             onClick={(e) => e.stopPropagation()}
           />
         </td>
-        <td className="py-3 px-4 w-12" style={{ paddingLeft: `${level * 20 + 16}px` }}>
-          {hasChildren && (
+        <td className="py-3 px-4 w-12 relative" style={{ paddingLeft: `${level * 20 + 16}px` }}>
+          {hasChildren ? (
             <span onClick={(e) => { e.stopPropagation(); toggleRow(item.id); }}>
               {isExpanded ? <FiChevronDown className="text-gray-400 text-base" /> : <FiChevronRight className="text-gray-400 text-base" />}
+            </span>
+          ) : (
+            <span className="w-4 h-4 inline-block relative">
+              <span className="absolute left-1/2 top-1/2 w-1.5 h-1.5 bg-gray-500 rounded-full transform -translate-x-1/2 -translate-y-1/2"></span>
             </span>
           )}
         </td>
@@ -185,8 +189,11 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, pageSize, t
   );
 };
 
-const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName, currentPage, onPageChange, pageSize, totalItems }) => {
+const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName, currentPage, onPageChange, pageSize, totalItems, omitColumns }) => {
   const [columnWidths, setColumnWidths] = useState({});
+  const [isExpanded, setIsExpanded] = useState(false);
+
+
   const updateWidth = (key, width, maxWidth) => {
     setColumnWidths(prev => ({
       ...prev,
@@ -204,21 +211,35 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
 
   const totalPages = Math.ceil(totalItems / pageSize);
 
+  // Filter columns if no rows are expanded and omitColumns is provided
+
+  const filteredSchema = useMemo(() => {
+    if (omitColumns && !isExpanded) {
+      return {
+        ...schema,
+        columns: schema.columns.filter(column => !omitColumns.includes(column.key))
+      };
+    }
+    return schema;
+  }, [schema, omitColumns, isExpanded]);
+
+
   return (
     <HierarchicalTableProvider 
       data={data} 
       onSelectionChange={onSelectionChange}
       initialSortConfig={initialSortConfig}
+      setIsExpanded={setIsExpanded}
     >
       <div className="overflow-x-auto hide-scrollbar">
         <table className="w-full">
           <TableHeader 
-            schema={schema} 
+            schema={filteredSchema} 
             columnWidths={columnWidths} 
             updateWidth={updateWidth} 
           />
           <TableBody 
-            schema={schema} 
+            schema={filteredSchema} 
             onRowClick={onRowClick} 
             columnWidths={columnWidths} 
             updateWidth={updateWidth}

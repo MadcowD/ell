@@ -108,6 +108,7 @@ def create_app(storage_dir: Optional[str] = None):
     @app.get("/api/invocations")
     def get_invocations(
         id: Optional[str] = Query(None),
+        hierarchical: Optional[bool] = Query(False),
         skip: int = Query(0, ge=0),
         limit: int = Query(100, ge=1, le=100),
         lmp_name: Optional[str] = Query(None),
@@ -127,7 +128,8 @@ def create_app(storage_dir: Optional[str] = None):
             lmp_filters=lmp_filters,
             filters=invocation_filters,
             skip=skip,
-            limit=limit
+            limit=limit,
+            hierarchical=hierarchical
         )
         return invocations
 

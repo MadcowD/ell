@@ -180,6 +180,13 @@ class Invocation(SQLModel, table=True):
         ),
     )
 
+    # a many to one relatoionship forming a tree eof invocaitons
+    used_by_id: Optional[str] = Field(default=None, foreign_key="invocation.id", index=True)
+    used_by: Optional["Invocation"] = Relationship(back_populates="uses", sa_relationship_kwargs={"remote_side": "Invocation.id"})
+    uses: List["Invocation"] = Relationship(back_populates="used_by")
+
+        
+
 
 
 
