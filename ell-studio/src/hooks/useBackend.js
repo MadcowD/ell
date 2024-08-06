@@ -64,7 +64,7 @@ export const useInvocationsFromLMP = (name, id, page = 0, pageSize = 50) => {
     queryFn: async () => {
       const skip = page * pageSize;
       const params = new URLSearchParams();
-      if (name) params.append('name', name);
+      if (name) params.append('lmp_name', name);
       if (id) params.append('lmp_id', id);
       params.append('skip', skip);
       params.append('limit', pageSize);
