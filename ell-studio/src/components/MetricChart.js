@@ -31,7 +31,7 @@ import {
   subHours,
 } from "date-fns";
 
-function MetricChart({ rawData, dataKey, color, title, yAxisLabel }) {
+function MetricChart({ rawData, dataKey, color, title, yAxisLabel, aggregation="sum" }) {
   const [dateRange, setDateRange] = useState(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState("all");
 
@@ -140,20 +140,22 @@ function MetricChart({ rawData, dataKey, color, title, yAxisLabel }) {
       const date = new Date(item.date);
       if (date >= zoomStart && date <= zoomEnd) {
         const key = format(aggregationFunction(date), "yyyy-MM-dd'T'HH:mm");
-        aggregatedMap.set(key, (aggregatedMap.get(key) || 0) + item[dataKey]);
+        const existing = aggregatedMap.get(key) || { sum: 0, count: 0 };
+        aggregatedMap.set(key, { sum: existing.sum + item[dataKey], count: existing.count + 1 });
       }
     });
 
     return aggregationInterval({ start: zoomStart, end: zoomEnd }).map(
       (date) => {
         const key = format(date, "yyyy-MM-dd'T'HH:mm");
+        const { sum, count } = aggregatedMap.get(key) || { sum: 0, count: 0 };
         return {
           date: key,
-          [dataKey]: aggregatedMap.get(key) || 0,
+          [dataKey]: aggregation === "avg" ? (count > 0 ? sum / count : 0) : sum,
         };
       }
     );
-  }, [rawData, dateRange, dataKey]);
+  }, [rawData, dateRange, dataKey, aggregation]);
 
   // Memoize formatting functions
   const formatXAxis = useCallback(
