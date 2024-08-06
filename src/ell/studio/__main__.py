@@ -6,7 +6,7 @@ from ell.studio.data_server import create_app
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from watchfiles import awatch
-
+import time
 
 def main():
     parser = ArgumentParser(description="ELL Studio Data Server")
@@ -30,20 +30,48 @@ def main():
 
     db_path = os.path.join(args.storage_dir, "ell.db")
 
-    async def db_watcher():
-        async for changes in awatch(db_path):
-            print(f"Database changed: {changes}")
-            await app.notify_clients("database_updated")
+    async def db_watcher(db_path, app):
+        last_stat = None
+
+        while True:
+            await asyncio.sleep(0.1)  # Fixed interval of 0.1 seconds
+            try:
+                current_stat = os.stat(db_path)
+                
+                if last_stat is None:
+                    print(f"Database file found: {db_path}")
+                    await app.notify_clients("database_updated")
+                else:
+                    # Use a threshold for time comparison to account for filesystem differences
+                    time_threshold = 1  # 1 second threshold
+                    time_changed = abs(current_stat.st_mtime - last_stat.st_mtime) > time_threshold
+                    size_changed = current_stat.st_size != last_stat.st_size
+                    inode_changed = current_stat.st_ino != last_stat.st_ino
+
+                    if time_changed or size_changed or inode_changed:
+                        print(f"Database changed: mtime {time.ctime(last_stat.st_mtime)} -> {time.ctime(current_stat.st_mtime)}, "
+                              f"size {last_stat.st_size} -> {current_stat.st_size}, "
+                              f"inode {last_stat.st_ino} -> {current_stat.st_ino}")
+                        await app.notify_clients("database_updated")
+                
+                last_stat = current_stat
+            except FileNotFoundError:
+                if last_stat is not None:
+                    print(f"Database file deleted: {db_path}")
+                    await app.notify_clients("database_updated")
+                last_stat = None
+                await asyncio.sleep(1)  # Wait a bit longer if the file is missing
+            except Exception as e:
+                print(f"Error checking database file: {e}")
+                await asyncio.sleep(1)  # Wait a bit longer on errors
 
     # Start the database watcher
-
-
     loop = asyncio.new_event_loop()
 
     config = uvicorn.Config(app=app, port=args.port, loop=loop)
     server = uvicorn.Server(config)
     loop.create_task(server.serve())
-    loop.create_task(db_watcher())
+    loop.create_task(db_watcher(db_path, app))
     loop.run_forever()
 
 if __name__ == "__main__":

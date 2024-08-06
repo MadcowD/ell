@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { getTimeAgo } from '../utils/lmpUtils';
@@ -9,6 +9,8 @@ import { Code } from 'lucide-react';
 import { Card, CardHeader, CardContent } from 'components/common/Card';
 import { ScrollArea } from 'components/common/ScrollArea';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from 'components/common/Resizable';
+
+const MemoizedDependencyGraph = React.memo(DependencyGraph);
 
 function Home() {
   const [expandedLMP, setExpandedLMP] = useState(null);
@@ -27,7 +29,22 @@ function Home() {
     return id.length > 8 ? `${id.substring(0, 8)}...` : id;
   };
 
-  if (isLoadingLMPs || isLoadingTraces) {
+  const [firstTraces, setFirstTraces] = useState(traces);
+  const [firstLMPs, setFirstLMPs] = useState(lmps);
+
+  useEffect(() => {
+    if((!firstTraces || !firstLMPs) && traces && lmps) {
+      console.log("Setting first traces and lmps");
+      setFirstTraces(traces);
+      setFirstLMPs(lmps);
+    }
+  }, [traces, firstTraces, lmps, firstLMPs]);
+  
+  // TODO: Make graph dynamically update.
+  const memoizedTraces = useMemo(() => firstTraces, [firstTraces]);
+  const memoizedLMPs = useMemo(() => firstLMPs, [firstLMPs]);
+
+  if (!memoizedLMPs || !memoizedTraces) {
     return <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen flex items-center justify-center`}>
       <p className={`text-${darkMode ? 'white' : 'black'}`}>Loading...</p>
     </div>;
@@ -53,7 +70,7 @@ function Home() {
               </div>
             </div>
             <div className="w-full h-full">
-              {lmps && traces && <DependencyGraph lmps={lmps} traces={traces}/>}
+            <MemoizedDependencyGraph lmps={memoizedLMPs} traces={memoizedTraces} key={memoizedLMPs.length + memoizedTraces.length}/>
             </div>
           </div>
         </ResizablePanel>
