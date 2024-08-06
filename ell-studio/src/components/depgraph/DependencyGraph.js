@@ -45,23 +45,27 @@ function LMPNode({ data }) {
   );
 }
 
-
 const LayoutFlow = ({ initialNodes, initialEdges }) => {
-  const [nodes, _, onNodesChange] = useNodesState(initialNodes);
-  const [edges, __, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [initialised, { toggle, isRunning }] = useLayoutedElements();
   const [didInitialSimulation, setDidInitialSimulation] = useState(false);
+  const { fitView } = useReactFlow();
 
-  // Start the simulation automatically when the initialized is good & run it for like 1second
+  // Start the simulation automatically when initialized and run it for 1 second
   useEffect(() => {
     if (initialised && !didInitialSimulation) {
       setDidInitialSimulation(true);
       toggle();
+
+    fitView({ duration: 500, padding: 0.1 });
       setTimeout(() => {
         toggle();
+        // Fit view after the simulation has run
+        fitView({ duration: 500, padding: 0.1 });
       }, 1000);
     }
-  }, [initialised, didInitialSimulation]);
+  }, [initialised, didInitialSimulation, toggle, fitView]);
 
   const nodeTypes = useMemo(() => ({ lmp: LMPNode }), []);
 
