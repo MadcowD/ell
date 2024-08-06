@@ -45,10 +45,10 @@ function Home() {
               </span>
               <div className="flex items-center">
                 <span className={`mr-4 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Total LMPs: {lmps.length}
+                  {/* Total LMPs: {lmps.length} */}
                 </span>
                 <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Last Updated: {lmps[0] && lmps[0].versions && lmps[0].versions[0] ? getTimeAgo(lmps[0].versions[0].created_at) : 'N/A'}
+                  {/* Last Updated: {lmps[0] && lmps[0].versions && lmps[0].versions[0] ? getTimeAgo(lmps[0].versions[0].created_at) : 'N/A'} */}
                 </span>
               </div>
             </div>
@@ -76,43 +76,23 @@ function Home() {
                       >
                         {truncateId(lmp.name)}
                       </Link>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="secondary">
-                          ID: {truncateId(lmp.lmp_id)}
-                        </Badge>
-                        <Badge variant="success" className={`ml-2 ${darkMode ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}>
-                          Latest
-                        </Badge>
-                        <VersionBadge version={(lmp.version_number || 0) + 1} hash={lmp.lmp_id} />
-                      </div>
+                      <div className="flex space-x-2">
+                    <span className={`text-xs px-2 py-1 rounded-full ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
+                      ID: {truncateId(lmp.lmp_id)}
+                    </span>
+                    <span className={`text-xs px-2 py-1 rounded-full ml-2 ${darkMode ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800'}`}>
+                      Latest
+                    </span>
+                    <VersionBadge version={lmp.version_number + 1} hash={lmp.lmp_id} />
+                  </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className={`bg-${darkMode ? 'gray-700' : 'gray-100'} rounded p-3 mb-4 overflow-x-auto`}>
-                      <code className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'} whitespace-pre-wrap break-words`}>
-                        {lmp.source && lmp.source.length > 100 ? `${lmp.source.substring(0, 100)}...` : lmp.source}
+                  <div className={`bg-${darkMode ? 'gray-700' : 'gray-100'} rounded p-3 mb-4`}>
+                  <code className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {lmp.source.length > 100 ? `${lmp.source.substring(0, 100)}...` : lmp.source}
                       </code>
                     </div>
-                    <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      Last Updated: {lmp.versions && lmp.versions[0] ? getTimeAgo(lmp.versions[0].created_at) : 'N/A'}
-                    </p>
-                    {expandedLMP === lmp.name && lmp.versions && lmp.versions.length > 1 && (
-                      <div className={`mt-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        <h3 className="text-sm font-semibold mb-2">Version History:</h3>
-                        <ul className="space-y-4">
-                          {lmp.versions.map((version, index) => (
-                            <li key={version.lmp_id} className="flex items-start">
-                              <div className={`w-4 h-4 rounded-full ${darkMode ? 'bg-blue-500' : 'bg-blue-400'} mr-2 mt-1 flex-shrink-0`}></div>
-                              <div className="flex-grow min-w-0">
-                                <p className="text-xs font-semibold break-words">Version {lmp.versions.length - index}</p>
-                                <p className="text-xs break-words">{new Date(version.created_at * 1000).toLocaleString()}</p>
-                                <p className="text-xs">Invocations: {version.invocations}</p>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               ))}
