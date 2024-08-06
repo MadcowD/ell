@@ -47,7 +47,7 @@ function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
         <div className="space-y-4">
           <div className="bg-[#161b22] p-3 rounded">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-sm font-semibold text-white">Version</h3>
+              <h3 className="text-md font-semibold text-white">Version</h3>
               <VersionBadge version={lmp.version_number + 1} hash={lmp.lmp_id} />
             </div>
             <StatItem icon={FiClock} label="Created" value={getTimeAgo(new Date(lmp.created_at))} />
@@ -58,7 +58,7 @@ function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
 
           {lmp.lm_kwargs && (
             <div className="bg-[#161b22] p-3 rounded">
-              <h3 className="text-sm font-semibold mb-2 text-white">LM Keywords</h3>
+              <h3 className="text-md font-semibold mb-2 text-white">LM Keywords</h3>
               <pre className="overflow-x-auto text-xs text-gray-300">
                 <code>{JSON.stringify(lmp.lm_kwargs, null, 2)}</code>
               </pre>
@@ -66,7 +66,7 @@ function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
           )}
 
           <div className="bg-[#161b22] p-3 rounded">
-            <h3 className="text-sm font-semibold mb-2 text-white">Uses</h3>
+            <h3 className="text-md font-semibold mb-2 text-white">Uses</h3>
             {uses && uses.length > 0 ? (
               <ul className="space-y-1">
                 {uses.filter(use => !!use).map((use) => (
@@ -101,19 +101,33 @@ function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
 
           <div className="bg-[#161b22] p-3 rounded">
             <h3 className="text-sm font-semibold mb-2 text-white">Version History</h3>
-            <div className="space-y-1 max-h-48 overflow-y-auto">
+            <div className="space-y-2 max-h-48 overflow-y-auto">
               {versionHistory.map((version, index) => (
                 <Link
                   key={version.lmp_id}
                   to={`/lmp/${version.name}/${version.lmp_id}`}
-                  className={`block text-xs ${version.lmp_id === lmp.lmp_id ? 'text-blue-400 font-semibold' : 'text-gray-400'} hover:text-white`}
+                  className={`block p-2 rounded ${
+                    version.lmp_id === lmp.lmp_id
+                      ? 'bg-blue-900 bg-opacity-30'
+                      : 'hover:bg-gray-800'
+                  }`}
                 >
-                  <div className="flex justify-between items-center">
-                    <span>v{versionHistory.length - index}</span>
-                    <span>{getTimeAgo(new Date(version.created_at))}</span>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className={`font-semibold ${
+                      version.lmp_id === lmp.lmp_id ? 'text-blue-400' : 'text-white'
+                    }`}>
+                      v{versionHistory.length - index}
+                    </span>
+                    <span className="text-gray-400 text-xs">
+                      <FiCalendar className="inline mr-1" size={12} />
+                      {format(new Date(version.created_at), 'MMM d, yyyy')}
+                    </span>
                   </div>
                   {version.commit_message && (
-                    <p className="text-gray-500 truncate">{version.commit_message}</p>
+                    <p className="text-gray-400 text-xs mt-1 truncate">
+                      <FiGitCommit className="inline mr-1" size={12} />
+                      {version.commit_message}
+                    </p>
                   )}
                 </Link>
               ))}

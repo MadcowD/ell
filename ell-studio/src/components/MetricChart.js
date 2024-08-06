@@ -182,9 +182,9 @@ function MetricChart({ rawData, dataKey, color, title, yAxisLabel, aggregation="
   return (
     <div className="bg-[#161b22] p-4 rounded-lg shadow-lg">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        <h3 className="text-md font-semibold text-white">{title}</h3>
         <select
-          className="bg-[#0d1117] text-white border border-gray-700 rounded px-2 py-1"
+          className="bg-[#0d1117] text-white text-sm border border-gray-700 rounded px-2 py-1"
           value={selectedTimeRange}
           onChange={(e) => setSelectedTimeRange(e.target.value)}
         >
@@ -195,11 +195,11 @@ function MetricChart({ rawData, dataKey, color, title, yAxisLabel, aggregation="
           ))}
         </select>
       </div>
-      <div className="h-80">
+      <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={aggregatedData}
-            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            margin={{ top: 5, right: 20, left: 0, bottom: 0 }}
           >
             <defs>
               <linearGradient id={`color${title}`} x1="0" y1="0" x2="0" y2="1">
@@ -210,17 +210,18 @@ function MetricChart({ rawData, dataKey, color, title, yAxisLabel, aggregation="
             <XAxis
               dataKey="date"
               stroke="#4a5568"
-              tick={{ fill: "#4a5568" }}
+              tick={{ fill: "#4a5568", fontSize: 10 }}
               tickFormatter={formatXAxis}
             />
             <YAxis
               stroke="#4a5568"
-              tick={{ fill: "#4a5568" }}
+              tick={{ fill: "#4a5568", fontSize: 10 }}
               label={{
                 value: yAxisLabel,
                 angle: -90,
                 position: "insideLeft",
                 fill: "#4a5568",
+                fontSize: 12,
               }}
             />
             <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" />
@@ -229,11 +230,12 @@ function MetricChart({ rawData, dataKey, color, title, yAxisLabel, aggregation="
                 backgroundColor: "#1f2937",
                 border: "none",
                 color: "#fff",
+                fontSize: 12,
               }}
               labelFormatter={(label) => format(new Date(label), "PPpp")}
               formatter={formatTooltip}
             />
-            <Legend />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
             <Area
               type="monotone"
               dataKey={dataKey}
@@ -244,7 +246,7 @@ function MetricChart({ rawData, dataKey, color, title, yAxisLabel, aggregation="
             />
             <Brush
               dataKey="date"
-              height={30}
+              height={20}
               stroke={color}
               fill="#161b22"
               onChange={handleZoom}

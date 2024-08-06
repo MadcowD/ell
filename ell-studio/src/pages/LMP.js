@@ -291,11 +291,13 @@ function LMP() {
         <>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={30} minSize={20}>
-            <LMPDetailsSidePanel
-              lmp={lmp}
+            <div className="h-full overflow-y-auto hide-scrollbar">
+              <LMPDetailsSidePanel
+                lmp={lmp}
               uses={uses}
-              versionHistory={versionHistory}
-            />
+                versionHistory={versionHistory}
+              />
+            </div>
           </ResizablePanel>
         </>
       )}
