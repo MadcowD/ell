@@ -1,15 +1,14 @@
 # Let's define the core types.
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Union
+from typing import Callable, Dict, List, Union, Any, Optional
 
-from typing import Any
 from ell.lstr import lstr
 from ell.util.dict_sync_meta import DictSyncMeta
 
 from datetime import datetime, timezone
 from typing import Any, List, Optional
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column
-from sqlalchemy import TIMESTAMP, func
+from sqlalchemy import func
 import sqlalchemy.types as types
 
 _lstr_generic = Union[lstr, str]
@@ -43,10 +42,6 @@ T = TypeVar("T", bound=Any)
 ChatLMP = Callable[[Chat, T], Chat]
 LMP = Union[OneTurn, MultiTurnLMP, ChatLMP]
 InvocableLM = Callable[..., _lstr_generic]
-
-from datetime import timezone
-from sqlmodel import Field
-from typing import Optional
 
 
 def utc_now() -> datetime:
@@ -92,7 +87,6 @@ class SerializedLMP(SQLModel, table=True):
     # Timestamp of when the LMP was created
     created_at: datetime = UTCTimestampField(
         index=True,
-        default=func.now(),
         nullable=False
     )
     is_lm: bool  # Boolean indicating if it is an LM (Language Model) or an LMP

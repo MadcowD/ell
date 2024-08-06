@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import json
 import os
 from typing import Any, Optional, Dict, List, Set, Union
@@ -26,7 +26,7 @@ class SQLStore(ell.store.Store):
                   global_vars: Dict[str, Any],
                   free_vars: Dict[str, Any],
                   commit_message: Optional[str] = None,
-                  created_at: Optional[float]=None) -> Optional[Any]:
+                  created_at: Optional[datetime]=None) -> Optional[Any]:
         with Session(self.engine) as session:
             lmp = session.query(SerializedLMP).filter(SerializedLMP.lmp_id == lmp_id).first()
             
