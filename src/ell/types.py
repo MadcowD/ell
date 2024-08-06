@@ -8,7 +8,9 @@ from ell.util.dict_sync_meta import DictSyncMeta
 
 from datetime import datetime, timezone
 from typing import Any, List, Optional
-from sqlmodel import Field, SQLModel, Relationship, JSON, ARRAY, Column, Float
+from sqlmodel import Field, SQLModel, Relationship, JSON, Column
+from sqlalchemy import TIMESTAMP, func
+import sqlalchemy.types as types
 
 _lstr_generic = Union[lstr, str]
 
@@ -42,6 +44,10 @@ ChatLMP = Callable[[Chat, T], Chat]
 LMP = Union[OneTurn, MultiTurnLMP, ChatLMP]
 InvocableLM = Callable[..., _lstr_generic]
 
+from datetime import timezone
+from sqlmodel import Field
+from typing import Optional
+
 
 def utc_now() -> datetime:
     """
@@ -62,6 +68,16 @@ class SerializedLMPUses(SQLModel, table=True):
     lmp_using_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id", primary_key=True, index=True)  # ID of the LMP that is using the other LMP
 
 
+class UTCTimestamp(types.TypeDecorator[datetime]):
+    impl = types.TIMESTAMP
+    def process_result_value(self, value: datetime, dialect:Any):
+        return value.replace(tzinfo=timezone.utc)
+
+def UTCTimestampField(index:bool=False, **kwargs:Any):
+    return Field(
+        sa_column= Column(UTCTimestamp(timezone=True),index=index, **kwargs))
+        
+
 
 class SerializedLMP(SQLModel, table=True):
     """
@@ -73,7 +89,12 @@ class SerializedLMP(SQLModel, table=True):
     name: str = Field(index=True)  # Name of the LMP
     source: str  # Source code or reference for the LMP
     dependencies: str  # List of dependencies for the LMP, stored as a string
-    created_at: datetime = Field(default_factory=utc_now, index=True)  # Timestamp of when the LMP was created
+    # Timestamp of when the LMP was created
+    created_at: datetime = UTCTimestampField(
+        index=True,
+        default=func.now(),
+        nullable=False
+    )
     is_lm: bool  # Boolean indicating if it is an LM (Language Model) or an LMP
     lm_kwargs: dict  = Field(sa_column=Column(JSON)) # Additional keyword arguments for the LMP
 
@@ -139,8 +160,8 @@ class Invocation(SQLModel, table=True):
     completion_tokens: Optional[int] = Field(default=None)
     state_cache_key: Optional[str] = Field(default=None)
 
-    
-    created_at: datetime = Field(default_factory=utc_now)  # Timestamp of when the invocation was created
+    # Timestamp of when the invocation was created
+    created_at: datetime = UTCTimestampField(default=func.now(), nullable=False)
     invocation_kwargs: dict = Field(default_factory=dict, sa_column=Column(JSON))  # Additional keyword arguments for the invocation
 
     # Relationships
