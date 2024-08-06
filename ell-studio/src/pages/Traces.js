@@ -121,6 +121,7 @@ const Traces = () => {
       <InvocationsTable 
         invocations={invocations} 
         currentPage={currentPage}
+        expandAll={true}
         setCurrentPage={setCurrentPage}
         pageSize={pageSize}
         onSelectTrace={handleSelectTrace} 

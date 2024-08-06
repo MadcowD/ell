@@ -4,7 +4,7 @@ const HierarchicalTableContext = createContext();
 
 export const useHierarchicalTable = () => useContext(HierarchicalTableContext);
 
-export const HierarchicalTableProvider = ({ children, data, onSelectionChange, initialSortConfig, setIsExpanded}) => {
+export const HierarchicalTableProvider = ({ children, data, onSelectionChange, initialSortConfig, setIsExpanded, expandAll}) => {
   const [expandedRows, setExpandedRows] = useState({});
   const [selectedRows, setSelectedRows] = useState({});
   const [sortConfig, setSortConfig] = useState(initialSortConfig || { key: null, direction: 'asc' });
@@ -12,7 +12,19 @@ export const HierarchicalTableProvider = ({ children, data, onSelectionChange, i
     const allParentRowsCollapsed = data.every(item => !expandedRows[item.id]);
     setIsExpanded(!allParentRowsCollapsed);
   }, [expandedRows, setIsExpanded, data]);
+  // expandall specifies if the initial state of row is expanded.
 
+  // if a rows expansion state is not specified, it is set to expanded if expandAll is true.
+  useEffect(() => {
+    if (expandAll) {
+      data.forEach(item => {
+        if (!(item.id in expandedRows)) {
+          setExpandedRows(prev => ({ ...prev, [item.id]: true }));
+        }
+      });
+    }
+  }, [data, expandAll, expandedRows]);
+  
   const toggleRow = useCallback((rowId) => {
     setExpandedRows(prev => ({
       ...prev,

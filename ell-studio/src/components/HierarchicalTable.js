@@ -10,6 +10,7 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
   const isExpanded = expandedRows[item.id];
   const isSelected = isItemSelected(item);
   const [isNew, setIsNew] = useState(true);
+  
 
   const customRowClassName = rowClassName ? rowClassName(item) : '';
 
@@ -43,9 +44,9 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
             <span onClick={(e) => { e.stopPropagation(); toggleRow(item.id); }}>
               {isExpanded ? <FiChevronDown className="text-gray-400 text-base" /> : <FiChevronRight className="text-gray-400 text-base" />}
             </span>
-          ) : (
+          ) : ( 
             <span className="w-4 h-4 inline-block relative">
-              <span className="absolute left-1/2 top-1/2 w-1.5 h-1.5 bg-gray-500 rounded-full transform -translate-x-1/2 -translate-y-1/2"></span>
+              <span className="absolute left-1/2 top-1/2 w-1.5 h-1.5 bg-gray-600 rounded-full transform -translate-x-1/2 -translate-y-1/2"></span>
             </span>
           )}
         </td>
@@ -189,7 +190,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, pageSize, t
   );
 };
 
-const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName, currentPage, onPageChange, pageSize, totalItems, omitColumns }) => {
+const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName, currentPage, onPageChange, pageSize, totalItems, omitColumns, expandAll }) => {
   const [columnWidths, setColumnWidths] = useState({});
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -230,6 +231,7 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
       onSelectionChange={onSelectionChange}
       initialSortConfig={initialSortConfig}
       setIsExpanded={setIsExpanded}
+      expandAll={expandAll}
     >
       <div className="overflow-x-auto hide-scrollbar">
         <table className="w-full">

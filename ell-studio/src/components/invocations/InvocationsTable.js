@@ -7,7 +7,7 @@ import VersionBadge from '../VersionBadge';
 import { useNavigate } from 'react-router-dom';
 import { lstrCleanStringify } from '../../utils/lstrCleanStringify';
 
-const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, onSelectTrace, currentlySelectedTrace, omitColumns = [] }) => {
+const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, onSelectTrace, currentlySelectedTrace, omitColumns = [], expandAll = false }) => {
   const navigate = useNavigate();
 
 
@@ -74,7 +74,8 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
           />
         </Card>
       ), 
-      sortable: true
+      sortable: true,
+      
     },
     { 
       header: 'Version', 
@@ -127,6 +128,7 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
       schema={{
         columns: defaultColumns
       }}
+      expandAll={expandAll}
       omitColumns={omitColumns}
       data={traces}
       onRowClick={onSelectTrace}
