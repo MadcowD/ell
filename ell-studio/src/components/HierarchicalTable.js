@@ -3,7 +3,7 @@ import {  FiChevronDown, FiArrowUp, FiArrowDown, FiChevronLeft, FiChevronRight, 
 import { HierarchicalTableProvider, useHierarchicalTable } from './HierarchicalTableContext';
 import { Checkbox } from "components/common/Checkbox"
 // Update the SmoothLine component
-const SmoothLine = ({ startX, startY, endX: endXPreprocess, endY, color, animated, opacity, offset }) => {
+const SmoothLine = ({ index, startX, startY, endX: endXPreprocess, special, endY, color, animated, opacity, offset }) => {
   const endX = endXPreprocess;
 
   const endYAdjustment = !animated ? 0 : -5
@@ -15,6 +15,8 @@ const SmoothLine = ({ startX, startY, endX: endXPreprocess, endY, color, animate
     S ${midX} ${endY}, ${endX + endYAdjustment} ${endY}
   `;
   const duration = '1s';
+  const randomId = useMemo(() => Math.random().toString(36).substring(7), []);
+
   return (
     <g>
       <path
@@ -38,7 +40,7 @@ const SmoothLine = ({ startX, startY, endX: endXPreprocess, endY, color, animate
             opacity={opacity}
           />
           <marker
-            id="arrowhead"
+            id={`arrowhead-${randomId}`}
             markerWidth="6"
             markerHeight="4"
             refX="0"
@@ -52,7 +54,7 @@ const SmoothLine = ({ startX, startY, endX: endXPreprocess, endY, color, animate
             stroke={color}
             fill="none"
             strokeWidth="1.5"
-            markerEnd="url(#arrowhead)"
+            markerEnd={`url(#arrowhead-${randomId})`}
             className={`animated-dash transition-opacity duration-${duration} ease-in-out`}
             opacity={opacity}
           />
@@ -303,6 +305,7 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
   const [isExpanded, setIsExpanded] = useState(false);
   const [rowRefs, setRowRefs] = useState({});
 
+
   const updateWidth = (key, width, maxWidth) => {
     setColumnWidths(prev => ({
       ...prev,
@@ -441,7 +444,6 @@ const LinkLines = ({ links, rowRefs, tableOffset }) => {
   return links?.map((link, index) => {
     const startRow = rowRefs[link.from];
     const endRow = rowRefs[link.to];
-    
 
     // Only render the link if both rows are expanded
     if (startRow && endRow && startRow?.visible && endRow?.visible) {
@@ -451,6 +453,7 @@ const LinkLines = ({ links, rowRefs, tableOffset }) => {
       const color = isHighlighted
         ? (hoveredRow === link.from ? '#f97316' : '#3b82f6')  // Orange if going from, Blue if coming to
         : '#4a5568';
+
       return (
         <SmoothLine
           key={index}
