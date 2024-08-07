@@ -8,6 +8,7 @@ export const HierarchicalTableProvider = ({ children, data, onSelectionChange, i
   const [expandedRows, setExpandedRows] = useState({});
   const [selectedRows, setSelectedRows] = useState({});
   const [sortConfig, setSortConfig] = useState(initialSortConfig || { key: null, direction: 'asc' });
+  const [hoveredRow, setHoveredRow] = useState(null);
   useEffect(() => {
     const allParentRowsCollapsed = data.every(item => !expandedRows[item.id]);
     setIsExpanded(!allParentRowsCollapsed);
@@ -109,6 +110,8 @@ export const HierarchicalTableProvider = ({ children, data, onSelectionChange, i
     sortConfig,
     onSort,
     sortedData,
+    hoveredRow,
+    setHoveredRow,
   };
 
   return (

@@ -72,4 +72,19 @@
   }
 }
 
+.animated-dash {
+  stroke-dasharray: 5, 5;
+  animation: dash-animation 0.5s linear infinite;
+}
 
+.animated-dash-overlay {
+  stroke-dasharray: 5, 5;
+  animation: dash-animation 0.5s linear infinite reverse;
+  opacity: 0.5;
+}
+
+@keyframes dash-animation {
+  to {
+    stroke-dashoffset: -10;
+  }
+}

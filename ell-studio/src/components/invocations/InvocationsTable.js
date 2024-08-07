@@ -6,6 +6,20 @@ import { getTimeAgo } from '../../utils/lmpUtils';
 import VersionBadge from '../VersionBadge';
 import { useNavigate } from 'react-router-dom';
 import { lstrCleanStringify } from '../../utils/lstrCleanStringify';
+import { useTraces } from '../../hooks/useBackend';
+
+const mapInvocation = (invocation) => ({
+  name: invocation.lmp?.name || 'Unknown',
+  id: invocation.id,
+  input: lstrCleanStringify(invocation.args.length === 1 ? invocation.args[0] : invocation.args),
+  output: lstrCleanStringify(invocation.results.length === 1 ? invocation.results[0] : invocation.results),
+  version: invocation.lmp.version_number + 1,
+  created_at: new Date(invocation.created_at),
+  children: [],
+  latency: invocation.latency_ms / 1000,
+  total_tokens: (invocation.prompt_tokens || 0) + (invocation.completion_tokens || 0),
+  ...invocation
+});
 
 const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, onSelectTrace, currentlySelectedTrace, omitColumns = [], expandAll = false }) => {
   const navigate = useNavigate();
@@ -15,38 +29,76 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
     navigate(`/lmp/${lmp.name}/${lmp.lmp_id}?i=${invocationId}`);
   }, [navigate]);
 
+  // const {data: traces} = useTraces(invocations?.map(i => i.lmp));  
+
   const isLoading = !invocations;
 
 
-  const traces = useMemo(() => {
+  const invocationTableData = useMemo(() => {
     if (!invocations) return [];
-    return invocations.map(inv => {
-      const mapInvocation = (invocation) => ({
-        name: invocation.lmp?.name || 'Unknown',
-        input: lstrCleanStringify(invocation.args.length === 1 ? invocation.args[0] : invocation.args),
-        output: lstrCleanStringify(invocation.results.length === 1 ? invocation.results[0] : invocation.results),
-        version: invocation.lmp.version_number + 1,
-        created_at: new Date(invocation.created_at),
-        latency: invocation.latency_ms / 1000,
-        children: invocation.uses ? invocation.uses.map(mapInvocation) : [],
-        total_tokens: (invocation.prompt_tokens || 0) + (invocation.completion_tokens || 0),
-        ...invocation
-      });
 
-      const mappedInv = mapInvocation(inv);
+    const invocationsMap = new Map();
+    const rootInvocations = [];
+
+    // First pass: map all invocations and identify roots
+    invocations.forEach(invocation => {
+      const mappedInvocation = mapInvocation(invocation);
+      invocationsMap.set(invocation.id, mappedInvocation);
       
-      return mappedInv;
+      if (!invocation.used_by_id) {
+        rootInvocations.push(mappedInvocation);
+      }
     });
+
+    // Second pass: build the tree structure
+    invocations.forEach(invocation => {
+      if (invocation.used_by_id) {
+        const parent = invocationsMap.get(invocation.used_by_id);
+        if (parent) {
+          if (!parent.children) parent.children = [];
+          parent.children.push(invocationsMap.get(invocation.id));
+        } else {
+          // If parent is not found, treat as a root
+          rootInvocations.push(invocationsMap.get(invocation.id));
+        }
+      }
+    });
+    return rootInvocations;
+  }, [invocations]);
+
+  const links = useMemo(() => {
+    const generateLinks = (invocation) => {
+      let links = [];
+      
+      // Add links for current invocation
+      if (invocation.consumes) {
+        links.push(...invocation.consumes.map(c => ({
+          to: invocation.id,
+          from: c
+        })));
+      }
+      
+      // Recursively add links for child invocations
+      if (invocation.uses) {
+        invocation.uses.forEach(child => {
+          links.push(...generateLinks(child));
+        });
+      }
+      
+      return links;
+    };
+
+    return invocations ? invocations.flatMap(generateLinks) : [];
   }, [invocations]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (currentlySelectedTrace) {
-        const currentIndex = traces.findIndex(trace => trace.id === currentlySelectedTrace.id);
+        const currentIndex = invocationTableData.findIndex(trace => trace.id === currentlySelectedTrace.id);
         if (e.key === 'ArrowUp' && currentIndex > 0) {
-          onSelectTrace(traces[currentIndex - 1]);
-        } else if (e.key === 'ArrowDown' && currentIndex < traces.length - 1) {
-          onSelectTrace(traces[currentIndex + 1]);
+          onSelectTrace(invocationTableData[currentIndex - 1]);
+        } else if (e.key === 'ArrowDown' && currentIndex < invocationTableData.length - 1) {
+          onSelectTrace(invocationTableData[currentIndex + 1]);
         }
       }
     };
@@ -55,7 +107,7 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [traces, currentlySelectedTrace, onSelectTrace]);
+  }, [invocationTableData, currentlySelectedTrace, onSelectTrace]);
 
   const defaultColumns = [
     { 
@@ -119,7 +171,7 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
 
   const initialSortConfig = { key: 'created_at', direction: 'desc' };
 
-  const hasNextPage = traces.length === pageSize;
+  const hasNextPage = invocationTableData.length === pageSize;
 
   if (isLoading) return <div>Loading...</div>;
 
@@ -128,9 +180,11 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
       schema={{
         columns: defaultColumns
       }}
+      links={links}
+      linkColumn={omitColumns.includes('name') ? 'version' : 'name'}
       expandAll={expandAll}
       omitColumns={omitColumns}
-      data={traces}
+      data={invocationTableData}
       onRowClick={onSelectTrace}
       initialSortConfig={initialSortConfig}
       rowClassName={(item) => 

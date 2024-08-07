@@ -1,16 +1,75 @@
-import React, { useMemo, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import {  FiChevronDown, FiArrowUp, FiArrowDown, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
 import { HierarchicalTableProvider, useHierarchicalTable } from './HierarchicalTableContext';
 import { Checkbox } from "components/common/Checkbox"
+// Update the SmoothLine component
+const SmoothLine = ({ startX, startY, endX: endXPreprocess, endY, color, animated, opacity, offset }) => {
+  const endX = endXPreprocess;
+
+  const endYAdjustment = !animated ? 0 : -5
+  const midX = startX - offset;
+
+  const path = `
+    M ${startX} ${startY}
+    C ${midX} ${startY}, ${midX} ${startY}, ${midX} ${(startY + endY) / 2}
+    S ${midX} ${endY}, ${endX + endYAdjustment} ${endY}
+  `;
+  const duration = '1s';
+  return (
+    <g>
+      <path
+        d={path}
+        stroke={color}
+        fill="none"
+        strokeWidth="1"
+        strokeDasharray={animated ? "5,5" : "none"}
+        className={`transition-all duration-${duration} ease-in-out ${animated ? "animated-dash" : ""}`}
+        opacity={opacity}
+      />
+      {animated && (
+        <>
+          <path
+            d={path}
+            stroke={color}
+            fill="none"
+            strokeWidth="2"
+            strokeDasharray="5,5"
+            className={`animated-dash-overlay transition-opacity duration-${duration} ease-in-out`}
+            opacity={opacity}
+          />
+          <marker
+            id="arrowhead"
+            markerWidth="6"
+            markerHeight="4"
+            refX="0"
+            refY="2"
+            orient="auto"
+          >
+            <polygon points="0 0, 6 2, 0 4" fill={color} />
+          </marker>
+          <path
+            d={path}
+            stroke={color}
+            fill="none"
+            strokeWidth="1.5"
+            markerEnd="url(#arrowhead)"
+            className={`animated-dash transition-opacity duration-${duration} ease-in-out`}
+            opacity={opacity}
+          />
+        </>
+      )}
+    </g>
+  );
+};
 
 
-const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWidth, rowClassName }) => {
-  const { expandedRows, selectedRows, toggleRow, toggleSelection, isItemSelected } = useHierarchicalTable();
+
+const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWidth, rowClassName, setRowRef, links, linkColumn }) => {
+  const { expandedRows, selectedRows, toggleRow, toggleSelection, isItemSelected, setHoveredRow, sortedData } = useHierarchicalTable();
   const hasChildren = item.children && item.children.length > 0;
   const isExpanded = expandedRows[item.id];
   const isSelected = isItemSelected(item);
   const [isNew, setIsNew] = useState(true);
-  
 
   const customRowClassName = rowClassName ? rowClassName(item) : '';
 
@@ -20,6 +79,37 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
       return () => clearTimeout(timer);
     }
   }, [isNew]);
+
+  const rowRef = useRef(null);
+
+  useEffect(() => {
+    if (!rowRef.current) return;
+
+    const updatePosition = () => {
+      const tableRect = rowRef.current.closest('table').getBoundingClientRect();
+      const rowRect = rowRef.current.getBoundingClientRect();
+      const relativeX = rowRect.left - tableRect.left;
+      const relativeY = rowRect.top - tableRect.top + rowRect.height / 2;
+      setRowRef(item.id, { id: item.id, x: relativeX, y: relativeY, visible: true });
+    };
+
+    // Initial position update
+    updatePosition();
+
+    // Create a ResizeObserver
+    const resizeObserver = new ResizeObserver(updatePosition);
+
+    // Observe both the row and the table
+    resizeObserver.observe(rowRef.current);
+    resizeObserver.observe(rowRef.current.closest('table'));
+
+    // Clean up
+    return () => {
+      setRowRef(item.id, {visible: false});
+      resizeObserver.disconnect();
+    };
+  }, [item.id, setRowRef, sortedData.length, expandedRows]);
+
 
   return (
     <React.Fragment>
@@ -31,6 +121,8 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
         onClick={() => {
           if (onRowClick) onRowClick(item);
         }}
+        onMouseEnter={() => setHoveredRow(item.id)}
+        onMouseLeave={() => setHoveredRow(null)}
       >
         <td className="py-3 px-4 w-12">
           <Checkbox
@@ -40,15 +132,15 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
           />
         </td>
         <td className="py-3 px-4 w-12 relative" style={{ paddingLeft: `${level * 20 + 16}px` }}>
-          {hasChildren ? (
-            <span onClick={(e) => { e.stopPropagation(); toggleRow(item.id); }}>
-              {isExpanded ? <FiChevronDown className="text-gray-400 text-base" /> : <FiChevronRight className="text-gray-400 text-base" />}
-            </span>
-          ) : ( 
-            <span className="w-4 h-4 inline-block relative">
-              <span className="absolute left-1/2 top-1/2 w-1.5 h-1.5 bg-gray-600 rounded-full transform -translate-x-1/2 -translate-y-1/2"></span>
-            </span>
-          )}
+          <div className="flex items-center">
+            {hasChildren && (
+              <span onClick={(e) => { e.stopPropagation(); toggleRow(item.id); }} 
+              >
+                {isExpanded ? <FiChevronDown className="text-gray-400 text-base" /> : <FiChevronRight className="text-gray-400 text-base" />}
+              </span>
+            )}
+          </div>
+        
         </td>
         {schema.columns.map((column, index) => {
           const content = column.render ? column.render(item) : item[column.key];
@@ -60,18 +152,26 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
                 style={{ 
                   ...column.style,
                   maxWidth: maxWidth !== Infinity ? `${maxWidth}px` : undefined,
-                  width: `${Math.min(columnWidths[column.key] || 0, maxWidth)}px`
+                  width: `${Math.min(columnWidths[column.key] || 0, maxWidth)}px`,
                 }}
+             
                 title={typeof content === 'string' ? content : ''}
               >
-                {content}
+                <div style={{
+                  marginLeft: column.key === linkColumn ? `${level * 20 + 16}px` : 0,
+                  width: column.key === linkColumn ? '100%' : 'auto'
+                }}>
+                <div ref={column.key === linkColumn ? rowRef : null}>
+                  {content}
+                </div>
+                </div>
               </td>
             </React.Fragment>
           );
         })}
       </tr>
       {hasChildren && isExpanded && item.children.map(child => (
-        <TableRow key={child.id} item={child} schema={schema} level={level + 1} onRowClick={onRowClick} columnWidths={columnWidths} updateWidth={updateWidth} rowClassName={rowClassName} />
+        <TableRow key={child.id} item={child} schema={schema} level={level + 1} onRowClick={onRowClick} columnWidths={columnWidths} updateWidth={updateWidth} rowClassName={rowClassName} setRowRef={setRowRef} links={links} linkColumn={linkColumn} />
       ))}
     </React.Fragment>
   );
@@ -120,8 +220,14 @@ const TableHeader = ({ schema, columnWidths, updateWidth }) => {
   );
 };
 
-const TableBody = ({ schema, onRowClick, columnWidths, updateWidth, rowClassName }) => {
+const TableBody = ({ schema, onRowClick, columnWidths, updateWidth, rowClassName, setRowRef, links, linkColumn }) => {
   const { sortedData } = useHierarchicalTable();
+  const [, forceUpdate] = useState({});
+
+  useEffect(() => {
+    // Force a re-render to trigger position updates
+    forceUpdate({});
+  }, [sortedData]);
 
   return (
     <tbody>
@@ -134,6 +240,9 @@ const TableBody = ({ schema, onRowClick, columnWidths, updateWidth, rowClassName
           columnWidths={columnWidths} 
           updateWidth={updateWidth}
           rowClassName={rowClassName}
+          setRowRef={setRowRef}
+          links={links}
+          linkColumn={linkColumn}
         />
       ))}
     </tbody>
@@ -190,10 +299,10 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, pageSize, t
   );
 };
 
-const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName, currentPage, onPageChange, pageSize, totalItems, omitColumns, expandAll }) => {
+const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName, currentPage, onPageChange, pageSize, totalItems, omitColumns, expandAll, links, linkColumn }) => {
   const [columnWidths, setColumnWidths] = useState({});
   const [isExpanded, setIsExpanded] = useState(false);
-
+  const [rowRefs, setRowRefs] = useState({});
 
   const updateWidth = (key, width, maxWidth) => {
     setColumnWidths(prev => ({
@@ -201,6 +310,25 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
       [key]: Math.min(Math.max(prev[key] || 0, width), maxWidth)
     }));
   };
+
+  const tableRef = useRef(null);
+  const [tableOffset, setTableOffset] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (tableRef.current) {
+      const rect = tableRef.current.getBoundingClientRect();
+      setTableOffset({ x: rect.left, y: rect.top });
+    }
+  }, []);
+
+  const setRowRef = useCallback((id, ref) => {
+    setRowRefs(prev => {
+      if (JSON.stringify(prev[id]) === JSON.stringify(ref)) {
+        return prev;
+      }
+      return { ...prev, [id]: ref };
+    });
+  }, []);
 
   useEffect(() => {
     const initialWidths = {};
@@ -233,7 +361,7 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
       setIsExpanded={setIsExpanded}
       expandAll={expandAll}
     >
-      <div className="overflow-x-auto hide-scrollbar">
+      <div className="overflow-x-auto hide-scrollbar relative" ref={tableRef}>
         <table className="w-full">
           <TableHeader 
             schema={filteredSchema} 
@@ -246,8 +374,23 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
             columnWidths={columnWidths} 
             updateWidth={updateWidth}
             rowClassName={rowClassName}
+            setRowRef={setRowRef}
+            links={links}
+            linkColumn={linkColumn}
           />
         </table>
+        
+        {/* Update SVG rendering for direct lines */}
+        <svg
+          className="absolute top-0 left-0 w-full h-full pointer-events-none"
+          style={{ overflow: 'visible' }}
+        >
+          <LinkLines 
+            links={links} 
+            rowRefs={rowRefs} 
+            tableOffset={tableOffset}
+          />
+        </svg>
       </div>
       {onPageChange && (
         <PaginationControls
@@ -260,6 +403,70 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
       )}
     </HierarchicalTableProvider>
   );
+};
+const LinkLines = ({ links, rowRefs, tableOffset }) => {
+  const { hoveredRow, expandedRows } = useHierarchicalTable();
+  // Memoize the grouping and sorting of links
+  const groupedLinks = useMemo(() => {
+    const grouped = links?.reduce((acc, link) => {
+      if (!acc[link.from]) acc[link.from] = [];
+      // Check for uniqueness of the link
+      const isUnique = !acc[link.from].some(existingLink => 
+        existingLink.from === link.from && existingLink.to === link.to
+      );
+      
+      if (isUnique) {
+        acc[link.from].push(link);
+      } else {
+        console.warn(`Duplicate link found: from ${link.from} to ${link.to}`);
+      }
+      return acc;
+    }, {});
+
+    // Sort each group by distance
+    Object.values(grouped).forEach(group => {
+      group.sort((a, b) => {
+        const distA = Math.abs(rowRefs[a.to]?.y - rowRefs[a.from]?.y);
+        const distB = Math.abs(rowRefs[b.to]?.y - rowRefs[b.from]?.y);
+        return distA - distB;
+      });
+    });
+
+    return grouped;
+  }, [links, rowRefs]);
+
+  
+
+  return links?.map((link, index) => {
+    const startRow = rowRefs[link.from];
+    const endRow = rowRefs[link.to];
+    
+
+    // Only render the link if both rows are expanded
+    if (startRow && endRow && startRow?.visible && endRow?.visible) {
+      const isHighlighted = hoveredRow === link.from || 
+                            hoveredRow === link.to;
+      const offset = (groupedLinks[link.from].indexOf(link)+ 2) * 5; // Multiply by 20 for spacing
+      const color = isHighlighted
+        ? (hoveredRow === link.from ? '#f97316' : '#3b82f6')  // Orange if going from, Blue if coming to
+        : '#4a5568';
+      return (
+        <SmoothLine
+          key={index}
+          startX={startRow.x}
+          startY={startRow.y}
+          endX={endRow.x}
+          endY={endRow.y}
+          color={color}
+          animated={isHighlighted}
+          opacity={isHighlighted ? 1 : 0.3}
+          offset={offset}
+        />
+      );
+    }
+    
+    return null;
+  });
 };
 
 export default HierarchicalTable;

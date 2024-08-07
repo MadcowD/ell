@@ -67,7 +67,7 @@ export const useInvocationsFromLMP = (name, id, page = 0, pageSize = 50) => {
       if (name) params.append('lmp_name', name);
       if (id) params.append('lmp_id', id);
       params.append('skip', skip);
-      params.append('hierarchical', true);
+      params.append('hierarchical', false);
       params.append('limit', pageSize);
       const response = await axios.get(`${API_BASE_URL}/api/invocations?${params.toString()}`);
 

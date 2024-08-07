@@ -88,7 +88,7 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
   }, [showDependenciesInitial]);
 
   return (
-    <div className="source-code-container bg-gray-900 text-gray-100">
+    <div className="source-code-container text-gray-100">
       {trimmedDependencies && (
         <CodeSection
           title="Dependencies"

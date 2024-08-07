@@ -163,8 +163,12 @@ class SQLStore(ell.store.Store):
                 if depth > 10:  # Prevent infinite recursion
                     return None
 
-                print(inv_id, depth)
-                query = select(Invocation, SerializedLStr, SerializedLMP).join(SerializedLMP).outerjoin(SerializedLStr).where(Invocation.id == inv_id)
+                query = (
+                    select(Invocation, SerializedLStr, SerializedLMP)
+                    .join(SerializedLMP)
+                    .outerjoin(SerializedLStr)
+                    .where(Invocation.id == inv_id)
+                )
                 results = session.exec(query).all()
 
                 if not results:
@@ -174,6 +178,13 @@ class SQLStore(ell.store.Store):
                 inv_dict = inv.model_dump()
                 inv_dict['lmp'] = lmp.model_dump()
                 inv_dict['results'] = [dict(**l.model_dump(), __lstr=True) for l in [r[1] for r in results if r[1]]]
+
+                # Fetch consumes and consumed_by invocation IDs
+                consumes_query = select(InvocationTrace.invocation_consuming_id).where(InvocationTrace.invocation_consumer_id == inv_id)
+                consumed_by_query = select(InvocationTrace.invocation_consumer_id).where(InvocationTrace.invocation_consuming_id == inv_id)
+
+                inv_dict['consumes'] = [r for r in session.exec(consumes_query).all()]
+                inv_dict['consumed_by'] = [r for r in session.exec(consumed_by_query).all()]
 
                 if hierarchical:
                     inv_dict['uses'] = [fetch_invocation(used.id, depth + 1) for used in inv.uses if used]
