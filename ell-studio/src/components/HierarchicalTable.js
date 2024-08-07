@@ -80,14 +80,14 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
     }
   }, [isNew]);
 
-  const rowRef = useRef(null);
+  const primaryColumnRef = useRef(null);
 
   useEffect(() => {
-    if (!rowRef.current) return;
+    if (!primaryColumnRef.current) return;
 
     const updatePosition = () => {
-      const tableRect = rowRef.current.closest('table').getBoundingClientRect();
-      const rowRect = rowRef.current.getBoundingClientRect();
+      const tableRect = primaryColumnRef.current.closest('table').getBoundingClientRect();
+      const rowRect = primaryColumnRef.current.getBoundingClientRect();
       const relativeX = rowRect.left - tableRect.left;
       const relativeY = rowRect.top - tableRect.top + rowRect.height / 2;
       setRowRef(item.id, { id: item.id, x: relativeX, y: relativeY, visible: true });
@@ -100,16 +100,15 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
     const resizeObserver = new ResizeObserver(updatePosition);
 
     // Observe both the row and the table
-    resizeObserver.observe(rowRef.current);
-    resizeObserver.observe(rowRef.current.closest('table'));
+    resizeObserver.observe(primaryColumnRef.current);
+    resizeObserver.observe(primaryColumnRef.current.closest('table'));
 
     // Clean up
     return () => {
       setRowRef(item.id, {visible: false});
       resizeObserver.disconnect();
     };
-  }, [item.id, setRowRef, sortedData.length, expandedRows]);
-
+  }, [item.id, setRowRef, sortedData.length, expandedRows, linkColumn]);
 
   return (
     <React.Fragment>
@@ -158,10 +157,10 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
                 title={typeof content === 'string' ? content : ''}
               >
                 <div style={{
-                  marginLeft: column.key === linkColumn ? `${level * 20 + 16}px` : 0,
-                  width: column.key === linkColumn ? '100%' : 'auto'
+                  marginLeft: column.key === 'name' ? `${level * 20 + 16}px` : 0,
+                  width: column.key === 'name' ? '100%' : 'auto'
                 }}>
-                <div ref={column.key === linkColumn ? rowRef : null}>
+                <div ref={column.key === linkColumn ? primaryColumnRef : null}>
                   {content}
                 </div>
                 </div>
@@ -299,7 +298,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, pageSize, t
   );
 };
 
-const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName, currentPage, onPageChange, pageSize, totalItems, omitColumns, expandAll, links, linkColumn }) => {
+const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName, currentPage, onPageChange, pageSize, totalItems, omitColumns, expandAll, links, expandedLinkColumn, collapsedLinkColumn }) => {
   const [columnWidths, setColumnWidths] = useState({});
   const [isExpanded, setIsExpanded] = useState(false);
   const [rowRefs, setRowRefs] = useState({});
@@ -351,6 +350,8 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
     }
     return schema;
   }, [schema, omitColumns, isExpanded]);
+
+  const linkColumn = !isExpanded && omitColumns ? collapsedLinkColumn : expandedLinkColumn;
 
 
   return (
@@ -446,7 +447,7 @@ const LinkLines = ({ links, rowRefs, tableOffset }) => {
     if (startRow && endRow && startRow?.visible && endRow?.visible) {
       const isHighlighted = hoveredRow === link.from || 
                             hoveredRow === link.to;
-      const offset = (groupedLinks[link.from].indexOf(link)+ 2) * 5; // Multiply by 20 for spacing
+      const offset = (groupedLinks[link.from].indexOf(link)+ 4) * 3; // Multiply by 20 for spacing
       const color = isHighlighted
         ? (hoveredRow === link.from ? '#f97316' : '#3b82f6')  // Orange if going from, Blue if coming to
         : '#4a5568';

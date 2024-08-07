@@ -52,7 +52,8 @@ function LMP() {
     name,
     id,
     currentPage,
-    pageSize
+    pageSize,
+    true // dangerous hierarchical query that will not scale to unique invocations
   );
   const { data: uses } = useMultipleLMPs(lmp?.uses);
 

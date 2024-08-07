@@ -6,7 +6,7 @@ import {DependencyGraph} from './depgraph/DependencyGraph';
 // When changing pages we need to rerender this component (or create a new graph)
 const DependencyGraphPane = ({ lmp, uses }) => {
   const lmps = [lmp, ...uses];
-  console.log(lmps);
+
   return (
    <DependencyGraph lmps={lmps} />
   );

@@ -75,15 +75,9 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
         links.push(...invocation.consumes.map(c => ({
           to: invocation.id,
           from: c
-        })));
+        })).filter(link => link.from !== invocation.id));
       }
       
-      // Recursively add links for child invocations
-      if (invocation.uses) {
-        invocation.uses.forEach(child => {
-          links.push(...generateLinks(child));
-        });
-      }
       
       return links;
     };
@@ -175,13 +169,15 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
 
   if (isLoading) return <div>Loading...</div>;
 
+
   return (
     <HierarchicalTable
       schema={{
         columns: defaultColumns
       }}
       links={links}
-      linkColumn={omitColumns.includes('name') ? 'version' : 'name'}
+      expandedLinkColumn={'name'}
+      collapsedLinkColumn={'version'}
       expandAll={expandAll}
       omitColumns={omitColumns}
       data={invocationTableData}

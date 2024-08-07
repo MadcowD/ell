@@ -159,10 +159,7 @@ class SQLStore(ell.store.Store):
 
     def get_invocations(self, lmp_filters: Dict[str, Any], skip: int = 0, limit: int = 10, filters: Optional[Dict[str, Any]] = None, hierarchical: bool = False) -> List[Dict[str, Any]]:
         with Session(self.engine) as session:
-            def fetch_invocation(inv_id, depth=0):
-                if depth > 10:  # Prevent infinite recursion
-                    return None
-
+            def fetch_invocation(inv_id):
                 query = (
                     select(Invocation, SerializedLStr, SerializedLMP)
                     .join(SerializedLMP)
@@ -185,9 +182,8 @@ class SQLStore(ell.store.Store):
 
                 inv_dict['consumes'] = [r for r in session.exec(consumes_query).all()]
                 inv_dict['consumed_by'] = [r for r in session.exec(consumed_by_query).all()]
+                inv_dict['uses'] = list([d.id for d in inv.uses]) 
 
-                if hierarchical:
-                    inv_dict['uses'] = [fetch_invocation(used.id, depth + 1) for used in inv.uses if used]
 
                 return inv_dict
 
@@ -208,6 +204,16 @@ class SQLStore(ell.store.Store):
             invocation_ids = session.exec(query).all()
 
             invocations = [fetch_invocation(inv_id) for inv_id in invocation_ids if inv_id]
+
+            if hierarchical:
+                # Fetch all related "uses" invocations
+                used_ids = set()
+                for inv in invocations:
+                    
+                    used_ids.update(inv['uses'])
+
+                used_invocations = [fetch_invocation(inv_id) for inv_id in used_ids if inv_id not in invocation_ids]
+                invocations.extend(used_invocations)
 
             return invocations
 
