@@ -360,7 +360,7 @@ def lexically_closured_source(func):
     source, dsrc = fnclosure
     formatted_source = _format_source(source)
     formatted_dsrc = _format_source(dsrc)
-    return (formatted_source, formatted_dsrc), uses
+    return (formatted_source, formatted_dsrc,) + func.__ell_closure__[2:], uses
 
 import ast
 

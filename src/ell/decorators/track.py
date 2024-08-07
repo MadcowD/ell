@@ -89,7 +89,7 @@ def track(fn: Callable) -> Callable:
                 # Todo: add nice logging if verbose for when using a cahced invocaiton. IN a different color with thar args..
                 if not hasattr(func_to_track, "__ell_hash__")  and config.lazy_versioning:
                     fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
-
+                
                 # compute the state cachekey
                 state_cache_key = compute_state_cache_key(ipstr, func_to_track.__ell_closure__)
                 
@@ -99,7 +99,7 @@ def track(fn: Callable) -> Callable:
 
                 if len(cached_invocations) > 0:
                     # TODO THis is bad?
-                    results =  [SerializedLStr(**d).deserialize() for  d in cached_invocations[0]['results']]
+                    results =  [d.deserialize() for  d in cached_invocations[0].results]
 
                     logger.info(f"Using cached result for {func_to_track.__qualname__} with state cache key: {state_cache_key}")
                     if len(results) == 1:
@@ -130,7 +130,7 @@ def track(fn: Callable) -> Callable:
             if not _has_serialized_lmp:
                 if not hasattr(func_to_track, "__ell_hash__") and config.lazy_versioning:
                     fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
-                
+                print(fn_closure)
                 _serialize_lmp(func_to_track, _name, fn_closure, lmp, lm_kwargs)
                 _has_serialized_lmp = True
 
@@ -155,16 +155,16 @@ def track(fn: Callable) -> Callable:
 def _serialize_lmp(func, name, fn_closure, is_lmp, lm_kwargs):
     lmps = config._store.get_versions_by_fqn(fqn=name)
     version = 0
-    already_in_store = any(lmp['lmp_id'] == func.__ell_hash__ for lmp in lmps)
+    already_in_store = any(lmp.lmp_id == func.__ell_hash__ for lmp in lmps)
     
     if not already_in_store:
         if lmps:
-            latest_lmp = max(lmps, key=lambda x: x['created_at'])
-            version = latest_lmp['version_number'] + 1
+            latest_lmp = max(lmps, key=lambda x: x.created_at)
+            version = latest_lmp.version_number + 1
             if config.autocommit:
                 from ell.util.differ import write_commit_message_for_diff
                 commit = str(write_commit_message_for_diff(
-                    f"{latest_lmp['dependencies']}\n\n{latest_lmp['source']}", 
+                    f"{latest_lmp.dependencies}\n\n{latest_lmp.source}", 
                     f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
         else:
             commit = None
