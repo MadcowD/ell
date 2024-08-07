@@ -48,7 +48,7 @@ def lm(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=
             if config.verbose and not exempt_from_tracking: model_usage_logger_pre(fn, fn_args, fn_kwargs, "notimplemented", messages, color)
             final_lm_kwargs = _get_lm_kwargs(lm_kwargs, lm_params)
             _invocation_kwargs = dict(model=model, messages=messages, lm_kwargs=final_lm_kwargs, client=client or default_client_from_decorator)
-            tracked_str, metadata = _run_lm(**_invocation_kwargs, _invocation_origin=_invocation_origin, exempt_from_tracking=exempt_from_tracking, _logging_color=color)
+            tracked_str, metadata = _run_lm(**_invocation_kwargs, _invocation_origin=_invocation_origin, exempt_from_tracking=exempt_from_tracking, _logging_color=color, name=fn.__name__)
 
             return tracked_str, _invocation_kwargs, metadata
 
