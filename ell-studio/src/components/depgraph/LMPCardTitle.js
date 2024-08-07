@@ -12,6 +12,7 @@ export function LMPCardTitle({
     clickable = true,
     shortVersion = false,
     paddingClassOverride = '',
+    nameOverride = null,
     ...rest
 }) {
     const paddingClass = paddingClassOverride ? paddingClassOverride : padding ? 'p-2' : '';
@@ -28,9 +29,9 @@ export function LMPCardTitle({
                     </div>
                 : <BiCube className="h-4 w-4 text-yellow-600" />}
             </div>
-            <code className={`px-2 py-1 rounded-md ${lmp.is_lmp ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'} text-${fontSize} font-medium truncate`}>
-                {lmp.name}()
-            </code>
+            {nameOverride ? nameOverride : <code className={`px-2 py-1 rounded-md ${lmp.is_lmp ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'} text-${fontSize} font-medium truncate`}>
+                 {lmp.name}()
+            </code> }
             {displayVersion && <VersionBadge version={lmp.version_number + 1} lmpId={lmp.lmp_id} shortVersion={shortVersion} />}
         </div>
     );
