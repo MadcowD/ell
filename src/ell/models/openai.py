@@ -38,11 +38,12 @@ def register_openai_models(client: openai.Client):
     ]
     for model_id, owned_by in model_data:
         config.register_model(model_id, client)
-        
+
+default_client = None
 try:
     default_client = openai.Client()
 except openai.OpenAIError as e:
-    # TODO: Provide warning here.
+    # TODO: Dont set default lcient if this is the case
     import os
     default_client = openai.Client(api_key=os.environ.get("OPENAI_API_KEY", ""))
 register_openai_models(default_client)
