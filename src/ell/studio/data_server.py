@@ -8,6 +8,7 @@ import os
 import logging
 import asyncio
 import json
+from argparse import ArgumentParser
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +29,13 @@ class ConnectionManager:
             print(f"Broadcasting message to {connection} {message}")
             await connection.send_text(message)
 
+def create_app():
+    parser = ArgumentParser(description="ELL Studio Data Server")
+    parser.add_argument("--storage-dir", default=os.getcwd(),
+                        help="Directory for filesystem serializer storage (default: current directory)")
+    args, _ = parser.parse_known_args()
 
-def create_app(storage_dir: Optional[str] = None):
-    storage_path = storage_dir or os.environ.get("ELL_STORAGE_DIR") or os.getcwd()
+    storage_path = args.storage_dir or os.environ.get("ELL_STORAGE_DIR") or os.getcwd()
     assert storage_path, "ELL_STORAGE_DIR must be set"
     serializer = SQLiteStore(storage_path)
 

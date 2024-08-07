@@ -17,9 +17,9 @@ def main():
     parser.add_argument("--dev", action="store_true", help="Run in development mode")
     args = parser.parse_args()
 
-    app = create_app(args.storage_dir)
 
     if not args.dev:
+        app = create_app()
         # In production mode, serve the built React app
         static_dir = os.path.join(os.path.dirname(__file__), "static")
         app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
@@ -68,9 +68,15 @@ def main():
     # Start the database watcher
     loop = asyncio.new_event_loop()
 
-    config = uvicorn.Config(app=app, port=args.port, loop=loop)
-    server = uvicorn.Server(config)
-    loop.create_task(server.serve())
+    # config = uvicorn.Config(app=app, port=args.port, loop=loop,reload=True,#if args.dev else False,
+    #                         reload_delay=1)
+    # server = uvicorn.Server(config)
+    uvicorn.run("ell.studio.data_server:create_app",
+                reload=True,
+                reload_delay=5,
+                host=args.host,
+                port=args.port)
+    # loop.create_task(server.serve())
     loop.create_task(db_watcher(db_path, app))
     loop.run_forever()
 
