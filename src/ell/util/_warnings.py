@@ -11,8 +11,7 @@ def _no_api_key_warning(model, name, client_to_use, long=False, error=False):
     return f"""{color}{prefix}: No API key found for model `{model}` used by LMP `{name}` using client `{client_to_use}`""" + (""".
 
 To fix this:
-* Run `ell setup openai` to set up your API keys system wide
-* Or, set your API key in the environment variable `OPENAI_API_KEY`
+* Or, set your API key in the environment variable `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`,  etc.
 * Or, specify a client explicitly in the decorator:
     ```
     import ell
