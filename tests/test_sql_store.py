@@ -24,7 +24,7 @@ def test_write_lmp(sql_store: SQLStore):
     source = "def test_function(): pass"
     dependencies = str(["dep1", "dep2"])
     is_lmp = True
-    lm_kwargs = '{"param1": "value1"}'
+    lm_kwargs = {"param1": "value1"}
     version_number = 1
     uses = {"used_lmp_1": {}, "used_lmp_2": {}}
     global_vars = {"global_var1": "value1"}
@@ -33,21 +33,24 @@ def test_write_lmp(sql_store: SQLStore):
     created_at = utc_now()
     assert created_at.tzinfo is not None
 
-    # Act
-    sql_store.write_lmp(
+    # Create SerializedLMP object
+    serialized_lmp = SerializedLMP(
         lmp_id=lmp_id,
         name=name,
         source=source,
         dependencies=dependencies,
-        is_lmp=is_lmp,
+        is_lm=is_lmp,
         lm_kwargs=lm_kwargs,
         version_number=version_number,
-        uses=uses,
-        global_vars=global_vars,
-        free_vars=free_vars,
+        initial_global_vars=global_vars,
+        initial_free_vars=free_vars,
         commit_message=commit_message,
         created_at=created_at
     )
+
+
+    # Act
+    sql_store.write_lmp(serialized_lmp, uses)
 
     # Assert
     with Session(sql_store.engine) as session:
@@ -57,7 +60,7 @@ def test_write_lmp(sql_store: SQLStore):
         assert result.lmp_id == lmp_id
         assert result.name == name
         assert result.source == source
-        assert result.dependencies == str(dependencies)
+        assert result.dependencies == dependencies
         assert result.is_lm == is_lmp
         assert result.lm_kwargs == lm_kwargs
         assert result.version_number == version_number
@@ -68,20 +71,8 @@ def test_write_lmp(sql_store: SQLStore):
         assert result.created_at.tzinfo is not None
 
     # Test that writing the same LMP again doesn't create a duplicate
-    sql_store.write_lmp(
-        lmp_id=lmp_id,
-        name=name,
-        source=source,
-        dependencies=dependencies,
-        is_lmp=is_lmp,
-        lm_kwargs=lm_kwargs,
-        version_number=version_number,
-        uses=uses,
-        global_vars=global_vars,
-        free_vars=free_vars,
-        commit_message=commit_message,
-        created_at=created_at
-    )
+
+    sql_store.write_lmp(SerializedLMP(lmp_id=lmp_id, name=name, source=source, dependencies=dependencies, is_lm=is_lmp, lm_kwargs=lm_kwargs, version_number=version_number, initial_global_vars=global_vars, initial_free_vars=free_vars, commit_message=commit_message, created_at=created_at), uses)
 
     with Session(sql_store.engine) as session:
         count = session.query(SerializedLMP).where(SerializedLMP.lmp_id == lmp_id).count()

@@ -89,21 +89,6 @@ export const useInvocation = (id) => {
 }
 
 
-export const useMultipleLMPs = (usesIds) => {
-  const multipleLMPs = useQueries({
-    queries: (usesIds || []).map(use => ({
-      queryKey: ['lmp', use],
-      queryFn: async () => {
-        const useResponse = await axios.get(`${API_BASE_URL}/api/lmp/${use}`);
-        return useResponse.data;
-      },
-      enabled: !!use,
-    })),
-  });
-  const isLoading = multipleLMPs.some(query => query.isLoading);
-  const data = multipleLMPs.map(query => query.data);
-  return { isLoading, data };
-};
 
 export const useLatestLMPs = (page = 0, pageSize = 100) => {
   return useQuery({

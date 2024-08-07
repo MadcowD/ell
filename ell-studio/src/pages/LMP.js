@@ -8,7 +8,6 @@ import {
 import {
   useLMPs,
   useInvocationsFromLMP,
-  useMultipleLMPs,
   useInvocation,
 } from "../hooks/useBackend";
 import InvocationsTable from "../components/invocations/InvocationsTable";
@@ -55,7 +54,8 @@ function LMP() {
     pageSize,
     true // dangerous hierarchical query that will not scale to unique invocations
   );
-  const { data: uses } = useMultipleLMPs(lmp?.uses);
+  const uses = lmp?.uses;
+
 
   const [activeTab, setActiveTab] = useState("runs");
   const [selectedTrace, setSelectedTrace] = useState(null);

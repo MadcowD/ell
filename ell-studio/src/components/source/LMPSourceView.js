@@ -46,7 +46,7 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
   const trimmedDependencies = dependencies.trim();
   const dependencyLines = trimmedDependencies ? trimmedDependencies.split('\n').length : 0;
   const sourceLines = source.split('\n').length;
-  const dependentLMPs = uses.length;
+
 
   const boundedVariableHooks = useMemo(() => {
     const mutableBVWrapper = ({ children, key, content }) => (  
