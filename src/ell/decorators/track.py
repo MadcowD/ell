@@ -130,7 +130,6 @@ def track(fn: Callable) -> Callable:
             if not _has_serialized_lmp:
                 if not hasattr(func_to_track, "__ell_hash__") and config.lazy_versioning:
                     fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
-                print(fn_closure)
                 _serialize_lmp(func_to_track, _name, fn_closure, lmp, lm_kwargs)
                 _has_serialized_lmp = True
 

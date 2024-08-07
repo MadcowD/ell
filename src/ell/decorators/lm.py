@@ -1,12 +1,12 @@
 from ell.configurator import config
 from ell.decorators.track import track
 from ell.types import LMP, InvocableLM, LMPParams, _lstr_generic
+from ell.util._warnings import _warnings
 from ell.util.lm import _get_lm_kwargs, _get_messages, _run_lm
 from ell.util.verbosity import compute_color, model_usage_logger_pre
 
 
 import openai
-
 
 from functools import wraps
 from typing import Optional
@@ -20,12 +20,17 @@ def lm(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=
     """
     default_client_from_decorator = client
 
+
     def decorator(
         fn: LMP,
     ) -> InvocableLM:
         color = compute_color(fn)
         _under_fn = fn
 
+
+        _warnings(model, fn, default_client_from_decorator)
+
+            
         @wraps(fn)
         def wrapper(
             *fn_args,

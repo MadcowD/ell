@@ -15,8 +15,4 @@ def number_to_words(number: int):
 You must always return the word representation and nothing else."""
     return f"Convert {number} to its word representation."
 
-# with ell.config.model_registry_override({"gpt-3.5-turbo": client}):
-
-
-
 (number_to_words(123456, client=client))
