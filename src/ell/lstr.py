@@ -97,15 +97,15 @@ class lstr(str):
         instance = super(lstr, cls).__new__(cls, content)
         instance._logits = logits
         if isinstance(_origin_trace, str):
-            instance.__origin_trace = frozenset({_origin_trace})
+            instance.__origin_trace__ = frozenset({_origin_trace})
         else:
-            instance.__origin_trace = (
+            instance.__origin_trace__ = (
                 frozenset(_origin_trace) if _origin_trace is not None else frozenset()
             )
         return instance
 
     _logits: Optional[np.ndarray]
-    __origin_trace: FrozenSet[str]
+    __origin_trace__: FrozenSet[str]
 
     @property
     def logits(self) -> Optional[np.ndarray]:
@@ -125,7 +125,7 @@ class lstr(str):
         Returns:
             FrozenSet[str]: A frozen set of strings representing the _origin_trace(s) of this lstr instance.
         """
-        return self.__origin_trace
+        return self.__origin_trace__
 
     ########################
     ## Overriding methods ##
@@ -151,11 +151,11 @@ class lstr(str):
         """
         if type(other) is str:
             new_content = super(lstr, self).__add__(other)
-            return lstr(new_content, None, self.__origin_trace)
+            return lstr(new_content, None, self.__origin_trace__)
         elif isinstance(other, lstr):
             new_content = super(lstr, self).__add__(other)
-            new__origin_trace = self.__origin_trace.union(other.__origin_trace)
-            return lstr(new_content, None, new__origin_trace)
+            new__origin_trace__ = self.__origin_trace__.union(other.__origin_trace__)
+            return lstr(new_content, None, new__origin_trace__)
         return NotImplemented
 
     def __mod__(
@@ -174,19 +174,19 @@ class lstr(str):
         # If 'other' is a tuple, we need to handle each element
         if isinstance(other, tuple):
             result_content = super(lstr, self).__mod__(tuple(str(o) for o in other))
-            new__origin_traces = set(self.__origin_trace)
+            new__origin_trace__s = set(self.__origin_trace__)
             for item in other:
                 if isinstance(item, lstr):
-                    new__origin_traces.update(item.__origin_trace)
-            new__origin_trace = frozenset(new__origin_traces)
+                    new__origin_trace__s.update(item.__origin_trace__)
+            new__origin_trace__ = frozenset(new__origin_trace__s)
         else:
             result_content = super(lstr, self).__mod__(other)
             if isinstance(other, lstr):
-                new__origin_trace = self.__origin_trace.union(other.__origin_trace)
+                new__origin_trace__ = self.__origin_trace__.union(other.__origin_trace__)
             else:
-                new__origin_trace = self.__origin_trace
+                new__origin_trace__ = self.__origin_trace__
 
-        return lstr(result_content, None, new__origin_trace)
+        return lstr(result_content, None, new__origin_trace__)
 
     def __mul__(self, other: SupportsIndex) -> "lstr":
         """
@@ -201,11 +201,11 @@ class lstr(str):
         """
         if isinstance(other, SupportsIndex):
             result_content = super(lstr, self).__mul__(other)
-            new__origin_trace = self.__origin_trace
+            new__origin_trace__ = self.__origin_trace__
         else:
             return NotImplemented
 
-        return lstr(result_content, None, new__origin_trace)
+        return lstr(result_content, None, new__origin_trace__)
 
     def __rmul__(self, other: SupportsIndex) -> "lstr":
         """
@@ -237,7 +237,7 @@ class lstr(str):
         # except:
         #   logit_subset = None
         logit_subset = None
-        return lstr(result, logit_subset, self.__origin_trace)
+        return lstr(result, logit_subset, self.__origin_trace__)
 
     def __getattribute__(self, name: str) -> Union[Callable, Any]:
         """
@@ -266,13 +266,13 @@ class lstr(str):
                 result = attr(*args, **kwargs)
                 # If the result is a string, return an lstr instance
                 if isinstance(result, str):
-                    _origin_traces = self.__origin_trace
+                    _origin_traces = self.__origin_trace__
                     for arg in args:
                         if isinstance(arg, lstr):
-                            _origin_traces = _origin_traces.union(arg.__origin_trace)
+                            _origin_traces = _origin_traces.union(arg.__origin_trace__)
                     for key, value in kwargs.items():
                         if isinstance(value, lstr):
-                            _origin_traces = _origin_traces.union(value.__origin_trace)
+                            _origin_traces = _origin_traces.union(value.__origin_trace__)
                     return lstr(result, None, _origin_traces)
 
                 return result
@@ -294,11 +294,11 @@ class lstr(str):
         """
         parts = [str(item) for item in iterable]
         new_content = super(lstr, self).join(parts)
-        new__origin_trace = self.__origin_trace
+        new__origin_trace__ = self.__origin_trace__
         for item in iterable:
             if isinstance(item, lstr):
-                new__origin_trace = new__origin_trace.union(item.__origin_trace)
-        return lstr(new_content, None, new__origin_trace)
+                new__origin_trace__ = new__origin_trace__.union(item.__origin_trace__)
+        return lstr(new_content, None, new__origin_trace__)
 
     @override
     def split(
@@ -344,7 +344,7 @@ class lstr(str):
             List["lstr"]: A list of lstr instances containing the split content, with the _origin_trace(s) preserved.
         """
         return [
-            lstr(p, None, self.__origin_trace)
+            lstr(p, None, self.__origin_trace__)
             for p in super(lstr, self).splitlines(keepends=keepends)
         ]
 
@@ -388,15 +388,15 @@ class lstr(str):
             Tuple["lstr", "lstr", "lstr"]: A tuple of three lstr instances containing the content before the separator, the separator itself, and the content after the separator, with the _origin_trace(s) updated accordingly.
         """
         part1, part2, part3 = method(sep)
-        new__origin_trace = (
-            self.__origin_trace | sep.__origin_trace
+        new__origin_trace__ = (
+            self.__origin_trace__ | sep.__origin_trace__
             if isinstance(sep, lstr)
-            else self.__origin_trace
+            else self.__origin_trace__
         )
         return (
-            lstr(part1, None, new__origin_trace),
-            lstr(part2, None, new__origin_trace),
-            lstr(part3, None, new__origin_trace),
+            lstr(part1, None, new__origin_trace__),
+            lstr(part2, None, new__origin_trace__),
+            lstr(part3, None, new__origin_trace__),
         )
 
     def _split_helper(
@@ -417,9 +417,9 @@ class lstr(str):
             List["lstr"]: A list of lstr instances containing the split content, with the _origin_trace(s) preserved.
         """
         _origin_traces = (
-            self.__origin_trace | sep.__origin_trace
+            self.__origin_trace__ | sep.__origin_trace__
             if isinstance(sep, lstr)
-            else self.__origin_trace
+            else self.__origin_trace__
         )
         parts = method(sep, maxsplit)
         return [lstr(part, None, _origin_traces) for part in parts]

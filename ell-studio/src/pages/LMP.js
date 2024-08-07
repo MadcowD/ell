@@ -210,7 +210,7 @@ function LMP() {
 
               <div className="mb-6">
                 <div className="flex border-b border-gray-700">
-                  {["Runs", "Version History", "Dependency Graph"].map(
+                  {["Runs", "Version History"].map(
                     (tab) => (
                       <button
                         key={tab}
@@ -272,16 +272,7 @@ function LMP() {
                   {activeTab === "version_history" && (
                     <VersionHistoryPane versions={versionHistory} />
                   )}
-                  {activeTab === "dependency_graph" && !!uses && (
-                    <DependencyGraphPane
-                      key={uses
-                        ?.map((lmp) => lmp.lmp_id)
-                        .sort()
-                        .join("-")}
-                      lmp={lmp}
-                      uses={uses}
-                    />
-                  )}
+                
                 </div>
               </div>
             </main>

@@ -454,6 +454,12 @@ const LinkLines = ({ links, rowRefs, tableOffset }) => {
         ? (hoveredRow === link.from ? '#f97316' : '#3b82f6')  // Orange if going from, Blue if coming to
         : '#4a5568';
 
+
+      // opacity at 11 outgoing links is 0.3
+      // 0.5 at one 
+      // 0.5/11 = 0.3 scaled so that 
+      const opacity =0.7*Math.exp(-0.05033*(groupedLinks[link.from].length -1))
+      
       return (
         <SmoothLine
           key={index}
@@ -463,7 +469,7 @@ const LinkLines = ({ links, rowRefs, tableOffset }) => {
           endY={endRow.y}
           color={color}
           animated={isHighlighted}
-          opacity={isHighlighted ? 1 : 0.3}
+          opacity={isHighlighted ? 1 : opacity}
           offset={offset}
         />
       );
