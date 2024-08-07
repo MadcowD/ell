@@ -79,9 +79,9 @@ class SerializedLMPBase(SQLModel):
     dependencies: str
     created_at: datetime = UTCTimestampField(index=True, nullable=False)
     is_lm: bool
-    lm_kwargs: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
-    initial_free_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
-    initial_global_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    lm_kwargs: Optional[Dict[str, Any]] = Field(default_factory=dict, sa_column=Column(JSON))
+    initial_free_vars: Optional[Dict[str, Any]] = Field(default_factory=dict, sa_column=Column(JSON))
+    initial_global_vars: Optional[Dict[str, Any]] = Field(default_factory=dict, sa_column=Column(JSON))
     num_invocations: Optional[int] = Field(default=0)
     commit_message: Optional[str] = Field(default=None)
     version_number: Optional[int] = Field(default=None)
