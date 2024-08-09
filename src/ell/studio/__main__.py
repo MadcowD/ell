@@ -72,7 +72,7 @@ def main():
         return list(set(sys.modules[name].__file__ for name in sys.modules if name.startswith(module_name.split('.')[0])))
 
     def reload_app():
-        importlib.reload(sys.modules["ell.studio.data_server"])
+        importlib.reload(sys.modules["ell.studio.server"])
         return create_app()
 
     async def run_server(server):
@@ -89,7 +89,7 @@ def main():
 
     async def main_async(args):
         db_path = os.path.join(args.storage_dir, "ell.db")
-        dependencies = get_dependencies("ell.studio.data_server")
+        dependencies = get_dependencies("ell.studio.server")
 
         config = uvicorn.Config(
             app=app,
