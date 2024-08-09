@@ -244,3 +244,9 @@ class SQLiteStore(SQLStore):
         os.makedirs(storage_dir, exist_ok=True)
         db_path = os.path.join(storage_dir, 'ell.db')
         super().__init__(f'sqlite:///{db_path}')
+
+class PostgresStore(SQLStore):
+    def __init__(self, db_uri: str):
+        super().__init__(db_uri)
+    
+

@@ -38,6 +38,7 @@ typing-extensions = "^4.12.2"
 
 
 black = "^24.8.0"
+psycopg2 = "^2.9.9"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
 

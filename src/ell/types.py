@@ -62,6 +62,7 @@ class SerializedLMPUses(SQLModel, table=True):
 
 
 class UTCTimestamp(types.TypeDecorator[datetime]):
+    cache_ok = True
     impl = types.TIMESTAMP
     def process_result_value(self, value: datetime, dialect:Any):
         return value.replace(tzinfo=timezone.utc)
@@ -118,7 +119,7 @@ class SerializedLStrBase(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
     content: str
     logits: List[float] = Field(default_factory=list, sa_column=Column(JSON))
-    producer_invocation_id: Optional[int] = Field(default=None, foreign_key="invocation.id", index=True)
+    producer_invocation_id: Optional[str] = Field(default=None, foreign_key="invocation.id", index=True)
 
 class SerializedLStr(SerializedLStrBase, table=True):
     producer_invocation: Optional["Invocation"] = Relationship(back_populates="results")
