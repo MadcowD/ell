@@ -10,6 +10,7 @@ import os
 import logging
 import asyncio
 import json
+from argparse import ArgumentParser
 import ell.studio.connection_manager
 from ell.studio.connection_manager import ConnectionManager
 from ell.studio.datamodels import SerializedLMPPublic, SerializedLMPWithUses
@@ -18,13 +19,18 @@ from ell.types import SerializedLMP
 from datetime import datetime, timedelta
 from sqlmodel import select
 
+
 logger = logging.getLogger(__name__)
 
 
 
+def create_app():
+    parser = ArgumentParser(description="ELL Studio Data Server")
+    parser.add_argument("--storage-dir", default=os.getcwd(),
+                        help="Directory for filesystem serializer storage (default: current directory)")
+    args, _ = parser.parse_known_args()
 
-def create_app(storage_dir: Optional[str] = None):
-    storage_path = storage_dir or os.environ.get("ELL_STORAGE_DIR") or os.getcwd()
+    storage_path = args.storage_dir or os.environ.get("ELL_STORAGE_DIR") or os.getcwd()
     assert storage_path, "ELL_STORAGE_DIR must be set"
     serializer = SQLiteStore(storage_path)
     def get_session():
