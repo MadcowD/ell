@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FiCopy, FiZap, FiEdit2, FiFilter, FiClock, FiColumns, FiPause, FiPlay } from 'react-icons/fi';
+import { FiCopy, FiZap, FiEdit2, FiFilter, FiClock, FiColumns, FiPause, FiPlay, FiSearch } from 'react-icons/fi';
 import InvocationsTable from '../components/invocations/InvocationsTable';
 import InvocationsLayout from '../components/invocations/InvocationsLayout';
 import MetricChart from '../components/MetricChart';
@@ -18,6 +18,9 @@ const Traces = () => {
 
   const { data: invocations , isLoading } = useInvocationsFromLMP(null, null, currentPage, pageSize);
   const { data: lmpHistory, isLoading: isLMPHistoryLoading } = useLMPHistory(365); // Fetch 1 year of data
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('All Runs');
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -38,6 +41,16 @@ const Traces = () => {
     setSelectedTrace(trace);
     navigate(`?i=${trace.id}`);
   };
+
+  const filteredInvocations = useMemo(() => {
+    if (!invocations) return [];
+    return invocations.filter(inv => 
+      inv.id.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (selectedFilter === 'All Runs' || 
+       (selectedFilter === 'Root Runs' && inv.is_root_run) ||
+       (selectedFilter === 'LLM Calls' && inv.is_llm_call))
+    );
+  }, [invocations, searchTerm, selectedFilter]);
 
   const chartData = useMemo(() => {
     if (!invocations || invocations.length === 0) return [];
@@ -80,13 +93,56 @@ const Traces = () => {
           <button className="flex items-center px-3 py-1.5 bg-[#1c2128] text-sm rounded hover:bg-gray-700">
             <FiZap className="mr-1" />
             Add Rule
-          </button>
+          </button>m
           <button className="flex items-center px-3 py-1.5 bg-[#1c2128] text-sm rounded hover:bg-gray-700">
             <FiEdit2 className="mr-1" />
             Edit
           </button>
         </div>
       </div>
+
+      {/* New search and filter interface */}
+      <div className="mb-6 bg-[#1c2128] p-4 rounded-lg">
+        <div className="flex items-center space-x-4 mb-4">
+          <div className="flex-grow relative">
+            <input
+              type="text"
+              placeholder="Search invocations..."
+              className="w-full bg-[#2d333b] text-white px-4 py-2 rounded-md pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          </div>
+          <button className="flex items-center px-3 py-2 bg-[#2d333b] text-sm rounded hover:bg-gray-700">
+            <FiFilter className="mr-2" />
+            Advanced Filters
+          </button>
+        </div>
+        <div className="flex space-x-2">
+          {['All Runs', 'Root Runs', 'LLM Calls'].map((filter) => (
+            <button
+              key={filter}
+              className={`px-3 py-1.5 rounded ${selectedFilter === filter ? 'bg-blue-600' : 'bg-[#2d333b]'} hover:bg-gray-700`}
+              onClick={() => setSelectedFilter(filter)}
+            >
+              {filter}
+            </button>
+          ))}
+          <button className="flex items-center px-3 py-1.5 bg-[#2d333b] rounded hover:bg-gray-700 ml-2">
+            <FiClock className="mr-2" />
+            Last 7 days
+          </button>
+          <button
+            className={`flex items-center px-3 py-1.5 ${isPolling ? 'bg-blue-600' : 'bg-[#2d333b]'} rounded hover:bg-gray-700 ml-auto`}
+            onClick={togglePolling}
+          >
+            {isPolling ? <FiPause className="mr-2" /> : <FiPlay className="mr-2" />}
+            {isPolling ? 'Pause Updates' : 'Resume Updates'}
+          </button>
+        </div>
+      </div>
+
       <div className="flex space-x-6 mb-6 flex-grow">
         <div className="flex-1">
           <MetricChart 
@@ -116,30 +172,12 @@ const Traces = () => {
       </div>
       <div className="flex items-center space-x-2 mb-6">
         <button className="flex items-center px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">
-          <FiFilter className="mr-1" />
-          1 filter
-        </button>
-        <button className="flex items-center px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">
-          <FiClock className="mr-1" />
-          Last 7 days
-        </button>
-        <button className="px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">Root Runs</button>
-        <button className="px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">LLM Calls</button>
-        <button className="px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">All Runs</button>
-        <button
-          className={`flex items-center px-2 py-1 ${isPolling ? 'bg-blue-600' : 'bg-[#1c2128]'} text-xs rounded hover:bg-gray-700`}
-          onClick={togglePolling}
-        >
-          {isPolling ? <FiPause className="mr-1" /> : <FiPlay className="mr-1" />}
-          {isPolling ? 'Pause Updates' : 'Resume Updates'}
-        </button>
-        <button className="ml-auto flex items-center px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">
           <FiColumns className="mr-1" />
           Columns
         </button>
       </div>
       <InvocationsTable 
-        invocations={invocations} 
+        invocations={filteredInvocations} 
         currentPage={currentPage}
         expandAll={true}
         setCurrentPage={setCurrentPage}
