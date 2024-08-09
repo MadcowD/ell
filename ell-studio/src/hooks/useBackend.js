@@ -130,3 +130,13 @@ export const useTraces = (lmps) => {
       enabled: !!lmps && lmps.length > 0,
     });
   };
+
+export const useLMPHistory = (days = 365) => {
+  return useQuery({
+    queryKey: ['lmpHistory', days],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/api/lmp-history?days=${days}`);
+      return response.data;
+    },
+  });
+};

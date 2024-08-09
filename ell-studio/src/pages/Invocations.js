@@ -3,8 +3,9 @@ import { FiCopy, FiZap, FiEdit2, FiFilter, FiClock, FiColumns, FiPause, FiPlay }
 import InvocationsTable from '../components/invocations/InvocationsTable';
 import InvocationsLayout from '../components/invocations/InvocationsLayout';
 import MetricChart from '../components/MetricChart';
+import LMPHistoryChart from '../components/LMPHistoryChart'; // New import
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useInvocationsFromLMP } from '../hooks/useBackend';
+import { useInvocationsFromLMP, useLMPHistory } from '../hooks/useBackend'; // Added useLMPHistory
 
 const Traces = () => {
   const [selectedTrace, setSelectedTrace] = useState(null);
@@ -16,6 +17,7 @@ const Traces = () => {
   const pageSize = 50;
 
   const { data: invocations , isLoading } = useInvocationsFromLMP(null, null, currentPage, pageSize);
+  const { data: lmpHistory, isLoading: isLMPHistoryLoading } = useLMPHistory(365); // Fetch 1 year of data
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -56,7 +58,7 @@ const Traces = () => {
     return sum / invocations.length;
   }, [invocations]);
 
-  if (isLoading) {
+  if (isLoading || isLMPHistoryLoading) {
     return <div>Loading...</div>;
   }
 
@@ -65,7 +67,7 @@ const Traces = () => {
       selectedTrace={selectedTrace} 
       setSelectedTrace={setSelectedTrace}
       showSidebar={true}
-      containerClass={'p-6'}
+      containerClass={'p-6 flex flex-col h-full'}
     >
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-white flex items-center">
@@ -85,22 +87,32 @@ const Traces = () => {
           </button>
         </div>
       </div>
-      <div className="flex space-x-6 mb-6">
-        <MetricChart 
-          rawData={chartData}
-          dataKey="count"
-          color="#8884d8"
-          title="Invocations"
-          yAxisLabel="Count"
-        />
-        <MetricChart 
-          rawData={chartData}
-          dataKey="latency"
-          color="#82ca9d"
-          title="Latency"
-          aggregation="avg"
-          yAxisLabel="ms"
-        />
+      <div className="flex space-x-6 mb-6 flex-grow">
+        <div className="flex-1">
+          <MetricChart 
+            rawData={chartData}
+            dataKey="count"
+            color="#8884d8"
+            title="Invocations"
+            yAxisLabel="Count"
+          />
+        </div>
+        <div className="flex-1">
+          <MetricChart 
+            rawData={chartData}
+            dataKey="latency"
+            color="#82ca9d"
+            title="Latency"
+            aggregation="avg"
+            yAxisLabel="ms"
+          />
+        </div>
+        {/* <div className="flex-1">
+          <LMPHistoryChart 
+            data={lmpHistory}
+            title="LMP History"
+          />
+        </div> */}
       </div>
       <div className="flex items-center space-x-2 mb-6">
         <button className="flex items-center px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">
