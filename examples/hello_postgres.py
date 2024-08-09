@@ -21,7 +21,7 @@ def hello(world : str):
 
 if __name__ == "__main__":
     ell.config.verbose = True
-    ell.set_store(PostgresStore('postgresql://postgres:postgres@localhost:5432/postgres'), autocommit=True)
+    ell.set_store(PostgresStore('postgresql://postgres:postgres@localhost:5432/ell'), autocommit=True)
 
     greeting = hello("sam altman") # > "hello sama! ... "
 
