@@ -16,7 +16,9 @@ from ell.studio.connection_manager import ConnectionManager
 from ell.studio.datamodels import SerializedLMPPublic, SerializedLMPWithUses
 
 from ell.types import SerializedLMP
->>>>>>> main:src/ell/studio/server.py
+from datetime import datetime, timedelta
+from sqlmodel import select
+
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +159,28 @@ def create_app():
     ):
         traces = serializer.get_all_traces_leading_to(session, invocation_id)
         return traces
+
+    @app.get("/api/lmp-history")
+    def get_lmp_history(
+        days: int = Query(365, ge=1, le=3650),  # Default to 1 year, max 10 years
+        session: Session = Depends(get_session)
+    ):
+        # Calculate the start date
+        start_date = datetime.utcnow() - timedelta(days=days)
+
+        # Query to get all LMP creation times within the date range
+        query = (
+            select(SerializedLMP.created_at)
+            .where(SerializedLMP.created_at >= start_date)
+            .order_by(SerializedLMP.created_at)
+        )
+
+        results = session.exec(query).all()
+
+        # Convert results to a list of dictionaries
+        history = [{"date": str(row), "count": 1} for row in results]
+
+        return history
 
     async def notify_clients(entity: str, id: Optional[str] = None):
         message = json.dumps({"entity": entity, "id": id})
