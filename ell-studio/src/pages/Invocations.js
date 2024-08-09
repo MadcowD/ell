@@ -21,6 +21,15 @@ const Traces = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All Runs');
+  const [advancedFilters, setAdvancedFilters] = useState({
+    lmpName: '',
+    inputContains: '',
+    outputContains: '',
+    latencyMin: '',
+    latencyMax: '',
+    tokensMin: '',
+    tokensMax: '',
+  });
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -44,32 +53,49 @@ const Traces = () => {
 
   const filteredInvocations = useMemo(() => {
     if (!invocations) return [];
-    return invocations.filter(inv => 
-      inv.id.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (selectedFilter === 'All Runs' || 
-       (selectedFilter === 'Root Runs' && inv.is_root_run) ||
-       (selectedFilter === 'LLM Calls' && inv.is_llm_call))
-    );
-  }, [invocations, searchTerm, selectedFilter]);
+    return invocations.filter(inv => {
+      const matchesSearch = 
+        inv.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inv.lmp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inv.args.some(arg => JSON.stringify(arg).toLowerCase().includes(searchTerm.toLowerCase())) ||
+        inv.results.some(result => JSON.stringify(result).toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const matchesFilter = 
+        selectedFilter === 'All Runs' || 
+        (selectedFilter === 'Root Runs' && !inv.used_by_id) ||
+        (selectedFilter === 'LLM Calls' && inv.lmp.is_lm);
+
+      const matchesAdvanced =
+        (!advancedFilters.lmpName || inv.lmp.name.toLowerCase().includes(advancedFilters.lmpName.toLowerCase())) &&
+        (!advancedFilters.inputContains || inv.args.some(arg => JSON.stringify(arg).toLowerCase().includes(advancedFilters.inputContains.toLowerCase()))) &&
+        (!advancedFilters.outputContains || inv.results.some(result => JSON.stringify(result).toLowerCase().includes(advancedFilters.outputContains.toLowerCase()))) &&
+        (!advancedFilters.latencyMin || inv.latency_ms >= parseFloat(advancedFilters.latencyMin) * 1000) &&
+        (!advancedFilters.latencyMax || inv.latency_ms <= parseFloat(advancedFilters.latencyMax) * 1000) &&
+        (!advancedFilters.tokensMin || (inv.prompt_tokens + inv.completion_tokens) >= parseInt(advancedFilters.tokensMin)) &&
+        (!advancedFilters.tokensMax || (inv.prompt_tokens + inv.completion_tokens) <= parseInt(advancedFilters.tokensMax));
+
+      return matchesSearch && matchesFilter && matchesAdvanced;
+    });
+  }, [invocations, searchTerm, selectedFilter, advancedFilters]);
 
   const chartData = useMemo(() => {
-    if (!invocations || invocations.length === 0) return [];
+    if (!filteredInvocations || filteredInvocations.length === 0) return [];
 
-    return invocations
+    return filteredInvocations
       .map(inv => ({
         date: new Date(inv.created_at),
         count: 1,
         latency: inv.latency_ms
       }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-  }, [invocations]);
+  }, [filteredInvocations]);
 
-  const totalInvocations = useMemo(() => invocations?.length || 0, [invocations]);
+  const totalInvocations = useMemo(() => filteredInvocations.length, [filteredInvocations]);
   const avgLatency = useMemo(() => {
-    if (!invocations || invocations.length === 0) return 0;
-    const sum = invocations.reduce((acc, inv) => acc + inv.latency_ms, 0);
-    return sum / invocations.length;
-  }, [invocations]);
+    if (filteredInvocations.length === 0) return 0;
+    const sum = filteredInvocations.reduce((acc, inv) => acc + inv.latency_ms, 0);
+    return sum / filteredInvocations.length;
+  }, [filteredInvocations]);
 
   if (isLoading || isLMPHistoryLoading) {
     return <div>Loading...</div>;
@@ -101,6 +127,34 @@ const Traces = () => {
         </div>
       </div>
 
+      <div className="flex space-x-6 mb-6 flex-grow">
+        <div className="flex-1">
+          <MetricChart 
+            rawData={chartData}
+            dataKey="count"
+            color="#8884d8"
+            title={`Invocations (${totalInvocations})`}
+            yAxisLabel="Count"
+          />
+        </div>
+        <div className="flex-1">
+          <MetricChart 
+            rawData={chartData}
+            dataKey="latency"
+            color="#82ca9d"
+            title={`Avg Latency (${avgLatency.toFixed(2)}ms)`}
+            aggregation="avg"
+            yAxisLabel="ms"
+          />
+        </div>
+        {/* <div className="flex-1">
+          <LMPHistoryChart 
+            data={lmpHistory}
+            title="LMP History"
+          />
+        </div> */}
+      </div>
+
       {/* New search and filter interface */}
       <div className="mb-6 bg-[#1c2128] p-4 rounded-lg">
         <div className="flex items-center space-x-4 mb-4">
@@ -114,11 +168,71 @@ const Traces = () => {
             />
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
-          <button className="flex items-center px-3 py-2 bg-[#2d333b] text-sm rounded hover:bg-gray-700">
+          <button 
+            className="flex items-center px-3 py-2 bg-[#2d333b] text-sm rounded hover:bg-gray-700"
+            onClick={() => setAdvancedFilters(prev => ({ ...prev, isOpen: !prev.isOpen }))}
+          >
             <FiFilter className="mr-2" />
             Advanced Filters
           </button>
         </div>
+        {advancedFilters.isOpen && (
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <input
+              type="text"
+              placeholder="LMP Name"
+              className="bg-[#2d333b] text-white px-3 py-1 rounded"
+              value={advancedFilters.lmpName}
+              onChange={(e) => setAdvancedFilters(prev => ({ ...prev, lmpName: e.target.value }))}
+            />
+            <input
+              type="text"
+              placeholder="Input Contains"
+              className="bg-[#2d333b] text-white px-3 py-1 rounded"
+              value={advancedFilters.inputContains}
+              onChange={(e) => setAdvancedFilters(prev => ({ ...prev, inputContains: e.target.value }))}
+            />
+            <input
+              type="text"
+              placeholder="Output Contains"
+              className="bg-[#2d333b] text-white px-3 py-1 rounded"
+              value={advancedFilters.outputContains}
+              onChange={(e) => setAdvancedFilters(prev => ({ ...prev, outputContains: e.target.value }))}
+            />
+            <div className="flex space-x-2">
+              <input
+                type="number"
+                placeholder="Min Latency (s)"
+                className="bg-[#2d333b] text-white px-3 py-1 rounded w-1/2"
+                value={advancedFilters.latencyMin}
+                onChange={(e) => setAdvancedFilters(prev => ({ ...prev, latencyMin: e.target.value }))}
+              />
+              <input
+                type="number"
+                placeholder="Max Latency (s)"
+                className="bg-[#2d333b] text-white px-3 py-1 rounded w-1/2"
+                value={advancedFilters.latencyMax}
+                onChange={(e) => setAdvancedFilters(prev => ({ ...prev, latencyMax: e.target.value }))}
+              />
+            </div>
+            <div className="flex space-x-2">
+              <input
+                type="number"
+                placeholder="Min Tokens"
+                className="bg-[#2d333b] text-white px-3 py-1 rounded w-1/2"
+                value={advancedFilters.tokensMin}
+                onChange={(e) => setAdvancedFilters(prev => ({ ...prev, tokensMin: e.target.value }))}
+              />
+              <input
+                type="number"
+                placeholder="Max Tokens"
+                className="bg-[#2d333b] text-white px-3 py-1 rounded w-1/2"
+                value={advancedFilters.tokensMax}
+                onChange={(e) => setAdvancedFilters(prev => ({ ...prev, tokensMax: e.target.value }))}
+              />
+            </div>
+          </div>
+        )}
         <div className="flex space-x-2">
           {['All Runs', 'Root Runs', 'LLM Calls'].map((filter) => (
             <button
@@ -143,33 +257,6 @@ const Traces = () => {
         </div>
       </div>
 
-      <div className="flex space-x-6 mb-6 flex-grow">
-        <div className="flex-1">
-          <MetricChart 
-            rawData={chartData}
-            dataKey="count"
-            color="#8884d8"
-            title="Invocations"
-            yAxisLabel="Count"
-          />
-        </div>
-        <div className="flex-1">
-          <MetricChart 
-            rawData={chartData}
-            dataKey="latency"
-            color="#82ca9d"
-            title="Latency"
-            aggregation="avg"
-            yAxisLabel="ms"
-          />
-        </div>
-        {/* <div className="flex-1">
-          <LMPHistoryChart 
-            data={lmpHistory}
-            title="LMP History"
-          />
-        </div> */}
-      </div>
       <div className="flex items-center space-x-2 mb-6">
         <button className="flex items-center px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">
           <FiColumns className="mr-1" />
