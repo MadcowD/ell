@@ -27,7 +27,7 @@ export function DiffRenderer({
   })
 
   const diff = diffLines(previousCode, code);
-  console.log("DIFF", diff)
+
 
   let oldLineNumber = startingLineNumber;
   let newLineNumber = startingLineNumber;

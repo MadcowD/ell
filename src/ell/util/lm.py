@@ -8,8 +8,10 @@ from ell.types import LMP, LMPParams, Message, MessageOrDict
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 from ell.util.verbosity import model_usage_logger_post_end, model_usage_logger_post_intermediate, model_usage_logger_post_start
+from ell.util._warnings import _no_api_key_warning
 
-
+import logging
+logger = logging.getLogger(__name__)
 
 def _get_lm_kwargs(lm_kwargs: Dict[str, Any], lm_params: LMPParams) -> Dict[str, Any]:
     """
@@ -46,6 +48,7 @@ def _run_lm(
     exempt_from_tracking: bool,
     client: Optional[openai.Client] = None,
     _logging_color=None,
+    name: str = None,
 ) -> Tuple[Union[lstr, Iterable[lstr]], Optional[Dict[str, Any]]]:
     """
     Helper function to run the language model with the provided messages and parameters.
@@ -55,6 +58,9 @@ def _run_lm(
     metadata = dict()
     if client is None:
         raise ValueError(f"No client found for model '{model}'. Ensure the model is registered using 'register_model' in 'config.py' or specify a client directly using the 'client' argument in the decorator or function call.")
+    
+    if not client.api_key:
+        raise RuntimeError(_no_api_key_warning(model, name, client, long=True, error=True))
 
     # todo: add suupport for streaming apis that dont give a final usage in the api
     model_result = client.chat.completions.create(

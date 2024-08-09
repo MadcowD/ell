@@ -1,6 +1,6 @@
 import logging
 import threading
-from ell.types import SerializedLStr, utc_now
+from ell.types import SerializedLStr, utc_now, SerializedLMP, Invocation, InvocationTrace
 import ell.util.closure
 from ell.configurator import config
 from ell.lstr import lstr
@@ -89,18 +89,17 @@ def track(fn: Callable) -> Callable:
                 # Todo: add nice logging if verbose for when using a cahced invocaiton. IN a different color with thar args..
                 if not hasattr(func_to_track, "__ell_hash__")  and config.lazy_versioning:
                     fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
-
+                
                 # compute the state cachekey
                 state_cache_key = compute_state_cache_key(ipstr, func_to_track.__ell_closure__)
                 
                 cache_store = func_to_track.__wrapper__.__ell_use_cache__
-                cached_invocations = cache_store.get_invocations(lmp_filters=dict(lmp_id=func_to_track.__ell_hash__), filters=dict(
-                    state_cache_key=state_cache_key
-                ))
+                cached_invocations = cache_store.get_cached_invocations(func_to_track.__ell_hash__, state_cache_key)
+                
 
                 if len(cached_invocations) > 0:
                     # TODO THis is bad?
-                    results =  [SerializedLStr(**d).deserialize() for  d in cached_invocations[0]['results']]
+                    results =  [d.deserialize() for  d in cached_invocations[0].results]
 
                     logger.info(f"Using cached result for {func_to_track.__qualname__} with state cache key: {state_cache_key}")
                     if len(results) == 1:
@@ -131,7 +130,6 @@ def track(fn: Callable) -> Callable:
             if not _has_serialized_lmp:
                 if not hasattr(func_to_track, "__ell_hash__") and config.lazy_versioning:
                     fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
-                
                 _serialize_lmp(func_to_track, _name, fn_closure, lmp, lm_kwargs)
                 _has_serialized_lmp = True
 
@@ -154,40 +152,41 @@ def track(fn: Callable) -> Callable:
     return wrapper
 
 def _serialize_lmp(func, name, fn_closure, is_lmp, lm_kwargs):
-    lmps = config._store.get_lmps(name=name)
+    lmps = config._store.get_versions_by_fqn(fqn=name)
     version = 0
-    already_in_store = any(lmp['lmp_id'] == func.__ell_hash__ for lmp in lmps)
+    already_in_store = any(lmp.lmp_id == func.__ell_hash__ for lmp in lmps)
     
     if not already_in_store:
         if lmps:
-            latest_lmp = max(lmps, key=lambda x: x['created_at'])
-            version = latest_lmp['version_number'] + 1
+            latest_lmp = max(lmps, key=lambda x: x.created_at)
+            version = latest_lmp.version_number + 1
             if config.autocommit:
                 from ell.util.differ import write_commit_message_for_diff
                 commit = str(write_commit_message_for_diff(
-                    f"{latest_lmp['dependencies']}\n\n{latest_lmp['source']}", 
+                    f"{latest_lmp.dependencies}\n\n{latest_lmp.source}", 
                     f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
         else:
             commit = None
 
-        config._store.write_lmp(
+        serialized_lmp = SerializedLMP(
             lmp_id=func.__ell_hash__,
             name=name,
             created_at=utc_now(),
             source=fn_closure[0],
             dependencies=fn_closure[1],
             commit_message=commit,
-            global_vars=get_immutable_vars(func.__ell_closure__[2]),
-            free_vars=get_immutable_vars(func.__ell_closure__[3]),
-            is_lmp=is_lmp,
+            initial_global_vars=get_immutable_vars(fn_closure[2]),
+            initial_free_vars=get_immutable_vars(fn_closure[3]),
+            is_lm=is_lmp,
             lm_kwargs=lm_kwargs if lm_kwargs else None,
             version_number=version,
-            uses=func.__ell_uses__,
         )
+
+        config._store.write_lmp(serialized_lmp, func.__ell_uses__)
 
 def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
                      state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result, parent_invocation_id):
-    config._store.write_invocation(
+    invocation = Invocation(
         id=invocation_id,
         lmp_id=func.__ell_hash__,
         created_at=utc_now(),
@@ -198,12 +197,27 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         completion_tokens=completion_tokens,
         state_cache_key=state_cache_key,
         invocation_kwargs=invocation_kwargs,
-        **cleaned_invocation_params,
-        consumes=consumes,
-        result=result,
-        parent_invocation_id=parent_invocation_id
+        args=cleaned_invocation_params.get('args', []),
+        kwargs=cleaned_invocation_params.get('kwargs', {}),
+        used_by_id=parent_invocation_id
     )
 
+    results = []
+    if isinstance(result, lstr):
+        results = [result]
+    elif isinstance(result, list):
+        results = result
+    else:
+        raise TypeError("Result must be either lstr or List[lstr]")
+
+    serialized_results = [
+        SerializedLStr(
+            content=str(res),
+            logits=res.logits
+        ) for res in results
+    ]
+
+    config._store.write_invocation(invocation, serialized_results, consumes)
 
 def compute_state_cache_key(ipstr, fn_closure):
     _global_free_vars_str = f"{json.dumps(get_immutable_vars(fn_closure[2]), sort_keys=True, default=repr)}"
@@ -271,5 +285,3 @@ def prepare_invocation_params(fn_args, fn_kwargs):
     # XXX:  Unify this with above so that we don't have to do this.
     # XXX: I really think there is some standard var explorer we can leverage from from ipython or someshit.
     return json.loads(jstr), jstr, consumes
-
-

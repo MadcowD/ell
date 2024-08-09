@@ -21,6 +21,7 @@ class _Config:
     # XXX: This might lead to incorrect serialization of globals/
     default_lm_params: Dict[str, Any] = field(default_factory=dict)
     default_system_prompt: str = "You are a helpful AI assistant."
+    _default_openai_client: Optional[openai.Client] = None
 
     def __post_init__(self):
         self._lock = threading.Lock()
@@ -54,7 +55,14 @@ class _Config:
         current_registry = self._local.stack[-1] if hasattr(self._local, 'stack') and self._local.stack else self.model_registry
         client = current_registry.get(model_name)
         if client is None:
-            _config_logger.warning(f"Model '{model_name}' is not registered. Falling back to OpenAI client from environment variables.")
+            warning_message = f"Warning: A defualt provider for model '{model_name}' could not be found. Falling back to default OpenAI client from environment variables."
+            if self.verbose:
+                from colorama import Fore, Style
+                _config_logger.warning(f"{Fore.LIGHTYELLOW_EX}{warning_message}{Style.RESET_ALL}")
+            else:
+                _config_logger.debug(warning_message)
+            client = self._default_openai_client
+        
         return client
 
     def reset(self) -> None:
@@ -75,6 +83,9 @@ class _Config:
     
     def set_default_system_prompt(self, prompt: str) -> None:
         self.default_system_prompt = prompt
+
+    def set_default_client(self, client: openai.Client) -> None:
+        self.default_client = client
 
 
 # Singleton instance

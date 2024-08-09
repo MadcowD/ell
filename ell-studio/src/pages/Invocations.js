@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FiCopy, FiZap, FiEdit2, FiFilter, FiClock, FiColumns, FiPause, FiPlay } from 'react-icons/fi';
 import InvocationsTable from '../components/invocations/InvocationsTable';
 import InvocationsLayout from '../components/invocations/InvocationsLayout';
+import MetricChart from '../components/MetricChart';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useInvocationsFromLMP } from '../hooks/useBackend';
 
@@ -11,13 +12,10 @@ const Traces = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-
-  // TODO Unify invocation search behaviour with the LMP page.
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 50;
 
   const { data: invocations , isLoading } = useInvocationsFromLMP(null, null, currentPage, pageSize);
-  
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -39,45 +37,44 @@ const Traces = () => {
     navigate(`?i=${trace.id}`);
   };
 
+  const chartData = useMemo(() => {
+    if (!invocations || invocations.length === 0) return [];
+
+    return invocations
+      .map(inv => ({
+        date: new Date(inv.created_at),
+        count: 1,
+        latency: inv.latency_ms
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [invocations]);
+
+  const totalInvocations = useMemo(() => invocations?.length || 0, [invocations]);
+  const avgLatency = useMemo(() => {
+    if (!invocations || invocations.length === 0) return 0;
+    const sum = invocations.reduce((acc, inv) => acc + inv.latency_ms, 0);
+    return sum / invocations.length;
+  }, [invocations]);
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
   return (
-
-      <InvocationsLayout 
-        selectedTrace={selectedTrace} 
+    <InvocationsLayout 
+      selectedTrace={selectedTrace} 
       setSelectedTrace={setSelectedTrace}
       showSidebar={true}
       containerClass={'p-6'}
-      >
-      <div className="flex items-center mb-6">
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <span>Personal</span>
-          <span>&gt;</span>
-          <span>Projects</span>
-          <span>&gt;</span>
-          <div className="flex items-center space-x-1">
-            <FiCopy className="text-blue-400" />
-            <span className="text-white">default</span>
-          </div>
-        </div>
-        <span className="ml-auto px-2 py-1 text-xs bg-[#1c2128] text-blue-400 rounded">DEVELOPER</span>
-      </div>
+    >
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-white flex items-center">
           <FiCopy className="mr-2 text-blue-400" />
-          default
+          Invocations
         </h1>
         <div className="flex items-center space-x-2">
           <FiCopy className="text-gray-400" />
           <span className="text-gray-400">ID</span>
-          <div className="flex items-center bg-[#1c2128] rounded px-2 py-1">
-            <span className="mr-2">Data Retention</span>
-            <select className="bg-transparent text-white">
-              <option>14d</option>
-            </select>
-          </div>
           <button className="flex items-center px-3 py-1.5 bg-[#1c2128] text-sm rounded hover:bg-gray-700">
             <FiZap className="mr-1" />
             Add Rule
@@ -88,11 +85,22 @@ const Traces = () => {
           </button>
         </div>
       </div>
-      <div className="flex space-x-6 mb-6 border-b border-gray-800">
-        <button className="text-blue-400 font-medium pb-4 border-b-2 border-blue-400">Runs</button>
-        <button className="text-gray-400 hover:text-white pb-4">Threads</button>
-        <button className="text-gray-400 hover:text-white pb-4">Monitor</button>
-        <button className="text-gray-400 hover:text-white pb-4">Setup</button>
+      <div className="flex space-x-6 mb-6">
+        <MetricChart 
+          rawData={chartData}
+          dataKey="count"
+          color="#8884d8"
+          title="Invocations"
+          yAxisLabel="Count"
+        />
+        <MetricChart 
+          rawData={chartData}
+          dataKey="latency"
+          color="#82ca9d"
+          title="Latency"
+          aggregation="avg"
+          yAxisLabel="ms"
+        />
       </div>
       <div className="flex items-center space-x-2 mb-6">
         <button className="flex items-center px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">
@@ -127,7 +135,6 @@ const Traces = () => {
         onSelectTrace={handleSelectTrace} 
         currentlySelectedTrace={selectedTrace}
       />
-      
     </InvocationsLayout>
   );
 };

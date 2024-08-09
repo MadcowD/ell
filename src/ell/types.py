@@ -50,8 +50,6 @@ def utc_now() -> datetime:
     Serializes to ISO-8601.
     """
     return datetime.now(tz=timezone.utc)
-
-
 class SerializedLMPUses(SQLModel, table=True):
     """
     Represents the many-to-many relationship between SerializedLMPs.
@@ -70,29 +68,27 @@ class UTCTimestamp(types.TypeDecorator[datetime]):
 
 def UTCTimestampField(index:bool=False, **kwargs:Any):
     return Field(
-        sa_column= Column(UTCTimestamp(timezone=True),index=index, **kwargs))
-        
+        sa_column=Column(UTCTimestamp(timezone=True), index=index, **kwargs))
 
 
-class SerializedLMP(SQLModel, table=True):
-    """
-    Represents a serialized Language Model Program (LMP).
-    
-    This class is used to store and retrieve LMP information in the database.
-    """
-    lmp_id: Optional[str] = Field(default=None, primary_key=True)  # Unique identifier for the LMP, now an index
-    name: str = Field(index=True)  # Name of the LMP
-    source: str  # Source code or reference for the LMP
-    dependencies: str  # List of dependencies for the LMP, stored as a string
-    # Timestamp of when the LMP was created
-    created_at: datetime = UTCTimestampField(
-        index=True,
-        nullable=False
-    )
-    is_lm: bool  # Boolean indicating if it is an LM (Language Model) or an LMP
-    lm_kwargs: dict  = Field(sa_column=Column(JSON)) # Additional keyword arguments for the LMP
 
-    invocations: List["Invocation"] = Relationship(back_populates="lmp")  # Relationship to invocations of this LMP
+class SerializedLMPBase(SQLModel):
+    lmp_id: Optional[str] = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    source: str
+    dependencies: str
+    created_at: datetime = UTCTimestampField(index=True, nullable=False)
+    is_lm: bool
+    lm_kwargs: Optional[Dict[str, Any]] = Field(default_factory=dict, sa_column=Column(JSON))
+    initial_free_vars: Optional[Dict[str, Any]] = Field(default_factory=dict, sa_column=Column(JSON))
+    initial_global_vars: Optional[Dict[str, Any]] = Field(default_factory=dict, sa_column=Column(JSON))
+    num_invocations: Optional[int] = Field(default=0)
+    commit_message: Optional[str] = Field(default=None)
+    version_number: Optional[int] = Field(default=None)
+
+
+class SerializedLMP(SerializedLMPBase, table=True):
+    invocations: List["Invocation"] = Relationship(back_populates="lmp")
     used_by: Optional[List["SerializedLMP"]] = Relationship(
         back_populates="uses",
         link_model=SerializedLMPUses,
@@ -101,7 +97,7 @@ class SerializedLMP(SQLModel, table=True):
             secondaryjoin="SerializedLMP.lmp_id==SerializedLMPUses.lmp_using_id",
         ),
     )
-    uses: List["SerializedLMP"]  = Relationship(
+    uses: List["SerializedLMP"] = Relationship(
         back_populates="used_by",
         link_model=SerializedLMPUses,
         sa_relationship_kwargs=dict(
@@ -110,98 +106,57 @@ class SerializedLMP(SQLModel, table=True):
         ),
     )
 
-    # Bound initial serialized free variables and globals
-    initial_free_vars : dict = Field(default_factory=dict, sa_column=Column(JSON))
-    initial_global_vars : dict = Field(default_factory=dict, sa_column=Column(JSON))
-    
-    # Cached INfo
-    num_invocations : Optional[int] = Field(default=0)
-    commit_message : Optional[str] = Field(default=None)
-    version_number: Optional[int] = Field(default=None)
-    
     class Config:
         table_name = "serializedlmp"
         unique_together = [("version_number", "name")]
 
-
-
 class InvocationTrace(SQLModel, table=True):
-    """
-    Represents a many-to-many relationship between Invocations and other Invocations (it's a 1st degree link in the trace graph)
+    invocation_consumer_id: str = Field(foreign_key="invocation.id", primary_key=True, index=True)
+    invocation_consuming_id: str = Field(foreign_key="invocation.id", primary_key=True, index=True)
 
-    This class is used to keep track of when an invocation consumes a in its kwargs or args a result of another invocation.
-    """
-    invocation_consumer_id: str = Field(foreign_key="invocation.id", primary_key=True, index=True)  # ID of the Invocation that is consuming another Invocation
-    invocation_consuming_id: str = Field(foreign_key="invocation.id", primary_key=True, index=True)  # ID of the Invocation that is being consumed by another Invocation
+class SerializedLStrBase(SQLModel):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    content: str
+    logits: List[float] = Field(default_factory=list, sa_column=Column(JSON))
+    producer_invocation_id: Optional[int] = Field(default=None, foreign_key="invocation.id", index=True)
 
+class SerializedLStr(SerializedLStrBase, table=True):
+    producer_invocation: Optional["Invocation"] = Relationship(back_populates="results")
 
-class Invocation(SQLModel, table=True):
-    """
-    Represents an invocation of an LMP.
-    
-    This class is used to store information about each time an LMP is called.
-    """
-    id: Optional[str] = Field(default=None, primary_key=True)  # Unique identifier for the invocation
-    lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)  # ID of the LMP that was invoked
-    args: List[Any] = Field(default_factory=list, sa_column=Column(JSON))  # Arguments used in the invocation
-    kwargs: dict = Field(default_factory=dict, sa_column=Column(JSON))  # Keyword arguments used in the invocation
-
-    global_vars : dict = Field(default_factory=dict, sa_column=Column(JSON))  # Global variables used in the invocation
-    free_vars : dict = Field(default_factory=dict, sa_column=Column(JSON))  # Free variables used in the invocation
-
-    latency_ms : float 
+class InvocationBase(SQLModel):
+    id: Optional[str] = Field(default=None, primary_key=True)
+    lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)
+    args: List[Any] = Field(default_factory=list, sa_column=Column(JSON))
+    kwargs: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    global_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    free_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    latency_ms: float
     prompt_tokens: Optional[int] = Field(default=None)
     completion_tokens: Optional[int] = Field(default=None)
     state_cache_key: Optional[str] = Field(default=None)
-
-    # Timestamp of when the invocation was created
     created_at: datetime = UTCTimestampField(default=func.now(), nullable=False)
-    invocation_kwargs: dict = Field(default_factory=dict, sa_column=Column(JSON))  # Additional keyword arguments for the invocation
+    invocation_kwargs: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    used_by_id: Optional[str] = Field(default=None, foreign_key="invocation.id", index=True)
 
-    # Relationships
-    lmp: SerializedLMP = Relationship(back_populates="invocations")  # Relationship to the LMP that was invoked
-    # Todo: Rename the result shcema to be consistent
-    results: List["SerializedLStr"] = Relationship(back_populates="producer_invocation")  # Relationship to the LStr results of the invocation
-    
-
+class Invocation(InvocationBase, table=True):
+    lmp: SerializedLMP = Relationship(back_populates="invocations")
+    results: List[SerializedLStr] = Relationship(back_populates="producer_invocation")
     consumed_by: List["Invocation"] = Relationship(
-        back_populates="consumes", link_model=InvocationTrace,
+        back_populates="consumes",
+        link_model=InvocationTrace,
         sa_relationship_kwargs=dict(
             primaryjoin="Invocation.id==InvocationTrace.invocation_consumer_id",
             secondaryjoin="Invocation.id==InvocationTrace.invocation_consuming_id",
         ),
-    )  # Relationship to the invocations that consumed this invocation
-
+    )
     consumes: List["Invocation"] = Relationship(
-        back_populates="consumed_by", link_model=InvocationTrace,
+        back_populates="consumed_by",
+        link_model=InvocationTrace,
         sa_relationship_kwargs=dict(
             primaryjoin="Invocation.id==InvocationTrace.invocation_consuming_id",
             secondaryjoin="Invocation.id==InvocationTrace.invocation_consumer_id",
         ),
     )
-
-    # a many to one relatoionship forming a tree eof invocaitons
-    used_by_id: Optional[str] = Field(default=None, foreign_key="invocation.id", index=True)
     used_by: Optional["Invocation"] = Relationship(back_populates="uses", sa_relationship_kwargs={"remote_side": "Invocation.id"})
     uses: List["Invocation"] = Relationship(back_populates="used_by")
 
-        
-
-
-
-
-class SerializedLStr(SQLModel, table=True):
-    """
-    Represents a Language String (LStr) result from an LMP invocation.
-    
-    This class is used to store the output of LMP invocations.
-    """
-    id: Optional[int] = Field(default=None, primary_key=True)  # Unique identifier for the LStr
-    content: str  # The actual content of the LStr
-    logits: List[float] = Field(default_factory=list, sa_column=Column(JSON))  # Logits associated with the LStr, if available
-    producer_invocation_id: Optional[int] = Field(default=None, foreign_key="invocation.id", index=True)  # ID of the Invocation that produced this LStr
-    producer_invocation: Optional[Invocation] = Relationship(back_populates="results")  # Relationship to the Invocation that produced this LStr
-
-    # Convert an SerializedLStr to an lstr
-    def deserialize(self) -> lstr:
-        return lstr(self.content, logits=self.logits, _origin_trace=frozenset([self.producer_invocation_id]))

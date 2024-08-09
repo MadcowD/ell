@@ -23,7 +23,6 @@ if __name__ == "__main__":
     ell.config.verbose = True
     ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
 
-
     greeting = hello("sam altman") # > "hello sama! ... "
 
 

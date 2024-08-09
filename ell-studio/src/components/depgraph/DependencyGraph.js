@@ -128,7 +128,7 @@ export function DependencyGraph({ lmps, traces, ...rest }) {
 
   return (
     <div
-      className="h-full w-full border-gray-700"
+      className="h-full h-full w-full border-gray-700"
       {...rest}
     >
       <ReactFlowProvider>

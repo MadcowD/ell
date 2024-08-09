@@ -209,10 +209,10 @@ export function getInitialGraph(lmps, traces) {
   const deadNodes = lmps
     .filter((x) => !!x)
     .flatMap((lmp) => 
-      (lmp.uses || []).filter(use => !lmpIds.has(use)).map(use => ({
-        id: `${use}`,
+      (lmp.uses || []).filter(use => !lmpIds.has(use.lmp_id)).map(use => ({
+        id: `${use.lmp_id}`,
         type: "lmp",
-        data: { label: `Unknown LMP (${use})`, lmp: { lmp_id: use, name: `Out of Date LMP (${use})`, version_number: -2 } },
+        data: { label: `Outdated LMP ${use.name}`, lmp: { lmp_id: use.lmp_id, name: `Outdated LMP (${use.name})`, version_number: use.version_number } },
         position: { x: 0, y: 0 },
         style: { opacity: 0.5 }, // Make dead nodes visually distinct
       }))
@@ -228,9 +228,9 @@ export function getInitialGraph(lmps, traces) {
         return (
           lmp?.uses?.map((use) => {
             return {
-              id: `uses-${lmp.lmp_id}-${use}`,
+              id: `uses-${lmp.lmp_id}-${use.lmp_id}`,
               target: `${lmp.lmp_id}`,
-              source: `${use}`,
+              source: `${use.lmp_id}`,
               animated: false,
               type: "default",
             };

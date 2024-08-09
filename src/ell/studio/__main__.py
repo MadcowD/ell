@@ -2,7 +2,7 @@ import asyncio
 import os
 import uvicorn
 from argparse import ArgumentParser
-from ell.studio.data_server import create_app
+from ell.studio.server import create_app
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import watchfiles

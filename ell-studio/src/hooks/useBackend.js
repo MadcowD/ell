@@ -58,7 +58,7 @@ export const useLMPs = (name, id) => {
   });
 };
 
-export const useInvocationsFromLMP = (name, id, page = 0, pageSize = 50) => {
+export const useInvocationsFromLMP = (name, id, page = 0, pageSize = 50, hierarchical = false) => {
   return useQuery({
     queryKey: ['invocations', name, id, page, pageSize],
     queryFn: async () => {
@@ -67,7 +67,7 @@ export const useInvocationsFromLMP = (name, id, page = 0, pageSize = 50) => {
       if (name) params.append('lmp_name', name);
       if (id) params.append('lmp_id', id);
       params.append('skip', skip);
-      params.append('hierarchical', true);
+      params.append('hierarchical', hierarchical);
       params.append('limit', pageSize);
       const response = await axios.get(`${API_BASE_URL}/api/invocations?${params.toString()}`);
 
@@ -89,21 +89,6 @@ export const useInvocation = (id) => {
 }
 
 
-export const useMultipleLMPs = (usesIds) => {
-  const multipleLMPs = useQueries({
-    queries: (usesIds || []).map(use => ({
-      queryKey: ['lmp', use],
-      queryFn: async () => {
-        const useResponse = await axios.get(`${API_BASE_URL}/api/lmp/${use}`);
-        return useResponse.data;
-      },
-      enabled: !!use,
-    })),
-  });
-  const isLoading = multipleLMPs.some(query => query.isLoading);
-  const data = multipleLMPs.map(query => query.data);
-  return { isLoading, data };
-};
 
 export const useLatestLMPs = (page = 0, pageSize = 100) => {
   return useQuery({

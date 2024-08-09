@@ -3,9 +3,12 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { FiChevronDown, FiChevronRight, FiMaximize2, FiMinimize2, FiCopy, FiRefreshCw } from 'react-icons/fi';
 import '../../styles/SourceCodeView.css';
+import { Card } from "../Card";
+import { useNavigate } from 'react-router-dom';
 
 import { CodeSection } from './CodeSection';
 import { CodeHighlighter } from './CodeHighlighter';
+import { LMPCardTitle } from '../depgraph/LMPCardTitle';
 
 const BoundedVariableWrapper = ({ children, selectedInvocation, content, initial_global_vars, initial_free_vars }) => {
   const var_name = content.split('=')[0].trim();
@@ -36,19 +39,74 @@ const BoundedVariableWrapper = ({ children, selectedInvocation, content, initial
   );
 };
 
+const UsedLMPWrapper = ({ uses, children, selectedInvocation, content, }) => {
+  const navigate = useNavigate();
+  const lmp_name = content.split('(')[0].split(' ')[1];
+  const defContent = content.split(lmp_name)[0];
+  const signatureContent = content.split(lmp_name)[1];
+  const lmp = uses?.find(u => u.name === lmp_name);
+  console.log("lmp", lmp, lmp_name);
+  console.log("uses", uses);
+  if (!lmp) return <>{children}</>;
+  return (
+    <div className='' style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
+      <Card style={{ display: 'inline-block' }} onClick={() => {
+        navigate(`/lmp/${lmp.name}/${lmp.lmp_id}`);
+      }}>
+        <LMPCardTitle 
+          lmp={lmp} 
+          nameOverride={<CodeHighlighter 
+            code={content} 
+            showLineNumbers={false} 
+            defaultRowPadding='' 
+            highlighterStyle={{
+              
+          padding: '0px 0px 0px 25px',
+              backgroundColor: 'transparent',
+              border: 'none',
+              marginLeft: '5px',
+              display: 'inline-block',
+                        width: 'unset'
+            }} 
+          />} 
+          displayVersion
+          fontSize="md" 
+        />
+      </Card>
+    </div>
+  );
+}
+
 
 const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocation = null, previousVersion = null, viewMode }) => {
-  const { dependencies, source, uses, initial_global_vars, initial_free_vars } = lmp;
+  const { dependencies : unprocessedDependencies, source, uses, initial_global_vars, initial_free_vars } = lmp;
 
   const [showDependencies, setShowDependencies] = useState(showDependenciesInitial);
   const [showSource, setShowSource] = useState(true);
 
+  const dependencies = useMemo(() => {
+    // Add tags on every single line which begins with def <name> where <name> is the naem of an lmp in iuses
+    const procd_deps = unprocessedDependencies.split('\n').map(line => {
+      const match = line.match(/^def (\w+)/);
+      if (match) {
+        // ge tthe lmp name its the function name after the def but before the signature args etc
+        const lmp_name = match[1].split('(')[0];
+        console.log(lmp_name);
+        if (uses.some(u => u.name === lmp_name)) {
+          return `#<LMP>\n${line}\n#</LMP>`;
+        }
+      }
+      return line;
+    }).join('\n');
+    return procd_deps;
+  }, [uses, unprocessedDependencies]);
+
   const trimmedDependencies = dependencies.trim();
   const dependencyLines = trimmedDependencies ? trimmedDependencies.split('\n').length : 0;
   const sourceLines = source.split('\n').length;
-  const dependentLMPs = uses.length;
 
-  const boundedVariableHooks = useMemo(() => {
+
+  const sourceCodeHooks = useMemo(() => {
     const mutableBVWrapper = ({ children, key, content }) => (  
       <BoundedVariableWrapper 
         key={key} 
@@ -73,9 +131,17 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
       startTag: '#<BmV>',
       endTag: '#</BmV>',
       wrapper: mutableBVWrapper
+    },
+    {
+      name: 'usedLMP',
+      startTag: '#<LMP>',
+      endTag: '#</LMP>',
+      wrapper: ({children, selectedInvocation, content}) => {
+        return <UsedLMPWrapper uses={uses} selectedInvocation={selectedInvocation} content={content}>{children}</UsedLMPWrapper>
+      }
     }
   ];
-  }, [selectedInvocation]);
+  }, [selectedInvocation, uses]);
 
   useEffect(() => {
     if (dependencyLines > 0 && dependencyLines < 6) {
@@ -88,7 +154,7 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
   }, [showDependenciesInitial]);
 
   return (
-    <div className="source-code-container bg-gray-900 text-gray-100">
+    <div className="source-code-container text-gray-100">
       {trimmedDependencies && (
         <CodeSection
           title="Dependencies"
@@ -97,7 +163,7 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
           setShowCode={setShowDependencies}
           lines={dependencyLines}
           isDependent={true}
-          customHooks={boundedVariableHooks}
+          customHooks={sourceCodeHooks}
           isDiffView={viewMode === 'Diff'}
           previousCode={previousVersion?.dependencies}
           highlighterStyle={{
