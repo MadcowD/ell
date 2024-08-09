@@ -20,8 +20,9 @@ def main():
     args = parser.parse_args()
 
 
+    app = create_app()
+
     if not args.dev:
-        app = create_app()
         # In production mode, serve the built React app
         static_dir = os.path.join(os.path.dirname(__file__), "static")
         app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
@@ -30,7 +31,6 @@ def main():
         async def serve_react_app(full_path: str):
             return FileResponse(os.path.join(static_dir, "index.html"))
 
-    db_path = os.path.join(args.storage_dir, "ell.db")
 
     async def db_watcher(db_path, app):
         print("Starting db watcher")
@@ -90,7 +90,6 @@ def main():
     async def main_async(args):
         db_path = os.path.join(args.storage_dir, "ell.db")
         dependencies = get_dependencies("ell.studio.data_server")
-        app = create_app()
 
         config = uvicorn.Config(
             app=app,
@@ -102,9 +101,13 @@ def main():
 
         tasks = [
             asyncio.create_task(run_server(server)),
-            asyncio.create_task(watch_files(dependencies, server, config, asyncio.get_event_loop())),
-            asyncio.create_task(db_watcher(db_path, app))
         ]
+        # todo. figure out equivalent for other backends
+        # maybe the server should broadcast a message to all clients on write instead of the db watcher approach
+        if args.storage_dir:
+            tasks.append(asyncio.create_task(db_watcher(db_path, app)))
+        if args.dev:
+            tasks.append(asyncio.create_task(watch_files(dependencies, server, config, asyncio.get_event_loop())))
 
         try:
             await asyncio.gather(*tasks)
