@@ -128,3 +128,13 @@ You can then visualize your promtps by visiting the frontend on `http://localhos
 - Convert all of our todos into issues and milestones
 - Multimodality
 - Output parsing.
+
+## Architecture v0
+```mermaid
+graph TD
+    A[Python Code<br>with LMP calls] -->|Invokes| B[Language Model<br>Programs LMPs]
+    B -->|Writes| C[Storage Backend<br>SQLite or PostgreSQL]
+    D[ell Studio<br>Python Server] -->|Reads| C
+    D -->|HTTP API| E[ell Studio<br>JavaScript Client]
+    D -->|WebSocket Updates| E
+```
