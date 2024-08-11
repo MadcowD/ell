@@ -2,22 +2,28 @@ import asyncio
 import os
 import uvicorn
 from argparse import ArgumentParser
+from ell.studio.config import Config
 from ell.studio.server import create_app
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from watchfiles import awatch
 import time
 
+
 def main():
     parser = ArgumentParser(description="ELL Studio Data Server")
-    parser.add_argument("--storage-dir", default=os.getcwd(),
+    parser.add_argument("--storage-dir" , default=None,
                         help="Directory for filesystem serializer storage (default: current directory)")
+    parser.add_argument("--pg-connection-string", default=None,
+                        help="PostgreSQL connection string (default: None)")
     parser.add_argument("--host", default="127.0.0.1", help="Host to run the server on")
     parser.add_argument("--port", type=int, default=8080, help="Port to run the server on")
     parser.add_argument("--dev", action="store_true", help="Run in development mode")
     args = parser.parse_args()
 
-    app = create_app(args.storage_dir)
+    config = Config(storage_dir=args.storage_dir,
+                    pg_connection_string=args.pg_connection_string)
+    app = create_app(config)
 
     if not args.dev:
         # In production mode, serve the built React app

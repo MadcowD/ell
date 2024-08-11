@@ -1,32 +1,38 @@
-from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 
 from sqlmodel import Session
-from ell.stores.sql import SQLiteStore
+from ell.stores.sql import PostgresStore, SQLiteStore
 from ell import __version__
 from fastapi import FastAPI, Query, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-import os
 import logging
-import asyncio
 import json
-import ell.studio.connection_manager
+from ell.studio.config import Config
 from ell.studio.connection_manager import ConnectionManager
-from ell.studio.datamodels import SerializedLMPPublic, SerializedLMPWithUses
+from ell.studio.datamodels import SerializedLMPWithUses
 
 from ell.types import SerializedLMP
 from datetime import datetime, timedelta
 from sqlmodel import select
 
+
 logger = logging.getLogger(__name__)
 
 
 
+def get_serializer(config: Config):
+    if config.pg_connection_string:
+        return PostgresStore(config.pg_connection_string)
+    elif config.storage_dir:
+        return SQLiteStore(config.storage_dir)
+    else:
+        raise ValueError("No storage configuration found")
 
-def create_app(storage_dir: Optional[str] = None):
-    storage_path = storage_dir or os.environ.get("ELL_STORAGE_DIR") or os.getcwd()
-    assert storage_path, "ELL_STORAGE_DIR must be set"
-    serializer = SQLiteStore(storage_path)
+
+
+def create_app(config:Config):
+    serializer = get_serializer(config)
+
     def get_session():
         with Session(serializer.engine) as session:
             yield session
