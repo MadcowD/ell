@@ -8,7 +8,7 @@ from ell.util.dict_sync_meta import DictSyncMeta
 from datetime import datetime, timezone
 from typing import Any, List, Optional
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column
-from sqlalchemy import func
+from sqlalchemy import Index, func
 import sqlalchemy.types as types
 
 _lstr_generic = Union[lstr, str]
@@ -161,3 +161,8 @@ class Invocation(InvocationBase, table=True):
     used_by: Optional["Invocation"] = Relationship(back_populates="uses", sa_relationship_kwargs={"remote_side": "Invocation.id"})
     uses: List["Invocation"] = Relationship(back_populates="used_by")
 
+    __table_args__ = (
+        Index('ix_invocation_lmp_id_created_at', 'lmp_id', 'created_at'),
+        Index('ix_invocation_created_at_latency_ms', 'created_at', 'latency_ms'),
+        Index('ix_invocation_created_at_tokens', 'created_at', 'prompt_tokens', 'completion_tokens'),
+    )

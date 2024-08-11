@@ -1,5 +1,6 @@
 import React from "react";
 import { BiCube } from "react-icons/bi";
+import { FiZap } from "react-icons/fi";
 import VersionBadge from "../VersionBadge";
 
 export function LMPCardTitle({
@@ -13,6 +14,7 @@ export function LMPCardTitle({
     shortVersion = false,
     paddingClassOverride = '',
     nameOverride = null,
+    showInvocationCount = true,  // New prop to control invocation count display
     ...rest
 }) {
     const paddingClass = paddingClassOverride ? paddingClassOverride : padding ? 'p-2' : '';
@@ -33,6 +35,12 @@ export function LMPCardTitle({
                  {lmp.name}()
             </code> }
             {displayVersion && <VersionBadge version={lmp.version_number + 1} lmpId={lmp.lmp_id} shortVersion={shortVersion} />}
+            {showInvocationCount && lmp.num_invocations > 0 && (
+                <div className="flex items-center text-xs text-gray-400" title={`${lmp.num_invocations} invocations`}>
+                    <FiZap className="w-3 h-3 mr-1" />
+                    {lmp.num_invocations}
+                </div>
+            )}
         </div>
     );
 }

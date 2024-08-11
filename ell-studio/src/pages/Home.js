@@ -5,7 +5,7 @@ import { getTimeAgo } from '../utils/lmpUtils';
 import { DependencyGraph } from '../components/depgraph/DependencyGraph';
 import { useLatestLMPs, useTraces } from '../hooks/useBackend';
 import VersionBadge from '../components/VersionBadge';
-import { Code } from 'lucide-react';
+import { BiCube } from 'react-icons/bi';
 import { Card, CardHeader, CardContent } from 'components/common/Card';
 import { ScrollArea } from 'components/common/ScrollArea';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from 'components/common/Resizable';
@@ -57,7 +57,6 @@ function Home() {
           <div className="flex flex-col h-full">
             <div className={`flex items-center justify-between border-b p-2 py-4`}>
               <span className={`text-xl font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'} flex items-center`}>
-                <Code className="w-6 h-6 mr-2" />
                 Language Model Programs
               </span>
               <div className="flex items-center">

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import os
 from typing import Any, Optional, Dict, List, Set, Union
@@ -9,7 +9,7 @@ import numpy as np
 from sqlalchemy.sql import text
 from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLMPUses, SerializedLStr, utc_now
 from ell.lstr import lstr
-from sqlalchemy import or_, func, and_
+from sqlalchemy import or_, func, and_, extract, case
 
 class SQLStore(ell.store.Store):
     def __init__(self, db_uri: str):
@@ -237,7 +237,50 @@ class SQLStore(ell.store.Store):
         
         # Convert the dictionary values back to a list
         return list(unique_traces.values())
+    
+    def get_invocations_aggregate(self, session: Session, lmp_filters: Dict[str, Any] = None, filters: Dict[str, Any] = None, days: int = 30) -> Dict[str, Any]:
+        # Calculate the start date for the graph data
+        start_date = datetime.utcnow() - timedelta(days=days)
 
+        # Base subquery
+        base_subquery = (
+            select(Invocation.created_at, Invocation.latency_ms, Invocation.prompt_tokens, Invocation.completion_tokens)
+            .join(SerializedLMP, Invocation.lmp_id == SerializedLMP.lmp_id)
+            .filter(Invocation.created_at >= start_date)
+        )
+
+        # Apply filters
+        if lmp_filters:
+            base_subquery = base_subquery.filter(and_(*[getattr(SerializedLMP, k) == v for k, v in lmp_filters.items()]))
+        if filters:
+            base_subquery = base_subquery.filter(and_(*[getattr(Invocation, k) == v for k, v in filters.items()]))
+
+        
+        data = session.exec(base_subquery).all()
+
+        # Calculate aggregate metrics
+        total_invocations = len(data)
+        total_tokens = sum(row.prompt_tokens + row.completion_tokens for row in data)
+        avg_latency = sum(row.latency_ms for row in data) / total_invocations if total_invocations > 0 else 0
+        unique_lmps = len(set(row.name for row in data))
+
+        # Prepare graph data
+        graph_data = []
+        for row in data:
+            graph_data.append({
+                "date": row.created_at,
+                "avg_latency": row.latency_ms,
+                "tokens": row.prompt_tokens + row.completion_tokens,
+                "count": 1
+            })
+
+        return {
+            "total_invocations": total_invocations,
+            "total_tokens": total_tokens,
+            "avg_latency": avg_latency,
+            "unique_lmps": unique_lmps,
+            "graph_data": graph_data
+        }
 
 class SQLiteStore(SQLStore):
     def __init__(self, storage_dir: str):
@@ -249,4 +292,3 @@ class PostgresStore(SQLStore):
     def __init__(self, db_uri: str):
         super().__init__(db_uri)
     
-

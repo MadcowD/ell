@@ -53,3 +53,22 @@ class SerializedLStrCreate(SerializedLStrBase):
 class SerializedLStrUpdate(SQLModel):
     content: Optional[str] = None
     logits: Optional[List[float]] = None
+
+from pydantic import BaseModel
+
+class GraphDataPoint(BaseModel):
+    date: datetime
+    count: int
+    avg_latency: float
+    tokens: int
+    # cost: float
+
+class InvocationsAggregate(BaseModel):
+    total_invocations: int
+    total_tokens: int
+    avg_latency: float
+    # total_cost: float
+    unique_lmps: int
+    # successful_invocations: int
+    # success_rate: float
+    graph_data: List[GraphDataPoint]
