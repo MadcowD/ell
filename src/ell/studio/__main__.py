@@ -21,7 +21,7 @@ def main():
     parser.add_argument("--dev", action="store_true", help="Run in development mode")
     args = parser.parse_args()
 
-    config = Config(storage_dir=args.storage_dir,
+    config = Config.create(storage_dir=args.storage_dir,
                     pg_connection_string=args.pg_connection_string)
     app = create_app(config)
 
