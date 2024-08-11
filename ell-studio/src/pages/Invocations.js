@@ -136,11 +136,11 @@ const Traces = () => {
 
   return (
     <ResizablePanelGroup direction="horizontal" className="w-full h-screen">
-      <ResizablePanel defaultSize={70} minSize={30}>
+      <ResizablePanel defaultSize={selectedTrace ? 100 : 70} minSize={30}>
         <InvocationsLayout 
           selectedTrace={selectedTrace} 
           setSelectedTrace={setSelectedTrace}
-          showSidebar={true}
+          showSidebar={selectedTrace}
           containerClass={'p-6 flex flex-col h-full'}
         >
           <div className="flex justify-between items-center mb-6">
@@ -256,97 +256,101 @@ const Traces = () => {
           />
         </InvocationsLayout>
       </ResizablePanel>
-      <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={30} minSize={20}>
-        <ScrollArea className="h-full p-4 bg-[#1c1f26]">
-          {!isAggregateLoading && aggregateData && (
-            <>
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-[#161b22] p-3 rounded">
-                  <h3 className="text-sm font-semibold text-white mb-1">Total Invocations</h3>
-                  <p className="text-2xl font-bold text-white">{aggregateData.total_invocations}</p>
-                </div>
-                <div className="bg-[#161b22] p-3 rounded">
-                  <h3 className="text-sm font-semibold text-white mb-1">Avg Latency</h3>
-                  <p className="text-2xl font-bold text-white">{aggregateData.avg_latency.toFixed(2)}ms</p>
-                </div>
-                <div className="bg-[#161b22] p-3 rounded">
-                  <h3 className="text-sm font-semibold text-white mb-1">Total Tokens</h3>
-                  <p className="text-2xl font-bold text-white">{aggregateData.total_tokens}</p>
-                </div>
-                <div className="bg-[#161b22] p-3 rounded">
-                  <h3 className="text-sm font-semibold text-white mb-1">Unique LMPs</h3>
-                  <p className="text-2xl font-bold text-white">{aggregateData.unique_lmps}</p>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="bg-[#161b22] p-4 rounded">
-                  <h3 className="text-md font-semibold text-white mb-3">Invocations Over Time</h3>
-                  <MetricChart 
-                    rawData={aggregateData.graph_data}
-                    dataKey="count"
-                    aggregation={"sum"}
-                    color="#8884d8"
-                    title={`Invocations (${aggregateData.total_invocations})`}
-                    yAxisLabel="Count"
-                  />
-                </div>
-
-                <div className="bg-[#161b22] p-4 rounded">
-                  <h3 className="text-md font-semibold text-white mb-3">Latency Over Time</h3>
-                  <MetricChart 
-                    rawData={aggregateData.graph_data}
-                    dataKey="avg_latency"
-                    aggregation={"avg"}
-                    color="#82ca9d"
-                    title={`Average Latency (${aggregateData.avg_latency.toFixed(2)}ms)`}
-                    yAxisLabel="ms"
-                  />
-                </div>
-
-                <div className="bg-[#161b22] p-4 rounded">
-                  <h3 className="text-md font-semibold text-white mb-3">Tokens Over Time</h3>
-                  <MetricChart 
-                    rawData={aggregateData.graph_data}
-                    dataKey="tokens"
-                    color="#ffc658"
-                    title={`Total Tokens (${aggregateData.total_tokens})`}
-                    yAxisLabel="Tokens"
-                  />
-                </div>
-
-
-                <div className="bg-[#161b22] p-4 rounded">
-                  <h3 className="text-md font-semibold text-white mb-3">Top 5 LMPs</h3>
-                  <ul className="space-y-2">
-                    {sidebarMetrics.topLMPs.map(([lmp, count], index) => (
-                      <li key={lmp} className="flex justify-between items-center text-white">
-                        <span>{index + 1}. {lmp}</span>
-                        <span className="text-sm text-gray-400">{count} invocations</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="bg-[#161b22] p-4 rounded">
-                  <h3 className="text-md font-semibold text-white mb-3">Additional Metrics</h3>
-                  <div className="space-y-2 text-white">
-                    <div className="flex justify-between">
-                      <span>Success Rate:</span>
-                      <span>{aggregateData.success_rate?.toFixed(2)}%</span>
+      {!selectedTrace && (
+        <>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={30} minSize={20}>
+            <ScrollArea className="h-full p-4 bg-[#1c1f26]">
+              {!isAggregateLoading && aggregateData && (
+                <>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-[#161b22] p-3 rounded">
+                      <h3 className="text-sm font-semibold text-white mb-1">Total Invocations</h3>
+                      <p className="text-2xl font-bold text-white">{aggregateData.total_invocations}</p>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Avg Tokens per Invocation:</span>
-                      <span>{(aggregateData.total_tokens / aggregateData.total_invocations).toFixed(2)}</span>
+                    <div className="bg-[#161b22] p-3 rounded">
+                      <h3 className="text-sm font-semibold text-white mb-1">Avg Latency</h3>
+                      <p className="text-2xl font-bold text-white">{aggregateData.avg_latency.toFixed(2)}ms</p>
+                    </div>
+                    <div className="bg-[#161b22] p-3 rounded">
+                      <h3 className="text-sm font-semibold text-white mb-1">Total Tokens</h3>
+                      <p className="text-2xl font-bold text-white">{aggregateData.total_tokens}</p>
+                    </div>
+                    <div className="bg-[#161b22] p-3 rounded">
+                      <h3 className="text-sm font-semibold text-white mb-1">Unique LMPs</h3>
+                      <p className="text-2xl font-bold text-white">{aggregateData.unique_lmps}</p>
                     </div>
                   </div>
-                </div>
-              </div>
-            </>
-          )}
-        </ScrollArea>
-      </ResizablePanel>
+
+                  <div className="space-y-6">
+                    <div className="bg-[#161b22] p-4 rounded">
+                      <h3 className="text-md font-semibold text-white mb-3">Invocations Over Time</h3>
+                      <MetricChart 
+                        rawData={aggregateData.graph_data}
+                        dataKey="count"
+                        aggregation={"sum"}
+                        color="#8884d8"
+                        title={`Invocations (${aggregateData.total_invocations})`}
+                        yAxisLabel="Count"
+                      />
+                    </div>
+
+                    <div className="bg-[#161b22] p-4 rounded">
+                      <h3 className="text-md font-semibold text-white mb-3">Latency Over Time</h3>
+                      <MetricChart 
+                        rawData={aggregateData.graph_data}
+                        dataKey="avg_latency"
+                        aggregation={"avg"}
+                        color="#82ca9d"
+                        title={`Average Latency (${aggregateData.avg_latency.toFixed(2)}ms)`}
+                        yAxisLabel="ms"
+                      />
+                    </div>
+
+                    <div className="bg-[#161b22] p-4 rounded">
+                      <h3 className="text-md font-semibold text-white mb-3">Tokens Over Time</h3>
+                      <MetricChart 
+                        rawData={aggregateData.graph_data}
+                        dataKey="tokens"
+                        color="#ffc658"
+                        title={`Total Tokens (${aggregateData.total_tokens})`}
+                        yAxisLabel="Tokens"
+                      />
+                    </div>
+
+
+                    <div className="bg-[#161b22] p-4 rounded">
+                      <h3 className="text-md font-semibold text-white mb-3">Top 5 LMPs</h3>
+                      <ul className="space-y-2">
+                        {sidebarMetrics.topLMPs.map(([lmp, count], index) => (
+                          <li key={lmp} className="flex justify-between items-center text-white">
+                            <span>{index + 1}. {lmp}</span>
+                            <span className="text-sm text-gray-400">{count} invocations</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="bg-[#161b22] p-4 rounded">
+                      <h3 className="text-md font-semibold text-white mb-3">Additional Metrics</h3>
+                      <div className="space-y-2 text-white">
+                        <div className="flex justify-between">
+                          <span>Success Rate:</span>
+                          <span>{aggregateData.success_rate?.toFixed(2)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Avg Tokens per Invocation:</span>
+                          <span>{(aggregateData.total_tokens / aggregateData.total_invocations).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </ScrollArea>
+          </ResizablePanel>
+        </>
+      )}
     </ResizablePanelGroup>
   );
 };
