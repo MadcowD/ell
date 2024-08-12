@@ -1,15 +1,13 @@
-from datetime import datetime
-import json
-import os
-from typing import Any, Optional, Dict, List, Set, Union
-from sqlmodel import Session, SQLModel, create_engine, select
+import asyncio
 import ell.store
-import cattrs
-import numpy as np
+import os
+from ell.studio.pubsub import PubSub
+from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLStr
+from sqlalchemy import func, and_
 from sqlalchemy.sql import text
-from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLMPUses, SerializedLStr, utc_now
-from ell.lstr import lstr
-from sqlalchemy import or_, func, and_
+from sqlmodel import Session, SQLModel, create_engine, select
+from typing import Any, Optional, Dict, List, Set
+
 
 class SQLStore(ell.store.Store):
     def __init__(self, db_uri: str):
@@ -244,3 +242,26 @@ class SQLiteStore(SQLStore):
         os.makedirs(storage_dir, exist_ok=True)
         db_path = os.path.join(storage_dir, 'ell.db')
         super().__init__(f'sqlite:///{db_path}')
+
+class PostgresStore(SQLStore):
+    def __init__(self, db_uri: str):
+        super().__init__(db_uri)
+    
+
+
+class SQLStorePublisher(SQLStore):
+    def __init__(self, db_uri: str, pubsub: PubSub):
+        self.pubsub = pubsub
+        super().__init__(db_uri)
+
+    def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:
+        super().write_lmp(serialized_lmp, uses)
+        # todo. return result from write lmp so we can check if it was created or alredy exists
+        asyncio.create_task(self.pubsub.publish(f"lmp/{serialized_lmp.lmp_id}/created", serialized_lmp))
+        return None
+
+    def write_invocation(self, invocation: Invocation, results: List[SerializedLStr], consumes: Set[str]) -> Optional[Any]:
+        super().write_invocation(invocation, results, consumes)
+        asyncio.create_task(self.pubsub.publish(f"lmp/{invocation.lmp_id}/invoked", invocation))
+        return None
+

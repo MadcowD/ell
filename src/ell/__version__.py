@@ -1,6 +1,6 @@
-try:
-    from importlib.metadata import version
-except ImportError:
-    from importlib_metadata import version
+from importlib.metadata import version, PackageNotFoundError
 
-__version__ = version("ell")
+try:
+    __version__ = version("ell")
+except PackageNotFoundError:
+    __version__ = "unknown"

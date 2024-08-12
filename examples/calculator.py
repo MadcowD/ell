@@ -19,7 +19,7 @@ AVAILABLE_TOOLS = [
     get_html_of_url
 ]
 
-@ell.l(model="gpt-4o", temperature=0.1)
+@ell.lm(model="gpt-4o", temperature=0.1)
 def tool_user(task: str) -> List[Any]:
     return [
         ell.system(
