@@ -21,7 +21,7 @@ import { LMPCardTitle } from "../components/depgraph/LMPCardTitle";
 import InvocationsLayout from "../components/invocations/InvocationsLayout";
 import ToggleSwitch from "../components/common/ToggleSwitch";
 import LMPDetailsSidePanel from "../components/LMPDetailsSidePanel";
-import {Card} from "../components/common/Card";
+import { Card } from "../components/common/Card";
 
 import GenericPageLayout from "../components/layouts/GenericPageLayout";
 function LMP() {
@@ -100,6 +100,16 @@ function LMP() {
       });
   };
 
+  const sidebar = useMemo(
+    () => (
+      <LMPDetailsSidePanel
+        lmp={lmp}
+        uses={uses}
+        versionHistory={versionHistory}
+      />
+    ),
+    [lmp, uses, versionHistory]
+  );
   const handleViewModeToggle = () => {
     setViewMode((prevMode) => (prevMode === "Source" ? "Diff" : "Source"));
   };
@@ -117,20 +127,14 @@ function LMP() {
     <GenericPageLayout
       selectedTrace={selectedTrace}
       setSelectedTrace={setSelectedTrace}
-      sidebarContent={
-        <LMPDetailsSidePanel
-          lmp={lmp}
-          uses={uses}
-          versionHistory={versionHistory}
-        />
-      }
+      sidebarContent={sidebar}
     >
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-lg flex items-center">
           <Link to={`/lmp/${lmp?.name}`}>
-          <Card>
-            <LMPCardTitle lmp={lmp} />
-          </Card>
+            <Card>
+              <LMPCardTitle lmp={lmp} />
+            </Card>
           </Link>
         </h1>
       </div>

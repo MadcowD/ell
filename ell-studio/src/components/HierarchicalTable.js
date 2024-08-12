@@ -2,6 +2,8 @@ import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react'
 import {  FiChevronDown, FiArrowUp, FiArrowDown, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
 import { HierarchicalTableProvider, useHierarchicalTable } from './HierarchicalTableContext';
 import { Checkbox } from "components/common/Checkbox"
+import { debounce } from 'lodash';
+
 // Update the SmoothLine component
 const SmoothLine = ({ index, startX, startY, endX: endXPreprocess, special, endY, color, animated, opacity, offset }) => {
   const endX = endXPreprocess;
@@ -83,34 +85,44 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
   }, [isNew]);
 
   const primaryColumnRef = useRef(null);
-
+  
   useEffect(() => {
     if (!primaryColumnRef.current) return;
 
+    const table = primaryColumnRef.current.closest('table');
+    let tableRect = table.getBoundingClientRect();
+
     const updatePosition = () => {
-      const tableRect = primaryColumnRef.current.closest('table').getBoundingClientRect();
-      const rowRect = primaryColumnRef.current.getBoundingClientRect();
-      const relativeX = rowRect.left - tableRect.left;
-      const relativeY = rowRect.top - tableRect.top + rowRect.height / 2;
-      setRowRef(item.id, { id: item.id, x: relativeX, y: relativeY, visible: true });
+      requestAnimationFrame(() => {
+        if (!primaryColumnRef.current) return;
+        const rowRect = primaryColumnRef.current.getBoundingClientRect();
+        const relativeX = rowRect.left - tableRect.left;
+        const relativeY = rowRect.top - tableRect.top + rowRect.height / 2;
+        setRowRef(item.id, { id: item.id, x: relativeX, y: relativeY, visible: true });
+      });
     };
+
+    const debouncedUpdatePosition = debounce(updatePosition, 100);
+
+    // Shared ResizeObserver
+    const resizeObserver = new ResizeObserver(() => {
+      tableRect = table.getBoundingClientRect(); // Update tableRect
+      debouncedUpdatePosition();
+    });
+
+    // Observe only the table
+    resizeObserver.observe(table);
 
     // Initial position update
     updatePosition();
-
-    // Create a ResizeObserver
-    const resizeObserver = new ResizeObserver(updatePosition);
-
-    // Observe both the row and the table
-    resizeObserver.observe(primaryColumnRef.current);
-    resizeObserver.observe(primaryColumnRef.current.closest('table'));
 
     // Clean up
     return () => {
       setRowRef(item.id, {visible: false});
       resizeObserver.disconnect();
+      debouncedUpdatePosition.cancel();
     };
-  }, [item.id, setRowRef, sortedData.length, expandedRows, linkColumn]);
+  }, [item.id, setRowRef]);
 
   return (
     <React.Fragment>
