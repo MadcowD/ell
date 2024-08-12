@@ -103,6 +103,10 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
     };
   }, [invocationTableData, currentlySelectedTrace, onSelectTrace]);
 
+  useEffect(() => {
+    console.log(`Displaying page ${currentPage + 1}, with ${invocations?.length} invocations`);
+  }, [currentPage, invocations]);
+
   const defaultColumns = [
     { 
       header: 'LMP', 
@@ -117,6 +121,7 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
               e.stopPropagation();
               onClickLMP(item);
             }} 
+            showInvocationCount={false}
           />
         </Card>
       ), 

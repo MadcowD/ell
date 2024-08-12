@@ -140,3 +140,17 @@ export const useLMPHistory = (days = 365) => {
     },
   });
 };
+
+export const useInvocationsAggregate = (lmpName, lmpId, days = 30) => {
+  return useQuery({
+    queryKey: ['invocationsAggregate', lmpName, lmpId, days],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (lmpName) params.append('lmp_name', lmpName);
+      if (lmpId) params.append('lmp_id', lmpId);
+      params.append('days', days);
+      const response = await axios.get(`${API_BASE_URL}/api/invocations/aggregate?${params.toString()}`);
+      return response.data;
+    }
+  });
+};

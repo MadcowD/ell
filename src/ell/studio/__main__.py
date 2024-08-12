@@ -10,10 +10,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import time
 
+
 def main():
     setup_logging()
     parser = ArgumentParser(description="ELL Studio Data Server")
-    parser.add_argument("--storage-dir", default=os.getcwd(),
+    parser.add_argument("--storage-dir" , default=None,
                         help="Directory for filesystem serializer storage (default: current directory)")
     parser.add_argument("--pg-connection-string", default=None,
                         help="PostgreSQL connection string (default: None)")
