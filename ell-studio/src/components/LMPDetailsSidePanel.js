@@ -33,9 +33,9 @@ function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
 
   return (
     <SidePanel title="LMP Details">
-      <div className="bg-[#21242c] p-3 rounded-md shadow-sm mb-4">
+      <div className="bg-card p-3 rounded-md shadow-sm mb-4">
         <div className="flex justify-between items-center mb-2">
-          <h3 className="text-sm font-medium text-gray-300">Version</h3>
+          <h3 className="text-sm font-medium text-card-foreground">Version</h3>
           <VersionBadge version={lmp.version_number + 1} hash={lmp.lmp_id} />
         </div>
         <StatItem icon={FiClock} label="Created" value={getTimeAgo(new Date(lmp.created_at))} />
@@ -45,28 +45,28 @@ function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
       </div>
 
       {lmp.lm_kwargs && (
-        <div className="bg-[#21242c] p-3 rounded-md shadow-sm mb-4">
-          <h3 className="text-sm font-medium text-gray-300 mb-2">LM Keywords</h3>
-          <pre className="overflow-x-auto text-xs text-gray-400 bg-[#2a2f3a] p-2 rounded">
+        <div className="bg-card p-3 rounded-md shadow-sm mb-4">
+          <h3 className="text-sm font-medium text-card-foreground mb-2">LM Keywords</h3>
+          <pre className="overflow-x-auto text-xs text-muted-foreground bg-muted p-2 rounded">
             <code>{JSON.stringify(lmp.lm_kwargs, null, 2)}</code>
           </pre>
         </div>
       )}
 
-      <div className="bg-[#21242c] p-3 rounded-md shadow-sm mb-4">
-        <h3 className="text-sm font-medium text-gray-300 mb-2">Uses</h3>
+      <div className="bg-card p-3 rounded-md shadow-sm mb-4">
+        <h3 className="text-sm font-medium text-card-foreground mb-2">Uses</h3>
         {uses && uses.length > 0 ? (
           <ul className="space-y-1">
             {uses.filter(use => !!use).map((use) => (
               <li key={use.lmp_id} className="text-xs">
-                <Link to={`/lmp/${use.name}/${use.lmp_id}`} className="text-blue-400 hover:text-blue-300 transition-colors">
+                <Link to={`/lmp/${use.name}/${use.lmp_id}`} className="text-primary hover:text-primary/80 transition-colors">
                   <LMPCardTitle lmp={use} displayVersion scale={50} shortVersion={true} />
                 </Link>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-gray-400">No dependencies</p>
+          <p className="text-xs text-muted-foreground">No dependencies</p>
         )}
       </div>
 
@@ -87,8 +87,8 @@ function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
         yAxisLabel="ms"
       />
 
-      <div className="bg-[#21242c] p-3 rounded-md shadow-sm mt-4">
-        <h3 className="text-sm font-medium text-gray-300 mb-2">Version History</h3>
+      <div className="bg-card p-3 rounded-md shadow-sm mt-4">
+        <h3 className="text-sm font-medium text-card-foreground mb-2">Version History</h3>
         <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
           {versionHistory.map((version, index) => (
             <Link
@@ -96,23 +96,23 @@ function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
               to={`/lmp/${version.name}/${version.lmp_id}`}
               className={`block p-2 rounded text-xs ${
                 version.lmp_id === lmp.lmp_id
-                  ? 'bg-blue-900 bg-opacity-30'
-                  : 'hover:bg-[#2a2f3a]'
+                  ? 'bg-primary/10'
+                  : 'hover:bg-muted'
               }`}
             >
               <div className="flex justify-between items-center">
                 <span className={`font-medium ${
-                  version.lmp_id === lmp.lmp_id ? 'text-blue-400' : 'text-gray-300'
+                  version.lmp_id === lmp.lmp_id ? 'text-primary' : 'text-muted-foreground'
                 }`}>
                   v{versionHistory.length - index}
                 </span>
-                <span className="text-gray-500">
+                <span className="text-muted-foreground">
                   <FiCalendar className="inline mr-1" size={10} />
                   {format(new Date(version.created_at), 'MMM d, yyyy')}
                 </span>
               </div>
               {version.commit_message && (
-                <p className="text-gray-500 mt-1 truncate">
+                <p className="text-muted-foreground mt-1 truncate">
                   <FiGitCommit className="inline mr-1" size={10} />
                   {version.commit_message}
                 </p>

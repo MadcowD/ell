@@ -17,7 +17,6 @@ function Home() {
   const { darkMode } = useTheme();
   const { data: lmps, isLoading: isLoadingLMPs } = useLatestLMPs();
   const { data: traces, isLoading: isLoadingTraces } = useTraces(lmps);
-  
 
   const toggleExpand = (lmpName, event) => {
     if (event.target.tagName.toLowerCase() !== 'a') {
@@ -56,14 +55,14 @@ function Home() {
         <ResizablePanel defaultSize={70} minSize={30}>
           <div className="flex flex-col h-full">
             <div className={`flex items-center justify-between border-b p-2 py-4`}>
-              <span className={`text-xl font-medium ${darkMode ? 'text-gray-100' : 'text-gray-800'} flex items-center`}>
+              <span className={`text-xl font-medium text-${darkMode ? 'gray-100' : 'gray-800'} flex items-center`}>
                 Language Model Programs
               </span>
               <div className="flex items-center">
-                <span className={`mr-4 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                <span className={`mr-4 text-sm text-${darkMode ? 'gray-300' : 'gray-600'}`}>
                   Total LMPs: {lmps.length}
                 </span>
-                <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                <span className={`text-sm text-${darkMode ? 'gray-300' : 'gray-600'}`}>
                   Last Updated: {lmps[0] && lmps[0].versions && lmps[0].versions[0] ? getTimeAgo(lmps[0].versions[0].created_at) : 'N/A'}
                 </span>
               </div>

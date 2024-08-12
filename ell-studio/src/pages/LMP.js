@@ -116,7 +116,7 @@ function LMP() {
 
   if (isLoadingLMP)
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-900 text-gray-100">
+      <div className="flex items-center justify-center h-screen bg-card text-card-foreground">
         Loading...
       </div>
     );
@@ -139,14 +139,14 @@ function LMP() {
         </h1>
       </div>
 
-      <main className=" overflow-y-auto hide-scrollbar">
-        <div className="mb-6 bg-[#1c1f26] rounded-lg p-4">
+      <main className="overflow-y-auto hide-scrollbar">
+        <div className="mb-6 bg-card rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center space-x-4">
-              <h2 className="text-md font-semibold">Language Model Program</h2>
+              <h2 className="text-md font-semibold text-card-foreground">Language Model Program</h2>
               {(id || requestedInvocationId) && (
                 <>
-                  <span className="text-gray-500 mx-2">•</span>
+                  <span className="text-muted-foreground mx-2">•</span>
                   <VersionBadge
                     version={
                       id
@@ -162,13 +162,13 @@ function LMP() {
               {previousVersion && (
                 <>
                   {viewMode === "Diff" && (
-                    <div className="flex items-center text-sm text-gray-400">
+                    <div className="flex items-center text-sm text-muted-foreground">
                       <FiGitCommit className="mr-2" />
                       <span className="mr-2">Comparing to </span>
                       <VersionBadge
                         version={previousVersion.version_number + 1}
                         hash={previousVersion.lmp_id}
-                        className="opacity-40 "
+                        className="opacity-40"
                       />
                     </div>
                   )}
@@ -181,7 +181,7 @@ function LMP() {
                 </>
               )}
               <button
-                className="p-1 rounded bg-[#2a2f3a] hover:bg-[#3a3f4b] transition-colors"
+                className="p-1 rounded bg-secondary hover:bg-secondary/80 transition-colors"
                 onClick={handleCopyCode}
               >
                 <FiCopy className="w-4 h-4" />
@@ -200,14 +200,14 @@ function LMP() {
         </div>
 
         <div className="mb-6">
-          <div className="flex border-b border-gray-700">
+          <div className="flex border-b border-border">
             {["Runs", "Version History"].map((tab) => (
               <button
                 key={tab}
                 className={`px-4 py-2 focus:outline-none ${
                   activeTab === tab.toLowerCase().replace(" ", "_")
-                    ? "text-blue-400 border-b-2 border-blue-400 font-medium"
-                    : "text-gray-400 hover:text-gray-200"
+                    ? "text-primary border-b-2 border-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
                 onClick={() =>
                   setActiveTab(tab.toLowerCase().replace(" ", "_"))
@@ -223,23 +223,23 @@ function LMP() {
               <>
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex space-x-2">
-                    <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors flex items-center">
+                    <button className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80 transition-colors flex items-center">
                       <FiFilter className="mr-1" /> 1 filter
                     </button>
-                    <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
+                    <button className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80 transition-colors">
                       Last 7 days
                     </button>
-                    <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
+                    <button className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80 transition-colors">
                       Root Runs
                     </button>
-                    <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
+                    <button className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80 transition-colors">
                       LLM Calls
                     </button>
-                    <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
+                    <button className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80 transition-colors">
                       All Runs
                     </button>
                   </div>
-                  <button className="p-1 rounded bg-[#2a2f3a] hover:bg-[#3a3f4b] transition-colors">
+                  <button className="p-1 rounded bg-secondary hover:bg-secondary/80 transition-colors">
                     <FiColumns className="w-4 h-4" />
                   </button>
                 </div>
