@@ -8,22 +8,17 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   Brush,
-  Legend
 } from "recharts";
 import {
   format,
   differenceInDays,
   differenceInHours,
-  differenceInMinutes,
   startOfMinute,
-  endOfMinute,
   eachMinuteOfInterval,
   eachHourOfInterval,
   eachDayOfInterval,
   startOfHour,
-  endOfHour,
   startOfDay,
-  endOfDay,
   addMinutes,
   getMinutes,
   subMonths,
@@ -43,23 +38,16 @@ function MetricChart({ rawData, dataKey, color, yAxisLabel, aggregation="sum", t
     { value: "12h", label: "Last 12 Hours" },
     { value: "1h", label: "Last Hour" },
   ].filter((range) => {
-     if(!rawData)
-        return true;
-    else {
-        // if the range extends beyond the available data, don't show it
-        const earliestDate = new Date(rawData[0]?.date);
-        if(range.value === "all")
-            return true;
-        else {
-            const start = range.value === "1m" ? subMonths(new Date(), 1) :
-                          range.value === "7d" ? subDays(new Date(), 7) :
-                          range.value === "24h" ? subHours(new Date(), 24) :
-                          range.value === "12h" ? subHours(new Date(), 12) :
-                          range.value === "1h" ? subHours(new Date(), 1) :
-                          new Date(); // Default case, shouldn't occur
-            return start >= earliestDate;
-        }
-    }
+    if(!rawData) return true;
+    const earliestDate = new Date(rawData[0]?.date);
+    if(range.value === "all") return true;
+    const start = range.value === "1m" ? subMonths(new Date(), 1) :
+                  range.value === "7d" ? subDays(new Date(), 7) :
+                  range.value === "24h" ? subHours(new Date(), 24) :
+                  range.value === "12h" ? subHours(new Date(), 12) :
+                  range.value === "1h" ? subHours(new Date(), 1) :
+                  new Date();
+    return start >= earliestDate;
   }), [rawData]);
 
   useEffect(() => {
@@ -68,24 +56,12 @@ function MetricChart({ rawData, dataKey, color, yAxisLabel, aggregation="sum", t
       let start = rawData[0]?.date;
       
       switch (selectedTimeRange) {
-        case "1m":
-          start = subMonths(latestNow, 1);
-          break;
-        case "7d":
-          start = subDays(latestNow, 7);
-          break;
-        case "24h":
-          start = subHours(latestNow, 24);
-          break;
-        case "12h":
-          start = subHours(latestNow, 12);
-          break;
-        case "1h":
-          start = subHours(latestNow, 1);
-          break;
-        default:
-          // "all" - use the earliest date in rawData
-          break;
+        case "1m": start = subMonths(latestNow, 1); break;
+        case "7d": start = subDays(latestNow, 7); break;
+        case "24h": start = subHours(latestNow, 24); break;
+        case "12h": start = subHours(latestNow, 12); break;
+        case "1h": start = subHours(latestNow, 1); break;
+        default: break;
       }
 
       setDateRange({
@@ -95,19 +71,16 @@ function MetricChart({ rawData, dataKey, color, yAxisLabel, aggregation="sum", t
     }
   }, [rawData, selectedTimeRange]);
 
-  // Determine aggregation based on zoom
   const aggregatedData = useMemo(() => {
     if (!rawData?.length || !dateRange) return [];
 
-    const zoomStart =  dateRange.start;
+    const zoomStart = dateRange.start;
     const zoomEnd = dateRange.end;
 
     const daysDiff = differenceInDays(zoomEnd, zoomStart);
     const hoursDiff = differenceInHours(zoomEnd, zoomStart);
-    const minutesDiff = differenceInMinutes(zoomEnd, zoomStart);
 
-    let aggregationInterval;
-    let aggregationFunction;
+    let aggregationInterval, aggregationFunction;
 
     if (daysDiff > 30) {
       aggregationInterval = eachDayOfInterval;
@@ -157,7 +130,6 @@ function MetricChart({ rawData, dataKey, color, yAxisLabel, aggregation="sum", t
     );
   }, [rawData, dateRange, dataKey, aggregation]);
 
-  // Memoize formatting functions
   const formatXAxis = useCallback(
     (tickItem) => {
       const date = new Date(tickItem);
@@ -171,19 +143,17 @@ function MetricChart({ rawData, dataKey, color, yAxisLabel, aggregation="sum", t
 
   const formatTooltip = useCallback(
     (value) => {
-      return [`${value} ${yAxisLabel || ''}`, title];
+      return [`${value} ${yAxisLabel || ''}`, ''];
     },
-    [yAxisLabel, title]
+    [yAxisLabel]
   );
 
-  const handleZoom = (domain) => {
-  };
-
   return (
-    <div className="bg-[#161b22] p-4 rounded-lg shadow-lg">
-      <div className="flex justify-end items-center mb-4">
+    <div className="bg-card p-2 rounded">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-sm font-semibold text-card-foreground">{title}</h3>
         <select
-          className="bg-[#0d1117] text-white text-sm border border-gray-700 rounded px-2 py-1"
+          className="bg-muted text-muted-foreground text-xs border border-input rounded px-1 py-0.5"
           value={selectedTimeRange}
           onChange={(e) => setSelectedTimeRange(e.target.value)}
         >
@@ -194,11 +164,11 @@ function MetricChart({ rawData, dataKey, color, yAxisLabel, aggregation="sum", t
           ))}
         </select>
       </div>
-      <div className="h-64">
+      <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={aggregatedData}
-            margin={{ top: 5, right: 20, left: 0, bottom: 0 }}
+            margin={{ top: 5, right: 5, left: 0, bottom: 0 }}
           >
             <defs>
               <linearGradient id={`color${dataKey}`} x1="0" y1="0" x2="0" y2="1">
@@ -208,49 +178,45 @@ function MetricChart({ rawData, dataKey, color, yAxisLabel, aggregation="sum", t
             </defs>
             <XAxis
               dataKey="date"
-              stroke="#4a5568"
-              tick={{ fill: "#4a5568", fontSize: 10 }}
+              stroke="#718096"
+              tick={{ fill: "#718096", fontSize: 9 }}
               tickFormatter={formatXAxis}
             />
             <YAxis
-              stroke="#4a5568"
-              tick={{ fill: "#4a5568", fontSize: 10 }}
+              stroke="#718096"
+              tick={{ fill: "#718096", fontSize: 9 }}
               label={{
                 value: yAxisLabel,
                 angle: -90,
                 position: "insideLeft",
-                fill: "#4a5568",
-                fontSize: 12,
+                fill: "#718096",
+                fontSize: 10,
               }}
             />
-            <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#4A5568" />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#1f2937",
-                border: "none",
-                color: "#fff",
-                fontSize: 12,
+                backgroundColor: "#2D3748",
+                border: "1px solid #4A5568",
+                color: "#E2E8F0",
+                fontSize: 10,
               }}
               labelFormatter={(label) => format(new Date(label), "PPpp")}
               formatter={formatTooltip}
             />
-            <Legend />
             <Area
               type="monotone"
               dataKey={dataKey}
               stroke={color}
               fillOpacity={1}
               fill={`url(#color${dataKey})`}
-              name={title}
             />
             <Brush
               dataKey="date"
-              height={20}
+              height={15}
               stroke={color}
-              fill="#161b22"
-              onChange={handleZoom}
-              startIndex={0}
-              endIndex={aggregatedData.length - 1}
+              fill="#2D3748"
+              tickFormatter={formatXAxis}
             />
           </AreaChart>
         </ResponsiveContainer>

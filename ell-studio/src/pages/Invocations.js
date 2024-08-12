@@ -145,24 +145,30 @@ const Invocations = () => {
       setSelectedTrace={setSelectedTrace}
       sidebarContent={sidebarContent}
     >
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-white flex items-center">
-          Invocations
-        </h1>
-      </div>
+      <div className="bg-background text-foreground">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-semibold">Invocations</h1>
+          <div className="flex items-center space-x-2">
+            <button
+              className={`px-3 py-1 rounded text-xs ${isPolling ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
+              onClick={togglePolling}
+            >
+              {isPolling ? <FiPause className="inline mr-1" /> : <FiPlay className="inline mr-1" />}
+              {isPolling ? 'Pause' : 'Resume'}
+            </button>
+          </div>
+        </div>
 
-      {/* Search bar, advanced filters, and controls */}
-      <div className="mb-6 space-y-4">
-        <div className="flex items-center space-x-4">
-          <div className="flex-grow relative">
+        <div className="mb-6 flex items-center space-x-4">
+          <div className="relative flex-grow">
             <input
               type="text"
               placeholder="Search invocations..."
-              className="w-full bg-[#2d333b] text-white px-4 py-2 rounded-md pl-10"
+              className="w-full pl-10 pr-4 py-2 bg-input text-foreground rounded-md"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
           </div>
           <button 
             className="flex items-center px-3 py-2 bg-[#2d333b] text-sm rounded hover:bg-gray-700"
@@ -170,13 +176,6 @@ const Invocations = () => {
           >
             <FiFilter className="mr-2" />
             Advanced Filters
-          </button>
-          <button
-            className={`flex items-center px-3 py-2 ${isPolling ? 'bg-blue-600' : 'bg-[#2d333b]'} rounded hover:bg-gray-700`}
-            onClick={togglePolling}
-          >
-            {isPolling ? <FiPause className="mr-2" /> : <FiPlay className="mr-2" />}
-            {isPolling ? 'Pause Updates' : 'Resume Updates'}
           </button>
         </div>
         
@@ -238,23 +237,22 @@ const Invocations = () => {
           </div>
         )}
         
+        <div className="flex items-center space-x-2 mb-6">
+          <button className="flex items-center px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded hover:bg-secondary/80">
+            <FiColumns className="mr-1" />
+            Columns
+          </button>
+        </div>
+        <InvocationsTable 
+          invocations={filteredInvocations} 
+          currentPage={currentPage}
+          expandAll={true}
+          setCurrentPage={setCurrentPage}
+          pageSize={pageSize}
+          onSelectTrace={handleSelectTrace} 
+          currentlySelectedTrace={selectedTrace}
+        />
       </div>
-
-      <div className="flex items-center space-x-2 mb-6">
-        <button className="flex items-center px-2 py-1 bg-[#1c2128] text-xs rounded hover:bg-gray-700">
-          <FiColumns className="mr-1" />
-          Columns
-        </button>
-      </div>
-      <InvocationsTable 
-        invocations={filteredInvocations} 
-        currentPage={currentPage}
-        expandAll={true}
-        setCurrentPage={setCurrentPage}
-        pageSize={pageSize}
-        onSelectTrace={handleSelectTrace} 
-        currentlySelectedTrace={selectedTrace}
-      />
     </GenericPageLayout>
   );
 };
