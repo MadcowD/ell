@@ -12,7 +12,7 @@ from ell import __version__
 from fastapi import FastAPI, Query, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from ell.studio.datamodels import SerializedLMPWithUses,InvocationsAggregate
-from ell.studio.pubsub import MqttPubSub, NoOpPubSub, WebSocketPubSub
+from ell.studio.pubsub import MqttWebSocketPubSub, NoOpPubSub, WebSocketPubSub
 from ell.studio.config import Config
 
 from ell.types import SerializedLMP
@@ -66,7 +66,7 @@ def create_app(config:Config):
                 try:
                     async with aiomqtt.Client(config.mqtt_connection_string) as mqtt:
                         logger.info("Connected to MQTT")
-                        pubsub = MqttPubSub(mqtt)
+                        pubsub = MqttWebSocketPubSub(mqtt)
                         loop = asyncio.get_event_loop()
                         task = pubsub.listen(loop)
 
@@ -107,7 +107,7 @@ def create_app(config:Config):
 
 
     @app.websocket("/ws")
-    async def websocket_endpoint(websocket: WebSocket, pubsub: MqttPubSub = Depends(get_pubsub)):
+    async def websocket_endpoint(websocket: WebSocket, pubsub: MqttWebSocketPubSub = Depends(get_pubsub)):
         await websocket.accept()
         await pubsub.subscribe_async("all", websocket)
         try:
@@ -116,7 +116,6 @@ def create_app(config:Config):
                 # Handle incoming WebSocket messages if needed
         except WebSocketDisconnect:
             pubsub.unsubscribe_from_all(websocket)
-            # manager.disconnect(websocket)
 
     
     @app.get("/api/latest/lmps", response_model=list[SerializedLMPWithUses])

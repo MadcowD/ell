@@ -1,7 +1,7 @@
 from functools import lru_cache
 import json
 import os
-from typing import Optional
+from typing import Any, Optional
 from pydantic import BaseModel
 
 import logging
@@ -20,10 +20,10 @@ class Config(BaseModel):
     pg_connection_string: Optional[str] = None
     storage_dir: Optional[str] = None
     mqtt_connection_string: Optional[str] = None
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
 
-    def model_post_init(self, __context):
+    def model_post_init(self, __context: Any):
         # Storage
         self.pg_connection_string = self.pg_connection_string or os.getenv(
             "ELL_PG_CONNECTION_STRING")

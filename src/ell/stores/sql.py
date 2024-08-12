@@ -294,22 +294,3 @@ class SQLiteStore(SQLStore):
 class PostgresStore(SQLStore):
     def __init__(self, db_uri: str):
         super().__init__(db_uri)
-
-
-
-class SQLStorePublisher(SQLStore):
-    def __init__(self, db_uri: str, pubsub: PubSub):
-        self.pubsub = pubsub
-        super().__init__(db_uri)
-
-    def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:
-        super().write_lmp(serialized_lmp, uses)
-        # todo. return result from write lmp so we can check if it was created or alredy exists
-        asyncio.create_task(self.pubsub.publish(f"lmp/{serialized_lmp.lmp_id}/created", serialized_lmp))
-        return None
-
-    def write_invocation(self, invocation: Invocation, results: List[SerializedLStr], consumes: Set[str]) -> Optional[Any]:
-        super().write_invocation(invocation, results, consumes)
-        asyncio.create_task(self.pubsub.publish(f"lmp/{invocation.lmp_id}/invoked", invocation))
-        return None
-
