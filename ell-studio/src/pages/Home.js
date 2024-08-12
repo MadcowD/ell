@@ -44,58 +44,58 @@ function Home() {
   const memoizedLMPs = useMemo(() => firstLMPs, [firstLMPs]);
 
   if (!memoizedLMPs || !memoizedTraces) {
-    return <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen flex items-center justify-center`}>
-      <p className={`text-${darkMode ? 'white' : 'black'}`}>Loading...</p>
+    return <div className={`bg-background min-h-screen flex items-center justify-center`}>
+      <p className={`text-foreground`}>Loading...</p>
     </div>;
   }
 
   return (
-    <div className={`bg-${darkMode ? 'gray-900' : 'gray-100'} min-h-screen`}>
+    <div className={`bg-background min-h-screen`}>
       <ResizablePanelGroup direction="horizontal" className="w-full h-screen">
         <ResizablePanel defaultSize={70} minSize={30}>
           <div className="flex flex-col h-full">
-            <div className={`flex items-center justify-between border-b p-2 py-4`}>
-              <span className={`text-xl font-medium text-${darkMode ? 'gray-100' : 'gray-800'} flex items-center`}>
+            <div className="flex items-center justify-between border-b border-border p-4">
+              <span className="text-xl font-medium text-foreground flex items-center">
                 Language Model Programs
               </span>
               <div className="flex items-center">
-                <span className={`mr-4 text-sm text-${darkMode ? 'gray-300' : 'gray-600'}`}>
+                <span className="mr-4 text-sm text-muted-foreground">
                   Total LMPs: {lmps.length}
                 </span>
-                <span className={`text-sm text-${darkMode ? 'gray-300' : 'gray-600'}`}>
+                <span className="text-sm text-muted-foreground">
                   Last Updated: {lmps[0] && lmps[0].versions && lmps[0].versions[0] ? getTimeAgo(lmps[0].versions[0].created_at) : 'N/A'}
                 </span>
               </div>
             </div>
             <div className="w-full h-full">
-            <MemoizedDependencyGraph lmps={memoizedLMPs} traces={memoizedTraces} key={memoizedLMPs.length + memoizedTraces.length}/>
+              <MemoizedDependencyGraph lmps={memoizedLMPs} traces={memoizedTraces} key={memoizedLMPs.length + memoizedTraces.length}/>
             </div>
           </div>
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={30} minSize={20}>
           <ScrollArea className="h-screen">
-            <div className="space-y-2 p-4">
+            <div className="space-y-4 p-4">
               {lmps.map((lmp) => (
                 <Card 
                   key={lmp.name} 
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-accent/50 transition-colors duration-200"
                   onClick={(e) => toggleExpand(lmp.name, e)}
                 >
                   <CardHeader>
                     <div className="flex flex-col space-y-2">
                       <Link 
                         to={`/lmp/${lmp.name}`} 
-                        className={`text-xl font-semibold ${darkMode ? 'text-gray-100 hover:text-blue-300' : 'text-gray-800 hover:text-blue-600'} break-words`}
+                        className="text-xl font-semibold text-foreground hover:text-primary break-words"
                         onClick={(e) => e.stopPropagation()}
                       >
-                    {lmp.name}
+                        {lmp.name}
                       </Link>
                       <div className="flex space-x-2">
-                        <span className={`text-xs px-2 py-1 rounded-full ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
+                        <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
                           ID: {truncateId(lmp.lmp_id)}
                         </span>
-                        <span className={`text-xs px-2 py-1 rounded-full ${darkMode ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800'}`}>
+                        <span className="text-xs px-2 py-1 rounded-full bg-primary text-primary-foreground">
                           Latest
                         </span>
                         <VersionBadge version={lmp.version_number + 1} hash={lmp.lmp_id} />
@@ -103,9 +103,9 @@ function Home() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                  <div className={`bg-${darkMode ? 'gray-700' : 'gray-100'} rounded p-3 mb-4`}>
-                  <code className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {lmp.source.length > 100 ? `${lmp.source.substring(0, 100)}...` : lmp.source}
+                    <div className="bg-muted rounded p-3 mb-4">
+                      <code className="text-sm text-muted-foreground">
+                        {lmp.source.length > 100 ? `${lmp.source.substring(0, 100)}...` : lmp.source}
                       </code>
                     </div>
                   </CardContent>

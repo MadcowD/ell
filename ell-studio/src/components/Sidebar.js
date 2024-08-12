@@ -12,7 +12,7 @@ const Sidebar = () => {
       to={to}
       className={({ isActive }) => `
         group flex items-center py-3 px-4 rounded-lg transition-all duration-200
-        ${isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}
+        ${isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'}
       `}
     >
       <Icon className="w-5 h-5" />
@@ -20,7 +20,7 @@ const Sidebar = () => {
         <span className="ml-3 text-sm font-medium">{label}</span>
       )}
       {!isExpanded && (
-        <div className="fixed left-16 ml-2 px-2 py-1 bg-background text-foreground text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+        <div className="fixed left-16 ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
           {label}
         </div>
       )}
@@ -31,7 +31,7 @@ const Sidebar = () => {
     <motion.aside 
       initial={false}
       animate={{ width: isExpanded ? 200 : 64 }}
-      className="bg-background h-screen py-6 flex flex-col"
+      className="bg-card border-r border-border h-screen py-6 flex flex-col"
     >
       <div className="flex justify-center items-center mb-8">
         <img src="/gif.gif" alt="ell-studio Logo" className="h-4 invert" />
