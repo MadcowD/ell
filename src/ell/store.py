@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from datetime import datetime
-from typing import Any, Optional, Dict, List, Set, Union
-from ell.lstr import lstr
+from typing import Any, Optional, Dict, List, Set
 from ell.types import InvocableLM, SerializedLMP, Invocation, SerializedLStr
 
 
