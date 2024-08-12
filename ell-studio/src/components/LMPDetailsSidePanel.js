@@ -1,15 +1,15 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { FiClock, FiTag, FiGitCommit, FiZap, FiHash, FiCalendar, FiChevronRight } from 'react-icons/fi';
+import { FiClock, FiTag, FiZap, FiHash, FiChevronRight, FiCode } from 'react-icons/fi';
 import { getTimeAgo } from '../utils/lmpUtils';
 import VersionBadge from './VersionBadge';
 import { useInvocationsFromLMP } from '../hooks/useBackend';
 import { LMPCardTitle } from './depgraph/LMPCardTitle';
 import { format } from 'date-fns';
 import SidePanel from './common/SidePanel';
-import StatItem from './common/StatItem';
-import MetricCard from './common/MetricCard';
+import MetricChart from './MetricChart';
 import { motion } from 'framer-motion';
+import {Card} from './common/Card';
 
 function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
   const { data: invocations } = useInvocationsFromLMP(lmp.name, lmp.lmp_id, 0, 100);
@@ -38,52 +38,72 @@ function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="space-y-6"
+        className="space-y-2 text-sm"
       >
-        <div className="bg-card p-4 rounded-lg shadow-md">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-card-foreground">Version Info</h3>
+        <div className="bg-card p-2 rounded">
+          <div className="flex justify-between items-center mb-1">
+            <h3 className="text-sm font-semibold text-card-foreground">Version Info</h3>
             <VersionBadge version={lmp.version_number + 1} hash={lmp.lmp_id} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <StatItem icon={FiClock} label="Created" value={getTimeAgo(new Date(lmp.created_at))} />
-            <StatItem icon={FiTag} label="Is LMP" value={lmp.is_lm ? 'Yes' : 'No'} />
-            <StatItem icon={FiZap} label="Total Invocations" value={totalInvocations} />
-            <StatItem icon={FiHash} label="Avg. Latency" value={`${avgLatency.toFixed(2)}ms`} />
+          <div className="grid grid-cols-2 gap-y-0.5">
+            <div className="flex items-center">
+              <FiClock className="mr-1 text-muted-foreground" size={12} />
+              <span className="text-muted-foreground">Created:</span>
+            </div>
+            <div className="text-right">{getTimeAgo(new Date(lmp.created_at))}</div>
+            <div className="flex items-center">
+              <FiTag className="mr-1 text-muted-foreground" size={12} />
+              <span className="text-muted-foreground">Is LMP:</span>
+            </div>
+            <div className="text-right">{lmp.is_lm ? 'Yes' : 'No'}</div>
+            <div className="flex items-center">
+              <FiZap className="mr-1 text-muted-foreground" size={12} />
+              <span className="text-muted-foreground">Invocations:</span>
+            </div>
+            <div className="text-right">{totalInvocations}</div>
+            <div className="flex items-center">
+              <FiHash className="mr-1 text-muted-foreground" size={12} />
+              <span className="text-muted-foreground">Avg. Latency:</span>
+            </div>
+            <div className="text-right">{avgLatency.toFixed(2)}ms</div>
           </div>
         </div>
 
         {lmp.lm_kwargs && (
-          <div className="bg-card p-4 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold text-card-foreground mb-3">LM Keywords</h3>
-            <pre className="overflow-x-auto text-sm text-muted-foreground bg-muted p-3 rounded-md">
+          <div className="bg-card p-2 rounded">
+            <h3 className="text-sm font-semibold text-card-foreground mb-1 flex items-center">
+              <FiCode className="mr-1" size={14} /> LM Keywords
+            </h3>
+            <pre className="overflow-x-auto text-xs text-muted-foreground bg-muted p-1 rounded">
               <code>{JSON.stringify(lmp.lm_kwargs, null, 2)}</code>
             </pre>
           </div>
         )}
 
-        <div className="bg-card p-4 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-card-foreground mb-3">Uses</h3>
+        <div className="bg-card p-2 rounded">
+          <h3 className="text-sm font-semibold text-card-foreground mb-1">Uses</h3>
           {uses && uses.length > 0 ? (
-            <ul className="space-y-2">
+            <ul className="space-y-0.5">
               {uses.filter(use => !!use).map((use) => (
                 <motion.li
                   key={use.lmp_id}
-                  whileHover={{ scale: 1.02 }}
-                  className="text-sm bg-muted p-2 rounded-md"
+                  whileHover={{ scale: 1.01 }}
+                  className=" p-0.5 rounded"
                 >
                   <Link to={`/lmp/${use.name}/${use.lmp_id}`} className="text-primary hover:text-primary/80 transition-colors">
-                    <LMPCardTitle lmp={use} displayVersion scale={50} shortVersion={true} />
+                    <Card>
+                    <LMPCardTitle lmp={use} displayVersion scale={50}  />
+                    </Card>
                   </Link>
                 </motion.li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">No dependencies</p>
+            <p className="text-muted-foreground">No dependencies</p>
           )}
         </div>
 
-        <MetricCard
+        <MetricChart
           title="Invocations"
           rawData={chartData}
           dataKey="count"
@@ -91,7 +111,7 @@ function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
           yAxisLabel="Count"
         />
 
-        <MetricCard
+        <MetricChart
           title="Latency"
           rawData={chartData}
           dataKey="latency"
@@ -99,35 +119,32 @@ function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
           aggregation="avg"
           yAxisLabel="ms"
         />
-
-        <div className="bg-card p-4 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-card-foreground mb-3">Version History</h3>
-          <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+{/* 
+        <div className="bg-card p-2 rounded">
+          <h3 className="text-sm font-semibold text-card-foreground mb-1">Version History</h3>
+          <div className="space-y-0.5 max-h-40 overflow-y-auto pr-1">
             {versionHistory.map((version, index) => (
               <motion.div
                 key={version.lmp_id}
-                whileHover={{ scale: 1.02 }}
-                className={`p-3 rounded-md text-sm ${
+                whileHover={{ scale: 1.01 }}
+                className={`p-0.5 rounded ${
                   version.lmp_id === lmp.lmp_id
-                    ? 'bg-primary/10'
+                    ? 'bg-primary/10 border-l-2 border-primary'
                     : 'bg-muted hover:bg-muted/80'
                 }`}
               >
                 <Link to={`/lmp/${version.name}/${version.lmp_id}`} className="block">
-                  <div className="flex justify-between items-center">
-                    <span className={`font-medium ${
-                      version.lmp_id === lmp.lmp_id ? 'text-primary' : 'text-card-foreground'
-                    }`}>
-                      v{versionHistory.length - index}
-                    </span>
-                    <span className="text-muted-foreground">
-                      <FiCalendar className="inline mr-1" size={12} />
-                      {format(new Date(version.created_at), 'MMM d, yyyy')}
-                    </span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1">
+                      <span className="font-semibold">v{versionHistory.length - index}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(version.created_at), 'MMM d, yyyy HH:mm')}
+                      </span>
+                    </div>
+                    <FiChevronRight className="text-muted-foreground" size={12} />
                   </div>
                   {version.commit_message && (
-                    <p className="text-muted-foreground mt-1 truncate">
-                      <FiGitCommit className="inline mr-1" size={12} />
+                    <p className="text-xs text-muted-foreground truncate">
                       {version.commit_message}
                     </p>
                   )}
@@ -135,7 +152,7 @@ function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
               </motion.div>
             ))}
           </div>
-        </div>
+        </div> */}
       </motion.div>
     </SidePanel>
   );

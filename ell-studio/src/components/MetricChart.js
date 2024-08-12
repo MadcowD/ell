@@ -149,11 +149,11 @@ function MetricChart({ rawData, dataKey, color, yAxisLabel, aggregation="sum", t
   );
 
   return (
-    <div className="bg-card p-4 rounded-lg shadow-md">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-card-foreground">{title}</h3>
+    <div className="bg-card p-2 rounded">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-sm font-semibold text-card-foreground">{title}</h3>
         <select
-          className="bg-muted text-muted-foreground text-sm border border-input rounded px-2 py-1"
+          className="bg-muted text-muted-foreground text-xs border border-input rounded px-1 py-0.5"
           value={selectedTimeRange}
           onChange={(e) => setSelectedTimeRange(e.target.value)}
         >
@@ -164,11 +164,11 @@ function MetricChart({ rawData, dataKey, color, yAxisLabel, aggregation="sum", t
           ))}
         </select>
       </div>
-      <div className="h-64">
+      <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={aggregatedData}
-            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            margin={{ top: 5, right: 5, left: 0, bottom: 0 }}
           >
             <defs>
               <linearGradient id={`color${dataKey}`} x1="0" y1="0" x2="0" y2="1">
@@ -179,18 +179,18 @@ function MetricChart({ rawData, dataKey, color, yAxisLabel, aggregation="sum", t
             <XAxis
               dataKey="date"
               stroke="#718096"
-              tick={{ fill: "#718096", fontSize: 10 }}
+              tick={{ fill: "#718096", fontSize: 9 }}
               tickFormatter={formatXAxis}
             />
             <YAxis
               stroke="#718096"
-              tick={{ fill: "#718096", fontSize: 10 }}
+              tick={{ fill: "#718096", fontSize: 9 }}
               label={{
                 value: yAxisLabel,
                 angle: -90,
                 position: "insideLeft",
                 fill: "#718096",
-                fontSize: 12,
+                fontSize: 10,
               }}
             />
             <CartesianGrid strokeDasharray="3 3" stroke="#4A5568" />
@@ -199,7 +199,7 @@ function MetricChart({ rawData, dataKey, color, yAxisLabel, aggregation="sum", t
                 backgroundColor: "#2D3748",
                 border: "1px solid #4A5568",
                 color: "#E2E8F0",
-                fontSize: 12,
+                fontSize: 10,
               }}
               labelFormatter={(label) => format(new Date(label), "PPpp")}
               formatter={formatTooltip}
@@ -213,7 +213,7 @@ function MetricChart({ rawData, dataKey, color, yAxisLabel, aggregation="sum", t
             />
             <Brush
               dataKey="date"
-              height={20}
+              height={15}
               stroke={color}
               fill="#2D3748"
               tickFormatter={formatXAxis}
