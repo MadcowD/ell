@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   Brush,
-  Legend,
+  Legend
 } from "recharts";
 import {
   format,
@@ -31,7 +31,7 @@ import {
   subHours,
 } from "date-fns";
 
-function MetricChart({ rawData, dataKey, color, title, yAxisLabel, aggregation="sum" }) {
+function MetricChart({ rawData, dataKey, color, yAxisLabel, aggregation="sum", title }) {
   const [dateRange, setDateRange] = useState(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState("all");
 
@@ -170,8 +170,8 @@ function MetricChart({ rawData, dataKey, color, title, yAxisLabel, aggregation="
   );
 
   const formatTooltip = useCallback(
-    (value, name, props) => {
-      return [`${value} ${yAxisLabel || title.toLowerCase()}`, title];
+    (value) => {
+      return [`${value} ${yAxisLabel || ''}`, title];
     },
     [yAxisLabel, title]
   );
@@ -181,8 +181,7 @@ function MetricChart({ rawData, dataKey, color, title, yAxisLabel, aggregation="
 
   return (
     <div className="bg-[#161b22] p-4 rounded-lg shadow-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-md font-semibold text-white">{title}</h3>
+      <div className="flex justify-end items-center mb-4">
         <select
           className="bg-[#0d1117] text-white text-sm border border-gray-700 rounded px-2 py-1"
           value={selectedTimeRange}
@@ -202,7 +201,7 @@ function MetricChart({ rawData, dataKey, color, title, yAxisLabel, aggregation="
             margin={{ top: 5, right: 20, left: 0, bottom: 0 }}
           >
             <defs>
-              <linearGradient id={`color${title}`} x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id={`color${dataKey}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={color} stopOpacity={0.8} />
                 <stop offset="95%" stopColor={color} stopOpacity={0} />
               </linearGradient>
@@ -235,13 +234,13 @@ function MetricChart({ rawData, dataKey, color, title, yAxisLabel, aggregation="
               labelFormatter={(label) => format(new Date(label), "PPpp")}
               formatter={formatTooltip}
             />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Legend />
             <Area
               type="monotone"
               dataKey={dataKey}
               stroke={color}
               fillOpacity={1}
-              fill={`url(#color${title})`}
+              fill={`url(#color${dataKey})`}
               name={title}
             />
             <Brush

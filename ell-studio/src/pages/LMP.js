@@ -21,13 +21,9 @@ import { LMPCardTitle } from "../components/depgraph/LMPCardTitle";
 import InvocationsLayout from "../components/invocations/InvocationsLayout";
 import ToggleSwitch from "../components/common/ToggleSwitch";
 import LMPDetailsSidePanel from "../components/LMPDetailsSidePanel";
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from "../components/common/Resizable";
-import { ScrollArea } from "../components/common/ScrollArea";
+import {Card} from "../components/common/Card";
 
+import GenericPageLayout from "../components/layouts/GenericPageLayout";
 function LMP() {
   const { name, id } = useParams();
   let [searchParams, setSearchParams] = useSearchParams();
@@ -55,7 +51,6 @@ function LMP() {
     true // dangerous hierarchical query that will not scale to unique invocations
   );
   const uses = lmp?.uses;
-
 
   const [activeTab, setActiveTab] = useState("runs");
   const [selectedTrace, setSelectedTrace] = useState(null);
@@ -119,181 +114,153 @@ function LMP() {
   const omitColumns = ["name"];
 
   return (
-    <ResizablePanelGroup
-      direction="horizontal"
-      className="w-full h-screen"
+    <GenericPageLayout
+      selectedTrace={selectedTrace}
+      setSelectedTrace={setSelectedTrace}
+      sidebarContent={
+        <LMPDetailsSidePanel
+          lmp={lmp}
+          uses={uses}
+          versionHistory={versionHistory}
+        />
+      }
     >
-      <ResizablePanel defaultSize={selectedTrace ? 100 : 70} minSize={30}>
-        {/* <ScrollArea className="h-full"> */}
-          <InvocationsLayout
-            selectedTrace={selectedTrace}
-            setSelectedTrace={setSelectedTrace}
-            showSidebar={true}
-          >
-            <header className="bg-[#1c1f26] p-4 flex justify-between items-center">
-              <h1 className="text-lg font-semibold">
-                <Link to={`/lmp/${lmp?.name}`}>
-                  <LMPCardTitle lmp={lmp} />
-                </Link>
-              </h1>
-              <div className="flex space-x-2">
-                <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-sm hover:bg-[#3a3f4b] transition-colors">
-                  Add to Dataset
-                </button>
-                <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-sm hover:bg-[#3a3f4b] transition-colors">
-                  Share
-                </button>
-              </div>
-            </header>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-lg flex items-center">
+          <Link to={`/lmp/${lmp?.name}`}>
+          <Card>
+            <LMPCardTitle lmp={lmp} />
+          </Card>
+          </Link>
+        </h1>
+      </div>
 
-            <main className="p-6 overflow-y-auto hide-scrollbar">
-              <div className="mb-6 bg-[#1c1f26] rounded-lg p-4">
+      <main className=" overflow-y-auto hide-scrollbar">
+        <div className="mb-6 bg-[#1c1f26] rounded-lg p-4">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center space-x-4">
+              <h2 className="text-md font-semibold">Language Model Program</h2>
+              {(id || requestedInvocationId) && (
+                <>
+                  <span className="text-gray-500 mx-2">•</span>
+                  <VersionBadge
+                    version={
+                      id
+                        ? lmp?.version_number + 1
+                        : requestedInvocation?.lmp.version_number + 1
+                    }
+                    hash={id ? lmp?.lmp_id : requestedInvocation?.lmp_id}
+                  />
+                </>
+              )}
+            </div>
+            <div className="flex space-x-4 items-center">
+              {previousVersion && (
+                <>
+                  {viewMode === "Diff" && (
+                    <div className="flex items-center text-sm text-gray-400">
+                      <FiGitCommit className="mr-2" />
+                      <span className="mr-2">Comparing to </span>
+                      <VersionBadge
+                        version={previousVersion.version_number + 1}
+                        hash={previousVersion.lmp_id}
+                        className="opacity-40 "
+                      />
+                    </div>
+                  )}
+                  <ToggleSwitch
+                    leftLabel="Source"
+                    rightLabel="Diff"
+                    isRight={viewMode === "Diff"}
+                    onToggle={handleViewModeToggle}
+                  />
+                </>
+              )}
+              <button
+                className="p-1 rounded bg-[#2a2f3a] hover:bg-[#3a3f4b] transition-colors"
+                onClick={handleCopyCode}
+              >
+                <FiCopy className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          <div className="overflow-hidden">
+            <LMPSourceView
+              lmp={lmp}
+              selectedInvocation={selectedTrace}
+              showDependenciesInitial={!!id}
+              previousVersion={previousVersion}
+              viewMode={previousVersion ? viewMode : "Source"}
+            />
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <div className="flex border-b border-gray-700">
+            {["Runs", "Version History"].map((tab) => (
+              <button
+                key={tab}
+                className={`px-4 py-2 focus:outline-none ${
+                  activeTab === tab.toLowerCase().replace(" ", "_")
+                    ? "text-blue-400 border-b-2 border-blue-400 font-medium"
+                    : "text-gray-400 hover:text-gray-200"
+                }`}
+                onClick={() =>
+                  setActiveTab(tab.toLowerCase().replace(" ", "_"))
+                }
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-4">
+            {activeTab === "runs" && (
+              <>
                 <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center space-x-4">
-                    <h2 className="text-md font-semibold">
-                      Language Model Program
-                    </h2>
-                    {(id || requestedInvocationId) && (
-                      <>
-                        <span className="text-gray-500 mx-2">•</span>
-                        <VersionBadge
-                          version={
-                            id
-                              ? lmp?.version_number + 1
-                              : requestedInvocation?.lmp.version_number + 1
-                          }
-                          hash={id ? lmp?.lmp_id : requestedInvocation?.lmp_id}
-                        />
-                      </>
-                    )}
-                  </div>
-                  <div className="flex space-x-4 items-center">
-                    {previousVersion && (
-                      <>
-                        {viewMode === "Diff" && (
-                          <div className="flex items-center text-sm text-gray-400">
-                            <FiGitCommit className="mr-2" />
-                            <span className="mr-2">Comparing to </span>
-                            <VersionBadge
-                              version={previousVersion.version_number + 1}
-                              hash={previousVersion.lmp_id}
-                              className="opacity-40 "
-                            />
-                          </div>
-                        )}
-                        <ToggleSwitch
-                          leftLabel="Source"
-                          rightLabel="Diff"
-                          isRight={viewMode === "Diff"}
-                          onToggle={handleViewModeToggle}
-                        />
-                      </>
-                    )}
-                    <button
-                      className="p-1 rounded bg-[#2a2f3a] hover:bg-[#3a3f4b] transition-colors"
-                      onClick={handleCopyCode}
-                    >
-                      <FiCopy className="w-4 h-4" />
+                  <div className="flex space-x-2">
+                    <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors flex items-center">
+                      <FiFilter className="mr-1" /> 1 filter
+                    </button>
+                    <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
+                      Last 7 days
+                    </button>
+                    <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
+                      Root Runs
+                    </button>
+                    <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
+                      LLM Calls
+                    </button>
+                    <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
+                      All Runs
                     </button>
                   </div>
+                  <button className="p-1 rounded bg-[#2a2f3a] hover:bg-[#3a3f4b] transition-colors">
+                    <FiColumns className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="overflow-hidden">
-                  <LMPSourceView
-                    lmp={lmp}
-                    selectedInvocation={selectedTrace}
-                    showDependenciesInitial={!!id}
-                    previousVersion={previousVersion}
-                    viewMode={previousVersion ? viewMode : "Source"}
-                  />
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <div className="flex border-b border-gray-700">
-                  {["Runs", "Version History"].map(
-                    (tab) => (
-                      <button
-                        key={tab}
-                        className={`px-4 py-2 focus:outline-none ${
-                          activeTab === tab.toLowerCase().replace(" ", "_")
-                            ? "text-blue-400 border-b-2 border-blue-400 font-medium"
-                            : "text-gray-400 hover:text-gray-200"
-                        }`}
-                        onClick={() =>
-                          setActiveTab(tab.toLowerCase().replace(" ", "_"))
-                        }
-                      >
-                        {tab}
-                      </button>
-                    )
-                  )}
-                </div>
-
-                <div className="mt-4">
-                  {activeTab === "runs" && (
-                    <>
-                      <div className="flex justify-between items-center mb-4">
-                        <div className="flex space-x-2">
-                          <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors flex items-center">
-                            <FiFilter className="mr-1" /> 1 filter
-                          </button>
-                          <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
-                            Last 7 days
-                          </button>
-                          <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
-                            Root Runs
-                          </button>
-                          <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
-                            LLM Calls
-                          </button>
-                          <button className="px-3 py-1 bg-[#2a2f3a] text-gray-200 rounded text-xs hover:bg-[#3a3f4b] transition-colors">
-                            All Runs
-                          </button>
-                        </div>
-                        <button className="p-1 rounded bg-[#2a2f3a] hover:bg-[#3a3f4b] transition-colors">
-                          <FiColumns className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <InvocationsTable
-                        invocations={invocations}
-                        currentPage={currentPage}
-                        pageSize={pageSize}
-                        setCurrentPage={setCurrentPage}
-                        producingLmp={lmp}
-                        onSelectTrace={(trace) => {
-                          setSelectedTrace(trace);
-                          setSearchParams({ i: trace.id });
-                        }}
-                        currentlySelectedTrace={selectedTrace}
-                        omitColumns={omitColumns}
-                      />
-                    </>
-                  )}
-                  {activeTab === "version_history" && (
-                    <VersionHistoryPane versions={versionHistory} />
-                  )}
-                
-                </div>
-              </div>
-            </main>
-          </InvocationsLayout>
-        {/* </ScrollArea> */}
-      </ResizablePanel>
-      {!selectedTrace && (
-        <>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={30} minSize={20}>
-            <div className="h-full overflow-y-auto hide-scrollbar">
-              <LMPDetailsSidePanel
-                lmp={lmp}
-              uses={uses}
-                versionHistory={versionHistory}
-              />
-            </div>
-          </ResizablePanel>
-        </>
-      )}
-    </ResizablePanelGroup>
+                <InvocationsTable
+                  invocations={invocations}
+                  currentPage={currentPage}
+                  pageSize={pageSize}
+                  setCurrentPage={setCurrentPage}
+                  producingLmp={lmp}
+                  onSelectTrace={(trace) => {
+                    setSelectedTrace(trace);
+                    setSearchParams({ i: trace.id });
+                  }}
+                  currentlySelectedTrace={selectedTrace}
+                  omitColumns={omitColumns}
+                />
+              </>
+            )}
+            {activeTab === "version_history" && (
+              <VersionHistoryPane versions={versionHistory} />
+            )}
+          </div>
+        </div>
+      </main>
+    </GenericPageLayout>
   );
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import InvocationDetailsSidevar from './InvocationDetailsSidebar';
+import InvocationDetailsSidevar from './details/InvocationDetailsPopover';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const InvocationsLayout = ({ children, selectedTrace, setSelectedTrace, showSidebar = false, containerClass = '' }) => {
