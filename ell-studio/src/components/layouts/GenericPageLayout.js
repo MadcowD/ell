@@ -23,16 +23,16 @@ const GenericPageLayout = ({
           selectedTrace={selectedTrace}
           setSelectedTrace={setSelectedTrace}
           showSidebar={showSidebar}
-          containerClass="flex flex-col h-full"
+          containerClass="flex flex-col h-full bg-background"
         >
-          <div className="p-6">
+          <div className="p-6 bg-background">
             {children}
           </div>
         </InvocationsLayout>
       </ResizablePanel>
-      <ResizableHandle withHandle className="my-handle" />
+      <ResizableHandle withHandle className="my-handle bg-border" />
       <ResizablePanel defaultSize={30} minSize={20} className="bg-background" style={{ display: sidebarVisible ? 'block' : 'none' }}>
-        <ScrollArea className="h-full">
+        <ScrollArea className="h-full bg-background">
           {sidebarContent}
         </ScrollArea>
       </ResizablePanel>
