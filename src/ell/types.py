@@ -1,6 +1,9 @@
 # Let's define the core types.
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Union, Any, Optional
+from typing import Annotated, Callable, Dict, List, Union, Any, Optional
+from pydantic import BeforeValidator
+
+from sqlalchemy.engine.interfaces import Dialect
 
 from ell.lstr import lstr
 from ell.util.dict_sync_meta import DictSyncMeta
@@ -50,6 +53,7 @@ def utc_now() -> datetime:
     Serializes to ISO-8601.
     """
     return datetime.now(tz=timezone.utc)
+
 class SerializedLMPUses(SQLModel, table=True):
     """
     Represents the many-to-many relationship between SerializedLMPs.
@@ -66,11 +70,17 @@ class UTCTimestamp(types.TypeDecorator[datetime]):
     impl = types.TIMESTAMP
     def process_result_value(self, value: datetime, dialect:Any):
         return value.replace(tzinfo=timezone.utc)
+    # def process_bind_param(self, value: str|datetime, dialect:Any):
+    #     if isinstance(value, str):
+    #         return datetime.fromisoformat(value).replace(tzinfo=timezone.utc)
+    #     elif isinstance(value, datetime):
+    #         return value.replace(tzinfo=timezone.utc)
+    #     raise ValueError(f"Invalid value for UTCTimestamp: {value}")
+
 
 def UTCTimestampField(index:bool=False, **kwargs:Any):
     return Field(
         sa_column=Column(UTCTimestamp(timezone=True), index=index, **kwargs))
-
 
 
 class SerializedLMPBase(SQLModel):
@@ -110,6 +120,7 @@ class SerializedLMP(SerializedLMPBase, table=True):
     class Config:
         table_name = "serializedlmp"
         unique_together = [("version_number", "name")]
+
 
 class InvocationTrace(SQLModel, table=True):
     invocation_consumer_id: str = Field(foreign_key="invocation.id", primary_key=True, index=True)

@@ -1,35 +1,45 @@
-import asyncio
 import ell.store
 import os
-from ell.studio.pubsub import PubSub
 from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLStr
-from sqlalchemy import func, and_
+from sqlalchemy import Engine, func, and_
 from sqlalchemy.sql import text
 from sqlmodel import Session, SQLModel, create_engine, select
 from typing import Any, Optional, Dict, List, Set
 from datetime import datetime, timedelta
-import cattrs
-import numpy as np
 from sqlalchemy.sql import text
-from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLMPUses, SerializedLStr, utc_now
-from ell.lstr import lstr
+from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLStr
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class SQLStore(ell.store.Store):
-    def __init__(self, db_uri: str):
-        self.engine = create_engine(db_uri)
+    def __init__(self, db_uri: Optional[str] = None, engine: Optional[Engine] = None):
+        if engine is not None:
+            self.engine = engine
+        elif db_uri is None:
+            raise ValueError(
+                "db_uri cannot be None when engine is not provided as an argument")
+        else:
+            self.engine = create_engine(db_uri)
+
         SQLModel.metadata.create_all(self.engine)
-        
 
-        self.open_files: Dict[str, Dict[str, Any]] = {}
-
+    def get_lmp(self, lmp_id: str,session:Optional[Session] = None) -> Optional[SerializedLMP]:
+        if session is None:
+            with Session(self.engine) as session:
+                return session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == lmp_id)).first()
+        else:
+            return session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == lmp_id)).first()
 
     def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:
         with Session(self.engine) as session:
             # Bind the serialized_lmp to the session
-            lmp = session.query(SerializedLMP).filter(SerializedLMP.lmp_id == serialized_lmp.lmp_id).first()
+            lmp = session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == serialized_lmp.lmp_id)).first()
             
             if lmp:
                 # Already added to the DB.
+                logger.debug(f"LMP {serialized_lmp.lmp_id} already exists in the DB. Skipping write.")
                 return lmp
             else:
                 session.add(serialized_lmp)
@@ -40,11 +50,12 @@ class SQLStore(ell.store.Store):
                     serialized_lmp.uses.append(used_lmp)
             
             session.commit()
+            logger.debug(f"Wrote new LMP {serialized_lmp.lmp_id} to the DB.")
         return None
 
     def write_invocation(self, invocation: Invocation, results: List[SerializedLStr], consumes: Set[str]) -> Optional[Any]:
         with Session(self.engine) as session:
-            lmp = session.query(SerializedLMP).filter(SerializedLMP.lmp_id == invocation.lmp_id).first()
+            lmp = session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == invocation.lmp_id)).first()
             assert lmp is not None, f"LMP with id {invocation.lmp_id} not found. Writing invocation erroneously"
             
             # Increment num_invocations
@@ -285,11 +296,22 @@ class SQLStore(ell.store.Store):
             "graph_data": graph_data
         }
 
+
 class SQLiteStore(SQLStore):
     def __init__(self, storage_dir: str):
-        os.makedirs(storage_dir, exist_ok=True)
-        db_path = os.path.join(storage_dir, 'ell.db')
-        super().__init__(f'sqlite:///{db_path}')
+        if ":memory:" not in storage_dir:
+            db_path = os.path.join(storage_dir, 'ell.db')
+            return super().__init__(f'sqlite:///{db_path}')
+        else:
+            from sqlalchemy.pool import StaticPool
+            engine = create_engine(
+                'sqlite://',
+                connect_args={'check_same_thread': False},
+                poolclass=StaticPool
+            )
+
+            return super().__init__(engine=engine)
+
 
 class PostgresStore(SQLStore):
     def __init__(self, db_uri: str):

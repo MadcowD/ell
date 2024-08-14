@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import Any, Optional, Dict, List, Set
+
+from sqlmodel import Session
 from ell.types import InvocableLM, SerializedLMP, Invocation, SerializedLStr
 
 
@@ -8,6 +10,16 @@ class Store(ABC):
     """
     Abstract base class for serializers. Defines the interface for serializing and deserializing LMPs and invocations.
     """
+
+    @abstractmethod
+    def get_lmp(self, lmp_id: str, session: Optional[Session] = None) -> Optional[SerializedLMP]:
+        """
+        Get an LMP by its ID.
+
+        :param lmp_id: ID of the LMP to retrieve.
+        :return: SerializedLMP object containing all LMP details, or None if the LMP does not exist.
+        """
+        pass
 
     @abstractmethod
     def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:

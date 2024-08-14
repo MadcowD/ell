@@ -1,6 +1,7 @@
 import logging
 from colorama import Fore, Style, init
 
+initialized = False
 def setup_logging(level: int = logging.INFO):
     # Initialize colorama for cross-platform colored output
     init(autoreset=True)
@@ -30,5 +31,7 @@ def setup_logging(level: int = logging.INFO):
 
     # Add the handler to the logger
     logger.addHandler(console_handler)
+    global initialized
+    initialized = True
 
     return logger
