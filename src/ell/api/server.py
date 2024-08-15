@@ -2,7 +2,7 @@ import asyncio
 from contextlib import asynccontextmanager
 import json
 import logging
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, Optional
 
 import aiomqtt
 from fastapi import Depends, FastAPI, HTTPException
@@ -13,13 +13,12 @@ from ell.api.types import GetLMPResponse, WriteInvocationInput, WriteLMPInput, L
 from ell.store import Store
 from ell.stores.sql import PostgresStore, SQLStore, SQLiteStore
 from ell.studio.logger import setup_logging
-from ell.types import Invocation,  SerializedLStr
 
 
 logger = logging.getLogger(__name__)
 
 
-publisher: Publisher | None = None
+publisher: Optional[Publisher] = None
 
 
 async def get_publisher():
