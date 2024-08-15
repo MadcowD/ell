@@ -1,27 +1,13 @@
-from typing import Annotated, Any, Dict,  Optional, cast
-from datetime import datetime, timezone
+from typing import Any, Dict, List,  Optional, Set, cast
+from datetime import datetime
+from numpy import ndarray
 
 from openai import BaseModel
-from pydantic import AwareDatetime, BeforeValidator, Field
+from pydantic import AwareDatetime, Field
+from ell.lstr import lstr
 
-from ell.types import SerializedLMP, utc_now
-
-
-def iso_timestamp_to_utc_datetime(v: datetime) -> datetime:
-    if isinstance(v, str):
-        return datetime.fromisoformat(v).replace(tzinfo=timezone.utc)
-    # elif isinstance(v, datetime):
-    #     if v.tzinfo is not timezone.utc:
-    #         raise ValueError(f"Invalid value for UTCTimestampField: {v}")
-    #     return v
-    elif v is None:
-        return None
-    raise ValueError(f"Invalid value for UTCTimestampField: {v}")
-
-
-# todo. does pydantic compose optional with this or do we have to in the before validator...?
-UTCTimestamp = Annotated[AwareDatetime,
-                         BeforeValidator(iso_timestamp_to_utc_datetime)]
+from ell.types import SerializedLMP, SerializedLStr, utc_now
+import ell.types
 
 
 class WriteLMPInput(BaseModel):
@@ -33,12 +19,12 @@ class WriteLMPInput(BaseModel):
     source: str
     dependencies: str
     is_lm: bool
-    lm_kwargs: Optional[Dict[str, Any]]
-    initial_free_vars: Optional[Dict[str, Any]]
-    initial_global_vars: Optional[Dict[str, Any]]
+    lm_kwargs: Optional[Dict[str, Any]] = None
+    initial_free_vars: Optional[Dict[str, Any]] = None
+    initial_global_vars: Optional[Dict[str, Any]] = None
     # num_invocations: Optional[int]
-    commit_message: Optional[str]
-    version_number: Optional[int]
+    commit_message: Optional[str] = None
+    version_number: Optional[int] = None
     created_at:  Optional[AwareDatetime] = Field(default_factory=utc_now)
 
     def to_serialized_lmp(self):
@@ -92,7 +78,72 @@ class LMP(BaseModel):
 #     lmp: LMP
 #     uses: List[str]
 
+
 GetLMPResponse = LMP
 # class LMPCreatedEvent(BaseModel):
 #     lmp: LMP
 #     uses: List[str]
+
+
+class Invocation(BaseModel):
+    """
+    An invocation of an LMP.
+    """
+    id: Optional[str] = None
+    lmp_id: str
+    args: List[Any]
+    kwargs: Dict[str, Any]
+    global_vars: Dict[str, Any]
+    free_vars: Dict[str, Any]
+    latency_ms: int
+    invocation_kwargs: Dict[str, Any]
+    prompt_tokens: Optional[int] = None
+    completion_tokens: Optional[int] = None
+    state_cache: Optional[str] = None
+    created_at: AwareDatetime = Field(default_factory=utc_now)
+    # used_by_id: Optional[str] = None
+
+    def to_serialized_invocation(self):
+        return ell.types.Invocation(
+            **self.model_dump()
+        )
+
+
+class WriteInvocationInputLStr(BaseModel):
+    id: Optional[str] = None
+    content: str
+    logits: Optional[List[float]] = None
+
+
+def lstr_to_serialized_lstr(ls: lstr) -> SerializedLStr:
+    return SerializedLStr(
+        content=str(ls),
+        logits=ls.logits if ls.logits is not None else None
+    )
+
+
+class WriteInvocationInput(BaseModel):
+    """
+    Arguments to write an invocation.
+    """
+    invocation: Invocation
+    results: List[WriteInvocationInputLStr]
+    consumes: List[str]
+
+    def to_serialized_invocation_input(self):
+        results = [
+            SerializedLStr(
+                id=ls.id,
+                content=ls.content,
+                logits=ndarray(
+                    ls.logits) if ls.logits is not None else None
+            )
+            for ls in self.results]
+
+        sinvo = self.invocation.to_serialized_invocation()
+        return {
+            'invocation': sinvo,
+            'results': results,
+            # todo. is this a list or a set?
+            'consumes': self.consumes
+        }

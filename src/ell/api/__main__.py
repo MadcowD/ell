@@ -15,9 +15,12 @@ def main():
                         help="PostgreSQL connection string (default: None)")
     parser.add_argument("--mqtt-connection-string", default=None,
                         help="MQTT connection string (default: None)")
-    parser.add_argument("--host", default="127.0.0.1", help="Host to run the server on")
-    parser.add_argument("--port", type=int, default=8080, help="Port to run the server on")
-    parser.add_argument("--dev", action="store_true", help="Run in development mode")
+    parser.add_argument("--host", default="0.0.0.0",
+                        help="Host to run the server on")
+    parser.add_argument("--port", type=int, default=8080,
+                        help="Port to run the server on")
+    parser.add_argument("--dev", action="store_true",
+                        help="Run in development mode")
     args = parser.parse_args()
 
     config = Config(
@@ -30,12 +33,18 @@ def main():
 
     loop = asyncio.new_event_loop()
 
-    config = uvicorn.Config(app=app, port=args.port, loop=loop)
+    config = uvicorn.Config(
+        app=app,
+        host=args.host,
+        port=args.port,
+        loop=loop  # type: ignore
+    )
     server = uvicorn.Server(config)
 
     loop.create_task(server.serve())
 
     loop.run_forever()
+
 
 if __name__ == "__main__":
     main()

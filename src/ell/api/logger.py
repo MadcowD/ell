@@ -2,6 +2,7 @@ import logging
 from colorama import Fore, Style, init
 
 initialized = False
+
 def setup_logging(level: int = logging.INFO):
     global initialized
     if initialized:
@@ -19,7 +20,7 @@ def setup_logging(level: int = logging.INFO):
             logging.CRITICAL: Fore.RED + Style.BRIGHT + "[%(asctime)s] %(levelname)-8s %(name)s: %(message)s" + Style.RESET_ALL
         }
 
-        def format(self, record):
+        def format(self, record: logging.LogRecord) -> str:
             log_fmt = self.FORMATS.get(record.levelno)
             formatter = logging.Formatter(log_fmt, datefmt="%Y-%m-%d %H:%M:%S")
             return formatter.format(record)
@@ -34,7 +35,6 @@ def setup_logging(level: int = logging.INFO):
 
     # Add the handler to the logger
     logger.addHandler(console_handler)
-
     initialized = True
 
     return logger

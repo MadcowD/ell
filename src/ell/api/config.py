@@ -20,6 +20,7 @@ class Config(BaseModel):
     storage_dir: Optional[str] = None
     pg_connection_string: Optional[str] = None
     mqtt_connection_string: Optional[str] = None
+    log_level: int = logging.INFO
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
 

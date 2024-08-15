@@ -1,9 +1,7 @@
 # Let's define the core types.
 from dataclasses import dataclass
-from typing import Annotated, Callable, Dict, List, Union, Any, Optional
-from pydantic import BeforeValidator
+from typing import Callable, Dict, List, Union, Any, Optional
 
-from sqlalchemy.engine.interfaces import Dialect
 
 from ell.lstr import lstr
 from ell.util.dict_sync_meta import DictSyncMeta
@@ -70,12 +68,6 @@ class UTCTimestamp(types.TypeDecorator[datetime]):
     impl = types.TIMESTAMP
     def process_result_value(self, value: datetime, dialect:Any):
         return value.replace(tzinfo=timezone.utc)
-    # def process_bind_param(self, value: str|datetime, dialect:Any):
-    #     if isinstance(value, str):
-    #         return datetime.fromisoformat(value).replace(tzinfo=timezone.utc)
-    #     elif isinstance(value, datetime):
-    #         return value.replace(tzinfo=timezone.utc)
-    #     raise ValueError(f"Invalid value for UTCTimestamp: {value}")
 
 
 def UTCTimestampField(index:bool=False, **kwargs:Any):

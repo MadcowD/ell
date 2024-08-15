@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 import asyncio
 from contextlib import asynccontextmanager
 import json
@@ -9,35 +8,18 @@ import aiomqtt
 from fastapi import Depends, FastAPI, HTTPException
 from sqlmodel import Session
 from ell.api.config import Config
-from ell.api.types import GetLMPResponse, WriteLMPInput, LMP
+from ell.api.publisher import MqttPub, NoopPublisher, Publisher
+from ell.api.types import GetLMPResponse, WriteInvocationInput, WriteLMPInput, LMP
 from ell.store import Store
 from ell.stores.sql import PostgresStore, SQLStore, SQLiteStore
+from ell.studio.logger import setup_logging
 from ell.types import Invocation,  SerializedLStr
 
 
 logger = logging.getLogger(__name__)
 
 
-class Publisher(ABC):
-    @abstractmethod
-    async def publish(self, topic: str, message: str) -> None:
-        pass
-
-
-class MqttPub(Publisher):
-    def __init__(self, conn: aiomqtt.Client):
-        self.mqtt_client = conn
-
-    async def publish(self, topic: str, message: str) -> None:
-        await self.mqtt_client.publish(topic, message)
-
-
-class NoopPublisher(Publisher):
-    async def publish(self, topic: str, message: str) -> None:
-        pass
-
-
-publisher = None
+publisher: Publisher | None = None
 
 
 async def get_publisher():
@@ -51,7 +33,7 @@ def init_serializer(config: Config) -> SQLStore:
     if serializer is not None:
         return serializer
     elif config.pg_connection_string:
-        return  PostgresStore(config.pg_connection_string)
+        return PostgresStore(config.pg_connection_string)
     elif config.storage_dir:
         return SQLiteStore(config.storage_dir)
     else:
@@ -72,12 +54,12 @@ def get_session():
 
 
 def create_app(config: Config):
+    setup_logging(config.log_level)
+
     app = FastAPI(
         title="ELL API",
         description="API server for ELL",
         version="0.1.0",
-        # dependencies=[Depends(get_publisher),
-                    #   Depends(get_serializer)]
     )
 
     @asynccontextmanager
@@ -132,29 +114,31 @@ def create_app(config: Config):
             )
         )
 
-    @app.post("/invocation")
+    @app.post("/invocation", response_model=WriteInvocationInput)
     async def write_invocation(
-        invocation: Invocation,
-        results: List[SerializedLStr],
-        consumes: Set[str],
+        input: WriteInvocationInput,
         publisher: Publisher = Depends(get_publisher),
         serializer: Store = Depends(get_serializer)
     ):
+        ser_input = input.to_serialized_invocation_input()
         serializer.write_invocation(
-            invocation,
-            results,
-            consumes
+            invocation=ser_input['invocation'],
+            results=ser_input['results'],
+            consumes=ser_input['consumes']
         )
         loop = asyncio.get_event_loop()
         loop.create_task(
             publisher.publish(
-                f"lmp/{invocation.lmp_id}/invoked",
+                f"lmp/{input.invocation.lmp_id}/invoked",
                 json.dumps({
-                    "invocation": invocation,
-                    "results": results,
-                    "consumes": consumes
+                    'foo': 'bar'
+                    # "not json serializable lol"
+                    # "invocation": input.invocation,
+                    # "results": results,
+                    # "consumes": consumes
                 })
             )
         )
+        return input
 
     return app
