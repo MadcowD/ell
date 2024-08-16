@@ -24,7 +24,7 @@ publisher: Optional[Publisher] = None
 async def get_publisher():
     yield publisher
 
-serializer: SQLStore | None = None
+serializer: Optional[SQLStore] = None
 
 
 def init_serializer(config: Config) -> SQLStore:
