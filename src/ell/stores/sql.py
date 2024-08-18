@@ -35,7 +35,9 @@ class SQLStore(ell.store.Store):
     def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:
         with Session(self.engine) as session:
             # Bind the serialized_lmp to the session
-            lmp = session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == serialized_lmp.lmp_id)).first()
+            lmp = None
+            if serialized_lmp.lmp_id:
+                lmp = self.get_lmp(serialized_lmp.lmp_id, session)
             
             if lmp:
                 # Already added to the DB.
@@ -45,7 +47,7 @@ class SQLStore(ell.store.Store):
                 session.add(serialized_lmp)
             
             for use_id in uses:
-                used_lmp = session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == use_id)).first()
+                used_lmp = self.get_lmp(use_id, session)
                 if used_lmp:
                     serialized_lmp.uses.append(used_lmp)
             
@@ -55,7 +57,7 @@ class SQLStore(ell.store.Store):
 
     def write_invocation(self, invocation: Invocation, results: List[SerializedLStr], consumes: Set[str]) -> Optional[Any]:
         with Session(self.engine) as session:
-            lmp = session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == invocation.lmp_id)).first()
+            lmp = self.get_lmp(invocation.lmp_id, session)
             assert lmp is not None, f"LMP with id {invocation.lmp_id} not found. Writing invocation erroneously"
             
             # Increment num_invocations
@@ -78,7 +80,7 @@ class SQLStore(ell.store.Store):
                 ))
 
             session.commit()
-            return None
+            return invocation
         
     def get_cached_invocations(self, lmp_id :str, state_cache_key :str) -> List[Invocation]:
         with Session(self.engine) as session:

@@ -37,13 +37,16 @@ class EllAPIClient(EllClient):
 
     async def write_lmp(self, lmp: WriteLMPInput, uses: Dict[str, Any]) -> None:
         response = await self.client.post("/lmp", json={
-            "lmp": lmp.model_dump(),
+            "lmp": lmp.model_dump(mode="json"),
             "uses": uses
         })
         response.raise_for_status()
 
     async def write_invocation(self, input: WriteInvocationInput) -> None:
-        response = await self.client.post("/invocation", json=input.model_dump())
+        response = await self.client.post(
+            "/invocation",
+            json=input.model_dump(mode="json")
+        )
         response.raise_for_status()
         return None
 
@@ -72,7 +75,7 @@ class EllSqliteClient(EllClient):
         if lmp:
             return LMP(**lmp.model_dump())
         return None
-    
+
     async def get_lmp_versions(self, fqn: str) -> List[LMP]:
         slmps = self.store.get_versions_by_fqn(fqn)
         return [LMP(**slmp.model_dump()) for slmp in slmps]
@@ -97,5 +100,5 @@ class EllSqliteClient(EllClient):
     async def __aenter__(self):
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self):
         await self.close()

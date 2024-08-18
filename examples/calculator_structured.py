@@ -69,5 +69,10 @@ def calc_structured(task: str) -> float:
 
 
 if __name__ == "__main__":
-    ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
+    # Local
+    ell.init(autocommit=True)
+
+    # API server
+    # ell.init(base_url="http://localhost:8080", autocommit=True)
+
     print(calc_structured("What is two plus two?"))

@@ -2,7 +2,7 @@ import asyncio
 from contextlib import asynccontextmanager
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import aiomqtt
 from fastapi import Depends, FastAPI, HTTPException
@@ -55,12 +55,6 @@ def get_session():
 def create_app(config: Config):
     setup_logging(config.log_level)
 
-    app = FastAPI(
-        title="ELL API",
-        description="API server for ELL",
-        version="0.1.0",
-    )
-
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         global serializer
@@ -82,6 +76,21 @@ def create_app(config: Config):
         else:
             publisher = NoopPublisher()
             yield  # allow the app to run
+
+    app = FastAPI(
+        title="ELL API",
+        description="API server for ELL",
+        version="0.1.0",
+        lifespan=lifespan
+    )
+
+    @app.get("/lmp/versions", response_model=List[LMP])
+    async def get_lmp_versions(
+            fqn: str,
+            serializer: Store = Depends(get_serializer)):
+        slmp = serializer.get_versions_by_fqn(fqn)
+        return [LMP.from_serialized_lmp(lmp) for lmp in slmp]
+
 
     @app.get("/lmp/{lmp_id}", response_model=GetLMPResponse)
     async def get_lmp(lmp_id: str,
@@ -139,13 +148,6 @@ def create_app(config: Config):
             )
         )
         return input
-    # with a query param for fqn
 
-    @app.get("/lmp/versions")
-    async def get_lmp_versions(
-            fqn: str,
-            serializer: Store = Depends(get_serializer)):
-        slmp = serializer.get_versions_by_fqn(fqn)
-        return [LMP.from_serialized_lmp(lmp) for lmp in slmp]
-
+    
     return app
