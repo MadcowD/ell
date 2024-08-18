@@ -6,6 +6,7 @@ import logging
 from contextlib import contextmanager
 import threading
 from ell.store import Store
+from ell.api.client import EllAPIClient, EllClient, EllSqliteClient
 
 _config_logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ class _Config:
     verbose: bool = False
     wrapped_logging: bool = True
     override_wrapped_logging_width: Optional[int] = None
-    _store: Optional[Store] = None
+    _client: Optional[EllClient] = None
     autocommit: bool = False
     lazy_versioning : bool = False # Optimizes computation of versionoing to the initial invocaiton
     # XXX: This might lead to incorrect serialization of globals/
@@ -86,6 +87,9 @@ class _Config:
 
     def set_default_client(self, client: openai.Client) -> None:
         self.default_client = client
+    
+    def set_ell_client(self, client: EllClient) -> None:
+        self._client = client
 
 
 # Singleton instance
@@ -107,3 +111,18 @@ def set_default_lm_params(*args, **kwargs) -> None:
 @wraps(config.set_default_system_prompt)
 def set_default_system_prompt(*args, **kwargs) -> None:
     return config.set_default_system_prompt(*args, **kwargs)
+
+def init(
+        client: Optional[EllClient] = None,
+        base_url: Optional[str] = None,
+        storage_dir: Optional[str] = None,
+        autocommit: bool = False
+) -> None:
+    config.autocommit = autocommit
+
+    if client is not None:
+        config.set_ell_client(client)
+    elif base_url is not None:
+        config.set_ell_client(EllAPIClient(base_url))
+    elif storage_dir is not None:         
+        config.set_ell_client(EllSqliteClient(storage_dir))

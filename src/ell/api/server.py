@@ -9,7 +9,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlmodel import Session
 from ell.api.config import Config
 from ell.api.publisher import MqttPub, NoopPublisher, Publisher
-from ell.api.types import GetLMPResponse, WriteInvocationInput, WriteLMPInput, LMP
+from ell.api.types import GetLMPResponse, LMPInvokedEvent, WriteInvocationInput, WriteLMPInput, LMP
 from ell.store import Store
 from ell.stores.sql import PostgresStore, SQLStore, SQLiteStore
 from ell.studio.logger import setup_logging
@@ -119,25 +119,33 @@ def create_app(config: Config):
         publisher: Publisher = Depends(get_publisher),
         serializer: Store = Depends(get_serializer)
     ):
-        ser_input = input.to_serialized_invocation_input()
-        serializer.write_invocation(
-            invocation=ser_input['invocation'],
-            results=ser_input['results'],
-            consumes=ser_input['consumes']
+        invocation, results, consumes = input.to_serialized_invocation_input()
+        # TODO: return anything this might create like invocation id
+        _invo = serializer.write_invocation(
+            invocation,
+            results,
+            consumes  # type: ignore
         )
         loop = asyncio.get_event_loop()
         loop.create_task(
             publisher.publish(
                 f"lmp/{input.invocation.lmp_id}/invoked",
-                json.dumps({
-                    'foo': 'bar'
-                    # "not json serializable lol"
-                    # "invocation": input.invocation,
-                    # "results": results,
-                    # "consumes": consumes
-                })
+                LMPInvokedEvent(
+                    lmp_id=input.invocation.lmp_id,
+                    # invocation_id=invo.id,
+                    results=results,
+                    consumes=consumes
+                ).model_dump_json()
             )
         )
         return input
+    # with a query param for fqn
+
+    @app.get("/lmp/versions")
+    async def get_lmp_versions(
+            fqn: str,
+            serializer: Store = Depends(get_serializer)):
+        slmp = serializer.get_versions_by_fqn(fqn)
+        return [LMP.from_serialized_lmp(lmp) for lmp in slmp]
 
     return app

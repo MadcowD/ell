@@ -1,4 +1,4 @@
-from typing import Any, Dict, List,  Optional, Set, cast
+from typing import Any, Dict, List,  Optional, Set, Tuple, cast
 from datetime import datetime
 from numpy import ndarray
 
@@ -79,7 +79,7 @@ class LMP(BaseModel):
 #     uses: List[str]
 
 
-GetLMPResponse = LMP
+GetLMPResponse = Optional[LMP]
 # class LMPCreatedEvent(BaseModel):
 #     lmp: LMP
 #     uses: List[str]
@@ -130,7 +130,7 @@ class WriteInvocationInput(BaseModel):
     results: List[WriteInvocationInputLStr]
     consumes: List[str]
 
-    def to_serialized_invocation_input(self):
+    def to_serialized_invocation_input(self) -> Tuple[ell.types.Invocation, List[SerializedLStr], List[str]]:
         results = [
             SerializedLStr(
                 id=ls.id,
@@ -141,9 +141,10 @@ class WriteInvocationInput(BaseModel):
             for ls in self.results]
 
         sinvo = self.invocation.to_serialized_invocation()
-        return {
-            'invocation': sinvo,
-            'results': results,
-            # todo. is this a list or a set?
-            'consumes': self.consumes
-        }
+        return  sinvo, results, self.consumes
+
+class LMPInvokedEvent(BaseModel):
+    lmp_id: str
+    # invocation_id: str
+    results: List[SerializedLStr]
+    consumes: List[str]

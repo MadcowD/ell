@@ -1,9 +1,11 @@
+import asyncio
 import logging
 import threading
-from ell.types import SerializedLStr, utc_now, SerializedLMP, Invocation, InvocationTrace
+from ell.types import utc_now, SerializedLMP
 import ell.util.closure
 from ell.configurator import config
 from ell.lstr import lstr
+from ell.api.types import WriteInvocationInput, WriteInvocationInputLStr,Invocation, WriteLMPInput
 
 import inspect
 
@@ -14,11 +16,17 @@ import numpy as np
 import hashlib
 import json
 import secrets
-import time
-from datetime import datetime
 from functools import wraps
 from typing import Any, Callable, Optional, OrderedDict, Tuple
 
+
+ell_event_loop = None
+def get_ell_event_loop():
+    global ell_event_loop
+    if not ell_event_loop:
+        logger.info(f"Creating new event loop for ell, thread id: {threading.get_ident()}")
+        ell_event_loop = asyncio.new_event_loop()
+    return ell_event_loop
 
 # Thread-local storage for the invocation stack
 _invocation_stack = threading.local()
@@ -74,7 +82,7 @@ def track(fn: Callable) -> Callable:
         # Compute the invocation id and hash the inputs for serialization.
         invocation_id = "invocation-" + secrets.token_hex(16)
         state_cache_key : str = None
-        if not config._store:
+        if not config._client:
             return fn(*fn_args, **fn_kwargs, _invocation_origin=invocation_id)[0]
 
         parent_invocation_id = get_current_invocation()
@@ -121,7 +129,7 @@ def track(fn: Callable) -> Callable:
                 if not lmp
                 else fn(*fn_args, _invocation_origin=invocation_id, **fn_kwargs, )
                 )
-            latency_ms = (utc_now() - _start_time).total_seconds() * 1000
+            latency_ms = int((utc_now() - _start_time).total_seconds() * 1000)
             usage = metadata.get("usage", {})
             prompt_tokens=usage.get("prompt_tokens", 0)
             completion_tokens=usage.get("completion_tokens", 0)
@@ -130,13 +138,15 @@ def track(fn: Callable) -> Callable:
             if not _has_serialized_lmp:
                 if not hasattr(func_to_track, "__ell_hash__") and config.lazy_versioning:
                     fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
-                _serialize_lmp(func_to_track, _name, fn_closure, lmp, lm_kwargs)
+                
+                # i want to treat this as a blocking call. this function is not async.
+                _serialize_lmp_sync(func_to_track, _name, fn_closure, lmp, lm_kwargs)
                 _has_serialized_lmp = True
 
             if not state_cache_key:
                 state_cache_key = compute_state_cache_key(ipstr, func_to_track.__ell_closure__)
 
-            _write_invocation(func_to_track, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
+            _write_invocation_sync(func_to_track, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
                             state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result, parent_invocation_id)
 
             return result
@@ -151,10 +161,11 @@ def track(fn: Callable) -> Callable:
 
     return wrapper
 
-def _serialize_lmp(func, name, fn_closure, is_lmp, lm_kwargs):
-    lmps = config._store.get_versions_by_fqn(fqn=name)
+async def _serialize_lmp(func, name, fn_closure, is_lmp, lm_kwargs):
+    lmps = await config._client.get_lmp_versions(fqn=name)
     version = 0
     already_in_store = any(lmp.lmp_id == func.__ell_hash__ for lmp in lmps)
+    commit = None
     
     if not already_in_store:
         if lmps:
@@ -168,7 +179,7 @@ def _serialize_lmp(func, name, fn_closure, is_lmp, lm_kwargs):
         else:
             commit = None
 
-        serialized_lmp = SerializedLMP(
+        input = WriteLMPInput(  
             lmp_id=func.__ell_hash__,
             name=name,
             created_at=utc_now(),
@@ -182,9 +193,14 @@ def _serialize_lmp(func, name, fn_closure, is_lmp, lm_kwargs):
             version_number=version,
         )
 
-        config._store.write_lmp(serialized_lmp, func.__ell_uses__)
+        await config._client.write_lmp(input,{})
 
-def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
+
+def _serialize_lmp_sync(func, name, fn_closure, is_lmp, lm_kwargs):
+    loop = get_ell_event_loop()
+    return loop.run_until_complete(_serialize_lmp(func, name, fn_closure, is_lmp, lm_kwargs))
+
+async def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
                      state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result, parent_invocation_id):
     invocation = Invocation(
         id=invocation_id,
@@ -211,13 +227,28 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         raise TypeError("Result must be either lstr or List[lstr]")
 
     serialized_results = [
-        SerializedLStr(
+        WriteInvocationInputLStr(
             content=str(res),
             logits=res.logits
         ) for res in results
     ]
+    input = WriteInvocationInput(
+        invocation=invocation,
+        results=serialized_results,
+        consumes=consumes
+    )
 
-    config._store.write_invocation(invocation, serialized_results, consumes)
+    await config._client.write_invocation(input)
+
+
+def _write_invocation_sync(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
+                     state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result, parent_invocation_id):
+    loop = get_ell_event_loop()
+    return loop.run_until_complete(
+
+        _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
+                     state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result, parent_invocation_id))
+
 
 def compute_state_cache_key(ipstr, fn_closure):
     _global_free_vars_str = f"{json.dumps(get_immutable_vars(fn_closure[2]), sort_keys=True, default=repr)}"
