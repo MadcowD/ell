@@ -65,8 +65,12 @@ def create_app(config: Config):
         serializer = init_serializer(config)
 
         if config.mqtt_connection_string is not None:
+
+            host, port = config.mqtt_connection_string.split("://")[1].split(":")
+
+            logger.info(f"Connecting to MQTT broker at {host}:{port}")
             try:
-                async with aiomqtt.Client(config.mqtt_connection_string) as mqtt:
+                async with aiomqtt.Client(host, int(port) if port else 1883) as mqtt:
                     logger.info("Connected to MQTT")
                     publisher = MqttPub(mqtt)
                     yield  # Allow the app to run

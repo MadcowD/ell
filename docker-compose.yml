@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  ell-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8081:8081"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8081
+      - ELL_PG_CONNECTION_STRING=postgresql://ell_user:ell_password@postgres:5432/ell_db
+      - ELL_MQTT_CONNECTION_STRING=mqtt://mqtt-broker:1883
+    depends_on:
+      - postgres
+      - mqtt-broker
+
+  ell-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile.studio
+    ports:
+      - "8080:8080"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080 # currently doesn't take effect -- cli defaults it
+      - ELL_PG_CONNECTION_STRING=postgresql://ell_user:ell_password@postgres:5432/ell_db
+      - ELL_MQTT_CONNECTION_STRING=mqtt://mqtt-broker:1883
+    depends_on:
+      - postgres
+      - mqtt-broker
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./src/ell/studio
+          target: /app/ell/studio
+
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    ports:
+      - "1883:1883"
+    command: mosquitto -c /mosquitto/config/mosquitto.conf
+    volumes:
+      - mosquitto_config:/mosquitto/config
+    depends_on:
+      - mqtt-config
+
+  mqtt-config:
+    image: busybox
+    volumes:
+      - mosquitto_config:/mosquitto/config
+    command: >
+      sh -c "echo 'listener 1883' > /mosquitto/config/mosquitto.conf &&
+             echo 'allow_anonymous true' >> /mosquitto/config/mosquitto.conf"
+
+  postgres:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=ell_user
+      - POSTGRES_PASSWORD=ell_password
+      - POSTGRES_DB=ell_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
+  mosquitto_config:

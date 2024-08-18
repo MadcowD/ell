@@ -70,9 +70,9 @@ def calc_structured(task: str) -> float:
 
 if __name__ == "__main__":
     # Local
-    ell.init(autocommit=True)
+    # ell.init(autocommit=True)
 
     # API server
-    # ell.init(base_url="http://localhost:8080", autocommit=True)
+    ell.init(base_url="http://localhost:8081", autocommit=True)
 
     print(calc_structured("What is two plus two?"))

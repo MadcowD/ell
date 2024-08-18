@@ -24,8 +24,10 @@ logger = logging.getLogger(__name__)
 
 def get_serializer(config: Config):
     if config.pg_connection_string:
+        logger.info("Initializing Postgres serializer")
         return PostgresStore(config.pg_connection_string)
     elif config.storage_dir:
+        logger.info("Initializing SQLite serializer")
         return SQLiteStore(config.storage_dir)
     else:
         raise ValueError("No storage configuration found")
@@ -64,11 +66,19 @@ def create_app(config:Config):
 
             for attempt in range(retry_max_attempts):
                 try:
-                    async with aiomqtt.Client(config.mqtt_connection_string) as mqtt:
+                    host, port = config.mqtt_connection_string.split("://")[1].split(":")
+
+                    logger.info(f"Connecting to MQTT broker at {host}:{port}")
+
+                    async with aiomqtt.Client(hostname=host, port=int(port) if port else 1883) as mqtt:
                         logger.info("Connected to MQTT")
                         pubsub = MqttWebSocketPubSub(mqtt)
                         loop = asyncio.get_event_loop()
                         task = pubsub.listen(loop)
+                        # await pubsub.mqtt_client.subscribe("#")
+                        # async for message in pubsub.mqtt_client.messages:
+                        #     logger.info(f"Received message on topic {message.topic}: {message.payload}")
+                        # logger.info("Subscribed to all topics")
 
                         yield  # Allow the app to run
 
@@ -110,6 +120,7 @@ def create_app(config:Config):
     async def websocket_endpoint(websocket: WebSocket, pubsub: MqttWebSocketPubSub = Depends(get_pubsub)):
         await websocket.accept()
         await pubsub.subscribe_async("all", websocket)
+        await pubsub.subscribe_async("lmp/#", websocket)
         try:
             while True:
                 data = await websocket.receive_text()

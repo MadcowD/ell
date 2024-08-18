@@ -1,4 +1,5 @@
 import asyncio
+import os
 import uvicorn
 from argparse import ArgumentParser
 from ell.api.config import Config
@@ -15,9 +16,9 @@ def main():
                         help="PostgreSQL connection string (default: None)")
     parser.add_argument("--mqtt-connection-string", default=None,
                         help="MQTT connection string (default: None)")
-    parser.add_argument("--host", default="0.0.0.0",
+    parser.add_argument("--host", default=None,
                         help="Host to run the server on")
-    parser.add_argument("--port", type=int, default=8080,
+    parser.add_argument("--port", type=int, default=None,
                         help="Port to run the server on")
     parser.add_argument("--dev", action="store_true",
                         help="Run in development mode")
@@ -35,8 +36,8 @@ def main():
 
     config = uvicorn.Config(
         app=app,
-        host=args.host,
-        port=args.port,
+        host=args.host if args.host else os.environ.get("HOST", "0.0.0.0"),
+        port=args.port if args.port else int(os.environ.get("PORT", 8081)),
         loop=loop  # type: ignore
     )
     server = uvicorn.Server(config)
