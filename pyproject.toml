@@ -5,7 +5,7 @@ description = "ell - a functional language model programming framework"
 authors = ["William Guss <will@lrsys.xyz>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/MadcowD/ell-studio"
+repository = "https://github.com/MadcowD/ell"
 packages = [
     { include = "ell", from = "src" }
 ]
