@@ -72,6 +72,13 @@ def UTCTimestampField(index:bool=False, **kwargs:Any):
         sa_column=Column(UTCTimestamp(timezone=True), index=index, **kwargs))
 
 
+import enum
+
+class LMPType(str, enum.Enum):
+    LM = "LM"
+    TOOL = "TOOL"
+    OTHER = "OTHER"
+
 
 class SerializedLMPBase(SQLModel):
     lmp_id: Optional[str] = Field(default=None, primary_key=True)
@@ -79,7 +86,9 @@ class SerializedLMPBase(SQLModel):
     source: str
     dependencies: str
     created_at: datetime = UTCTimestampField(index=True, nullable=False)
-    is_lm: bool
+
+    lmp_type: LMPType
+    
     lm_kwargs: Optional[Dict[str, Any]] = Field(default_factory=dict, sa_column=Column(JSON))
     initial_free_vars: Optional[Dict[str, Any]] = Field(default_factory=dict, sa_column=Column(JSON))
     initial_global_vars: Optional[Dict[str, Any]] = Field(default_factory=dict, sa_column=Column(JSON))

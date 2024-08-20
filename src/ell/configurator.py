@@ -17,7 +17,7 @@ class _Config:
     override_wrapped_logging_width: Optional[int] = None
     _store: Optional[Store] = None
     autocommit: bool = False
-    lazy_versioning : bool = False # Optimizes computation of versionoing to the initial invocaiton
+    lazy_versioning : bool = True # Optimizes computation of versionoing to the initial invocaiton
     # XXX: This might lead to incorrect serialization of globals/
     default_lm_params: Dict[str, Any] = field(default_factory=dict)
     default_system_prompt: str = "You are a helpful AI assistant."

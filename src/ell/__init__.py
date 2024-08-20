@@ -1,4 +1,5 @@
 from ell.decorators.lm import lm
+from ell.decorators.tool import tool
 from ell.types import Message
 from ell.__version__ import __version__
 

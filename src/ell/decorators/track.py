@@ -1,6 +1,6 @@
 import logging
 import threading
-from ell.types import SerializedLStr, utc_now, SerializedLMP, Invocation, InvocationTrace
+from ell.types import LMPType, SerializedLStr, utc_now, SerializedLMP, Invocation, InvocationTrace
 import ell.util.closure
 from ell.configurator import config
 from ell.lstr import lstr
@@ -17,7 +17,7 @@ import secrets
 import time
 from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Optional, OrderedDict, Tuple
+from typing import Any, Callable, Dict, Iterable, Optional, OrderedDict, Tuple
 
 
 # Thread-local storage for the invocation stack
@@ -44,33 +44,23 @@ def exclude_var(v):
     # is module or is immutable
     return inspect.ismodule(v)
 
-def track(fn: Callable) -> Callable:
-    if hasattr(fn, "__ell_lm_kwargs__"):
-        func_to_track = fn
-        lm_kwargs = fn.__ell_lm_kwargs__
-        lmp = True
-    else:
-        func_to_track = fn
-        lm_kwargs = None
-        lmp = False
+def track(fn: Callable, *, forced_dependencies: Optional[Dict[str, Any]] = None) -> Callable:
+    func_to_track = fn
+        
+    lmp_type = getattr(fn, "__ell_type__", LMPType.OTHER)
 
 
     # see if it exists
-    _name = func_to_track.__qualname__
-    _has_serialized_lmp = False
+    if not hasattr(func_to_track, "_has_serialized_lmp"):
+        func_to_track._has_serialized_lmp = False
 
-    fn_closure : Tuple[str, str, OrderedDict[str, Any], OrderedDict[str, Any]]
     if not hasattr(func_to_track, "__ell_hash__") and not config.lazy_versioning:
-        fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
-
-
+        ell.util.closure.lexically_closured_source(func_to_track, forced_dependencies)
 
 
     @wraps(fn)
     def wrapper(*fn_args, **fn_kwargs) -> str:
         # XXX: Cache keys and global variable binding is not thread safe.
-        nonlocal _has_serialized_lmp
-        nonlocal fn_closure
         # Compute the invocation id and hash the inputs for serialization.
         invocation_id = "invocation-" + secrets.token_hex(16)
         state_cache_key : str = None
@@ -117,8 +107,8 @@ def track(fn: Callable) -> Callable:
 
             # get the prompt
             (result, invocation_kwargs, metadata) = (
-                (fn(*fn_args, **fn_kwargs), None)
-                if not lmp
+                (fn(*fn_args, **fn_kwargs), {}, {})
+                if lmp_type == LMPType.OTHER
                 else fn(*fn_args, _invocation_origin=invocation_id, **fn_kwargs, )
                 )
             latency_ms = (utc_now() - _start_time).total_seconds() * 1000
@@ -126,12 +116,9 @@ def track(fn: Callable) -> Callable:
             prompt_tokens=usage.get("prompt_tokens", 0)
             completion_tokens=usage.get("completion_tokens", 0)
 
-
-            if not _has_serialized_lmp:
-                if not hasattr(func_to_track, "__ell_hash__") and config.lazy_versioning:
-                    fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
-                _serialize_lmp(func_to_track, _name, fn_closure, lmp, lm_kwargs)
-                _has_serialized_lmp = True
+            if not hasattr(func_to_track, "__ell_hash__") and config.lazy_versioning:
+                ell.util.closure.lexically_closured_source(func_to_track, forced_dependencies)
+            _serialize_lmp(func_to_track)
 
             if not state_cache_key:
                 state_cache_key = compute_state_cache_key(ipstr, func_to_track.__ell_closure__)
@@ -145,13 +132,28 @@ def track(fn: Callable) -> Callable:
 
 
     fn.__wrapper__  = wrapper
-    wrapper.__ell_lm_kwargs__ = lm_kwargs
+    if hasattr(fn, "__ell_lm_kwargs__"):
+        wrapper.__ell_lm_kwargs__ = fn.__ell_lm_kwargs__
+    if hasattr(fn, "__ell_params_model__"):
+        wrapper.__ell_params_model__ = fn.__ell_params_model__
     wrapper.__ell_func__ = func_to_track
     wrapper.__ell_track = True
 
     return wrapper
 
-def _serialize_lmp(func, name, fn_closure, is_lmp, lm_kwargs):
+def _serialize_lmp(func):
+    # Serialize deptjh first all fo the used lmps.
+    for f in func.__ell_uses__:
+        _serialize_lmp(f)
+    
+    if getattr(func, "_has_serialized_lmp", False):
+        return
+    func._has_serialized_lmp = False
+    fn_closure = func.__ell_closure__
+    lmp_type = func.__ell_type__
+    name = func.__qualname__
+    lm_kwargs = getattr(func, "__ell_lm_kwargs__", None)
+
     lmps = config._store.get_versions_by_fqn(fqn=name)
     version = 0
     already_in_store = any(lmp.lmp_id == func.__ell_hash__ for lmp in lmps)
@@ -177,12 +179,12 @@ def _serialize_lmp(func, name, fn_closure, is_lmp, lm_kwargs):
             commit_message=commit,
             initial_global_vars=get_immutable_vars(fn_closure[2]),
             initial_free_vars=get_immutable_vars(fn_closure[3]),
-            is_lm=is_lmp,
+            lmp_type=lmp_type,
             lm_kwargs=lm_kwargs if lm_kwargs else None,
             version_number=version,
         )
-
-        config._store.write_lmp(serialized_lmp, func.__ell_uses__)
+        config._store.write_lmp(serialized_lmp, [f.__ell_hash__ for f in func.__ell_uses__])
+    func._has_serialized_lmp = True
 
 def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
                      state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result, parent_invocation_id):
@@ -213,7 +215,7 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
     serialized_results = [
         SerializedLStr(
             content=str(res),
-            logits=res.logits
+            # logits=res.logits
         ) for res in results
     ]
 

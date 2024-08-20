@@ -1,3 +1,4 @@
+from functools import partial
 from ell.configurator import config
 import openai
 from collections import defaultdict
@@ -49,6 +50,7 @@ def _run_lm(
     client: Optional[openai.Client] = None,
     _logging_color=None,
     name: str = None,
+    tools: Optional[list[LMP]] = None,
 ) -> Tuple[Union[lstr, Iterable[lstr]], Optional[Dict[str, Any]]]:
     """
     Helper function to run the language model with the provided messages and parameters.
@@ -63,9 +65,38 @@ def _run_lm(
         raise RuntimeError(_no_api_key_warning(model, name, client, long=True, error=True))
 
     # todo: add suupport for streaming apis that dont give a final usage in the api
-    model_result = client.chat.completions.create(
-        model=model, messages=messages, stream=True, stream_options={"include_usage": True}, **lm_kwargs
+    # print(lm_kwargs)
+    if lm_kwargs.get("response_format", False):
+        model_call = client.beta.chat.completions.parse
+        lm_kwargs.pop("stream", None)
+        lm_kwargs.pop("stream_options", None)
+    elif tools:
+        model_call = client.chat.completions.create
+        lm_kwargs["tools"] = [
+            {
+                "type": "function",
+                "function": {
+                    "name": tool.__name__,
+                    "description": tool.__doc__,
+                    "parameters": tool.__ell_params_model__.model_json_schema()
+                }
+            } for tool in tools
+        ]
+        lm_kwargs["tool_choice"] = "auto"
+        lm_kwargs.pop("stream", None)
+        lm_kwargs.pop("stream_options", None)
+    else:
+        model_call = client.chat.completions.create
+        lm_kwargs["stream"] = True
+        lm_kwargs["stream_options"] = {"include_usage": True}
+
+    # print(lm_kwargs)
+    model_result = model_call(
+        model=model, messages=messages, **lm_kwargs
     )
+    streaming = lm_kwargs.get("stream", False)
+    if not streaming:
+        model_result = [model_result]
 
     choices_progress = defaultdict(list)
     n = lm_kwargs.get("n", 1)
@@ -75,22 +106,28 @@ def _run_lm(
 
     with model_usage_logger_post_intermediate(_logging_color, n) as _logger:
         for chunk in model_result:
-            if chunk.usage:
+            if hasattr(chunk, "usage") and chunk.usage:
                 # Todo: is this a good decision.
                 metadata = chunk.to_dict()
-                continue
+                
+                if streaming:
+                    continue
+            
             for choice in chunk.choices:
                 choices_progress[choice.index].append(choice)
                 if config.verbose and choice.index == 0 and not exempt_from_tracking:
-                    _logger(choice.delta.content)
+                    # print(choice, streaming)
+                    _logger(choice.delta.content if streaming else 
+                        choice.message.content or getattr(choice.message, "refusal", ""), is_refusal=getattr(choice.message, "refusal", False) if not streaming else False)
 
     if config.verbose and not exempt_from_tracking:
         model_usage_logger_post_end()
     n_choices = len(choices_progress)
 
+    print(choice.message.tool_calls)
     tracked_results = [
         lstr(
-            content="".join((choice.delta.content or "" for choice in choice_deltas)),
+            content="".join((choice.delta.content or "" for choice in choice_deltas)) if streaming else choice.message.content,
             # logits=( #
             #     np.concatenate([np.array(
             #         [c.logprob for c in choice.logprobs.content or []]

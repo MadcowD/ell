@@ -30,7 +30,7 @@ numpy = "^2.0.1"
 dill = "^0.3.8"
 colorama = "^0.4.6"
 cattrs = "^23.2.3"
-openai = "^1.37.1"
+openai = "^1.40.6"
 sqlmodel = "^0.0.21"
 uvicorn = "^0.30.3"
 requests = "^2.32.3"
@@ -38,7 +38,6 @@ typing-extensions = "^4.12.2"
 
 
 black = "^24.8.0"
-psycopg2 = "^2.9.9"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
 

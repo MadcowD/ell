@@ -51,3 +51,7 @@ config._default_openai_client = default_client
 # assert openai.api_key is not None
 
 
+
+
+import openai
+openai.chat.completions.create(model="gpt-4o-2024-08-06", messages=[{"role": "system", "content": "You are a helpful assistant."}])

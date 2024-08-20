@@ -244,7 +244,7 @@ class SQLStore(ell.store.Store):
 
         # Base subquery
         base_subquery = (
-            select(Invocation.created_at, Invocation.latency_ms, Invocation.prompt_tokens, Invocation.completion_tokens)
+            select(Invocation.created_at, Invocation.latency_ms, Invocation.prompt_tokens, Invocation.completion_tokens, Invocation.lmp_id)
             .join(SerializedLMP, Invocation.lmp_id == SerializedLMP.lmp_id)
             .filter(Invocation.created_at >= start_date)
         )
@@ -262,7 +262,7 @@ class SQLStore(ell.store.Store):
         total_invocations = len(data)
         total_tokens = sum(row.prompt_tokens + row.completion_tokens for row in data)
         avg_latency = sum(row.latency_ms for row in data) / total_invocations if total_invocations > 0 else 0
-        unique_lmps = len(set(row.name for row in data))
+        unique_lmps = len(set(row.lmp_id for row in data))
 
         # Prepare graph data
         graph_data = []

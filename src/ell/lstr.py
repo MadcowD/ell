@@ -95,7 +95,7 @@ class lstr(str):
         _origin_trace (Union[str, FrozenSet[str]], optional): The _origin_trace(s) of this string. Defaults to None.
         """
         instance = super(lstr, cls).__new__(cls, content)
-        instance._logits = logits
+        # instance._logits = logits
         if isinstance(_origin_trace, str):
             instance.__origin_trace__ = frozenset({_origin_trace})
         else:
@@ -104,18 +104,18 @@ class lstr(str):
             )
         return instance
 
-    _logits: Optional[np.ndarray]
+    # _logits: Optional[np.ndarray]
     __origin_trace__: FrozenSet[str]
 
-    @property
-    def logits(self) -> Optional[np.ndarray]:
-        """
-        Get the logits associated with this lstr instance.
+    # @property
+    # def logits(self) -> Optional[np.ndarray]:
+    #     """
+    #     Get the logits associated with this lstr instance.
 
-        Returns:
-            Optional[np.ndarray]: The logits associated with this lstr instance, or None if no logits are available.
-        """
-        return self._logits
+    #     Returns:
+    #         Optional[np.ndarray]: The logits associated with this lstr instance, or None if no logits are available.
+    #     """
+    #     return self._logits
 
     @property
     def _origin_trace(self) -> FrozenSet[str]:
@@ -149,14 +149,17 @@ class lstr(str):
         Returns:
             lstr: A new lstr instance containing the concatenated content, with the _origin_trace(s) updated accordingly.
         """
-        if type(other) is str:
-            new_content = super(lstr, self).__add__(other)
-            return lstr(new_content, None, self.__origin_trace__)
-        elif isinstance(other, lstr):
-            new_content = super(lstr, self).__add__(other)
-            new__origin_trace__ = self.__origin_trace__.union(other.__origin_trace__)
-            return lstr(new_content, None, new__origin_trace__)
-        return NotImplemented
+        new_content = super(lstr, self).__add__(other)
+        self_origin = self.__origin_trace__
+        
+        if isinstance(other, lstr):
+            new_origin = set(self_origin)
+            new_origin.update(other.__origin_trace__)
+            new_origin = frozenset(new_origin)
+        else:
+            new_origin = self_origin
+        
+        return lstr(new_content, None, new_origin)
 
     def __mod__(
         self, other: Union[str, "lstr", Tuple[Union[str, "lstr"], ...]]
@@ -423,3 +426,84 @@ class lstr(str):
         )
         parts = method(sep, maxsplit)
         return [lstr(part, None, _origin_traces) for part in parts]
+
+
+if __name__ == "__main__":
+    import timeit
+    import random
+    import string
+
+    def generate_random_string(length):
+        return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+    def test_concatenation():
+        s1 = generate_random_string(1000)
+        s2 = generate_random_string(1000)
+        
+        lstr_time = timeit.timeit(lambda: lstr(s1) + lstr(s2), number=10000)
+        str_time = timeit.timeit(lambda: s1 + s2, number=10000)
+        
+        print(f"Concatenation: lstr: {lstr_time:.6f}s, str: {str_time:.6f}s")
+
+    def test_slicing():
+        s = generate_random_string(10000)
+        ls = lstr(s)
+        
+        lstr_time = timeit.timeit(lambda: ls[1000:2000], number=10000)
+        str_time = timeit.timeit(lambda: s[1000:2000], number=10000)
+        
+        print(f"Slicing: lstr: {lstr_time:.6f}s, str: {str_time:.6f}s")
+
+    def test_splitting():
+        s = generate_random_string(10000)
+        ls = lstr(s)
+        
+        lstr_time = timeit.timeit(lambda: ls.split(), number=1000)
+        str_time = timeit.timeit(lambda: s.split(), number=1000)
+        
+        print(f"Splitting: lstr: {lstr_time:.6f}s, str: {str_time:.6f}s")
+
+    def test_joining():
+        words = [generate_random_string(10) for _ in range(1000)]
+        lwords = [lstr(word) for word in words]
+        
+        lstr_time = timeit.timeit(lambda: lstr(' ').join(lwords), number=1000)
+        str_time = timeit.timeit(lambda: ' '.join(words), number=1000)
+        
+        print(f"Joining: lstr: {lstr_time:.6f}s, str: {str_time:.6f}s")
+
+    print("Running performance tests...")
+    test_concatenation()
+    test_slicing()
+    test_splitting()
+    test_joining()
+
+    import cProfile
+    import pstats
+    from io import StringIO
+
+    def test_add():
+        s1 = generate_random_string(1000)
+        s2 = generate_random_string(1000)
+        ls1 = lstr(s1, None, "origin1")
+        ls2 = lstr(s2, None, "origin2")
+        
+        for _ in range(100000):
+            result = ls1 + ls2
+
+    print("\nProfiling __add__ method:")
+    profiler = cProfile.Profile()
+    profiler.enable()
+    test_add()
+    profiler.disable()
+    
+    s = StringIO()
+    ps = pstats.Stats(profiler, stream=s).sort_stats('cumulative')
+    ps.print_stats(20)  # Print top 20 lines
+    print(s.getvalue())
+
+# if __name__ == "__main__":
+#     x = lstr("hello")
+#     y = lstr("world")
+#     z = x + y
+#     print(z)

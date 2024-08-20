@@ -129,7 +129,7 @@ def model_usage_logger_post_intermediate(color: str = "", n: int = 1):
     subsequent_prefix = f"{PIPE_COLOR}│   {' ' * (len('assistant: '))}"
     chars_printed = len(subsequent_prefix)
 
-    def log_stream_chunk(stream_chunk: str):
+    def log_stream_chunk(stream_chunk: str, is_refusal: bool = False):
         nonlocal chars_printed
         if stream_chunk:
             lines = stream_chunk.split('\n')
