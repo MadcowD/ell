@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import Field, create_model
 from pydantic.fields import FieldInfo
-from ell.decorators.track import track
+from ell.lmp.track import track
 # from ell.types import ToolFunction, InvocableTool, ToolParams
 # from ell.util.verbosity import compute_color, tool_usage_logger_pre
 from ell.configurator import config

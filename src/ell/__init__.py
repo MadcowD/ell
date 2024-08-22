@@ -1,6 +1,7 @@
-from ell.decorators.lm import lm
-from ell.decorators.tool import tool
-from ell.types import Message
+from ell.lmp.text import text
+from ell.lmp.tool import tool
+from ell.lmp.multimodal import multimodal
+from ell.types import Message, MessageContentBlock
 from ell.__version__ import __version__
 
 # registers all of the mdoels.
@@ -18,7 +19,7 @@ def system(content: str) -> Message:
     Returns:
     Message: A Message object with role set to 'system' and the provided content.
     """
-    return Message(role="system", content=content)
+    return Message(role="system", content=[MessageContentBlock(text=content)])
 
 
 def user(content: str) -> Message:
@@ -31,7 +32,7 @@ def user(content: str) -> Message:
     Returns:
     Message: A Message object with role set to 'user' and the provided content.
     """
-    return Message(role="user", content=content)
+    return Message(role="user", content=[MessageContentBlock(text=content)])
 
 
 def assistant(content: str) -> Message:
@@ -44,7 +45,10 @@ def assistant(content: str) -> Message:
     Returns:
     Message: A Message object with role set to 'assistant' and the provided content.
     """
-    return Message(role="assistant", content=content)
+    return Message(role="assistant", content=[MessageContentBlock(text=content)])
 
 
-__all__ = ["lm", "system", "user", "assistant", "config", "__version__"]
+def message(role: str, content: str) -> Message:
+    return Message(role=role, content=[MessageContentBlock(text=content)])
+
+__all__ = ["text", "system", "user", "assistant", "config", "__version__"]

@@ -1,17 +1,18 @@
 from ell.configurator import config
-from ell.decorators.track import track
-from ell.types import LMP, InvocableLM, LMPParams, LMPType, _lstr_generic
+from ell.lmp.track import track
+from ell.lstr import lstr
+from ell.types import LMP, InvocableLM, LMPParams, LMPType, Message, MessageContentBlock, MessageOrDict, _lstr_generic
 from ell.util._warnings import _warnings
-from ell.util.api import _get_lm_kwargs, _get_messages, _call
+from ell.util.api import  call
 from ell.util.verbosity import compute_color, model_usage_logger_pre
 
 
 import openai
 
 from functools import wraps
-from typing import Optional, List, Callable
+from typing import Any, Dict, Optional, List, Callable, Union
 
-def lm(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=False, tools: Optional[List[Callable]] = None, **lm_kwargs):
+def multimodal(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=False, tools: Optional[List[Callable]] = None, post_callback: Optional[Callable] = None, **lm_kwargs):
     """
     Defines a basic language model program (a parameterization of an existing foundation model using a particular prompt.)
 
@@ -43,14 +44,14 @@ def lm(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=
 
             if config.verbose and not exempt_from_tracking: model_usage_logger_pre(prompt, fn_args, fn_kwargs, "notimplemented", messages, color)
 
-            final_lm_kwargs = _get_lm_kwargs(lm_kwargs, lm_params)
-            api_params = dict(model=model, messages=messages, lm_kwargs=final_lm_kwargs, client=client or default_client_from_decorator)
-
-            tracked_str, metadata = _call(**api_params, _invocation_origin=_invocation_origin, exempt_from_tracking=exempt_from_tracking, _logging_color=color, name=prompt.__name__, tools=tools)
+            (result, api_params, metadata) = call(model=model, messages=messages, lm_kwargs={**config.default_lm_params, **lm_kwargs, **lm_params}, client=client or default_client_from_decorator, _invocation_origin=_invocation_origin, _exempt_from_tracking=exempt_from_tracking, _logging_color=color, _name=prompt.__name__, tools=tools)
+        
+            result = post_callback(result) if post_callback else result
             
+            return result, api_params, metadata
 
-            return tracked_str, api_params, metadata
 
+  
         # TODO: # we'll deal with type safety here later
         model_call.__ell_lm_kwargs__ = lm_kwargs
         model_call.__ell_func__ = prompt
@@ -61,6 +62,19 @@ def lm(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=
             return model_call
         else:
             return track(model_call, forced_dependencies=dict(tools=tools))
-
-
     return parameterized_lm_decorator
+
+def _get_messages(prompt_ret: Union[str, list[MessageOrDict]], prompt: LMP) -> list[Message]:
+    """
+    Helper function to convert the output of an LMP into a list of Messages.
+    """
+    if isinstance(prompt_ret, str):
+        return [
+            Message(role="system", content=[MessageContentBlock(text=lstr(prompt.__doc__) or config.default_system_prompt)]),
+            Message(role="user", content=[MessageContentBlock(text=prompt_ret)]),
+        ]
+    else:
+        assert isinstance(
+            prompt_ret, list
+        ), "Need to pass a list of MessagesOrDict to the language model"
+        return prompt_ret

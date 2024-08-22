@@ -7,7 +7,7 @@ from ell.stores.sql import SQLiteStore
 def get_random_length():
     return int(np.random.beta(2, 6) * 1500)
 
-@ell.lm(model="gpt-4o-mini")
+@ell.text(model="gpt-4o-mini")
 def hello(world : str):
     """Your goal is to be really meant to the other guy whiel say hello"""
     name = world.capitalize()

@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 import ell
 import requests
 
-import ell.decorators.tool
+import ell.lmp.tool
 from ell.lstr import lstr
 from ell.stores.sql import SQLiteStore
 
@@ -16,7 +16,7 @@ def get_html_content(
     return lstr(requests.get(url))
 
 
-@ell.lm(model="gpt-4o", tools=[get_html_content], eager=True)
+@ell.text(model="gpt-4o", tools=[get_html_content], eager=True)
 def summarize_website(website :str) -> str:
     """You are an agent that can summarize the contents of a website."""
     return f"Tell me whats on {website}"
@@ -181,7 +181,7 @@ message = Union[list[
 
 # so
 
-@ell.lm -> only produces text
+@ell.text -> only produces text
 
 @ell.agent -> produces an a message type?
 
@@ -190,7 +190,7 @@ message = Union[list[
 @ell.structured -> (model=, schema=<>)
 
 
-@ell.lm
+@ell.text
 -> produces openai message type
 
 [
@@ -210,7 +210,7 @@ message = Union[list[
 
 
 or 
-@ell.lm 
+@ell.text 
 -> produces 
     ("Hello! Can you help me summarize the front page of the New York Times?",
     )
@@ -259,7 +259,7 @@ elif isinstance(x, fn):
 
 
 
-@ell.lm(model="gpt-4o", tools=[get_html_content], tool_choice="auto")
+@ell.text(model="gpt-4o", tools=[get_html_content], tool_choice="auto")
 def my_prompt(msg):
     return "Write a poem"
 

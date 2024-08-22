@@ -68,8 +68,8 @@ def print_wrapped_messages(messages: List[Message], max_role_length: int, color:
     wrapping_width = wrap_width or (terminal_width - len(prefix))
 
     for i, message in enumerate(messages):
-        role = message["role"]
-        text = message["content"]
+        role = message.role
+        text = message.content[0].text
         role_color = SYSTEM_COLOR if role == "system" else USER_COLOR if role == "user" else ASSISTANT_COLOR
         
         role_line = f"{prefix}{role_color}{role.rjust(max_role_length)}: {RESET}"
@@ -107,7 +107,7 @@ def model_usage_logger_pre(
     print(f"{PIPE_COLOR}║ {BOLD}Prompt:{RESET}")
     print(f"{PIPE_COLOR}╟{'─' * (terminal_width - 2)}╢{RESET}")
 
-    max_role_length = max(len("assistant"), max(len(message["role"]) for message in messages))
+    max_role_length = max(len("assistant"), max(len(message.role) for message in messages))
     print_wrapped_messages(messages, max_role_length, color)
 
 def model_usage_logger_post_start(color: str = "", n: int = 1):

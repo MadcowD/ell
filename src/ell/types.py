@@ -1,6 +1,8 @@
 # Let's define the core types.
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Union, Any, Optional
+from typing import Callable, Dict, List, Type, Union, Any, Optional
+
+from pydantic import BaseModel, field_validator, validator
 
 from ell.lstr import lstr
 from ell.util.dict_sync_meta import DictSyncMeta
@@ -20,10 +22,39 @@ OneTurn = Callable[..., _lstr_generic]
 LMPParams = Dict[str, Any]
 
 
-@dataclass
-class Message(dict, metaclass=DictSyncMeta):
+InvocableTool = Callable[..., _lstr_generic]
+
+# todo: implement tracing for structured outs. this a v2 feature.
+class ToolCall(BaseModel):
+    tool : InvocableTool
+    params : Type[BaseModel]
+
+class MessageContentBlock(BaseModel):
+    text: Optional[_lstr_generic] = Field(default=None)
+    image: Optional[str] = Field(default=None)
+    audio: Optional[str] = Field(default=None)
+    tool_calls: Optional[List[ToolCall]] = Field(default=None)
+    structured: Optional[Type[BaseModel]] = Field(default=None)
+
+    # XXX: Todo implement this.
+    # @field_validator('*')
+    # @classmethod
+    # def check_at_least_one_field_set(cls, v, info):
+    #     if all(field is None for field in info.data.values()):
+    #         raise ValueError("At least one field must be set")
+    #     return v
+
+class Message(BaseModel):
     role: str
-    content: _lstr_generic
+    content: List[MessageContentBlock] = Field(min_length=1)
+
+    def to_openai_message(self):
+        assert len(self.content) == 1
+        return {
+            "role": self.role,
+            "content": self.content[0].text
+        }
+    
 
 
 # Well this is disappointing, I wanted to effectively type hint by doign that data sync meta, but eh, at elast we can still reference role or content this way. Probably wil lcan the dict sync meta.
@@ -134,6 +165,7 @@ class SerializedLStrBase(SQLModel):
 class SerializedLStr(SerializedLStrBase, table=True):
     producer_invocation: Optional["Invocation"] = Relationship(back_populates="results")
 
+# Should be subtyped for differnet kidns of LMPS.
 class InvocationBase(SQLModel):
     id: Optional[str] = Field(default=None, primary_key=True)
     lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)

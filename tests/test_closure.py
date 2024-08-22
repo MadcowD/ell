@@ -114,12 +114,12 @@ def test_lexical_closure_uses_type():
 
 def test_lexical_closure_uses():
 
-    @ell.lm(model="gpt-4")
+    @ell.text(model="gpt-4")
     def dependency_func():
         return "42"
     
 
-    @ell.lm(model="gpt-4")
+    @ell.text(model="gpt-4")
     def main_func():
         return dependency_func() 
 

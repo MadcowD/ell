@@ -187,6 +187,8 @@ def _serialize_lmp(func):
 
 def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
                      state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result, parent_invocation_id):
+    
+
     invocation = Invocation(
         id=invocation_id,
         lmp_id=func.__ell_hash__,

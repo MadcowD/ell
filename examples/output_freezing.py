@@ -4,7 +4,7 @@ ell.config.verbose = True
 
 BASE_PROMPT = """You are an adept python programmer. Only answer in python code. Avoid markdown formatting at all costs."""
 
-@ell.lm(model="gpt-4o", temperature=0.7, max_tokens=4)
+@ell.text(model="gpt-4o", temperature=0.7, max_tokens=4)
 def create_a_python_class(user_spec : str):
     return [
         ell.system(
@@ -15,7 +15,7 @@ def create_a_python_class(user_spec : str):
         )
     ]
 
-@ell.lm(model="gpt-4o", temperature=0.7)
+@ell.text(model="gpt-4o", temperature=0.7)
 def write_unit_for_a_class(class_def : str):
     return [
         ell.system(

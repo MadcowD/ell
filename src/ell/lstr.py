@@ -16,6 +16,10 @@ from typing import (
     Callable,
 )
 from typing_extensions import override
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema
+
+from pydantic_core import CoreSchema, core_schema
 
 class lstr(str):
     """
@@ -106,6 +110,12 @@ class lstr(str):
     # _logits: Optional[np.ndarray]
     __origin_trace__: FrozenSet[str]
 
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        return core_schema.no_info_after_validator_function(cls, handler(str))
     # @property
     # def logits(self) -> Optional[np.ndarray]:
     #     """
