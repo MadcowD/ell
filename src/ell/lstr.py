@@ -17,7 +17,6 @@ from typing import (
 )
 from typing_extensions import override
 
-
 class lstr(str):
     """
     A string class that supports logits and keeps track of its _origin_trace even after mutation.

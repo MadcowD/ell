@@ -2,7 +2,7 @@ from ell.configurator import config
 from ell.decorators.track import track
 from ell.types import LMP, InvocableLM, LMPParams, LMPType, _lstr_generic
 from ell.util._warnings import _warnings
-from ell.util.lm import _get_lm_kwargs, _get_messages, _run_lm
+from ell.util.api import _get_lm_kwargs, _get_messages, _call
 from ell.util.verbosity import compute_color, model_usage_logger_pre
 
 
@@ -11,8 +11,7 @@ import openai
 from functools import wraps
 from typing import Optional, List, Callable
 
-
-def lm(model: str, client: Optional[openai.Client] = None, tools: Optional[List[Callable]] = None, exempt_from_tracking=False,  **lm_kwargs):
+def lm(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=False,  **lm_kwargs):
     """
     Defines a basic language model program (a parameterization of an existing foundation model using a particular prompt.)
 
@@ -21,18 +20,18 @@ def lm(model: str, client: Optional[openai.Client] = None, tools: Optional[List[
     default_client_from_decorator = client
 
 
-    def decorator(
-        fn: LMP,
+    def parameterized_lm_decorator(
+        prompt: LMP,
     ) -> InvocableLM:
-        color = compute_color(fn)
-        _under_fn = fn
+        color = compute_color(prompt)
+        _under_fn = prompt
 
 
-        _warnings(model, fn, default_client_from_decorator)
+        _warnings(model, prompt, default_client_from_decorator)
 
             
-        @wraps(fn)
-        def wrapper(
+        @wraps(prompt)
+        def model_call(
             *fn_args,
             _invocation_origin : str = None,
             client: Optional[openai.Client] = None,
@@ -40,27 +39,31 @@ def lm(model: str, client: Optional[openai.Client] = None, tools: Optional[List[
             invocation_kwargs=False,
             **fn_kwargs,
         ) -> _lstr_generic:
-            res = fn(*fn_args, **fn_kwargs)
+            res = prompt(*fn_args, **fn_kwargs)
 
-            assert exempt_from_tracking or _invocation_origin is not None, "Invocation orgiin is required when using a tracked LMP"
-            messages = _get_messages(res, fn)
+            assert exempt_from_tracking or _invocation_origin is not None, "Invocation origin is required when using a tracked LMP"
+            messages = _get_messages(res, prompt)
 
-            if config.verbose and not exempt_from_tracking: model_usage_logger_pre(fn, fn_args, fn_kwargs, "notimplemented", messages, color)
+            if config.verbose and not exempt_from_tracking: model_usage_logger_pre(prompt, fn_args, fn_kwargs, "notimplemented", messages, color)
+
             final_lm_kwargs = _get_lm_kwargs(lm_kwargs, lm_params)
             _invocation_kwargs = dict(model=model, messages=messages, lm_kwargs=final_lm_kwargs, client=client or default_client_from_decorator)
-            tracked_str, metadata = _run_lm(**_invocation_kwargs, _invocation_origin=_invocation_origin, exempt_from_tracking=exempt_from_tracking, _logging_color=color, name=fn.__name__, tools=tools)
+
+            tracked_str, metadata = _call(**_invocation_kwargs, _invocation_origin=_invocation_origin, exempt_from_tracking=exempt_from_tracking, _logging_color=color, name=prompt.__name__, tools=tools)
+            
 
             return tracked_str, _invocation_kwargs, metadata
 
         # TODO: # we'll deal with type safety here later
-        wrapper.__ell_lm_kwargs__ = lm_kwargs
-        wrapper.__ell_func__ = _under_fn
-        wrapper.__ell_type__ = LMPType.LM
-        wrapper.__ell_exempt_from_tracking = exempt_from_tracking
+        model_call.__ell_lm_kwargs__ = lm_kwargs
+        model_call.__ell_func__ = _under_fn
+        model_call.__ell_type__ = LMPType.LM
+        model_call.__ell_exempt_from_tracking = exempt_from_tracking
+
         if exempt_from_tracking:
-            return wrapper
+            return model_call
         else:
-            return track(wrapper, forced_dependencies=dict(tools=tools))
+            return track(model_call, forced_dependencies=dict(tools=tools))
 
 
-    return decorator
+    return parameterized_lm_decorator

@@ -44,10 +44,9 @@ def exclude_var(v):
     # is module or is immutable
     return inspect.ismodule(v)
 
-def track(fn: Callable, *, forced_dependencies: Optional[Dict[str, Any]] = None) -> Callable:
-    func_to_track = fn
+def track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, Any]] = None) -> Callable:
         
-    lmp_type = getattr(fn, "__ell_type__", LMPType.OTHER)
+    lmp_type = getattr(func_to_track, "__ell_type__", LMPType.OTHER)
 
 
     # see if it exists
@@ -58,14 +57,14 @@ def track(fn: Callable, *, forced_dependencies: Optional[Dict[str, Any]] = None)
         ell.util.closure.lexically_closured_source(func_to_track, forced_dependencies)
 
 
-    @wraps(fn)
-    def wrapper(*fn_args, **fn_kwargs) -> str:
+    @wraps(func_to_track)
+    def tracked_func(*fn_args, **fn_kwargs) -> str:
         # XXX: Cache keys and global variable binding is not thread safe.
         # Compute the invocation id and hash the inputs for serialization.
         invocation_id = "invocation-" + secrets.token_hex(16)
         state_cache_key : str = None
         if not config._store:
-            return fn(*fn_args, **fn_kwargs, _invocation_origin=invocation_id)[0]
+            return func_to_track(*fn_args, **fn_kwargs, _invocation_origin=invocation_id)[0]
 
         parent_invocation_id = get_current_invocation()
         try:
@@ -107,9 +106,9 @@ def track(fn: Callable, *, forced_dependencies: Optional[Dict[str, Any]] = None)
 
             # get the prompt
             (result, invocation_kwargs, metadata) = (
-                (fn(*fn_args, **fn_kwargs), {}, {})
+                (func_to_track(*fn_args, **fn_kwargs), {}, {})
                 if lmp_type == LMPType.OTHER
-                else fn(*fn_args, _invocation_origin=invocation_id, **fn_kwargs, )
+                else func_to_track(*fn_args, _invocation_origin=invocation_id, **fn_kwargs, )
                 )
             latency_ms = (utc_now() - _start_time).total_seconds() * 1000
             usage = metadata.get("usage", {})
@@ -131,15 +130,15 @@ def track(fn: Callable, *, forced_dependencies: Optional[Dict[str, Any]] = None)
             pop_invocation()
 
 
-    fn.__wrapper__  = wrapper
-    if hasattr(fn, "__ell_lm_kwargs__"):
-        wrapper.__ell_lm_kwargs__ = fn.__ell_lm_kwargs__
-    if hasattr(fn, "__ell_params_model__"):
-        wrapper.__ell_params_model__ = fn.__ell_params_model__
-    wrapper.__ell_func__ = func_to_track
-    wrapper.__ell_track = True
+    func_to_track.__wrapper__  = tracked_func
+    if hasattr(func_to_track, "__ell_lm_kwargs__"):
+        tracked_func.__ell_lm_kwargs__ = func_to_track.__ell_lm_kwargs__
+    if hasattr(func_to_track, "__ell_params_model__"):
+        tracked_func.__ell_params_model__ = func_to_track.__ell_params_model__
+    tracked_func.__ell_func__ = func_to_track
+    tracked_func.__ell_track = True
 
-    return wrapper
+    return tracked_func
 
 def _serialize_lmp(func):
     # Serialize deptjh first all fo the used lmps.

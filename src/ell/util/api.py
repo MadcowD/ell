@@ -41,7 +41,7 @@ def _get_messages(res: Union[str, list[MessageOrDict]], fn: LMP) -> list[Message
 
 # Todo: Ensure that we handle all clients equivently
 # THis means we need a client parsing interface
-def _run_lm(
+def _call(
     model: str,
     messages: list[Message],
     lm_kwargs: Dict[str, Any],
@@ -123,8 +123,8 @@ def _run_lm(
     if config.verbose and not exempt_from_tracking:
         model_usage_logger_post_end()
     n_choices = len(choices_progress)
+    print(choices_progress[0][0].message.tool_calls)
 
-    print(choice.message.tool_calls)
     tracked_results = [
         lstr(
             content="".join((choice.delta.content or "" for choice in choice_deltas)) if streaming else choice.message.content,

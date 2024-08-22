@@ -26,6 +26,11 @@ if __name__ == "__main__":
     ell.config.verbose = True
     ell.set_store(SQLiteStore("sqlite_example"), autocommit=True)
     summarize_website("nyt front page")
+
+
+
+
+
     # Options for behaviour:
     # 1. this will call the tool and return the result if the tool is called
     # 2. This will return a partial of get_html_content that you call .
@@ -183,3 +188,114 @@ message = Union[list[
 @ell.multimodal -> produces a message type?
 
 @ell.structured -> (model=, schema=<>)
+
+
+@ell.lm
+-> produces openai message type
+
+[
+    {
+        type: "text",
+        content: "Hello! Can you help me summarize the front page of the New York Times?"
+    },
+    {
+        type: "tool_call",
+        call: fn,
+        function: {
+            name: "get_html_content",
+            arguments: "https://example.com"
+        }
+    }
+]
+
+
+or 
+@ell.lm 
+-> produces 
+    ("Hello! Can you help me summarize the front page of the New York Times?",
+    )
+
+msg_part = Union[lstr, InstanceOf[ell.BaseModel], fn_str]
+msg = Union[msg_part, list[msg_part]]
+
+# The LM can produce many types of outputs. 
+# you could force this bitch to be type safe on the other side?
+
+@ell.completion -> produces a text completion lstr?
+
+@ell.chat
+-> produces markup
+
+
+x = do_something(msg) 
+# This is the code you need to do evey single time? Well it's random though on the otherside. So that's why langchain did their |OutputParsers bullshit
+if isinstance(x, lstr):
+    x = x.content
+elif isinstance(x, ell.BaseModel):
+    x = x.model_dump_json()
+elif isinstance(x, fn):
+    x = x()
+
+
+# @ell.lm(model="gpt-4o", tools=[get_html_content], tool_choice="auto")
+# def do_something(msg):
+#     return "prompt"
+
+# while True:
+#     y = input()
+
+#     try: 
+#         out = do_something(y) -> lstr | ell.StructuredOutput | ell.ToolCall
+#         if out.is_str():
+#             print(out)
+#         elif out.is_tool_call():
+#             print(out())
+#         elif out.is_structured():
+#             print(out.model_dump_json())
+        
+#     except ell.Refusal as e:
+#         print(e)
+
+
+
+
+@ell.lm(model="gpt-4o", tools=[get_html_content], tool_choice="auto")
+def my_prompt(msg):
+    return "Write a poem"
+
+
+x = my_prompt("Hello!") # -> "A poem about the ocean: Turning and turning in the widening gyre"
+
+# -> MessagePart
+
+print(x.text)
+for part in x:
+    if part.text:
+        # doing somethign with the text
+    pass
+    if part.image:
+        # doing somethign with the image
+        pass
+    if part.tool_result:
+        # doing somethign with the tool result
+        pass
+    if part.function_call:
+        # doing somethign with the function call
+        part.function_call.call()
+        pass
+    pass
+
+
+class MessagePart(BaseModel):
+    text: str
+    image: str
+    tool_result: str
+    audio: str
+    function_call  : FunctionCall
+
+class FunctionCall(BaseModel):
+    name: str
+    arguments: BaseModel
+    fn : Callable
+    def call(self):
+        return self.fn(self.arguments)
