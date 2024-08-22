@@ -30,6 +30,7 @@ def xD():
 """
 import collections
 import ast
+from dataclasses import dataclass
 import hashlib
 import itertools
 import os
@@ -279,14 +280,7 @@ def _generate_function_hash(source, dsrc, qualname):
     """Generate a hash for the function."""
     return "lmp-" + hashlib.md5("\n".join((source, dsrc, qualname)).encode()).hexdigest()
 
-def _update_ell_func(outer_ell_func, source, dsrc, globals_dict, frees_dict, fn_hash, uses):
-    """Update the ell function attributes."""
-    formatted_source = _format_source(source)
-    formatted_dsrc = _format_source(dsrc)
-    if hasattr(outer_ell_func, "__ell_func__"):
-        outer_ell_func.__ell_closure__ = (formatted_source, formatted_dsrc, globals_dict, frees_dict)
-        outer_ell_func.__ell_hash__ = fn_hash
-        outer_ell_func.__ell_uses__ = uses
+
 
 def _raise_error(message, exception, recursion_stack):
     """Raise an error with detailed information."""
@@ -505,3 +499,25 @@ def globalvars(func, recurse=True, builtin=False):
     #NOTE: if name not in __globals__, then we skip it...
     return dict((name,globs[name]) for name in func if name in globs)
 
+
+def _update_ell_func(outer_ell_func, source, dsrc, globals_dict, frees_dict, fn_hash, uses):
+    """Update the ell function attributes."""
+    formatted_source = _format_source(source)
+    formatted_dsrc = _format_source(dsrc)
+    if hasattr(outer_ell_func, "__ell_func__"):
+        function_closures[outer_ell_func] = LexicalClosure(hash=fn_hash, closure=(formatted_source, formatted_dsrc, globals_dict, frees_dict), uses=uses)
+        
+@dataclass
+class LexicalClosure:
+    hash : str
+    closure : Tuple[str, str, Dict[str, Any], Dict[str, Any]]
+    uses : Set[str]
+
+# cache of all the closured funciton closures.
+function_closures : Dict[Callable, LexicalClosure] =  {}
+
+def has_closured_function(func : Callable) -> bool:
+    return func in function_closures
+
+def get_lexical_closure(func : Callable) -> LexicalClosure | None:
+    return function_closures.get(func)
