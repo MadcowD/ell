@@ -115,6 +115,7 @@ class lstr(str):
     def __get_pydantic_core_schema__(
         cls, source_type: Any, handler: GetCoreSchemaHandler
     ) -> CoreSchema:
+        # todo: make this work with originators & all
         return core_schema.no_info_after_validator_function(cls, handler(str))
     # @property
     # def logits(self) -> Optional[np.ndarray]:
