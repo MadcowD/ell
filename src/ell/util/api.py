@@ -140,3 +140,8 @@ def _call(
     ]
 
     return tracked_results[0] if n_choices == 1 else tracked_results, metadata
+
+# Todo: for implementation of lmp.text, & lmp.multimodal, we need to do the following:
+# 1. implement a _call fn that creates a generic multimodal output input and output type irrespective of the client for a model
+# 2. modify lm to use _call then process it as a ttacke dlstr so tis very clean to use
+# 3. implement a multimodal decorator that can handle the multimodal input and output types & does not restructure shit.

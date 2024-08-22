@@ -505,3 +505,5 @@ def globalvars(func, recurse=True, builtin=False):
     #NOTE: if name not in __globals__, then we skip it...
     return dict((name,globs[name]) for name in func if name in globs)
 
+
+# XXX: This is a mess. COuld probably be about 100 lines of code max.
