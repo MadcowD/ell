@@ -25,9 +25,6 @@ def process_messages_for_client(messages: list[Message], client: Any):
 
     # elif isinstance(client, anthropic.Anthropic):
         # return messages
-
-# Todo: Ensure that we handle all clients equivently
-# THis means we need a client parsing interface
 def call(
     *, 
     model: str,
