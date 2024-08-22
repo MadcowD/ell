@@ -52,15 +52,16 @@ def lm(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=
             return tracked_str, api_params, metadata
 
         # TODO: # we'll deal with type safety here later
-        model_call.__ell_lm_kwargs__ = lm_kwargs
+        # XXX: Do we need intermediate params?
         model_call.__ell_func__ = prompt
-        model_call.__ell_type__ = LMPType.LM
-        model_call.__ell_exempt_from_tracking = exempt_from_tracking
 
         if exempt_from_tracking:
             return model_call
         else:
-            return track(model_call, forced_dependencies=dict(tools=tools))
+            return track(model_call, forced_dependencies=dict(tools=tools), lmp_type=LMPType.LM, lm_kwargs=lm_kwargs)
 
 
     return parameterized_lm_decorator
+
+
+

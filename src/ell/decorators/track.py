@@ -44,18 +44,14 @@ def exclude_var(v):
     # is module or is immutable
     return inspect.ismodule(v)
 
-def track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, Any]] = None) -> Callable:
-        
-    lmp_type = getattr(func_to_track, "__ell_type__", LMPType.OTHER)
+_has_serialized_lmp = {}
+_lmp_hash = {}
 
+def track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, Any]] = None, lm_kwargs: Optional[Dict[str, Any]] = None, lmp_type: Optional[LMPType] = LMPType.OTHER) -> Callable:
 
-    # see if it exists
-    if not hasattr(func_to_track, "_has_serialized_lmp"):
-        func_to_track._has_serialized_lmp = False
-
-    if not hasattr(func_to_track, "__ell_hash__") and not config.lazy_versioning:
+    
+    if not ell.util.closure.has_closured_function(func_to_track) and not config.lazy_versioning:
         ell.util.closure.lexically_closured_source(func_to_track, forced_dependencies)
-
 
     @wraps(func_to_track)
     def tracked_func(*fn_args, **fn_kwargs) -> str:
@@ -76,14 +72,15 @@ def track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, An
 
             if  try_use_cache:
                 # Todo: add nice logging if verbose for when using a cahced invocaiton. IN a different color with thar args..
-                if not hasattr(func_to_track, "__ell_hash__")  and config.lazy_versioning:
+                if not ell.util.closure.has_closured_function(func_to_track) and config.lazy_versioning:
                     fn_closure, _ = ell.util.closure.lexically_closured_source(func_to_track)
                 
                 # compute the state cachekey
-                state_cache_key = compute_state_cache_key(ipstr, func_to_track.__ell_closure__)
+                lexical_closure = ell.util.closure.get_lexical_closure(func_to_track)
+                state_cache_key = compute_state_cache_key(ipstr, lexical_closure.closure)
                 
                 cache_store = func_to_track.__wrapper__.__ell_use_cache__
-                cached_invocations = cache_store.get_cached_invocations(func_to_track.__ell_hash__, state_cache_key)
+                cached_invocations = cache_store.get_cached_invocations(lexical_closure.hash, state_cache_key)
                 
 
                 if len(cached_invocations) > 0:
@@ -115,12 +112,13 @@ def track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, An
             prompt_tokens=usage.get("prompt_tokens", 0)
             completion_tokens=usage.get("completion_tokens", 0)
 
-            if not hasattr(func_to_track, "__ell_hash__") and config.lazy_versioning:
+            if not ell.util.closure.has_closured_function(func_to_track) and config.lazy_versioning:
                 ell.util.closure.lexically_closured_source(func_to_track, forced_dependencies)
             _serialize_lmp(func_to_track)
 
+            lexical_closure = ell.util.closure.get_lexical_closure(func_to_track)
             if not state_cache_key:
-                state_cache_key = compute_state_cache_key(ipstr, func_to_track.__ell_closure__)
+                state_cache_key = compute_state_cache_key(ipstr, lexical_closure.closure)
 
             _write_invocation(func_to_track, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
                             state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result, parent_invocation_id)
@@ -131,8 +129,7 @@ def track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, An
 
 
     func_to_track.__wrapper__  = tracked_func
-    if hasattr(func_to_track, "__ell_lm_kwargs__"):
-        tracked_func.__ell_lm_kwargs__ = func_to_track.__ell_lm_kwargs__
+    # XXX: Move away from __ private declarations this should be object oriented.
     if hasattr(func_to_track, "__ell_params_model__"):
         tracked_func.__ell_params_model__ = func_to_track.__ell_params_model__
     tracked_func.__ell_func__ = func_to_track
@@ -142,12 +139,13 @@ def track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, An
 
 def _serialize_lmp(func):
     # Serialize deptjh first all fo the used lmps.
-    for f in func.__ell_uses__:
+    lexical_closure = ell.util.closure.get_lexical_closure(func)
+    for f in lexical_closure.uses:
         _serialize_lmp(f)
     
-    if getattr(func, "_has_serialized_lmp", False):
+    if getattr(func, _has_serialized_lmp[func], False):
         return
-    func._has_serialized_lmp = False
+    _has_serialized_lmp[func] = True
     fn_closure = func.__ell_closure__
     lmp_type = func.__ell_type__
     name = func.__qualname__
