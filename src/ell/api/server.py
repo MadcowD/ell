@@ -12,7 +12,6 @@ from ell.api.publisher import MqttPub, NoopPublisher, Publisher
 from ell.api.types import GetLMPResponse, LMPInvokedEvent, WriteInvocationInput, WriteLMPInput, LMP
 from ell.store import Store
 from ell.stores.sql import PostgresStore, SQLStore, SQLiteStore
-from ell.studio.logger import setup_logging
 
 
 logger = logging.getLogger(__name__)
@@ -53,7 +52,7 @@ def get_session():
 
 
 def create_app(config: Config):
-    setup_logging(config.log_level)
+    # setup_logging(config.log_level)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -132,6 +131,7 @@ def create_app(config: Config):
         publisher: Publisher = Depends(get_publisher),
         serializer: Store = Depends(get_serializer)
     ):
+        logger.info(f"Writing invocation {input.invocation.lmp_id}")
         invocation, results, consumes = input.to_serialized_invocation_input()
         # TODO: return anything this might create like invocation id
         _invo = serializer.write_invocation(

@@ -1,14 +1,18 @@
 import asyncio
 import os
+from typing import cast
 import uvicorn
 from argparse import ArgumentParser
 from ell.api.config import Config
 from ell.api.server import create_app
-from ell.studio.logger import setup_logging
+from ell.api.logger import setup_logging, LogLevel
+
 
 
 def main():
-    setup_logging()
+    log_level = cast(LogLevel, os.environ.get("LOG_LEVEL", "INFO"))
+    setup_logging(level=log_level)
+
     parser = ArgumentParser(description="ELL API Server")
     parser.add_argument("--storage-dir", default=None,
                         help="Storage directory (default: None)")

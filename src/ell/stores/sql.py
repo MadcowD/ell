@@ -34,6 +34,7 @@ class SQLStore(ell.store.Store):
 
     def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:
         with Session(self.engine) as session:
+            logger.debug(f"Begin writing LMP {serialized_lmp.lmp_id}")
             # Bind the serialized_lmp to the session
             lmp = None
             if serialized_lmp.lmp_id:
@@ -57,6 +58,7 @@ class SQLStore(ell.store.Store):
 
     def write_invocation(self, invocation: Invocation, results: List[SerializedLStr], consumes: Set[str]) -> Optional[Any]:
         with Session(self.engine) as session:
+            logger.debug(f"Begin writing invocation {invocation.id}")
             lmp = self.get_lmp(invocation.lmp_id, session)
             assert lmp is not None, f"LMP with id {invocation.lmp_id} not found. Writing invocation erroneously"
             
@@ -72,14 +74,21 @@ class SQLStore(ell.store.Store):
                 result.producer_invocation = invocation
                 session.add(result)
 
+            logger.debug(f"Committing invocation {invocation.id}")
+            session.commit()
+            logger.debug(f"Committed invocation {invocation.id}")
+
             # Now create traces.
             for consumed_id in consumes:
+                logger.debug(f"Creating trace from {invocation.id} to {consumed_id}")
                 session.add(InvocationTrace(
                     invocation_consumer_id=invocation.id,
                     invocation_consuming_id=consumed_id
                 ))
 
+            logger.debug(f"Committing traces for invocation {invocation.id}")
             session.commit()
+            logger.debug(f"Committed traces for invocation {invocation.id}")
             return invocation
         
     def get_cached_invocations(self, lmp_id :str, state_cache_key :str) -> List[Invocation]:

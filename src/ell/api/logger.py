@@ -1,9 +1,14 @@
 import logging
+from typing import Literal, Union
 from colorama import Fore, Style, init
 
-initialized = False
 
-def setup_logging(level: int = logging.INFO):
+LogLevel = Union[Literal['CRITICAL'], Literal['FATAL'], Literal['ERROR'], Literal['WARN'],
+                 Literal['WARNING'], Literal['INFO'], Literal['DEBUG'], Literal['NOTSET']]
+
+
+initialized = False
+def setup_logging(level: LogLevel = "INFO"):
     global initialized
     if initialized:
         return
@@ -27,7 +32,7 @@ def setup_logging(level: int = logging.INFO):
 
     # Create and configure the logger
     logger = logging.getLogger("ell")
-    logger.setLevel(level)
+    logger.setLevel(logging.getLevelName(level.upper()))
 
     # Create console handler and set formatter
     console_handler = logging.StreamHandler()
@@ -35,6 +40,7 @@ def setup_logging(level: int = logging.INFO):
 
     # Add the handler to the logger
     logger.addHandler(console_handler)
+
     initialized = True
 
     return logger

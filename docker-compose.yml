@@ -15,6 +15,7 @@ services:
       - PORT=8081
       - ELL_PG_CONNECTION_STRING=postgresql://ell_user:ell_password@postgres:5432/ell_db
       - ELL_MQTT_CONNECTION_STRING=mqtt://mqtt:1883
+      - LOG_LEVEL=DEBUG
     depends_on:
       - postgres
       - mqtt
