@@ -14,16 +14,27 @@ const InvocationDataPane = ({ invocation }) => {
     return lstrCleanStringify(invocation.kwargs, 1);
   }, [invocation.kwargs]);
 
+  const resultsLines = useMemo(() => {
+    return lstrCleanStringify(invocation.results, 1);
+  }, [invocation.results]);
+
   const hasKwargs = useMemo(() => {
     return Object.keys(invocation.kwargs).length > 0;
   }, [invocation.kwargs]);
+
+  const hasResults = useMemo(() => {
+    return Array.isArray(invocation.results) ? invocation.results.length > 0 : !!invocation.results;
+  }, [invocation.results]);
 
   // TODO: Properly implement collapse behaviour
   useEffect(() => {
     if ((argsLines && argsLines.split('\n').length > 10) || (hasKwargs && kwargsLines.split('\n').length > 10)) {
       setInputExpanded(false);
     }
-  }, []);
+    if (hasResults && resultsLines.split('\n').length > 10) {
+      setOutputExpanded(false);
+    }
+  }, [argsLines, kwargsLines, resultsLines, hasKwargs, hasResults]);
 
   return (
     <div className="flex-grow p-4 overflow-y-auto w-[400px] hide-scrollbar">
@@ -37,6 +48,7 @@ const InvocationDataPane = ({ invocation }) => {
           lines={argsLines.split('\n').length}
           language="json"
           showLineNumbers={false}
+          offset={0}
           enableFormatToggle={true}
         />
       )} 
@@ -50,22 +62,25 @@ const InvocationDataPane = ({ invocation }) => {
           collapsedHeight={'300px'}
           lines={kwargsLines.split('\n').length}
           showLineNumbers={false}
+          offset={0}
           enableFormatToggle={true}
         />
       )}
 
-      {invocation.results.map((result, index) => (
+      {hasResults && (
         <CodeSection
-          key={index}
-          title={`Output ${index + 1}`}
-          code={result.content}
+          title="Results"
+          code={resultsLines}
           showCode={outputExpanded}
           setShowCode={setOutputExpanded}
-          lines={result.content.split('\n').length}
-          language="text"
+          collapsedHeight={'300px'}
+          lines={resultsLines.split('\n').length}
+          language="json"
           showLineNumbers={false}
+          enableFormatToggle={true}
+          offset={0}
         />
-      ))}
+      )}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 # Let's define the core types.
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Type, Union, Any, Optional
+from typing import Callable, Dict, List, Literal, Type, Union, Any, Optional
 
 from pydantic import BaseModel, field_validator, validator
 
@@ -31,14 +31,28 @@ InvocableTool = Callable[..., _lstr_generic]
 # todo: implement tracing for structured outs. this a v2 feature.
 class ToolCall(BaseModel):
     tool : InvocableTool
-    params : Type[BaseModel]
+    params : Union[Type[BaseModel], BaseModel]
+    def __call__(self, **kwargs):
+        assert not kwargs, "Unexpected arguments provided. Calling a tool uses the params provided in the ToolCall."
+        return self.tool(**self.params.model_dump())
 
 class MessageContentBlock(BaseModel):
     text: Optional[_lstr_generic] = Field(default=None)
     image: Optional[str] = Field(default=None)
     audio: Optional[str] = Field(default=None)
-    tool_calls: Optional[List[ToolCall]] = Field(default=None)
-    structured: Optional[Type[BaseModel]] = Field(default=None)
+    tool_call: Optional[ToolCall]     = Field(default=None)
+    structured: Optional[Union[Type[BaseModel], BaseModel]] = Field(default=None)
+
+    @property 
+    def type(self):
+        if self.text is not None:
+            return "text"
+        if self.image is not None:
+            return "image"
+        if self.tool_call is not None:
+            return "tool_call"
+        if self.structured is not None:
+            return "structured"
 
     # XXX: Should validate.
     # @field_validator('*')
@@ -51,9 +65,6 @@ class MessageContentBlock(BaseModel):
 class Message(BaseModel):
     role: str
     content: List[MessageContentBlock] = Field(min_length=1)
-    def __json__(self):
-        print("dumping", self.model_dump())
-        return self.model_dump()
     def to_openai_message(self):
         assert len(self.content) == 1
         return {
@@ -62,7 +73,7 @@ class Message(BaseModel):
         }
 
 
-# Well this is disappointing, I wanted to effectively type hint by doign that data sync meta, but eh, at elast we can still reference role or content this way. Probably wil lcan the dict sync meta.
+# Well this is disappointing, I wanted to effectively type hint by doign that data sync meta, but eh, at elast we can still reference role or content this way. Probably wil lcan the dict sync meta. TypedDict is the ticket ell oh ell.
 MessageOrDict = Union[Message, Dict[str, str]]
 
 # Can support iamge prompts later.
@@ -86,6 +97,7 @@ def utc_now() -> datetime:
     Serializes to ISO-8601.
     """
     return datetime.now(tz=timezone.utc)
+
 class SerializedLMPUses(SQLModel, table=True):
     """
     Represents the many-to-many relationship between SerializedLMPs.

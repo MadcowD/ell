@@ -114,17 +114,11 @@ class _lstr(str):
         cls, source_type: Any, handler: GetCoreSchemaHandler
     ) -> CoreSchema:
         def validate_lstr(value):
-            print("valiudating", value)
-            import traceback
-            print("Call stack:")
-            for line in traceback.format_stack():
-                print(line.strip())
             if isinstance(value, dict) and value.get('__lstr', False):
                 content = value['content']
-                _origin_trace = value['_originator'].split(',')
+                _origin_trace = value['__origin_trace__'].split(',')
                 return cls(content, _origin_trace=_origin_trace)
             elif isinstance(value, str):
-                print("returning lstr")
                 return cls(value)
             elif isinstance(value, cls):
                 return value
@@ -134,7 +128,7 @@ class _lstr(str):
         return core_schema.json_or_python_schema(
             json_schema=core_schema.typed_dict_schema({
                 'content': core_schema.typed_dict_field(core_schema.str_schema()),
-                '_originator': core_schema.typed_dict_field(core_schema.str_schema()),
+                '__origin_trace__': core_schema.typed_dict_field(core_schema.str_schema()),
                 '__lstr': core_schema.typed_dict_field(core_schema.bool_schema()),
             }),
             python_schema=core_schema.union_schema([
@@ -144,7 +138,7 @@ class _lstr(str):
             serialization=core_schema.plain_serializer_function_ser_schema(
                 lambda instance:  {
                     "content": str(instance),
-                    "_originator": ",".join(instance._origin_trace),
+                    "__origin_trace__": (instance.__origin_trace__),
                     "__lstr": True
                 }
             )

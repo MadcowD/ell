@@ -1,6 +1,6 @@
-from ell.lmp.text import text
+from ell.lmp.text import simple
 from ell.lmp.tool import tool
-from ell.lmp.multimodal import multimodal
+from ell.lmp.multimodal import complex
 from ell.types import Message, MessageContentBlock
 from ell.__version__ import __version__
 
@@ -51,4 +51,4 @@ def assistant(content: str) -> Message:
 def message(role: str, content: str) -> Message:
     return Message(role=role, content=[MessageContentBlock(text=content)])
 
-__all__ = ["text", "system", "user", "assistant", "config", "__version__"]
+__all__ = ["simple", "system", "user", "assistant", "config", "__version__"]

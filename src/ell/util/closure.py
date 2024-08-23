@@ -43,6 +43,8 @@ import re
 from collections import deque
 import black
 
+from ell.util.serialization import is_immutable_variable
+
 DELIM = "$$$$$$$$$$$$$$$$$$$$$$$$$"
 FORBIDDEN_NAMES = ["ell", "lstr"]
 
@@ -159,14 +161,13 @@ def _process_signature_dependency(val, dependencies, already_closed, recursion_s
     # Todo: Buidl general cattr like utility for unstructureing python objects with ooks that keep track of state variables.
     # Todo: break up closure into types and fucntions.
     
-    # print(name, val, is_builtin)
     if  (name not in FORBIDDEN_NAMES):
         try:
             dep = None
             _uses = None
             if isinstance(val, (types.FunctionType, type, types.MethodType)):
                 dep, _, _uses = lexical_closure(val, already_closed=already_closed, recursion_stack=recursion_stack.copy())
-                print(_uses)
+
             elif isinstance(val, (list, tuple, set)): # Todo: Figure out recursive ypye closurex
                 # print(val)
                 for item in val:
@@ -176,8 +177,13 @@ def _process_signature_dependency(val, dependencies, already_closed, recursion_s
                     is_builtin = (val.__class__.__module__ == "builtins" or val.__class__.__module__ == "__builtins__" )
                 except:
                     is_builtin = False
+
                 if not is_builtin:
-                    dep, _, _uses = lexical_closure(type(val), already_closed=already_closed, recursion_stack=recursion_stack.copy())
+                    if should_import(val.__class__.__module__):
+                
+                        dependencies.append(dill.source.getimport(val.__class__, alias=val.__class__.__name__))
+                    else:
+                        dep, _, _uses = lexical_closure(type(val), already_closed=already_closed, recursion_stack=recursion_stack.copy())
 
             if dep: dependencies.append(dep)
             if _uses: uses.update(_uses)
@@ -187,6 +193,14 @@ def _process_signature_dependency(val, dependencies, already_closed, recursion_s
 
 def _process_variable(var_name, var_value, dependencies, modules, imports, already_closed, recursion_stack , uses):
     """Process a single variable."""
+    try:
+        name = inspect.getmodule(var_value).__name__
+        if should_import(name):
+            imports.append(dill.source.getimport(var_value, alias=var_name))
+            return
+    except:
+        pass
+    
     if isinstance(var_value, (types.FunctionType, type, types.MethodType)):
         _process_callable(var_name, var_value, dependencies, already_closed, recursion_stack, uses)
     elif isinstance(var_value, types.ModuleType):
@@ -213,7 +227,7 @@ def _process_callable(var_name, var_value, dependencies, already_closed, recursi
 
 def _process_module(var_name, var_value, modules, imports, uses):
     """Process a module."""
-    if should_import(var_value):
+    if should_import(var_value.__name__):
         imports.append(dill.source.getimport(var_value, alias=var_name))
     else:
         modules.append((var_name, var_value))
@@ -294,62 +308,23 @@ def _raise_error(message, exception, recursion_stack):
     error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
     raise Exception(error_msg)
 
-def is_immutable_variable(value):
-    """
-    Check if a value is immutable.
-    
-    This function determines whether the given value is of an immutable type in Python.
-    Immutable types are objects whose state cannot be modified after they are created.
-    
-    Args:
-        value: Any Python object to check for immutability.
-    
-    Returns:
-        bool: True if the value is immutable, False otherwise.
-    
-    Note:
-        - This function checks for common immutable types in Python.
-        - Custom classes are considered mutable unless they explicitly implement
-          immutability (which this function doesn't check for).
-        - For some types like tuple, immutability is shallow (i.e., the tuple itself
-          is immutable, but its contents might not be).
-    """
-    immutable_types = (
-        int, float, complex, str, bytes,
-        tuple, frozenset, type(None),
-        bool,  # booleans are immutable
-        range,  # range objects are immutable
-        slice,  # slice objects are immutable
-    )
-    
-    if isinstance(value, immutable_types):
-        return True
-    
-    # Check for immutable instances of mutable types
-    if isinstance(value, (tuple, frozenset)):
-        return all(is_immutable_variable(item) for item in value)
-    
-    return False
-
-def should_import(module: types.ModuleType):
+def should_import(module_name : str):
     """
     This function checks if a module should be imported based on its origin.
     It returns False if the module is in the local directory or if the module's spec is None.
     Otherwise, it returns True.
 
-    Parameters:
-    module (ModuleType): The module to check.
-
     Returns:
     bool: True if the module should be imported, False otherwise.
     """
+
     # Define the local directory
     DIRECTORY_TO_WATCH = os.environ.get("DIRECTORY_TO_WATCH", os.getcwd())
 
     # Get the module's spec
-    spec = importlib.util.find_spec(module.__name__)
+    spec = importlib.util.find_spec(module_name)
 
-    if module.__name__.startswith("ell"):
+    if module_name.startswith("ell"):
         return True
     
     # Return False if the spec is None or if the spec's origin starts with the local directory

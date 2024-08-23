@@ -5,12 +5,12 @@ from typing import Set, Any
 import numpy as np
 from ell.util.closure import (
     lexical_closure,
-    is_immutable_variable,
     should_import,
     get_referenced_names,
     is_function_called,
 )
 import ell
+from ell.util.serialization import is_immutable_variable
 
 
 def test_lexical_closure_simple_function():
@@ -114,12 +114,12 @@ def test_lexical_closure_uses_type():
 
 def test_lexical_closure_uses():
 
-    @ell.text(model="gpt-4")
+    @ell.simple(model="gpt-4")
     def dependency_func():
         return "42"
     
 
-    @ell.text(model="gpt-4")
+    @ell.simple(model="gpt-4")
     def main_func():
         return dependency_func() 
 

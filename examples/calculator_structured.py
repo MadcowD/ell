@@ -39,7 +39,7 @@ class Div:
 CalcOp = Union[Add, Sub, Mul, Div]
 
 
-@ell.text(model="gpt-4o", temperature=0.1)
+@ell.simple(model="gpt-4o", temperature=0.1)
 def parse_json(task: str, type: Type[Any]):
     return [
         ell.system(

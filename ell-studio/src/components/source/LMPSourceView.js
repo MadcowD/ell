@@ -18,7 +18,7 @@ const BoundedVariableWrapper = ({ children, selectedInvocation, content, initial
 
   const isGlobal = var_name in invocationVars;
   const isFree = var_name in invocationFreeVars;
-  const formattedValue = `${var_name} = ${JSON.stringify(value).replace(/"<Object of type ([^>]+)>"/g, '<Object of type $1>')}`;
+  const formattedValue = `${var_name} = ${JSON.stringify(value)?.replace(/"<Object of type ([^>]+)>"/g, '<Object of type $1>')}`;
   
   return (
     <div className="relative rounded border border-gray-500 mt-2 py-2">

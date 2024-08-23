@@ -5,28 +5,28 @@ from ell.stores.sql import SQLiteStore
 
 ell.config.verbose = True
 
-@ell.text(model="gpt-4o-mini", temperature=1.0)
+@ell.simple(model="gpt-4o-mini", temperature=1.0)
 def generate_story_ideas(about : str):
     return [
         ell.system("You are an expert story ideator. Only answer in a single sentence."),
         ell.user(f"Generate a story idea about {about}."),
     ]
 
-@ell.text(model="gpt-4o-mini", temperature=1.0)
+@ell.simple(model="gpt-4o-mini", temperature=1.0)
 def write_a_draft_of_a_story(idea : str):
     return [
         ell.system("You are an adept story writer. The story should only be 3 paragraphs."),
         ell.user(f"Write a story about {idea}."),
     ]
 
-@ell.text(model="gpt-4o", temperature=0.1)
+@ell.simple(model="gpt-4o", temperature=0.1)
 def choose_the_best_draft(drafts : List[str]):
     return [
         ell.system("You are an expert fiction editor."),
         ell.user(f"Choose the best draft from the following list: {'\n'.join(drafts)}."),
     ]
 
-@ell.text(model="gpt-4-turbo", temperature=0.2)
+@ell.simple(model="gpt-4-turbo", temperature=0.2)
 def write_a_really_good_story(about : str):
     ideas = generate_story_ideas(about, lm_params=(dict(n=4)))
 

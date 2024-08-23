@@ -1,11 +1,12 @@
 from functools import partial
+import json
 
 # import anthropic
 from ell.configurator import config
 import openai
 from collections import defaultdict
 from ell._lstr import _lstr
-from ell.types import LMP, LMPParams, Message, MessageContentBlock, MessageOrDict
+from ell.types import LMP, LMPParams, Message, MessageContentBlock, MessageOrDict, ToolCall
 
 
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
@@ -113,18 +114,44 @@ def call(
     n_choices = len(choices_progress)
 
     # coerce the streaming into a final message type
-    tracked_results = [
-        # TODO: Remove hardcoding
-        # TODO: Unversal message format
-        Message(role=choice.message.role if not streaming else choice_deltas[0].delta.role, content=[MessageContentBlock(text=_lstr(
-            content="".join((choice.delta.content or "" for choice in choice_deltas)) if streaming else choice.message.content,
-            _origin_trace=_invocation_origin,
-        ))])
-        for _, choice_deltas in sorted(choices_progress.items(), key= lambda x: x[0],)
-    ]
-     
-    print(tracked_results)
-    api_params= dict(model=model, messages=client_safe_messages_messages, lm_kwargs=lm_kwargs)
+    tracked_results = []
+    for _, choice_deltas in sorted(choices_progress.items(), key=lambda x: x[0]):
+        content = []
+        
+        # Handle text content
+        if streaming:
+            text_content = "".join((choice.delta.content or "" for choice in choice_deltas))
+            if text_content:
+                content.append(MessageContentBlock(
+                    text=_lstr(content=text_content, _origin_trace=_invocation_origin)
+                ))
+        else:
+            choice = choice_deltas[0].message
+            if choice.content:
+                content.append(MessageContentBlock(
+                    text=_lstr(content=choice.content, _origin_trace=_invocation_origin)
+                ))
+        
+        # Handle tool calls
+        if not streaming and hasattr(choice, 'tool_calls'):
+            for tool_call in choice.tool_calls or []:
+                matching_tool = None
+                for tool in tools:
+                    if tool.__name__ == tool_call.function.name:
+                        matching_tool = tool
+                        break
+                
+                if matching_tool:
+                    params = matching_tool.__ell_params_model__(**json.loads(tool_call.function.arguments))
+                    content.append(MessageContentBlock(
+                        tool_call=ToolCall(tool=matching_tool, params=params)
+                    ))
+        
+        tracked_results.append(Message(
+            role=choice.role if not streaming else choice_deltas[0].delta.role,
+            content=content
+        ))
+    
+    api_params = dict(model=model, messages=client_safe_messages_messages, lm_kwargs=lm_kwargs)
     
     return tracked_results[0] if n_choices == 1 else tracked_results, api_params, metadata
-

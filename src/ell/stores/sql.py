@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import json
 import os
 from typing import Any, Optional, Dict, List, Set, Union
+from pydantic import BaseModel
 from sqlmodel import Session, SQLModel, create_engine, select
 import ell.store
 import cattrs
@@ -9,11 +10,24 @@ import numpy as np
 from sqlalchemy.sql import text
 from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLMPUses, utc_now
 from ell._lstr import _lstr
-from sqlalchemy import or_, func, and_, extract, case
+from sqlalchemy import or_, func, and_, extract, FromClause
+from sqlalchemy.types import TypeDecorator, VARCHAR
+from ell.util.serialization import pydantic_ltype_aware_cattr
+
+import json
+
+
+
+
+
 
 class SQLStore(ell.store.Store):
     def __init__(self, db_uri: str):
-        self.engine = create_engine(db_uri)
+        self.engine = create_engine(db_uri,
+                                    json_serializer=lambda obj: json.dumps(pydantic_ltype_aware_cattr.unstructure(obj), 
+                                     sort_keys=True, default=repr))
+        
+
         SQLModel.metadata.create_all(self.engine)
         self.open_files: Dict[str, Dict[str, Any]] = {}
 
@@ -48,6 +62,7 @@ class SQLStore(ell.store.Store):
             else:
                 lmp.num_invocations += 1
 
+            
             session.add(invocation)
 
             # Now create traces.
@@ -122,7 +137,7 @@ class SQLStore(ell.store.Store):
             inv, lmp = results[0]
             inv_dict = inv.model_dump()
             inv_dict['lmp'] = lmp.model_dump()
-            inv_dict['results'] = inv_dict['lmp']['results']
+            
 
             # Fetch consumes and consumed_by invocation IDs
             consumes_query = select(InvocationTrace.invocation_consuming_id).where(InvocationTrace.invocation_consumer_id == inv_id)

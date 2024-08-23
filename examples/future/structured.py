@@ -11,7 +11,7 @@ class Test(BaseModel):
     height_precise: float
     is_cool: bool
 
-@ell.multimodal(model='gpt-4o-2024-08-06', response_format=Test)
+@ell.complex(model='gpt-4o-2024-08-06', response_format=Test)
 def create_test(text: str):
     """You are a test model. You are given a text and you need to return a pydantic object."""
     return "do it!" 

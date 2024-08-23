@@ -9,7 +9,7 @@ ell.config.verbose = True
 
 client = openai.Client(api_key=open(os.path.expanduser("~/.oaikey")).read().strip())
 
-@ell.text(model="gpt-4o", temperature=0.1, n=1)
+@ell.simple(model="gpt-4o", temperature=0.1, n=1)
 def number_to_words(number: int):
     """You are an expert in the english language and convert any number to its word representation, for example 123456 would be one hundred and twenty three thousand four hundred fifty six. 
 You must always return the word representation and nothing else."""

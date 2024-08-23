@@ -1,5 +1,5 @@
 from ell.configurator import config
-from ell.lmp.track import track
+from ell.lmp._track import _track
 from ell._lstr import _lstr
 from ell.types import LMP, InvocableLM, LMPParams, LMPType, Message, MessageContentBlock, MessageOrDict, _lstr_generic
 from ell.util._warnings import _warnings
@@ -12,7 +12,7 @@ import openai
 from functools import wraps
 from typing import Any, Dict, Optional, List, Callable, Union
 
-def multimodal(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=False, tools: Optional[List[Callable]] = None, post_callback: Optional[Callable] = None, **lm_kwargs):
+def complex(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=False, tools: Optional[List[Callable]] = None, post_callback: Optional[Callable] = None, **lm_kwargs):
     """
     Defines a basic language model program (a parameterization of an existing foundation model using a particular prompt.)
 
@@ -23,7 +23,7 @@ def multimodal(model: str, client: Optional[openai.Client] = None, exempt_from_t
 
     def parameterized_lm_decorator(
         prompt: LMP,
-    ) -> InvocableLM:
+    ) -> Callable[..., Union[List[Message], Message]]:
         color = compute_color(prompt)
         _warnings(model, prompt, default_client_from_decorator)
 
@@ -61,7 +61,7 @@ def multimodal(model: str, client: Optional[openai.Client] = None, exempt_from_t
         if exempt_from_tracking:
             return model_call
         else:
-            return track(model_call, forced_dependencies=dict(tools=tools))
+            return _track(model_call, forced_dependencies=dict(tools=tools))
     return parameterized_lm_decorator
 
 def _get_messages(prompt_ret: Union[str, list[MessageOrDict]], prompt: LMP) -> list[Message]:

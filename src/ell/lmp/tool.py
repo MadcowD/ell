@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import Field, create_model
 from pydantic.fields import FieldInfo
-from ell.lmp.track import track
+from ell.lmp._track import _track
 # from ell.types import ToolFunction, InvocableTool, ToolParams
 # from ell.util.verbosity import compute_color, tool_usage_logger_pre
 from ell.configurator import config
@@ -78,7 +78,7 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
                 fields[param_name] = (annotation, default)
 
         # 3. Create the Pydantic model
-        model_name = f"{fn.__name__.capitalize()}Params"
+        model_name = f"{fn.__name__}Params"
         ParamsModel = create_model(model_name, **fields)
         
         # Attach the Pydantic model to the wrapper function
@@ -88,6 +88,6 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
         if exempt_from_tracking:
             return wrapper
         else:
-            return track(wrapper)
+            return _track(wrapper)
 
     return decorator
