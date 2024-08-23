@@ -1,6 +1,6 @@
 from ell.configurator import config
 from ell.lmp.track import track
-from ell.lstr import lstr
+from ell._lstr import _lstr
 from ell.types import LMP, InvocableLM, LMPParams, LMPType, Message, MessageContentBlock, MessageOrDict, _lstr_generic
 from ell.util._warnings import _warnings
 from ell.util.api import  call
@@ -70,7 +70,7 @@ def _get_messages(prompt_ret: Union[str, list[MessageOrDict]], prompt: LMP) -> l
     """
     if isinstance(prompt_ret, str):
         return [
-            Message(role="system", content=[MessageContentBlock(text=lstr(prompt.__doc__) or config.default_system_prompt)]),
+            Message(role="system", content=[MessageContentBlock(text=_lstr(prompt.__doc__) or config.default_system_prompt)]),
             Message(role="user", content=[MessageContentBlock(text=prompt_ret)]),
         ]
     else:

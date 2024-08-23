@@ -4,7 +4,9 @@ from typing import Callable, Dict, List, Type, Union, Any, Optional
 
 from pydantic import BaseModel, field_validator, validator
 
-from ell.lstr import lstr
+import enum
+
+from ell._lstr import _lstr
 from ell.util.dict_sync_meta import DictSyncMeta
 
 from datetime import datetime, timezone
@@ -13,7 +15,7 @@ from sqlmodel import Field, SQLModel, Relationship, JSON, Column
 from sqlalchemy import Index, func
 import sqlalchemy.types as types
 
-_lstr_generic = Union[lstr, str]
+_lstr_generic = Union[_lstr, str]
 
 OneTurn = Callable[..., _lstr_generic]
 
@@ -23,6 +25,8 @@ LMPParams = Dict[str, Any]
 
 
 InvocableTool = Callable[..., _lstr_generic]
+
+
 
 # todo: implement tracing for structured outs. this a v2 feature.
 class ToolCall(BaseModel):
@@ -36,7 +40,7 @@ class MessageContentBlock(BaseModel):
     tool_calls: Optional[List[ToolCall]] = Field(default=None)
     structured: Optional[Type[BaseModel]] = Field(default=None)
 
-    # XXX: Todo implement this.
+    # XXX: Should validate.
     # @field_validator('*')
     # @classmethod
     # def check_at_least_one_field_set(cls, v, info):
@@ -47,14 +51,15 @@ class MessageContentBlock(BaseModel):
 class Message(BaseModel):
     role: str
     content: List[MessageContentBlock] = Field(min_length=1)
-
+    def __json__(self):
+        print("dumping", self.model_dump())
+        return self.model_dump()
     def to_openai_message(self):
         assert len(self.content) == 1
         return {
             "role": self.role,
             "content": self.content[0].text
         }
-    
 
 
 # Well this is disappointing, I wanted to effectively type hint by doign that data sync meta, but eh, at elast we can still reference role or content this way. Probably wil lcan the dict sync meta.
@@ -103,13 +108,12 @@ def UTCTimestampField(index:bool=False, **kwargs:Any):
         sa_column=Column(UTCTimestamp(timezone=True), index=index, **kwargs))
 
 
-import enum
-
 class LMPType(str, enum.Enum):
     LM = "LM"
     TOOL = "TOOL"
     MULTIMODAL = "MULTIMODAL"
     OTHER = "OTHER"
+
 
 
 class SerializedLMPBase(SQLModel):
@@ -156,15 +160,6 @@ class InvocationTrace(SQLModel, table=True):
     invocation_consumer_id: str = Field(foreign_key="invocation.id", primary_key=True, index=True)
     invocation_consuming_id: str = Field(foreign_key="invocation.id", primary_key=True, index=True)
 
-class SerializedLStrBase(SQLModel):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    content: str
-    logits: List[float] = Field(default_factory=list, sa_column=Column(JSON))
-    producer_invocation_id: Optional[str] = Field(default=None, foreign_key="invocation.id", index=True)
-
-class SerializedLStr(SerializedLStrBase, table=True):
-    producer_invocation: Optional["Invocation"] = Relationship(back_populates="results")
-
 # Should be subtyped for differnet kidns of LMPS.
 class InvocationBase(SQLModel):
     id: Optional[str] = Field(default=None, primary_key=True)
@@ -180,10 +175,10 @@ class InvocationBase(SQLModel):
     created_at: datetime = UTCTimestampField(default=func.now(), nullable=False)
     invocation_kwargs: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     used_by_id: Optional[str] = Field(default=None, foreign_key="invocation.id", index=True)
+    results : Union[List[Message], Any] = Field(default_factory=list, sa_column=Column(JSON))
 
 class Invocation(InvocationBase, table=True):
     lmp: SerializedLMP = Relationship(back_populates="invocations")
-    results: List[SerializedLStr] = Relationship(back_populates="producer_invocation")
     consumed_by: List["Invocation"] = Relationship(
         back_populates="consumes",
         link_model=InvocationTrace,

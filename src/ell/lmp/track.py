@@ -1,9 +1,9 @@
 import logging
 import threading
-from ell.types import LMPType, SerializedLStr, utc_now, SerializedLMP, Invocation, InvocationTrace
+from ell.types import LMPType, utc_now, SerializedLMP, Invocation, InvocationTrace
 import ell.util.closure
 from ell.configurator import config
-from ell.lstr import lstr
+from ell._lstr import _lstr
 
 import inspect
 
@@ -202,25 +202,12 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         invocation_kwargs=invocation_kwargs,
         args=cleaned_invocation_params.get('args', []),
         kwargs=cleaned_invocation_params.get('kwargs', {}),
-        used_by_id=parent_invocation_id
+        used_by_id=parent_invocation_id,
+        results=result
     )
 
-    results = []
-    if isinstance(result, lstr):
-        results = [result]
-    elif isinstance(result, list):
-        results = result
-    else:
-        raise TypeError("Result must be either lstr or List[lstr]")
-
-    serialized_results = [
-        SerializedLStr(
-            content=str(res),
-            # logits=res.logits
-        ) for res in results
-    ]
-
-    config._store.write_invocation(invocation, serialized_results, consumes)
+    
+    config._store.write_invocation(invocation, consumes)
 
 def compute_state_cache_key(ipstr, fn_closure):
     _global_free_vars_str = f"{json.dumps(get_immutable_vars(fn_closure[2]), sort_keys=True, default=repr)}"
@@ -269,7 +256,7 @@ def prepare_invocation_params(fn_args, fn_kwargs):
         lambda arr: arr.tolist()
     )
     invocation_converter.register_unstructure_hook(
-        lstr,
+        _lstr,
         process_lstr
     )
     invocation_converter.register_unstructure_hook(

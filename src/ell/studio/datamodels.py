@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlmodel import SQLModel
-from ell.types import SerializedLMPBase, InvocationBase, SerializedLStrBase
+from ell.types import SerializedLMPBase, InvocationBase
 
 class SerializedLMPPublic(SerializedLMPBase):
     pass
@@ -25,7 +25,6 @@ class SerializedLMPUpdate(SQLModel):
 
 class InvocationPublic(InvocationBase):
     lmp: SerializedLMPPublic
-    results: List[SerializedLStrBase]
     consumes: List[str]
     consumed_by: List[str]
     uses: List[str]
@@ -44,11 +43,6 @@ class InvocationUpdate(SQLModel):
     state_cache_key: Optional[str] = None
     invocation_kwargs: Optional[Dict[str, Any]] = None
 
-class SerializedLStrPublic(SerializedLStrBase):
-    pass
-
-class SerializedLStrCreate(SerializedLStrBase):
-    pass
 
 class SerializedLStrUpdate(SQLModel):
     content: Optional[str] = None

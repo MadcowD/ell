@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from datetime import datetime
 from typing import Any, Optional, Dict, List, Set, Union
-from ell.lstr import lstr
-from ell.types import InvocableLM, SerializedLMP, Invocation, SerializedLStr
+from ell._lstr import _lstr
+from ell.types import InvocableLM, SerializedLMP, Invocation
 
 
 class Store(ABC):
@@ -23,7 +23,7 @@ class Store(ABC):
         pass
 
     @abstractmethod
-    def write_invocation(self, invocation: Invocation, results: List[SerializedLStr], consumes: Set[str]) -> Optional[Any]:
+    def write_invocation(self, invocation: Invocation,  consumes: Set[str]) -> Optional[Any]:
         """
         Write an invocation of an LMP to the storage.
 

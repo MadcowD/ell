@@ -2,7 +2,7 @@ import dataclasses
 import random
 from typing import Callable, List, Tuple
 import ell
-from ell.lstr import lstr
+from ell._lstr import _lstr
 ell.config.verbose = True
 
 
@@ -10,7 +10,7 @@ ell.config.verbose = True
 # Option 0 (pythonic.)
 # This going to be NON Native to ell
 
-def parse_outputs(result : lstr) -> str:
+def parse_outputs(result : _lstr) -> str:
     name = result.split(":")[0]
     backstory = result.split(":")[1]
     return Personality(name, backstory)
@@ -31,7 +31,7 @@ def get_personality():
 
 # Option 1.
 
-def parse_outputs(result : lstr) -> str:
+def parse_outputs(result : _lstr) -> str:
     name = result.split(":")[0]
     backstory = result.split(":")[1]
     return Personality(name, backstory)
@@ -56,7 +56,7 @@ class Personality:
     backstory : str
 
     @staticmethod
-    def parse_outputs(result : lstr) -> str:
+    def parse_outputs(result : _lstr) -> str:
         name = result.split(":")[0]
         backstory = result.split(":")[1]
         return Personality(name, backstory)
@@ -73,7 +73,7 @@ Backstory: <3 sentence backstory>'""" # System prompt
 
 # Option 3. Another decorator
 
-def parse_outputs(result : lstr) -> str:
+def parse_outputs(result : _lstr) -> str:
     name = result.split(":")[0]
     backstory = result.split(":")[1]
     return Personality(name, backstory)
@@ -103,7 +103,7 @@ class PersonalitySchema(ell.Schema):
     name : str
     backstory : str
 
-    def parse_outputs(result : lstr) -> str:
+    def parse_outputs(result : _lstr) -> str:
         name = result.split(":")[0]
         backstory = result.split(":")[1]
         return Personality(name, backstory)
@@ -126,7 +126,7 @@ def create_random_personality():
 
 
 # or 
-def parser(result : lstr) -> OutputFormat:
+def parser(result : _lstr) -> OutputFormat:
     name = result.split(":")[0]
     backstory = result.split(":")[1]
     return OutputFormat(name, backstory)
@@ -323,7 +323,7 @@ def internal_make_a_rpg_character(name : str):
 
 @ell.track
 @retry(tries=3)
-def parse(result : lstr):
+def parse(result : _lstr):
     return json.parse(result)
 
 

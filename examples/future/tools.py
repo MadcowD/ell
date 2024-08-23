@@ -4,7 +4,7 @@ import ell
 import requests
 
 import ell.lmp.tool
-from ell.lstr import lstr
+from ell._lstr import _lstr
 from ell.stores.sql import SQLiteStore
 
 
@@ -13,7 +13,7 @@ def get_html_content(
     url : str = Field(description="The URL to get the HTML content of. Never incldue the protocol (like http:// or https://)"),
     ):
     """Get the HTML content of a URL."""
-    return lstr(requests.get(url))
+    return _lstr(requests.get(url))
 
 
 @ell.text(model="gpt-4o", tools=[get_html_content], eager=True)

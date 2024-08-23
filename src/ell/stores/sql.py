@@ -7,16 +7,14 @@ import ell.store
 import cattrs
 import numpy as np
 from sqlalchemy.sql import text
-from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLMPUses, SerializedLStr, utc_now
-from ell.lstr import lstr
+from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLMPUses, utc_now
+from ell._lstr import _lstr
 from sqlalchemy import or_, func, and_, extract, case
 
 class SQLStore(ell.store.Store):
     def __init__(self, db_uri: str):
         self.engine = create_engine(db_uri)
         SQLModel.metadata.create_all(self.engine)
-        
-
         self.open_files: Dict[str, Dict[str, Any]] = {}
 
 
@@ -39,7 +37,7 @@ class SQLStore(ell.store.Store):
             session.commit()
         return None
 
-    def write_invocation(self, invocation: Invocation, results: List[SerializedLStr], consumes: Set[str]) -> Optional[Any]:
+    def write_invocation(self, invocation: Invocation, consumes: Set[str]) -> Optional[Any]:
         with Session(self.engine) as session:
             lmp = session.query(SerializedLMP).filter(SerializedLMP.lmp_id == invocation.lmp_id).first()
             assert lmp is not None, f"LMP with id {invocation.lmp_id} not found. Writing invocation erroneously"
@@ -51,10 +49,6 @@ class SQLStore(ell.store.Store):
                 lmp.num_invocations += 1
 
             session.add(invocation)
-
-            for result in results:
-                result.producer_invocation = invocation
-                session.add(result)
 
             # Now create traces.
             for consumed_id in consumes:
@@ -116,9 +110,8 @@ class SQLStore(ell.store.Store):
     def get_invocations(self, session: Session, lmp_filters: Dict[str, Any], skip: int = 0, limit: int = 10, filters: Optional[Dict[str, Any]] = None, hierarchical: bool = False) -> List[Dict[str, Any]]:
         def fetch_invocation(inv_id):
             query = (
-                select(Invocation, SerializedLStr, SerializedLMP)
+                select(Invocation, SerializedLMP)
                 .join(SerializedLMP)
-                .outerjoin(SerializedLStr)
                 .where(Invocation.id == inv_id)
             )
             results = session.exec(query).all()
@@ -126,10 +119,10 @@ class SQLStore(ell.store.Store):
             if not results:
                 return None
 
-            inv, lstr, lmp = results[0]
+            inv, lmp = results[0]
             inv_dict = inv.model_dump()
             inv_dict['lmp'] = lmp.model_dump()
-            inv_dict['results'] = [dict(**l.model_dump(), __lstr=True) for l in [r[1] for r in results if r[1]]]
+            inv_dict['results'] = inv_dict['lmp']['results']
 
             # Fetch consumes and consumed_by invocation IDs
             consumes_query = select(InvocationTrace.invocation_consuming_id).where(InvocationTrace.invocation_consumer_id == inv_id)
