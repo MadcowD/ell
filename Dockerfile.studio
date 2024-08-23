@@ -1,5 +1,5 @@
 # Start with a Node.js base image for building the React app
-FROM node:18 AS client-builder
+FROM node:20 AS client-builder
 
 WORKDIR /app/ell-studio
 
