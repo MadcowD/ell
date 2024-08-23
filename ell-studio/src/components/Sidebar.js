@@ -12,7 +12,7 @@ const Sidebar = () => {
       to={to}
       className={({ isActive }) => `
         group flex items-center py-3 px-4 rounded-lg transition-all duration-200
-        ${isActive ? 'bg-blue-500/10 text-blue-500' : 'text-gray-400 hover:text-white'}
+        ${isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'}
       `}
     >
       <Icon className="w-5 h-5" />
@@ -20,7 +20,7 @@ const Sidebar = () => {
         <span className="ml-3 text-sm font-medium">{label}</span>
       )}
       {!isExpanded && (
-        <div className="fixed left-16 ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+        <div className="fixed left-16 ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
           {label}
         </div>
       )}
@@ -31,7 +31,7 @@ const Sidebar = () => {
     <motion.aside 
       initial={false}
       animate={{ width: isExpanded ? 200 : 64 }}
-      className="bg-[#1c1f26] h-screen py-6 flex flex-col"
+      className="bg-card border-r border-border h-screen py-6 flex flex-col"
     >
       <div className="flex justify-center items-center mb-8">
         <img src="/gif.gif" alt="ell-studio Logo" className="h-4 invert" />
@@ -50,9 +50,9 @@ const Sidebar = () => {
 
       <button 
         onClick={() => setIsExpanded(!isExpanded)}
-        className="mt-4 mx-auto p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors duration-200"
+        className="mt-4 mx-auto p-2 rounded-full bg-background hover:bg-muted transition-colors duration-200"
       >
-        <svg className={`w-4 h-4 text-white transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className={`w-4 h-4 text-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </button>

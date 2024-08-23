@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { lstrCleanStringify } from '../../utils/lstrCleanStringify';
-import { CodeSection } from '../source/CodeSection';
+import { lstrCleanStringify } from '../../../utils/lstrCleanStringify';
+import { CodeSection } from '../../source/CodeSection';
 
 const InvocationDataPane = ({ invocation }) => {
   const [inputExpanded, setInputExpanded] = useState(true);
