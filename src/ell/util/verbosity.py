@@ -4,10 +4,12 @@ import shutil
 import textwrap
 from typing import Dict, Tuple, List, Any, Optional
 from colorama import Fore, Style, init
-from ell.types import LMP, Message
+from ell.types import Message
 from ell.configurator import config
 import logging
 from functools import lru_cache
+
+from ell.types.message import LMP
 
 # Initialize colorama
 init(autoreset=True)

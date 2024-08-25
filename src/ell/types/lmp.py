@@ -1,95 +1,23 @@
-# Let's define the core types.
-from dataclasses import dataclass
-from typing import Callable, Dict, List, Literal, Type, Union, Any, Optional
-
-from pydantic import BaseModel, field_validator, validator
-
+from datetime import datetime, timezone
 import enum
 
-from ell._lstr import _lstr
-from ell.util.dict_sync_meta import DictSyncMeta
+import sqlalchemy.types as types
 
-from datetime import datetime, timezone
+from ell.types.message import Any, Any, Field, Message, Optional
+
+from sqlmodel import Column, Field, SQLModel
+from typing import Optional
+from dataclasses import dataclass
+from typing import Dict, List, Literal, Union, Any, Optional
+
+from pydantic import field_validator
+
+from datetime import datetime
 from typing import Any, List, Optional
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column
 from sqlalchemy import Index, func
-import sqlalchemy.types as types
 
-_lstr_generic = Union[_lstr, str]
-
-OneTurn = Callable[..., _lstr_generic]
-
-# want to enable a use case where the user can actually return a standrd oai chat format
-# This is a placehodler will likely come back later for this
-LMPParams = Dict[str, Any]
-
-
-InvocableTool = Callable[..., _lstr_generic]
-
-
-
-# todo: implement tracing for structured outs. this a v2 feature.
-class ToolCall(BaseModel):
-    tool : InvocableTool
-    params : Union[Type[BaseModel], BaseModel]
-    def __call__(self, **kwargs):
-        assert not kwargs, "Unexpected arguments provided. Calling a tool uses the params provided in the ToolCall."
-        return self.tool(**self.params.model_dump())
-
-class MessageContentBlock(BaseModel):
-    text: Optional[_lstr_generic] = Field(default=None)
-    image: Optional[str] = Field(default=None)
-    audio: Optional[str] = Field(default=None)
-    tool_call: Optional[ToolCall]     = Field(default=None)
-    structured: Optional[Union[Type[BaseModel], BaseModel]] = Field(default=None)
-
-    @property 
-    def type(self):
-        if self.text is not None:
-            return "text"
-        if self.image is not None:
-            return "image"
-        if self.tool_call is not None:
-            return "tool_call"
-        if self.structured is not None:
-            return "structured"
-
-    # XXX: Should validate.
-    # @field_validator('*')
-    # @classmethod
-    # def check_at_least_one_field_set(cls, v, info):
-    #     if all(field is None for field in info.data.values()):
-    #         raise ValueError("At least one field must be set")
-    #     return v
-
-class Message(BaseModel):
-    role: str
-    content: List[MessageContentBlock] = Field(min_length=1)
-    def to_openai_message(self):
-        assert len(self.content) == 1
-        return {
-            "role": self.role,
-            "content": self.content[0].text
-        }
-
-
-# Well this is disappointing, I wanted to effectively type hint by doign that data sync meta, but eh, at elast we can still reference role or content this way. Probably wil lcan the dict sync meta. TypedDict is the ticket ell oh ell.
-MessageOrDict = Union[Message, Dict[str, str]]
-
-# Can support iamge prompts later.
-Chat = List[
-    Message
-]  # [{"role": "system", "content": "prompt"}, {"role": "user", "content": "message"}]
-
-MultiTurnLMP = Callable[..., Chat]
 from typing import TypeVar, Any
-
-# This is the specific LMP that must accept history as an argument and can take any additional arguments
-T = TypeVar("T", bound=Any)
-ChatLMP = Callable[[Chat, T], Chat]
-LMP = Union[OneTurn, MultiTurnLMP, ChatLMP]
-InvocableLM = Callable[..., _lstr_generic]
-
 
 def utc_now() -> datetime:
     """
@@ -98,10 +26,11 @@ def utc_now() -> datetime:
     """
     return datetime.now(tz=timezone.utc)
 
+
 class SerializedLMPUses(SQLModel, table=True):
     """
     Represents the many-to-many relationship between SerializedLMPs.
-    
+
     This class is used to track which LMPs use or are used by other LMPs.
     """
 
@@ -114,6 +43,7 @@ class UTCTimestamp(types.TypeDecorator[datetime]):
     impl = types.TIMESTAMP
     def process_result_value(self, value: datetime, dialect:Any):
         return value.replace(tzinfo=timezone.utc)
+
 
 def UTCTimestampField(index:bool=False, **kwargs:Any):
     return Field(

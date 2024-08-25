@@ -6,10 +6,11 @@ from ell.configurator import config
 import openai
 from collections import defaultdict
 from ell._lstr import _lstr
-from ell.types import LMP, LMPParams, Message, MessageContentBlock, MessageOrDict, ToolCall
+from ell.types import Message, ContentBlock, ToolCall
 
 
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
+from ell.types.message import LMP, LMPParams, MessageOrDict
 
 from ell.util.verbosity import model_usage_logger_post_end, model_usage_logger_post_intermediate, model_usage_logger_post_start
 from ell.util._warnings import _no_api_key_warning
@@ -122,13 +123,13 @@ def call(
         if streaming:
             text_content = "".join((choice.delta.content or "" for choice in choice_deltas))
             if text_content:
-                content.append(MessageContentBlock(
+                content.append(ContentBlock(
                     text=_lstr(content=text_content, _origin_trace=_invocation_origin)
                 ))
         else:
             choice = choice_deltas[0].message
             if choice.content:
-                content.append(MessageContentBlock(
+                content.append(ContentBlock(
                     text=_lstr(content=choice.content, _origin_trace=_invocation_origin)
                 ))
         
@@ -143,7 +144,7 @@ def call(
                 
                 if matching_tool:
                     params = matching_tool.__ell_params_model__(**json.loads(tool_call.function.arguments))
-                    content.append(MessageContentBlock(
+                    content.append(ContentBlock(
                         tool_call=ToolCall(tool=matching_tool, params=params)
                     ))
         

@@ -1,7 +1,9 @@
 from ell.configurator import config
 from ell.lmp._track import _track
 from ell._lstr import _lstr
-from ell.types import LMP, InvocableLM, LMPParams, LMPType, Message, MessageContentBlock, MessageOrDict, _lstr_generic
+from ell.types import Message, ContentBlock
+from ell.types.message import LMP, InvocableLM, LMPParams, MessageOrDict, _lstr_generic
+from ell.types.lmp import LMPType
 from ell.util._warnings import _warnings
 from ell.util.api import  call
 from ell.util.verbosity import compute_color, model_usage_logger_pre
@@ -57,6 +59,8 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
         model_call.__ell_func__ = prompt
         model_call.__ell_type__ = LMPType.LM
         model_call.__ell_exempt_from_tracking = exempt_from_tracking
+        # model_call.__ell_uses__ = prompt.__ell_uses__
+        # model_call.__ell_hash__ = prompt.__ell_hash__
 
         if exempt_from_tracking:
             return model_call
@@ -70,8 +74,8 @@ def _get_messages(prompt_ret: Union[str, list[MessageOrDict]], prompt: LMP) -> l
     """
     if isinstance(prompt_ret, str):
         return [
-            Message(role="system", content=[MessageContentBlock(text=_lstr(prompt.__doc__) or config.default_system_prompt)]),
-            Message(role="user", content=[MessageContentBlock(text=prompt_ret)]),
+            Message(role="system", content=[ContentBlock(text=_lstr(prompt.__doc__) or config.default_system_prompt)]),
+            Message(role="user", content=[ContentBlock(text=prompt_ret)]),
         ]
     else:
         assert isinstance(

@@ -3,6 +3,9 @@ from pydantic import BaseModel, Field
 import ell
 import requests
 
+import openai
+
+
 import ell.lmp.tool
 from ell._lstr import _lstr
 from ell.stores.sql import SQLiteStore

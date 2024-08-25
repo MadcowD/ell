@@ -7,7 +7,7 @@ from ell.lmp._track import _track
 # from ell.types import ToolFunction, InvocableTool, ToolParams
 # from ell.util.verbosity import compute_color, tool_usage_logger_pre
 from ell.configurator import config
-from ell.types import LMPType
+from ell.types.lmp import LMPType
 import inspect
 
 def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):

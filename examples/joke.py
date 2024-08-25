@@ -6,6 +6,7 @@ import numpy as np
 
 from ell.stores.sql import SQLiteStore
 
+import openai
 
 @ell.simple(model="gpt-4o-mini")
 def come_up_with_a_premise_for_a_joke_about(topic : str):
@@ -16,7 +17,6 @@ def come_up_with_a_premise_for_a_joke_about(topic : str):
 def get_random_length():
     return int(np.random.beta(2, 5) * 300)
 
-
 @ell.simple(model="gpt-4o-mini")
 def joke(topic : str):
     """You are a funny comedian. You respond in scripts for a standup comedy skit."""
@@ -24,7 +24,6 @@ def joke(topic : str):
 
 
 if __name__ == "__main__":
-
     ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
     # Todo: Figure configuration for automcommititng.
     joke("minecraft") # <The joke>

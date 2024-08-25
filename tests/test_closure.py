@@ -63,12 +63,12 @@ def test_is_immutable_variable(value, expected):
 
 def test_should_import():
     import os
-    assert should_import(os)
+    assert should_import(os.__name__)
     
     class DummyModule:
         __name__ = "dummy"
     dummy = DummyModule()
-    assert not should_import(dummy)
+    assert not should_import(dummy.__name__)
 
 def test_get_referenced_names():
     code = """
@@ -113,7 +113,7 @@ def test_lexical_closure_uses_type():
 
 
 def test_lexical_closure_uses():
-
+    ell.config.lazy_versioning = False
     @ell.simple(model="gpt-4")
     def dependency_func():
         return "42"
@@ -124,10 +124,11 @@ def test_lexical_closure_uses():
         return dependency_func() 
 
     
-    # Check that uses is a set
+    main_func()
     assert isinstance(main_func.__ell_uses__, set)
     
     # Check that the set contains exactly one item
+    print(main_func.__ell_uses__)
     assert  dependency_func.__ell_hash__ in main_func.__ell_uses__
     assert len(main_func.__ell_uses__) == 1
     # Check that the item in the set starts with 'lmp-'

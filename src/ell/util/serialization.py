@@ -24,9 +24,13 @@ pydantic_ltype_aware_cattr.register_unstructure_hook(
     frozenset,
     lambda s: list(sorted(s))
 )
+
+def unstructure_lstr(obj):
+    return dict(content=str(obj), **obj.__dict__, __lstr=True)
+
 pydantic_ltype_aware_cattr.register_unstructure_hook(
     _lstr,
-    lambda obj: dict(content=str(obj), **obj.__dict__, __lstr=True)
+    unstructure_lstr
 )
 
 pydantic_ltype_aware_cattr.register_unstructure_hook(
@@ -42,9 +46,12 @@ pydantic_ltype_aware_cattr.register_unstructure_hook(
 def unstructure_with_all_origins(obj):
     converter = pydantic_ltype_aware_cattr.copy()
     consumes = set()
+    def unstructure_and_track_lstr(lstr):
+        consumes.update(lstr._origin_trace)
+        return unstructure_lstr(lstr)
     converter.register_unstructure_hook(
         _lstr,
-        lambda lstr: consumes.add(lstr.origin)
+        unstructure_and_track_lstr
     )
     return converter.unstructure(obj), consumes
 

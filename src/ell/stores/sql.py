@@ -8,10 +8,11 @@ import ell.store
 import cattrs
 import numpy as np
 from sqlalchemy.sql import text
-from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLMPUses, utc_now
+from ell.types import InvocationTrace, SerializedLMP, Invocation
 from ell._lstr import _lstr
 from sqlalchemy import or_, func, and_, extract, FromClause
 from sqlalchemy.types import TypeDecorator, VARCHAR
+from ell.types.lmp import SerializedLMPUses, utc_now
 from ell.util.serialization import pydantic_ltype_aware_cattr
 
 import json
@@ -137,7 +138,7 @@ class SQLStore(ell.store.Store):
             inv, lmp = results[0]
             inv_dict = inv.model_dump()
             inv_dict['lmp'] = lmp.model_dump()
-            
+
 
             # Fetch consumes and consumed_by invocation IDs
             consumes_query = select(InvocationTrace.invocation_consuming_id).where(InvocationTrace.invocation_consumer_id == inv_id)

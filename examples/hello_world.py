@@ -4,8 +4,13 @@ import numpy as np
 from ell.stores.sql import SQLiteStore
 
 
+ell.config.verbose = True
+ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
+
+
+
 def get_random_length():
-    return int(np.random.beta(2, 6) * 1500)
+    return int(np.random.beta(2, 6) * 3000)
 
 @ell.simple(model="gpt-4o-mini")
 def hello(world : str):
@@ -18,15 +23,4 @@ def hello(world : str):
 
 
 if __name__ == "__main__":
-    ell.config.verbose = True
-    ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
-
     greeting = hello("sam altman") # > "hello sama! ... "
-    # print(greeting[0:5].__origin_trace__)
-
-    # complex
-    # greeting.content[0].text #"hello sama!"
-    
-    # simple
-    greeting # "hello sama!"
-

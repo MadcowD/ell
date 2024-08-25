@@ -1,6 +1,7 @@
 import logging
 import threading
-from ell.types import LMPType, utc_now, SerializedLMP, Invocation, InvocationTrace
+from ell.types import SerializedLMP, Invocation, InvocationTrace
+from ell.types.lmp import LMPType, utc_now
 import ell.util.closure
 from ell.configurator import config
 from ell._lstr import _lstr
