@@ -124,15 +124,13 @@ def test_lexical_closure_uses():
         return dependency_func() 
 
     
-    main_func()
+    # main_func()
     assert isinstance(main_func.__ell_uses__, set)
     
-    # Check that the set contains exactly one item
-    print(main_func.__ell_uses__)
-    assert  dependency_func.__ell_hash__ in main_func.__ell_uses__
+    assert  dependency_func.__ell_hash__ in map(lambda x: x.__ell_hash__, main_func.__ell_uses__)
     assert len(main_func.__ell_uses__) == 1
     # Check that the item in the set starts with 'lmp-'
-    assert list(main_func.__ell_uses__)[0].startswith('lmp-')
+    assert all(hash.startswith('lmp-') for hash in map(lambda x: x.__ell_hash__, main_func.__ell_uses__))
     assert len(dependency_func.__ell_uses__) == 0
     
 

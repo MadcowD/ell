@@ -1,5 +1,7 @@
 # todo: implement tracing for structured outs. this a v2 feature.
+import json
 from ell._lstr import _lstr
+from functools import cached_property
 
 
 from pydantic import BaseModel, Field, model_validator
@@ -9,32 +11,35 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 _lstr_generic = Union[_lstr, str]
-InvocableTool = Callable[..., Union["ToolResult", _lstr_generic, List["MessageContentBlock"], ]]
+InvocableTool = Callable[..., Union["ToolResult", _lstr_generic, List["ContentBlock"], ]]
 
+
+class ToolResult(BaseModel):
+    tool_call_id: _lstr_generic
+    result: List["ContentBlock"]
 
 class ToolCall(BaseModel):
     tool : InvocableTool
-    tool_call_id : Optional[str] = Field(default=None)
+    tool_call_id : Optional[_lstr_generic] = Field(default=None)
     params : Union[Type[BaseModel], BaseModel]
     def __call__(self, **kwargs):
         assert not kwargs, "Unexpected arguments provided. Calling a tool uses the params provided in the ToolCall."
+
+        # XXX: TODO: MOVE TRACKING CODE TO _TRACK AND OUT OF HERE AND API.
         return self.tool(**self.params.model_dump())
 
     def call_and_collect_as_message_block(self):
-        return ContentBlock(tool_result=ToolResult(tool_call_id=self.tool_call_id, result=self.tool(**self.params.model_dump())))
+        res = self.tool(**self.params.model_dump(), _tool_call_id=self.tool_call_id)
+        return ContentBlock(tool_result=res)
 
     def call_and_collect_as_message(self):
         return Message(role="user", content=[self.call_and_collect_as_message_block()])
 
-class ToolResult(BaseModel):
-    tool_call_id: str
-    result: List["ContentBlock"]
-
 
 class ContentBlock(BaseModel):
     text: Optional[_lstr_generic] = Field(default=None)
-    image: Optional[str] = Field(default=None)
-    audio: Optional[str] = Field(default=None)
+    image: Optional[_lstr_generic] = Field(default=None)
+    audio: Optional[_lstr_generic] = Field(default=None)
     tool_call: Optional[ToolCall] = Field(default=None)
     formatted_response: Optional[Union[Type[BaseModel], BaseModel]] = Field(default=None)
     tool_result: Optional[ToolResult] = Field(default=None)
@@ -76,52 +81,79 @@ class ContentBlock(BaseModel):
             return cls(formatted_response=content)
         raise ValueError(f"Invalid content type: {type(content)}")
 
+def coerce_content_list(content: Union[str, List[ContentBlock], List[Union[str, ContentBlock, ToolCall, ToolResult, BaseModel]]] = None, **content_block_kwargs) -> List[ContentBlock]:
+    if not content:
+        content = [ContentBlock(**content_block_kwargs)]
+
+    if not isinstance(content, list):
+        content = [content]
+    
+    return [ContentBlock.model_validate(ContentBlock.coerce(c)) for c in content]
 
 class Message(BaseModel):
     role: str
     content: List[ContentBlock]
 
     def __init__(self, role, content: Union[str, List[ContentBlock], List[Union[str, ContentBlock, ToolCall, ToolResult, BaseModel]]] = None, **content_block_kwargs):
-        if not content:
-            content = [ContentBlock(**content_block_kwargs)]
-
-        if not isinstance(content, list):
-            content = [content]
-        
-        content = [ContentBlock.model_validate(ContentBlock.coerce(c)) for c in content]
+        content = coerce_content_list(content, **content_block_kwargs)
         super().__init__(content=content, role=role)
 
-    @property
-    def text(self, text_only=False) -> str:
-        return "\n".join(c.text for c in self.content if c.text) if text_only else "\n".join(c.text or f"<{c.type}>" for c in self.content)
+    @cached_property
+    def text(self) -> str:
+        return "\n".join(c.text or f"<{c.type}>" for c in self.content)
 
-    @property
+    @cached_property
+    def text_only(self) -> str:
+        return "\n".join(c.text for c in self.content if c.text)
+
+    @cached_property
     def tool_calls(self) -> List[ToolCall]:
-        return [c for c in self.content if c.tool_call is not None]
+        return [c.tool_call for c in self.content if c.tool_call is not None]
     
-    @property
+    @cached_property
     def tool_results(self) -> List[ToolResult]:
-        return [c for c in self.content if c.tool_result is not None]
+        return [c.tool_result for c in self.content if c.tool_result is not None]
 
-    @property
+    @cached_property
     def formatted_responses(self) -> List[BaseModel]:
-        return [c for c in self.content if c.formatted_response is not None]
+        return [c.formatted_response for c in self.content if c.formatted_response is not None]
     
     def call_tools_and_collect_as_message(self, parallel=False, max_workers=None):
         if parallel:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = [executor.submit(c.call_and_collect_as_message_block) for c in self.tool_calls]
+                futures = [executor.submit(c.tool_call.call_and_collect_as_message_block) for c in self.content if c.tool_call]
                 content = [future.result() for future in as_completed(futures)]
         else:
-            content = [c.call_and_collect_as_message_block() for c in self.tool_calls]
+            content = [c.tool_call.call_and_collect_as_message_block() for c in self.content if c.tool_call]
         return Message(role="user", content=content)
 
-    def to_openai_message(self) -> List[Dict[str, Any]]:
-        return     {
-                "role": self.role,
-                "content": self.text
-            }
-        
+    def to_openai_message(self) -> Dict[str, Any]:
+        message = {
+            "role": "tool" if self.tool_results else self.role,
+            "content": self.text_only if self.text_only else None
+        }
+
+        if self.tool_calls:
+            message["tool_calls"] = [
+                {
+                    "id": tool_call.tool_call_id,
+                    "type": "function",
+                    "function": {
+                        "name": tool_call.tool.__name__,
+                        "arguments": json.dumps(tool_call.params.model_dump())
+                    }
+                } for tool_call in self.tool_calls
+            ]
+            message["content"] = None  # Set content to null when there are tool calls
+
+        if self.tool_results:
+            message["tool_call_id"] = self.tool_results[0].tool_call_id
+            # message["name"] = self.tool_results[0].tool_call_id.split('-')[0]  # Assuming the tool name is the first part of the tool_call_id
+            message["content"] = self.tool_results[0].result[0].text
+            # Let';s assert no other type of content block in the tool result
+            assert len(self.tool_results[0].result) == 1, "Tool result should only have one content block"
+            assert self.tool_results[0].result[0].type == "text", "Tool result should only have one text content block"
+        return message
 
 # HELPERS 
 def system(content: Union[str, List[ContentBlock]]) -> Message:

@@ -1,4 +1,5 @@
 from functools import wraps
+import json
 from typing import Optional
 
 from pydantic import Field, create_model
@@ -7,8 +8,11 @@ from ell.lmp._track import _track
 # from ell.types import ToolFunction, InvocableTool, ToolParams
 # from ell.util.verbosity import compute_color, tool_usage_logger_pre
 from ell.configurator import config
+from ell._lstr import _lstr
 from ell.types.lmp import LMPType
 import inspect
+
+from ell.types.message import ContentBlock, ToolResult, coerce_content_list
 
 def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
     """
@@ -24,10 +28,14 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
         def wrapper(
             *fn_args,
             _invocation_origin: str = None,
-            # tool_params: ToolParams = {},
-            invocation_kwargs=False,
+            _tool_call_id: str = None,
             **fn_kwargs
         ):
+            
+            #XXX: Post release, we need to wrap all tool arguments in type primitives for tracking I guess or change that tool makes the tool function inoperable.
+            #XXX: Most people are not going to manually try and call the tool without a type primitive and if they do it will most likely be wrapped with l strs.
+
+            
             # assert exempt_from_tracking or _invocation_origin is not None, "Invocation origin is required when using a tracked Tool"
             # Do nice logging hooks here.
 
@@ -40,9 +48,35 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
             _invocation_kwargs = dict(tool_kwargs=tool_kwargs)
             
             # Here you might want to add logic for tracking the tool usage
-            # Similar to how it's done in the lm decorator
+            # Similar to how it's done in the lm decorator # Use _invocation_origin
 
-            return result, _invocation_kwargs, {}
+            if isinstance(result, str) and _invocation_origin:
+                result = _lstr(result, _origin_trace=_invocation_origin)
+
+            #XXX: This _tool_call_id thing is a hack. Tracking should happen via params in the api
+            if _tool_call_id:
+                try:
+                    content_results = coerce_content_list(result)
+                except ValueError as e:
+                    # XXX: TODO: MOVE TRACKING CODE TO _TRACK AND OUT OF HERE AND API.
+                    content_results = [ContentBlock(text=_lstr(json.dumps(result), _origin_trace=_invocation_origin))]
+                
+                # TODO: poolymorphic validation here is important (cant have tool_call or formatted_response in the result)
+                # XXX: Should we put this coercion here or in the tool call/result area.
+                for c in content_results:
+                    assert not c.tool_call, "Tool call in tool result"
+                    # assert not c.formatted_response, "Formatted response in tool result"
+                    if c.formatted_response:
+                        # Warning: Formatted response in tool result will be converted to text
+                        # TODO: Logging needs to produce not print.
+                        print(f"Warning: Formatted response in tool result will be converted to text. Original: {c.formatted_response}")
+                        c.text = _lstr(c.formatted_response.model_dump_json(), _origin_trace=_invocation_origin)
+                        c.formatted_response = None
+                    assert not c.audio, "Audio in tool result"
+                return ToolResult(tool_call_id=_tool_call_id, result=content_results), _invocation_kwargs, {}
+            else:
+                return result, _invocation_kwargs, {}
+
 
         wrapper.__ell_tool_kwargs__ = tool_kwargs
         wrapper.__ell_func__ = _under_fn

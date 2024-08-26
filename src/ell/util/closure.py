@@ -297,7 +297,7 @@ def _update_ell_func(outer_ell_func, source, dsrc, globals_dict, frees_dict, fn_
     """Update the ell function attributes."""
     formatted_source = _format_source(source)
     formatted_dsrc = _format_source(dsrc)
-    print(outer_ell_func, "hey")
+    
     if hasattr(outer_ell_func, "__ell_func__"):
         
         outer_ell_func.__ell_closure__ = (formatted_source, formatted_dsrc, globals_dict, frees_dict)

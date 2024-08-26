@@ -2,7 +2,7 @@ from ell.configurator import config
 from ell.lmp._track import _track
 from ell._lstr import _lstr
 from ell.types import Message, ContentBlock
-from ell.types.message import LMP, InvocableLM, LMPParams, MessageOrDict, _lstr_generic
+from ell.types.message import LMP, InvocableLM, LMPParams, MessageOrDict, tracked_str_or_not
 from ell.types.lmp import LMPType
 from ell.util._warnings import _warnings
 from ell.util.api import  call
@@ -38,7 +38,7 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
             lm_params: Optional[LMPParams] = {},
             invocation_kwargs=False,
             **fn_kwargs,
-        ) -> _lstr_generic:
+        ) -> tracked_str_or_not:
             res = prompt(*fn_args, **fn_kwargs)
 
             assert exempt_from_tracking or _invocation_origin is not None, "Invocation origin is required when using a tracked LMP"
@@ -50,6 +50,7 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
         
             result = post_callback(result) if post_callback else result
             
+
             return result, api_params, metadata
 
 

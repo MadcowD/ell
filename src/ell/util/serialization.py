@@ -40,22 +40,6 @@ pydantic_ltype_aware_cattr.register_unstructure_hook(
 # Register hooks for complex types (deserialization)
 
 
-# TODO: If you are contributo this is a massive place to optimize jesus christ.
-# Consider using VS-code's prefered method or gdb's prefered method of strifying symbols recursively.
-
-def unstructure_with_all_origins(obj):
-    converter = pydantic_ltype_aware_cattr.copy()
-    consumes = set()
-    def unstructure_and_track_lstr(lstr):
-        consumes.update(lstr._origin_trace)
-        return unstructure_lstr(lstr)
-    converter.register_unstructure_hook(
-        _lstr,
-        unstructure_and_track_lstr
-    )
-    return converter.unstructure(obj), consumes
-
-
 def get_immutable_vars(vars_dict):
     converter = cattrs.Converter()
 
@@ -91,9 +75,26 @@ def prepare_invocation_params(fn_args, fn_kwargs):
         kwargs=(fn_kwargs),
     )
 
-    cleaned_invocation_params, consumes = unstructure_with_all_origins(invocation_params)
+    cleaned_invocation_params = pydantic_ltype_aware_cattr.unstructure(invocation_params)
+    
     # Thisis because we wneed the caching to work on the hash of a cleaned and serialized object.
     jstr = json.dumps(cleaned_invocation_params, sort_keys=True, default=repr)
+
+    consumes = set()
+    import re
+    # XXX: Better than registering a hook in cattrs.
+    pattern = r'"__origin_trace__":\s*"frozenset\({(.+?)}\)"'
+    
+    # Find all matches in the jstr
+    matches = re.findall(pattern, jstr)
+    
+    # Process each match and add to consumes set
+    for match in matches:
+        # Remove quotes and spaces, then split by comma
+        items = [item.strip().strip("'") for item in match.split(',')]
+        consumes.update(items)
+    consumes = list(consumes)
+    # XXX: Only need to reload because of 'input' caching., we could skip this by making ultimate model caching rather than input hash caching; if prompt same use the same output.. irrespective of version.
     return json.loads(jstr), jstr, consumes
 
 

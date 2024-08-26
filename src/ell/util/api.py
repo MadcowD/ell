@@ -145,7 +145,7 @@ def call(
                 if matching_tool:
                     params = matching_tool.__ell_params_model__(**json.loads(tool_call.function.arguments))
                     content.append(ContentBlock(
-                        tool_call=ToolCall(tool=matching_tool, params=params)
+                        tool_call=ToolCall(tool=matching_tool, tool_call_id=_lstr(tool_call.id, _origin_trace=_invocation_origin), params=params)
                     ))
         
         tracked_results.append(Message(

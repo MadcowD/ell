@@ -20,6 +20,7 @@ from ell.util.serialization import get_immutable_vars
 from ell.util.serialization import compute_state_cache_key
 from ell.util.serialization import prepare_invocation_params
 
+logger = logging.getLogger(__name__)
 
 # Thread-local storage for the invocation stack
 _invocation_stack = threading.local()
@@ -53,10 +54,11 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
 
 
     @wraps(func_to_track)
-    def tracked_func(*fn_args, **fn_kwargs) -> str:
+    def tracked_func(*fn_args,  _get_invocation_id=False, **fn_kwargs,) -> str:
         # XXX: Cache keys and global variable binding is not thread safe.
         # Compute the invocation id and hash the inputs for serialization.
         invocation_id = "invocation-" + secrets.token_hex(16)
+
         state_cache_key : str = None
         if not config._store:
             return func_to_track(*fn_args, **fn_kwargs, _invocation_origin=invocation_id)[0]
@@ -110,6 +112,11 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
             prompt_tokens=usage.get("prompt_tokens", 0)
             completion_tokens=usage.get("completion_tokens", 0)
 
+
+            #XXX: cattrs add invocation origin here recursively on all pirmitive types within a message.
+            #XXX: This will allow all objects to be traced automatically irrespective origin rather than relying on the API to do it, it will of vourse be expensive but unify track.
+            #XXX: No other code will need to consider tracking after this point.
+
             if not hasattr(func_to_track, "__ell_hash__") and config.lazy_versioning:
                 ell.util.closure.lexically_closured_source(func_to_track, forced_dependencies)
             _serialize_lmp(func_to_track)
@@ -120,7 +127,10 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
             _write_invocation(func_to_track, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
                             state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result, parent_invocation_id)
 
-            return result
+            if _get_invocation_id:
+                return result, invocation_id
+            else:
+                return result
         finally:
             pop_invocation()
 
