@@ -108,8 +108,11 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
             if isinstance(param.default, FieldInfo):
                 field = param.default
                 fields[param_name] = (annotation, field)
+            elif param.default != inspect.Parameter.empty:
+                fields[param_name] = (annotation, param.default)
             else:
-                fields[param_name] = (annotation, default)
+                # If no default value, use Field without default
+                fields[param_name] = (annotation, Field(...))
 
         # 3. Create the Pydantic model
         model_name = f"{fn.__name__}Params"
