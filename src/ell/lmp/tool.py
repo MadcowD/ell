@@ -66,12 +66,12 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
                 for c in content_results:
                     assert not c.tool_call, "Tool call in tool result"
                     # assert not c.formatted_response, "Formatted response in tool result"
-                    if c.formatted_response:
+                    if c.parsed:
                         # Warning: Formatted response in tool result will be converted to text
                         # TODO: Logging needs to produce not print.
-                        print(f"Warning: Formatted response in tool result will be converted to text. Original: {c.formatted_response}")
-                        c.text = _lstr(c.formatted_response.model_dump_json(), _origin_trace=_invocation_origin)
-                        c.formatted_response = None
+                        print(f"Warning: Formatted response in tool result will be converted to text. Original: {c.parsed}")
+                        c.text = _lstr(c.parsed.model_dump_json(), _origin_trace=_invocation_origin)
+                        c.parsed = None
                     assert not c.audio, "Audio in tool result"
                 return ToolResult(tool_call_id=_tool_call_id, result=content_results), _invocation_kwargs, {}
             else:

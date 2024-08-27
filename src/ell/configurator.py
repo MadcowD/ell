@@ -1,5 +1,5 @@
 from functools import wraps
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 from dataclasses import dataclass, field
 import openai
 import logging
@@ -70,9 +70,13 @@ class _Config:
             self.__init__()
             if hasattr(self._local, 'stack'):
                 del self._local.stack
-
-    def set_store(self, store: Store, autocommit: bool = True) -> None:
-        self._store = store
+    
+    def set_store(self, store: Union[Store, str], autocommit: bool = True) -> None:
+        if isinstance(store, str):
+            from ell.stores.sql import SQLiteStore
+            self._store = SQLiteStore(store)
+        else:
+            self._store = store
         self.autocommit = autocommit or self.autocommit
 
     def get_store(self) -> Store:

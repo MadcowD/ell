@@ -292,8 +292,11 @@ class SQLStore(ell.store.Store):
         }
 
 class SQLiteStore(SQLStore):
-    def __init__(self, storage_dir: str):
-        os.makedirs(storage_dir, exist_ok=True)
+    def __init__(self, db_path: str):
+        assert not db_path.endswith('.db'), "Create store wit h a directory not a db."
+        storage_dir = os.path.dirname(db_path)
+        if storage_dir:
+            os.makedirs(storage_dir, exist_ok=True)
         db_path = os.path.join(storage_dir, 'ell.db')
         super().__init__(f'sqlite:///{db_path}')
 

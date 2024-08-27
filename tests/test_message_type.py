@@ -40,7 +40,7 @@ def test_content_block_coerce_base_model():
     formatted_response = DummyFormattedResponse(field1="test", field2=42)
     result = ContentBlock.coerce(formatted_response)
     assert isinstance(result, ContentBlock)
-    assert result.formatted_response == formatted_response
+    assert result.parsed == formatted_response
     assert result.type == "formatted_response"
 
 def test_content_block_coerce_content_block():
@@ -66,7 +66,7 @@ def test_message_coercion():
     assert isinstance(message.content[0], ContentBlock) and message.content[0].text == "Text message"
     assert isinstance(message.content[1], ContentBlock) and isinstance(message.content[1].tool_call, ToolCall)
     assert isinstance(message.content[2], ContentBlock) and isinstance(message.content[2].tool_result, ToolResult)
-    assert isinstance(message.content[3], ContentBlock) and isinstance(message.content[3].formatted_response, DummyFormattedResponse)
+    assert isinstance(message.content[3], ContentBlock) and isinstance(message.content[3].parsed, DummyFormattedResponse)
     assert isinstance(message.content[4], ContentBlock) and message.content[4].text == "Existing content block"
 
 def test_content_block_single_non_null():
@@ -76,7 +76,7 @@ def test_content_block_single_non_null():
     ContentBlock.model_validate(ContentBlock(audio="audio.mp3"))
     ContentBlock.model_validate(ContentBlock(tool_call=ToolCall(tool=dummy_tool, 
                                     params=DummyParams(param1="test", param2=42))))
-    ContentBlock.model_validate(ContentBlock(formatted_response=DummyFormattedResponse(field1="test", field2=42)))
+    ContentBlock.model_validate(ContentBlock(parsed=DummyFormattedResponse(field1="test", field2=42)))
     ContentBlock.model_validate(ContentBlock(tool_result=ToolResult(tool_call_id="123", result=[ContentBlock(text="Tool result")])))
 
     # Invalid cases
@@ -88,4 +88,4 @@ def test_content_block_single_non_null():
                                                       params=DummyParams(param1="test", param2=42))))
     
     with pytest.raises(ValueError):
-        ContentBlock.model_validate(ContentBlock(image="image.jpg", audio="audio.mp3", formatted_response=DummyFormattedResponse(field1="test", field2=42)))
+        ContentBlock.model_validate(ContentBlock(image="image.jpg", audio="audio.mp3", parsed=DummyFormattedResponse(field1="test", field2=42)))

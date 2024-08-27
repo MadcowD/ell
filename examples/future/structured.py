@@ -20,7 +20,6 @@ def create_test(text: str):
 import json
 if __name__ == "__main__":
     result = create_test("ads")
-    parsed_result = Test.model_validate_json(result)
-    print(parsed_result.model_dump_json(indent=2))
+    print(result)
 
 

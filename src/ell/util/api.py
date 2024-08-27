@@ -128,7 +128,14 @@ def call(
                 ))
         else:
             choice = choice_deltas[0].message
-            if choice.content:
+            if choice.refusal:
+                raise ValueError(choice.refusal)
+                # XXX: is this the best practice? try catch a parser?
+            if choice.parsed:
+                content.append(ContentBlock(
+                    parsed=choice.parsed
+                ))
+            elif choice.content:
                 content.append(ContentBlock(
                     text=_lstr(content=choice.content, _origin_trace=_invocation_origin)
                 ))

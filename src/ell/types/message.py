@@ -41,7 +41,7 @@ class ContentBlock(BaseModel):
     image: Optional[_lstr_generic] = Field(default=None)
     audio: Optional[_lstr_generic] = Field(default=None)
     tool_call: Optional[ToolCall] = Field(default=None)
-    formatted_response: Optional[Union[Type[BaseModel], BaseModel]] = Field(default=None)
+    parsed: Optional[Union[Type[BaseModel], BaseModel]] = Field(default=None)
     tool_result: Optional[ToolResult] = Field(default=None)
 
     @model_validator(mode='after')
@@ -61,8 +61,8 @@ class ContentBlock(BaseModel):
             return "audio"
         if self.tool_call is not None:
             return "tool_call"
-        if self.formatted_response is not None:
-            return "formatted_response"
+        if self.parsed is not None:
+            return "parsed"
         if self.tool_result is not None:
             return "tool_result"
         return None
@@ -78,7 +78,7 @@ class ContentBlock(BaseModel):
         if isinstance(content, ToolResult):
             return cls(tool_result=content)
         if isinstance(content, BaseModel):
-            return cls(formatted_response=content)
+            return cls(parsed=content)
         raise ValueError(f"Invalid content type: {type(content)}")
 
 def coerce_content_list(content: Union[str, List[ContentBlock], List[Union[str, ContentBlock, ToolCall, ToolResult, BaseModel]]] = None, **content_block_kwargs) -> List[ContentBlock]:
@@ -115,8 +115,8 @@ class Message(BaseModel):
         return [c.tool_result for c in self.content if c.tool_result is not None]
 
     @cached_property
-    def formatted_responses(self) -> List[BaseModel]:
-        return [c.formatted_response for c in self.content if c.formatted_response is not None]
+    def parsed_content(self) -> List[BaseModel]:
+        return [c.parsed for c in self.content if c.parsed is not None]
     
     def call_tools_and_collect_as_message(self, parallel=False, max_workers=None):
         if parallel:

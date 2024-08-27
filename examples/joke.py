@@ -24,6 +24,7 @@ def joke(topic : str):
 
 
 if __name__ == "__main__":
-    ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
+    ell.config.verbose = True
+    ell.set_store('sqlite_example', autocommit=False)
     # Todo: Figure configuration for automcommititng.
     joke("minecraft") # <The joke>
