@@ -1,2 +1,2 @@
-from ell.lmp.text import simple
-from ell.lmp.multimodal import complex
+from ell.lmp.simple import simple
+from ell.lmp.complex import complex

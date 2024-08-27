@@ -2,7 +2,7 @@ from functools import wraps
 from typing import Optional
 
 import openai
-from ell.lmp.multimodal import complex
+from ell.lmp.complex import complex
 
 
 @wraps(complex)

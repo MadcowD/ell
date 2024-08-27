@@ -2,7 +2,7 @@ import ell
 import os
 import openai
 
-import ell.lmp.text
+import ell.lmp.simple
 
 
 ell.config.verbose = True

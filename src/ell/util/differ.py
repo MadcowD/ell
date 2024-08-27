@@ -1,5 +1,5 @@
 
-from ell.lmp.text import simple
+from ell.lmp.simple import simple
 import difflib
 
 # Todo: update this for single change stuff so that it doesn't summarize small chage but says it specifically.
