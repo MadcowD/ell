@@ -201,6 +201,7 @@ def _serialize_lmp(func):
 def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
                      state_cache_key, invocation_api_params, cleaned_invocation_params, consumes, result, parent_invocation_id):
     
+    # XXX: Extract to blobable table type.
     invocation_contents = InvocationContents(
         invocation_id=invocation_id,
         params=cleaned_invocation_params,
@@ -209,6 +210,17 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         global_vars=get_immutable_vars(func.__ell_closure__[2]),
         free_vars=get_immutable_vars(func.__ell_closure__[3])
     )
+
+    if invocation_contents.should_externalize and config._store.has_blob_storage:
+        invocation_contents.is_external = True
+        
+        # write ot the sqlite store's extenral invocations table (files with direcotries split on invocation id.)
+        config._store.write_external_blob(invocation_id, invocation_contents.model_dump_json())
+        invocation_contents = InvocationContents(
+            invocation_id=invocation_id,
+            is_external=True,
+        )
+        
 
     invocation = Invocation(
         id=invocation_id,

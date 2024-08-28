@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import enum
+from functools import cached_property
 
 import sqlalchemy.types as types
 
@@ -118,11 +119,31 @@ class InvocationBase(SQLModel):
 
 class InvocationContentsBase(SQLModel):
     invocation_id: str = Field(foreign_key="invocation.id", index=True, primary_key=True)
-    params: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
-    results: Union[List[Message], Any] = Field(default_factory=list, sa_column=Column(JSON))
-    invocation_api_params: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
-    global_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
-    free_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    params: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    results: Optional[Union[List[Message], Any]] = Field(default=None, sa_column=Column(JSON))
+    invocation_api_params: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    global_vars: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    free_vars: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    is_external : bool = Field(default=False)
+
+    @cached_property
+    def should_externalize(self) -> bool:
+        import json
+        
+        json_fields = [
+            self.params,
+            self.results,
+            self.invocation_api_params,
+            self.global_vars,
+            self.free_vars
+        ]
+        
+        total_size = sum(
+            len(json.dumps(field).encode('utf-8')) for field in json_fields if field is not None
+        )
+        # print("total_size", total_size)
+        
+        return total_size > 102400  # Precisely 100kb in bytes
 
 class InvocationContents(InvocationContentsBase, table=True):
     invocation: "Invocation" = Relationship(back_populates="contents")

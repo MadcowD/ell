@@ -20,6 +20,7 @@ const InvocationDetailsPopover = ({ invocation, onClose, onResize }) => {
   };
 
   const isNarrowForInfo = sidebarWidth < 600;
+  console.log("invocation", invocation)
 
   return (
     <ResizableSidebar onResize={handleResize}>

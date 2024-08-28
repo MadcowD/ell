@@ -12,6 +12,10 @@ class Store(ABC):
     Abstract base class for serializers. Defines the interface for serializing and deserializing LMPs and invocations.
     """
 
+    def __init__(self, has_blob_storage: bool = False):
+        self.has_blob_storage = has_blob_storage
+
+
     @abstractmethod
     def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:
         """

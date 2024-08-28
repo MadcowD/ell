@@ -68,6 +68,7 @@ function LMP() {
       : null;
   }, [versionHistory, lmp]);
 
+  console.log(requestedInvocationId)
   const { data: requestedInvocationQueryData } = useInvocation(
     requestedInvocationId
   );
@@ -77,7 +78,6 @@ function LMP() {
     else return requestedInvocationQueryData;
   }, [requestedInvocationQueryData, invocations, requestedInvocationId]);
 
-  console.log("requestedInvocation", requestedInvocation);
   useEffect(() => {
     setSelectedTrace(requestedInvocation);
   }, [requestedInvocation]);

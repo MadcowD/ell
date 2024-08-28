@@ -14,7 +14,7 @@ from sqlalchemy import or_, func, and_, extract, FromClause
 from sqlalchemy.types import TypeDecorator, VARCHAR
 from ell.types.lmp import SerializedLMPUses, utc_now
 from ell.util.serialization import pydantic_ltype_aware_cattr
-
+import gzip
 import json
 
 
@@ -23,7 +23,7 @@ import json
 
 
 class SQLStore(ell.store.Store):
-    def __init__(self, db_uri: str):
+    def __init__(self, db_uri: str, has_blob_storage: bool = False):
         self.engine = create_engine(db_uri,
                                     json_serializer=lambda obj: json.dumps(pydantic_ltype_aware_cattr.unstructure(obj), 
                                      sort_keys=True, default=repr))
@@ -31,6 +31,7 @@ class SQLStore(ell.store.Store):
 
         SQLModel.metadata.create_all(self.engine)
         self.open_files: Dict[str, Dict[str, Any]] = {}
+        super().__init__(has_blob_storage)
 
 
     def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:
@@ -261,10 +262,34 @@ class SQLiteStore(SQLStore):
         assert not db_dir.endswith('.db'), "Create store wit h a directory not a db."
     
         os.makedirs(db_dir, exist_ok=True)
+        self.db_dir = db_dir
         db_path = os.path.join(db_dir, 'ell.db')
-        super().__init__(f'sqlite:///{db_path}')
+        super().__init__(f'sqlite:///{db_path}', has_blob_storage=True)
+
+    def _get_blob_path(self, id: str, depth: int = 2) -> str:
+        if not self.has_blob_storage:
+            raise ValueError("This store does not support external blob storage")
+        
+        assert "-" in id, "Blob id must have a single - in it to split on."
+        _type, _id = id.split("-")
+        increment = 2
+        dirs = [_type] + [_id[i:i+increment] for i in range(0, depth*increment, increment)]
+        file_name = _id[depth*increment:]
+        return os.path.join(self.db_dir, "blob", *dirs, file_name)
+
+    def write_external_blob(self, id: str, json_dump: str, depth: int = 2):
+        file_path = self._get_blob_path(id, depth)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with gzip.open(file_path, "wt", encoding="utf-8") as f:
+            f.write(json_dump)
+
+    def read_external_blob(self, id: str, depth: int = 2) -> str:
+        file_path = self._get_blob_path(id, depth)
+        with gzip.open(file_path, "rt", encoding="utf-8") as f:
+            return f.read()
+
 
 class PostgresStore(SQLStore):
     def __init__(self, db_uri: str):
-        super().__init__(db_uri)
+        super().__init__(db_uri, has_blob_storage=False)
     

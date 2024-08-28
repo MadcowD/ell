@@ -6,13 +6,14 @@ import { getTimeAgo } from '../../utils/lmpUtils';
 import VersionBadge from '../VersionBadge';
 import { useNavigate } from 'react-router-dom';
 
-import IORenderer from '../IORenderer';
+import { ContentsRenderer } from './ContentsRenderer';
+
+
+
 
 const mapInvocation = (invocation) => ({
   name: invocation.lmp?.name || 'Unknown',
   id: invocation.id,
-  input: (invocation.contents?.params),
-  output: (invocation.contents?.results.length === 1 ? invocation.contents?.results[0] : invocation.contents?.results),
   version: invocation.lmp.version_number + 1,
   created_at: new Date(invocation.created_at),
   children: [],
@@ -138,8 +139,8 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
       maxWidth: 150,
       sortable: true
     },
-    { header: 'Input', key: 'input', maxWidth: 400, render: (item) => <IORenderer content={item.input}typeMatchLevel={1}/> },
-    { header: 'Output', key: 'output', render: (item) => <IORenderer content={item.output}  />, maxWidth: 600 },
+    { header: 'Input', key: 'input', maxWidth: 400, render: (item) => <ContentsRenderer typeMatchLevel={1} item={item} field={"params"} />},
+    { header: 'Output', key: 'output', render: (item) => <ContentsRenderer item={item} field={"results"} />, maxWidth: 600 },
     { 
       header: 'Start Time', 
       key: 'created_at', 

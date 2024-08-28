@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any
 from sqlmodel import Session
 from ell.stores.sql import PostgresStore, SQLiteStore
 from ell import __version__
-from fastapi import FastAPI, Query, HTTPException, Depends, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Query, HTTPException, Depends, Response, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import json
@@ -161,6 +161,15 @@ def create_app(config:Config):
     ):
         traces = serializer.get_all_traces_leading_to(session, invocation_id)
         return traces
+    
+
+    @app.get("/api/blob/{blob_id}", response_class=Response)
+    def get_blob(
+        blob_id: str,
+        session: Session = Depends(get_session)
+    ):
+        blob = serializer.read_external_blob(blob_id)
+        return Response(content=blob, media_type="application/json")
 
     @app.get("/api/lmp-history")
     def get_lmp_history(
