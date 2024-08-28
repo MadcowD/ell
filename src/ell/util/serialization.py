@@ -1,11 +1,13 @@
 
 # Global converter
+import base64
 import hashlib
+from io import BytesIO
 import json
 import cattrs
 import numpy as np
 from pydantic import BaseModel
-
+import PIL
 from ell._lstr import _lstr
 
 
@@ -25,6 +27,20 @@ pydantic_ltype_aware_cattr.register_unstructure_hook(
     lambda s: list(sorted(s))
 )
 
+
+def serialize_image(img):
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+
+pydantic_ltype_aware_cattr.register_unstructure_hook(
+    PIL.Image.Image,
+    lambda obj: {
+        "content": serialize_image(obj),
+        "__limage": True
+    }
+)
+
 def unstructure_lstr(obj):
     return dict(content=str(obj), **obj.__dict__, __lstr=True)
 
@@ -32,7 +48,6 @@ pydantic_ltype_aware_cattr.register_unstructure_hook(
     _lstr,
     unstructure_lstr
 )
-
 
 pydantic_ltype_aware_cattr.register_unstructure_hook(
     BaseModel,

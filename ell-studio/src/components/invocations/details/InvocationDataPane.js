@@ -9,20 +9,20 @@ const InvocationDataPane = ({ invocation }) => {
 
 
   const kwargsLines = useMemo(() => {
-    return lstrCleanStringify(invocation.params, 1);
-  }, [invocation.params]);
+    return lstrCleanStringify(invocation.contents?.params, 1);
+  }, [invocation.contents?.params]);
 
   const resultsLines = useMemo(() => {
-    return lstrCleanStringify(invocation.results, 1);
-  }, [invocation.results]);
+    return lstrCleanStringify(invocation.contents?.results, 1);
+  }, [invocation.contents?.results]);
 
   const hasKwargs = useMemo(() => {
-    return Object.keys(invocation.params).length > 0;
-  }, [invocation.params]);
+    return Object.keys(invocation.contents?.params).length > 0;
+  }, [invocation.contents?.params]);
 
   const hasResults = useMemo(() => {
-    return Array.isArray(invocation.results) ? invocation.results.length > 0 : !!invocation.results;
-  }, [invocation.results]);
+    return Array.isArray(invocation.contents?.results) ? invocation.contents?.results.length > 0 : !!invocation.contents?.results;
+  }, [invocation.contents?.results]);
 
   // TODO: Properly implement collapse behaviour
   useEffect(() => {
@@ -39,7 +39,7 @@ const InvocationDataPane = ({ invocation }) => {
       {hasKwargs && (
         <CodeSection
           title="Input"
-          raw={JSON.stringify(invocation.params, null, 2)}
+          raw={JSON.stringify(invocation.contents?.params, null, 2)}
           showCode={inputExpanded}
           setShowCode={setInputExpanded}
           collapsedHeight={'300px'}
@@ -50,7 +50,7 @@ const InvocationDataPane = ({ invocation }) => {
           showCopyButton={true}
         >
           <div className="p-4">
-            <IORenderer content={lstrCleanStringify(invocation.params, 1)} inline={false} />
+            <IORenderer content={lstrCleanStringify(invocation.contents?.params, 1)} typeMatchLevel={1} inline={false} />
           </div>
         </CodeSection>
       )}
@@ -58,7 +58,7 @@ const InvocationDataPane = ({ invocation }) => {
       {hasResults && (
         <CodeSection
           title="Results"
-          raw={JSON.stringify(invocation.results, null, 2)}
+          raw={JSON.stringify(invocation.contents?.results, null, 2)}
           showCode={outputExpanded}
           setShowCode={setOutputExpanded}
           collapsedHeight={'300px'}
@@ -67,7 +67,7 @@ const InvocationDataPane = ({ invocation }) => {
           offset={0}
         > 
           <div className="p-4">
-            <IORenderer content={lstrCleanStringify(invocation.results, 1)} inline={false} />
+            <IORenderer content={lstrCleanStringify(invocation.contents?.results, 1)} inline={false} />
           </div>
         </CodeSection>
       )}

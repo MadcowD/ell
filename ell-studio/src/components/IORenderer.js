@@ -7,41 +7,47 @@ const typeMatchers = {
   Message: (data) => data && typeof data === 'object' && 'role' in data && 'content' in data,
 };
 
-const preprocessData = (data) => {
-  if (typeMatchers.Message(data)) {
-    const { role, content } = data;
-    if (content.length === 1) {
-      const block = content[0];
-      if (block.text) {
-        return { type: 'Message', role, content: block.text };
+const preprocessData = (data, currentLevel = 0, typeMatchLevel = 0) => {
+  if (currentLevel >= typeMatchLevel) {
+    if (typeMatchers.Message(data)) {
+      const { role, content } = data;
+      if (content.length === 1) {
+        const block = content[0];
+        if (block.text) {
+          return { type: 'Message', role, content: block.text };
+        }
+        if (block.tool_call) {
+          return { type: 'Message', role, content: preprocessData(block.tool_call) };
+        }
+        const complexType = ['image', 'audio', 'parsed', 'tool_result'].find(type => block[type]);
+        if (complexType) {
+          return { type: 'Message', role, content: preprocessData(block[complexType]) };
+        }
       }
-      if (block.tool_call) {
-        return { type: 'Message', role, content: preprocessData(block.tool_call) };
-      }
-      const complexType = ['image', 'audio', 'parsed', 'tool_result'].find(type => block[type]);
-      if (complexType) {
-        return { type: 'Message', role, content: preprocessData(block[complexType]) };
-      }
+      return { type: 'Message', role, content: content.map(preprocessData) };
     }
-    return { type: 'Message', role, content: content.map(preprocessData) };
-  }
-  
-  if (typeMatchers.ContentBlock(data)) {
-    const contentType = Object.keys(data).find(key => ['text', 'image', 'audio', 'tool_call', 'parsed', 'tool_result'].includes(key));
-    return { type: 'ContentBlock', content: preprocessData(data[contentType]) };
+    
+    if (typeMatchers.ContentBlock(data)) {
+      const contentType = Object.keys(data).find(key => ['text', 'image', 'audio', 'tool_call', 'parsed', 'tool_result'].includes(key));
+      return { type: 'ContentBlock', content: preprocessData(data[contentType]) };
+    }
+    
+    // ... other type matchers ...
   }
   
   if (Array.isArray(data)) {
-    return data.map(preprocessData);
+    return data.map(item => preprocessData(item, currentLevel + 1, typeMatchLevel));
   }
   
   if (typeof data === 'object' && data !== null) {
-    const typeRenderer = Object.entries(typeMatchers).find(([, matcher]) => matcher(data));
-    if (typeRenderer) {
-      const [type] = typeRenderer;
-      return { type, ...data };
+    if (currentLevel >= typeMatchLevel) {
+      const typeRenderer = Object.entries(typeMatchers).find(([, matcher]) => matcher(data));
+      if (typeRenderer) {
+        const [type] = typeRenderer;
+        return { type, ...data };
+      }
     }
-    return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, preprocessData(value)]));
+    return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, preprocessData(value, currentLevel + 1, typeMatchLevel)]));
   }
   
   return data;
@@ -55,8 +61,8 @@ const renderInline = (data, customRenderers) => {
       ToolCall: 'purple',
       ContentBlock: 'orange',
       Message: 'teal'
-    }[type];
-    
+    }[type]
+
     return (
       <span className="text-gray-300">
         <span className={`text-${typeColor}-400`}>{type}</span>(
@@ -91,8 +97,16 @@ const renderInline = (data, customRenderers) => {
       </span>
     );
   }
-  
   if (typeof data === 'object' && data !== null) {
+    const isImage = data.__limage;
+
+    if (isImage) {
+      return (
+         <img src={data.content} alt="PIL.Image" style={{display: 'inline-block', verticalAlign: 'middle', maxHeight: '1.5em'}} />
+        
+      );
+    }
+
     return (
       <span className="text-gray-300">
         {'{'}
@@ -123,7 +137,7 @@ const renderNonInline = (data, customRenderers, level = 0, isArrayItem = false, 
       ContentBlock: 'orange',
       Message: 'teal'
     }[type];
-    
+
     return (
       <div>
         <span className={`text-${typeColor}-400`}>{type}</span>(
@@ -169,21 +183,31 @@ const renderNonInline = (data, customRenderers, level = 0, isArrayItem = false, 
   }
   
   if (typeof data === 'object' && data !== null) {
-    return (
-      <>
-        {'{'}
-        {Object.entries(data).map(([key, value], index, arr) => (
-          <React.Fragment key={key}>
-            <Indent level={level + 1}>
-              <span className="text-sky-300">{key}</span>: {
-                renderNonInline(value, customRenderers, level + 1, false, index < arr.length - 1 ? ',' : '')
-              }
-            </Indent>
-          </React.Fragment>
-        ))}
-       <div>{'}'}{postfix}</div>
-      </>
-    );
+    const isImage = data.__limage;
+
+    if (isImage) 
+      return (
+        <Indent level={level + 1}>
+          <img src={data.content} alt="Embedded Image" />
+        </Indent>
+      );
+    
+    else 
+      return (
+        <>
+          {'{'}
+          {Object.entries(data).map(([key, value], index, arr) => (
+            <React.Fragment key={key}>
+              <Indent level={level + 1}>
+                <span className="text-sky-300">{key}</span>: {
+                  renderNonInline(value, customRenderers, level + 1, false, index < arr.length - 1 ? ',' : '')
+                }
+              </Indent>
+            </React.Fragment>
+          ))}
+        <div>{'}'}{postfix}</div>
+        </>
+      );
   }
   
   if (typeof data === 'string') {
@@ -217,16 +241,16 @@ const renderNonInline = (data, customRenderers, level = 0, isArrayItem = false, 
   );
 };
 
-const Indent = ({ level, children }) => (
-  <div style={{ marginLeft: `${level * 7}px` }}>
+const Indent = ({ children }) => (
+  <div style={{ marginLeft: `${15}px` }}>
     <span>{children}</span>
   </div>
 );
 
-const IORenderer = ({ content, customRenderers = [], inline = true }) => {
+const IORenderer = ({ content, customRenderers = [], inline = true, typeMatchLevel = 0 }) => {
   try {
     const parsedContent = JSON.parse(content);
-    const preprocessedContent = preprocessData(parsedContent);
+    const preprocessedContent = preprocessData(parsedContent, 0, typeMatchLevel);
     return (
       <div className="text-sm font-mono">
         {inline ? renderInline(preprocessedContent, customRenderers) : renderNonInline(preprocessedContent, customRenderers)}

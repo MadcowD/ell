@@ -77,6 +77,7 @@ function LMP() {
     else return requestedInvocationQueryData;
   }, [requestedInvocationQueryData, invocations, requestedInvocationId]);
 
+  console.log("requestedInvocation", requestedInvocation);
   useEffect(() => {
     setSelectedTrace(requestedInvocation);
   }, [requestedInvocation]);

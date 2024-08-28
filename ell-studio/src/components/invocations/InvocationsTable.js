@@ -6,14 +6,13 @@ import { getTimeAgo } from '../../utils/lmpUtils';
 import VersionBadge from '../VersionBadge';
 import { useNavigate } from 'react-router-dom';
 import { lstrCleanStringify } from '../../utils/lstrCleanStringify';
-import { useTraces } from '../../hooks/useBackend';
 import IORenderer from '../IORenderer';
 
 const mapInvocation = (invocation) => ({
   name: invocation.lmp?.name || 'Unknown',
   id: invocation.id,
-  input: lstrCleanStringify(invocation.params),
-  output: lstrCleanStringify(invocation.results.length === 1 ? invocation.results[0] : invocation.results),
+  input: lstrCleanStringify(invocation.contents?.params),
+  output: lstrCleanStringify(invocation.contents?.results.length === 1 ? invocation.contents?.results[0] : invocation.contents?.results),
   version: invocation.lmp.version_number + 1,
   created_at: new Date(invocation.created_at),
   children: [],
@@ -28,8 +27,7 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
   const onClickLMP = useCallback(({lmp, id : invocationId}) => {
     navigate(`/lmp/${lmp.name}/${lmp.lmp_id}?i=${invocationId}`);
   }, [navigate]);
-
-  // const {data: traces} = useTraces(invocations?.map(i => i.lmp));  
+ 
 
   const isLoading = !invocations;
 
@@ -73,7 +71,7 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
       if (invocation.consumes) {
         links.push(...invocation.consumes.map(c => ({
           to: invocation.id,
-          from: c
+          from: c.id
         })).filter(link => link.from !== invocation.id));
       }
       
@@ -140,8 +138,8 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
       maxWidth: 150,
       sortable: true
     },
-    { header: 'Input', key: 'input', maxWidth: 400, render: (item) => <IORenderer content={item.input} /> },
-    { header: 'Output', key: 'output', render: (item) => <IORenderer content={item.output} />, maxWidth: 600 },
+    { header: 'Input', key: 'input', maxWidth: 400, render: (item) => <IORenderer content={item.input}typeMatchLevel={1}/> },
+    { header: 'Output', key: 'output', render: (item) => <IORenderer content={item.output}  />, maxWidth: 600 },
     { 
       header: 'Start Time', 
       key: 'created_at', 

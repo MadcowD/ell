@@ -1,13 +1,11 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { FiLink, FiCopy, FiChevronDown, FiClock, FiTag } from "react-icons/fi";
-import { lstrCleanStringify } from '../../../utils/lstrCleanStringify';
-import { CodeSection } from '../../source/CodeSection';
-import { TraceGraph } from '../TraceGraph';
+
 import ResizableSidebar from '../../ResizableSidebar';
 import { InvocationInfoPane } from '../InvocationInfoPane';
 import InvocationDataPane from './InvocationDataPane';
 
-const InvocationDetailsSidebar = ({ invocation, onClose, onResize }) => {
+const InvocationDetailsPopover = ({ invocation, onClose, onResize }) => {
   const [activeTab, setActiveTab] = useState("Details");
   const [isClicked, setIsClicked] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(window.innerWidth / 2);
@@ -90,4 +88,4 @@ const InvocationDetailsSidebar = ({ invocation, onClose, onResize }) => {
   );
 };
 
-export default InvocationDetailsSidebar;
+export default InvocationDetailsPopover;

@@ -14,6 +14,8 @@ from sqlmodel import Field
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from typing import Any, Callable, Dict, List, Literal, Optional, Type, Union
+
+from ell.util.serialization import serialize_image
 _lstr_generic = Union[_lstr, str]
 InvocableTool = Callable[..., Union["ToolResult", _lstr_generic, List["ContentBlock"], ]]
 
@@ -117,9 +119,7 @@ class ContentBlock(BaseModel):
     def serialize_image(self, image: Optional[PILImage.Image], _info):
         if image is None:
             return None
-        buffered = BytesIO()
-        image.save(buffered, format="PNG")
-        return base64.b64encode(buffered.getvalue()).decode()
+        return serialize_image(image)
     
 
     def to_openai_content_block(self):

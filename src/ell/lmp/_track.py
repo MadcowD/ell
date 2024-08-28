@@ -1,6 +1,6 @@
 import logging
 import threading
-from ell.types import SerializedLMP, Invocation, InvocationTrace
+from ell.types import SerializedLMP, Invocation, InvocationTrace, InvocationContents
 from ell.types.lmp import LMPType, utc_now
 import ell.util.closure
 from ell.configurator import config
@@ -201,23 +201,26 @@ def _serialize_lmp(func):
 def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
                      state_cache_key, invocation_api_params, cleaned_invocation_params, consumes, result, parent_invocation_id):
     
+    invocation_contents = InvocationContents(
+        invocation_id=invocation_id,
+        params=cleaned_invocation_params,
+        results=result,
+        invocation_api_params=invocation_api_params,
+        global_vars=get_immutable_vars(func.__ell_closure__[2]),
+        free_vars=get_immutable_vars(func.__ell_closure__[3])
+    )
 
     invocation = Invocation(
         id=invocation_id,
         lmp_id=func.__ell_hash__,
         created_at=utc_now(),
-        global_vars=get_immutable_vars(func.__ell_closure__[2]),
-        free_vars=get_immutable_vars(func.__ell_closure__[3]),
         latency_ms=latency_ms,
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
         state_cache_key=state_cache_key,
-        invocation_api_params=invocation_api_params,
-        params=cleaned_invocation_params,
         used_by_id=parent_invocation_id,
-        results=result
+        contents=invocation_contents
     )
 
-    
     config._store.write_invocation(invocation, consumes)
 

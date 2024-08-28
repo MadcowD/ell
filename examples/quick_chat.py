@@ -31,8 +31,6 @@ Backstory: <3 sentence backstory>'""" # System prompt
 
 
 
-
-
 def format_message_history(message_history : List[Tuple[str, str]]) -> str:
     return "\n".join([f"{name}: {message}" for name, message in message_history])
 
@@ -61,7 +59,7 @@ if __name__ == "__main__":
     names = []
     backstories = []    
     for personality in personalities:
-        parts = personality.split("\n")
+        parts = list(filter(None, personality.split("\n")))
         names.append(parts[0].split(": ")[1])
         backstories.append(parts[1].split(": ")[1])
     print(names)

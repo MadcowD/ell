@@ -8,7 +8,7 @@ import ell.store
 import cattrs
 import numpy as np
 from sqlalchemy.sql import text
-from ell.types import InvocationTrace, SerializedLMP, Invocation
+from ell.types import InvocationTrace, SerializedLMP, Invocation, InvocationContents
 from ell._lstr import _lstr
 from sqlalchemy import or_, func, and_, extract, FromClause
 from sqlalchemy.types import TypeDecorator, VARCHAR
@@ -63,7 +63,10 @@ class SQLStore(ell.store.Store):
             else:
                 lmp.num_invocations += 1
 
+            # Add the invocation contents
+            session.add(invocation.contents)
             
+            # Add the invocation
             session.add(invocation)
 
             # Now create traces.
@@ -124,34 +127,8 @@ class SQLStore(ell.store.Store):
         return results
 
     def get_invocations(self, session: Session, lmp_filters: Dict[str, Any], skip: int = 0, limit: int = 10, filters: Optional[Dict[str, Any]] = None, hierarchical: bool = False) -> List[Dict[str, Any]]:
-        def fetch_invocation(inv_id):
-            query = (
-                select(Invocation, SerializedLMP)
-                .join(SerializedLMP)
-                .where(Invocation.id == inv_id)
-            )
-            results = session.exec(query).all()
-
-            if not results:
-                return None
-
-            inv, lmp = results[0]
-            inv_dict = inv.model_dump()
-            inv_dict['lmp'] = lmp.model_dump()
-
-
-            # Fetch consumes and consumed_by invocation IDs
-            consumes_query = select(InvocationTrace.invocation_consuming_id).where(InvocationTrace.invocation_consumer_id == inv_id)
-            consumed_by_query = select(InvocationTrace.invocation_consumer_id).where(InvocationTrace.invocation_consuming_id == inv_id)
-
-            inv_dict['consumes'] = [r for r in session.exec(consumes_query).all()]
-            inv_dict['consumed_by'] = [r for r in session.exec(consumed_by_query).all()]
-            inv_dict['uses'] = list([d.id for d in inv.uses]) 
-
-
-            return inv_dict
-
-        query = select(Invocation.id).join(SerializedLMP)
+        
+        query = select(Invocation).join(SerializedLMP)
 
         # Apply LMP filters
         for key, value in lmp_filters.items():
@@ -165,21 +142,9 @@ class SQLStore(ell.store.Store):
         # Sort from newest to oldest
         query = query.order_by(Invocation.created_at.desc()).offset(skip).limit(limit)
 
-        invocation_ids = session.exec(query).all()
-
-        invocations = [fetch_invocation(inv_id) for inv_id in invocation_ids if inv_id]
-
-        if hierarchical:
-            # Fetch all related "uses" invocations
-            used_ids = set()
-            for inv in invocations:
-                
-                used_ids.update(inv['uses'])
-
-            used_invocations = [fetch_invocation(inv_id) for inv_id in used_ids if inv_id not in invocation_ids]
-            invocations.extend(used_invocations)
-
+        invocations = session.exec(query).all()
         return invocations
+
 
     def get_traces(self, session: Session):
         query = text("""

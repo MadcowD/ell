@@ -62,8 +62,8 @@ const Invocations = () => {
       const matchesSearch = 
         inv.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         inv.lmp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        JSON.stringify(inv.params).toLowerCase().includes(searchTerm.toLowerCase()) ||
-        JSON.stringify(inv.results).toLowerCase().includes(searchTerm.toLowerCase());
+        JSON.stringify(inv.contents?.params).toLowerCase().includes(searchTerm.toLowerCase()) ||
+        JSON.stringify(inv.contents?.results).toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesFilter = 
         selectedFilter === 'All Runs' || 
@@ -72,8 +72,8 @@ const Invocations = () => {
 
       const matchesAdvanced =
         (!advancedFilters.lmpName || inv.lmp.name.toLowerCase().includes(advancedFilters.lmpName.toLowerCase())) &&
-        (!advancedFilters.inputContains || JSON.stringify(inv.params).toLowerCase().includes(advancedFilters.inputContains.toLowerCase())) &&
-        (!advancedFilters.outputContains || inv.results.some(result => JSON.stringify(result).toLowerCase().includes(advancedFilters.outputContains.toLowerCase()))) &&
+        (!advancedFilters.inputContains || JSON.stringify(inv.contents?.params).toLowerCase().includes(advancedFilters.inputContains.toLowerCase())) &&
+        (!advancedFilters.outputContains || inv.contents?.results.some(result => JSON.stringify(result).toLowerCase().includes(advancedFilters.outputContains.toLowerCase()))) &&
         (!advancedFilters.latencyMin || inv.latency_ms >= parseFloat(advancedFilters.latencyMin) * 1000) &&
         (!advancedFilters.latencyMax || inv.latency_ms <= parseFloat(advancedFilters.latencyMax) * 1000) &&
         (!advancedFilters.tokensMin || (inv.prompt_tokens + inv.completion_tokens) >= parseInt(advancedFilters.tokensMin)) &&

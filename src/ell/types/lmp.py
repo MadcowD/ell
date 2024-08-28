@@ -108,17 +108,24 @@ class InvocationTrace(SQLModel, table=True):
 class InvocationBase(SQLModel):
     id: Optional[str] = Field(default=None, primary_key=True)
     lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)
-    params: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
-    global_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
-    free_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     latency_ms: float
     prompt_tokens: Optional[int] = Field(default=None)
     completion_tokens: Optional[int] = Field(default=None)
     state_cache_key: Optional[str] = Field(default=None)
     created_at: datetime = UTCTimestampField(default=func.now(), nullable=False)
-    invocation_api_params: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     used_by_id: Optional[str] = Field(default=None, foreign_key="invocation.id", index=True)
-    results : Union[List[Message], Any] = Field(default_factory=list, sa_column=Column(JSON))
+    # global_vars and free_vars removed from here
+
+class InvocationContentsBase(SQLModel):
+    invocation_id: str = Field(foreign_key="invocation.id", index=True, primary_key=True)
+    params: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    results: Union[List[Message], Any] = Field(default_factory=list, sa_column=Column(JSON))
+    invocation_api_params: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    global_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    free_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+
+class InvocationContents(InvocationContentsBase, table=True):
+    invocation: "Invocation" = Relationship(back_populates="contents")
 
 class Invocation(InvocationBase, table=True):
     lmp: SerializedLMP = Relationship(back_populates="invocations")
@@ -140,9 +147,14 @@ class Invocation(InvocationBase, table=True):
     )
     used_by: Optional["Invocation"] = Relationship(back_populates="uses", sa_relationship_kwargs={"remote_side": "Invocation.id"})
     uses: List["Invocation"] = Relationship(back_populates="used_by")
+    contents: InvocationContents = Relationship(back_populates="invocation")
 
     __table_args__ = (
         Index('ix_invocation_lmp_id_created_at', 'lmp_id', 'created_at'),
         Index('ix_invocation_created_at_latency_ms', 'created_at', 'latency_ms'),
         Index('ix_invocation_created_at_tokens', 'created_at', 'prompt_tokens', 'completion_tokens'),
     )
+
+# Update forward references
+Invocation.update_forward_refs()
+InvocationContents.update_forward_refs()
