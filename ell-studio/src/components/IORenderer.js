@@ -1,9 +1,5 @@
 import React from 'react';
 
-
-
-
-
 const typeMatchers = {
   ToolResult: (data) => data && typeof data === 'object' && 'tool_call_id' in data && 'result' in data,
   ToolCall: (data) => data && typeof data === 'object' && 'tool' in data && 'params' in data,
@@ -29,65 +25,52 @@ const renderFields = (data, customRenderers) => (
 const typeRenderers = {
   ToolResult: (data, customRenderers) => (
     <span className="text-gray-300">
-      <span className="text-blue-400">ToolResult</span>(
-      {renderFields(data, customRenderers)}
-      )
+      <span className="text-blue-400">ToolResult</span>({renderFields(data, customRenderers)})
     </span>
   ),
   ToolCall: (data, customRenderers) => (
     <span className="text-gray-300">
-      <span className="text-purple-400">ToolCall</span>(
-      {renderFields(data, customRenderers)}
-      )
+      <span className="text-purple-400">ToolCall</span>({renderFields(data, customRenderers)})
     </span>
   ),
   ContentBlock: (data, customRenderers) => {
     const type = Object.keys(data).find(key => ['text', 'image', 'audio', 'tool_call', 'parsed', 'tool_result'].includes(key));
     return (
       <span className="text-gray-300">
-        <span className="text-orange-400">ContentBlock</span>(
-        {renderField(type, data[type], customRenderers)}
-        )
+        <span className="text-orange-400">ContentBlock</span>({renderField(type, data[type], customRenderers)})
       </span>
     );
   },
   Message: (data, customRenderers) => {
     const { role, content } = data;
-
     const renderContent = () => {
       if (content.length === 1) {
         const block = content[0];
-        if (block.text) {
-          return <span className="text-green-300">"{block.text}"</span>;
-        } else if (block.image) {
-          return <span className="text-green-300">"{block.image}"</span>;
-        } else if (block.audio) {
-          return <span className="text-green-300">"{block.audio}"</span>;
-        } else if (block.tool_call || block.parsed || block.tool_result) {
-          return <RecursiveObjectRenderer data={block[Object.keys(block)[0]]} customRenderers={customRenderers} />;
+        const simpleTypes = ['text', 'image', 'audio'];
+        const simpleType = simpleTypes.find(type => block[type]);
+        if (simpleType) {
+          return <span className="text-green-300">"{block[simpleType]}"</span>;
+        }
+        const complexType = ['tool_call', 'parsed', 'tool_result'].find(type => block[type]);
+        if (complexType) {
+          return <RecursiveObjectRenderer data={block[complexType]} customRenderers={customRenderers} />;
         }
       }
-      
       return (
         <span className="text-gray-300">
-          [
-          {content.map((block, index) => (
+          [{content.map((block, index) => (
             <React.Fragment key={index}>
               {index > 0 && ', '}
               <RecursiveObjectRenderer data={block} customRenderers={customRenderers} />
             </React.Fragment>
-          ))}
-          ]
+          ))}]
         </span>
       );
     };
 
     return (
       <span className="text-gray-300">
-        <span className="text-teal-400">Message</span>(
-        {renderContent()},
-        <span className="text-sky-300"> role</span>=<span className="text-green-300">"{role}"</span>
-        )
+        <span className="text-teal-400">Message</span>({renderContent()}, <span className="text-sky-300">role</span>=<span className="text-green-300">"{role}"</span>)
       </span>
     );
   },
@@ -180,17 +163,10 @@ const renderNonInline = (data, customRenderers, level = 0) => {
   }
 
   if (typeof data === 'object' && data !== null) {
-    if (typeMatchers.Message(data)) {
-      return renderNonInlineMessage(data, customRenderers, level);
-    }
-    if (typeMatchers.ContentBlock(data)) {
-      return renderNonInlineContentBlock(data, customRenderers, level);
-    }
-    if (typeMatchers.ToolCall(data)) {
-      return renderNonInlineToolCall(data, customRenderers, level);
-    }
-    if (typeMatchers.ToolResult(data)) {
-      return renderNonInlineToolResult(data, customRenderers, level);
+    const typeRenderer = Object.entries(typeMatchers).find(([, matcher]) => matcher(data));
+    if (typeRenderer) {
+      const [type] = typeRenderer;
+      return renderNonInlineType(type, data, customRenderers, level);
     }
 
     return (
@@ -210,71 +186,33 @@ const renderNonInline = (data, customRenderers, level = 0) => {
   return <span className="text-green-300">{JSON.stringify(data)}</span>;
 };
 
-const renderNonInlineMessage = (data, customRenderers, level) => {
-  const { role, content } = data;
-
+const renderNonInlineType = (type, data, customRenderers, level) => {
   const renderContent = () => {
-    if (content.length === 1) {
-      const block = content[0];
-      if (block.text || block.image || block.audio) {
-        return <span className="text-green-300">"{block[Object.keys(block)[0]]}"</span>;
-      }
+    if (type === 'Message') {
+      const { role, content } = data;
+      return (
+        <>
+          <Indent level={level + 1}>
+            {renderNonInline(content, customRenderers, level + 1)},
+          </Indent>
+          <Indent level={level + 1}>
+            <span className="text-sky-300">role</span>: <span className="text-green-300">"{role}"</span>
+          </Indent>
+        </>
+      );
     }
-    return renderNonInline(content, customRenderers, level + 1);
+    return Object.entries(data).map(([key, value], index, arr) => (
+      <Indent key={key} level={level + 1}>
+        <span className="text-sky-300">{key}</span>: {renderNonInline(value, customRenderers, level + 1)}
+        {index < arr.length - 1 && ','}
+      </Indent>
+    ));
   };
 
   return (
     <div>
-      <span className="text-teal-400">Message</span>(
-      <Indent level={level + 1}>
-        {renderContent()},
-      </Indent>
-      <Indent level={level + 1}>
-        <span className="text-sky-300">role</span>: <span className="text-green-300">"{role}"</span>
-      </Indent>
-      <Indent level={level}>)</Indent>
-    </div>
-  );
-};
-
-const renderNonInlineContentBlock = (data, customRenderers, level) => {
-  const type = Object.keys(data).find(key => ['text', 'image', 'audio', 'tool_call', 'parsed', 'tool_result'].includes(key));
-  return (
-    <div>
-      <span className="text-orange-400">ContentBlock</span>(
-      <Indent level={level + 1}>
-        <span className="text-sky-300">{type}</span>: {renderNonInline(data[type], customRenderers, level + 1)}
-      </Indent>
-      <Indent level={level}>)</Indent>
-    </div>
-  );
-};
-
-const renderNonInlineToolCall = (data, customRenderers, level) => {
-  return (
-    <div>
-      <span className="text-purple-400">ToolCall</span>(
-      {Object.entries(data).map(([key, value], index, arr) => (
-        <Indent key={key} level={level + 1}>
-          <span className="text-sky-300">{key}</span>: {renderNonInline(value, customRenderers, level + 1)}
-          {index < arr.length - 1 && ','}
-        </Indent>
-      ))}
-      <Indent level={level}>)</Indent>
-    </div>
-  );
-};
-
-const renderNonInlineToolResult = (data, customRenderers, level) => {
-  return (
-    <div>
-      <span className="text-blue-400">ToolResult</span>(
-      {Object.entries(data).map(([key, value], index, arr) => (
-        <Indent key={key} level={level + 1}>
-          <span className="text-sky-300">{key}</span>: {renderNonInline(value, customRenderers, level + 1)}
-          {index < arr.length - 1 && ','}
-        </Indent>
-      ))}
+      <span className={`text-${type === 'ToolResult' ? 'blue' : type === 'ToolCall' ? 'purple' : type === 'ContentBlock' ? 'orange' : 'teal'}-400`}>{type}</span>(
+      {renderContent()}
       <Indent level={level}>)</Indent>
     </div>
   );

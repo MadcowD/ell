@@ -140,7 +140,7 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
       maxWidth: 150,
       sortable: true
     },
-    { header: 'Input', key: 'input', maxWidth: 300, render: (item) => <IORenderer content={item.input} /> },
+    { header: 'Input', key: 'input', maxWidth: 400, render: (item) => <IORenderer content={item.input} /> },
     { header: 'Output', key: 'output', render: (item) => <IORenderer content={item.output} />, maxWidth: 600 },
     { 
       header: 'Start Time', 
