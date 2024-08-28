@@ -2,9 +2,13 @@
 import json
 from ell._lstr import _lstr
 from functools import cached_property
+from PIL.Image import Image
+import numpy as np
+import base64
+from io import BytesIO
+from PIL import Image as PILImage
 
-
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator, field_validator, field_serializer
 from sqlmodel import Field
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -36,8 +40,10 @@ class ToolCall(BaseModel):
 
 
 class ContentBlock(BaseModel):    
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
     text: Optional[_lstr_generic] = Field(default=None)
-    image: Optional[_lstr_generic] = Field(default=None)
+    image: Optional[Union[PILImage.Image, str, np.ndarray]] = Field(default=None)
     audio: Optional[_lstr_generic] = Field(default=None)
     tool_call: Optional[ToolCall] = Field(default=None)
     parsed: Optional[Union[Type[BaseModel], BaseModel]] = Field(default=None)
@@ -67,7 +73,7 @@ class ContentBlock(BaseModel):
         return None
 
     @classmethod
-    def coerce(cls, content: Union[str, ToolCall, ToolResult, BaseModel, "ContentBlock"]) -> ["ContentBlock"]:
+    def coerce(cls, content: Union[str, ToolCall, ToolResult, BaseModel, "ContentBlock", PILImage.Image, np.ndarray]) -> "ContentBlock":
         if isinstance(content, ContentBlock):
             return content
         if isinstance(content, str):
@@ -78,7 +84,61 @@ class ContentBlock(BaseModel):
             return cls(tool_result=content)
         if isinstance(content, BaseModel):
             return cls(parsed=content)
+        if isinstance(content, (PILImage.Image, np.ndarray)):
+
+            return cls(image=content)
         raise ValueError(f"Invalid content type: {type(content)}")
+
+    @field_validator('image')
+    @classmethod
+    def validate_image(cls, v):
+        if v is None:
+            return v
+        if isinstance(v, PILImage.Image):
+            return v
+        if isinstance(v, str):
+            try:
+                img_data = base64.b64decode(v)
+                img = PILImage.open(BytesIO(img_data))
+                if img.mode not in ('L', 'RGB', 'RGBA'):
+                    img = img.convert('RGB')
+                return img
+            except:
+                raise ValueError("Invalid base64 string for image")
+        if isinstance(v, np.ndarray):
+            if v.ndim == 3 and v.shape[2] in (3, 4):
+                mode = 'RGB' if v.shape[2] == 3 else 'RGBA'
+                return PILImage.fromarray(v, mode=mode)
+            else:
+                raise ValueError(f"Invalid numpy array shape for image: {v.shape}. Expected 3D array with 3 or 4 channels.")
+        raise ValueError(f"Invalid image type: {type(v)}")
+
+    @field_serializer('image')
+    def serialize_image(self, image: Optional[PILImage.Image], _info):
+        if image is None:
+            return None
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        return base64.b64encode(buffered.getvalue()).decode()
+    
+
+    def to_openai_content_block(self):
+        if self.image:
+            base64_image = self.serialize_image(self.image, None)
+            return {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/png;base64,{base64_image}"
+                }
+            }
+        elif self.text:
+            return {
+                "type": "text",
+                "text": self.text
+            }
+        else:
+            return None 
+        
 
 def coerce_content_list(content: Union[str, List[ContentBlock], List[Union[str, ContentBlock, ToolCall, ToolResult, BaseModel]]] = None, **content_block_kwargs) -> List[ContentBlock]:
     if not content:
@@ -128,11 +188,13 @@ class Message(BaseModel):
         return Message(role="user", content=content)
 
     def to_openai_message(self) -> Dict[str, Any]:
+
         message = {
             "role": "tool" if self.tool_results else self.role,
-            "content": self.text_only if self.text_only else None
+            "content": self.text_only if self.text_only else filter(None, [
+                c.to_openai_content_block() for c in self.content
+            ])
         }
-
         if self.tool_calls:
             message["tool_calls"] = [
                 {

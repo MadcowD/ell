@@ -37,6 +37,7 @@ if __name__ == "__main__":
         message_history.append(ell.user(user_message))
         response = limbo_chat_bot(message_history)
 
+        print(response)
         # print("Limbo: ", response[-1].content)
         message_history.append(response)    
 

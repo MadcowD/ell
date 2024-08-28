@@ -22,7 +22,8 @@ def get_html_content(
     """Get the HTML content of a URL."""
     response = requests.get("https://" + url)
     soup = BeautifulSoup(response.text, 'html.parser')
-    return soup.get_text()
+    # print(soup.get_text())~
+    return soup.get_text()[:100]
 
 
 @ell.complex(model="gpt-4o", tools=[get_html_content])
@@ -32,18 +33,14 @@ def summarize_website(website :str) -> str:
 
 
 if __name__ == "__main__":
-    output = summarize_website("nyt front page") # Message{[MessageContentBlock[function_call]]}
+    output = summarize_website("langchains website") # Message{[MessageContentBlock[function_call]]}
     print(output)
-    for content_block in output.content:
-        if content_block.text:
-            print(content_block.text)
-        if content_block.tool_call:
-            result = content_block.tool_call()
-            print(result)
+    if output.tool_calls:
+        tool_results = output.call_tools_and_collect_as_message()
 
-
-    
-
+    print(tool_results)
+    # print(output)
+   
 
     
 

@@ -103,10 +103,12 @@ class InvocationTrace(SQLModel, table=True):
     invocation_consuming_id: str = Field(foreign_key="invocation.id", primary_key=True, index=True)
 
 # Should be subtyped for differnet kidns of LMPS.
+# XXX: Move all ofh te binary data out to a different table.
+# XXX: Need a flag that says dont store images.
+# XXX: Deprecate the args columns
 class InvocationBase(SQLModel):
     id: Optional[str] = Field(default=None, primary_key=True)
     lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)
-    args: List[Any] = Field(default_factory=list, sa_column=Column(JSON))
     kwargs: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     global_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     free_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))

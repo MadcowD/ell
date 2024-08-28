@@ -24,3 +24,6 @@ def hello(world : str):
 
 if __name__ == "__main__":
     greeting = hello("sam altman") # > "hello sama! ... "
+
+    # List of strings
+    print(greeting.split(" ")[-1])
