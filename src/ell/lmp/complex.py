@@ -14,7 +14,7 @@ import openai
 from functools import wraps
 from typing import Any, Dict, Optional, List, Callable, Union
 
-def complex(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=False, tools: Optional[List[Callable]] = None, post_callback: Optional[Callable] = None, **lm_kwargs):
+def complex(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=False, tools: Optional[List[Callable]] = None, post_callback: Optional[Callable] = None, **api_params):
     """
     Defines a basic language model program (a parameterization of an existing foundation model using a particular prompt.)
 
@@ -36,7 +36,7 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
             _invocation_origin : str = None,
             client: Optional[openai.Client] = None,
             lm_params: Optional[LMPParams] = {},
-            invocation_kwargs=False,
+            invocation_api_params=False,
             **fn_kwargs,
         ) -> _lstr_generic:
             res = prompt(*fn_args, **fn_kwargs)
@@ -46,7 +46,7 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
 
             if config.verbose and not exempt_from_tracking: model_usage_logger_pre(prompt, fn_args, fn_kwargs, "notimplemented", messages, color)
 
-            (result, api_params, metadata) = call(model=model, messages=messages, lm_kwargs={**config.default_lm_params, **lm_kwargs, **lm_params}, client=client or default_client_from_decorator, _invocation_origin=_invocation_origin, _exempt_from_tracking=exempt_from_tracking, _logging_color=color, _name=prompt.__name__, tools=tools)
+            (result, _api_params, metadata) = call(model=model, messages=messages, api_params={**config.default_lm_params, **api_params, **lm_params}, client=client or default_client_from_decorator, _invocation_origin=_invocation_origin, _exempt_from_tracking=exempt_from_tracking, _logging_color=color, _name=prompt.__name__, tools=tools)
         
             result = post_callback(result) if post_callback else result
             
@@ -56,7 +56,7 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
 
   
         # TODO: # we'll deal with type safety here later
-        model_call.__ell_lm_kwargs__ = lm_kwargs
+        model_call.__ell_api_params__ = api_params
         model_call.__ell_func__ = prompt
         model_call.__ell_type__ = LMPType.LM
         model_call.__ell_exempt_from_tracking = exempt_from_tracking

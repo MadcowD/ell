@@ -66,8 +66,7 @@ class SerializedLMPBase(SQLModel):
     created_at: datetime = UTCTimestampField(index=True, nullable=False)
 
     lmp_type: LMPType
-    
-    lm_kwargs: Optional[Dict[str, Any]] = Field(default_factory=dict, sa_column=Column(JSON))
+    api_params: Optional[Dict[str, Any]] = Field(default_factory=dict, sa_column=Column(JSON))
     initial_free_vars: Optional[Dict[str, Any]] = Field(default_factory=dict, sa_column=Column(JSON))
     initial_global_vars: Optional[Dict[str, Any]] = Field(default_factory=dict, sa_column=Column(JSON))
     num_invocations: Optional[int] = Field(default=0)
@@ -117,7 +116,7 @@ class InvocationBase(SQLModel):
     completion_tokens: Optional[int] = Field(default=None)
     state_cache_key: Optional[str] = Field(default=None)
     created_at: datetime = UTCTimestampField(default=func.now(), nullable=False)
-    invocation_kwargs: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    invocation_api_params: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     used_by_id: Optional[str] = Field(default=None, foreign_key="invocation.id", index=True)
     results : Union[List[Message], Any] = Field(default_factory=list, sa_column=Column(JSON))
 

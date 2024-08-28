@@ -296,7 +296,7 @@ def make_a_rpg_character(name : str):
 What the this does is:
 """
 # structured_lm.py
-def json(schema : ell.Schema,**lm_kwargs):
+def json(schema : ell.Schema,**api_params):
     def decorator(func):
         def converted_lm_func():
             system_prompt, user_prompt =  func()
@@ -307,7 +307,7 @@ def json(schema : ell.Schema,**lm_kwargs):
             return new_system_prompt, user_prompt
 
         return retry(schema.parse(
-            ell.simple(**lm_kwargs)(converted_lm_func)), tries=3)
+            ell.simple(**api_params)(converted_lm_func)), tries=3)
         
     return decorator
 

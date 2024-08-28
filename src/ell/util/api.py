@@ -33,7 +33,7 @@ def call(
     *, 
     model: str,
     messages: list[Message],
-    lm_kwargs: Dict[str, Any],
+    api_params: Dict[str, Any],
     tools: Optional[list[LMP]] = None,
     client: Optional[openai.Client] = None,
     _invocation_origin : str,
@@ -54,14 +54,14 @@ def call(
         raise RuntimeError(_no_api_key_warning(model, _name, client, long=True, error=True))
 
     # todo: add suupport for streaming apis that dont give a final usage in the api
-    # print(lm_kwargs)
-    if lm_kwargs.get("response_format", False):
+    # print(api_params)
+    if api_params.get("response_format", False):
         model_call = client.beta.chat.completions.parse
-        lm_kwargs.pop("stream", None)
-        lm_kwargs.pop("stream_options", None)
+        api_params.pop("stream", None)
+        api_params.pop("stream_options", None)
     elif tools:
         model_call = client.chat.completions.create
-        lm_kwargs["tools"] = [
+        api_params["tools"] = [
             {
                 "type": "function",
                 "function": {
@@ -71,25 +71,25 @@ def call(
                 }
             } for tool in tools
         ]
-        lm_kwargs["tool_choice"] = "auto"
-        lm_kwargs.pop("stream", None)
-        lm_kwargs.pop("stream_options", None)
+        api_params["tool_choice"] = "auto"
+        api_params.pop("stream", None)
+        api_params.pop("stream_options", None)
     else:
         model_call = client.chat.completions.create
-        lm_kwargs["stream"] = True
-        lm_kwargs["stream_options"] = {"include_usage": True}
+        api_params["stream"] = True
+        api_params["stream_options"] = {"include_usage": True}
     
     client_safe_messages_messages = process_messages_for_client(messages, client)
-    # print(lm_kwargs)
+    # print(api_params)
     model_result = model_call(
-        model=model, messages=client_safe_messages_messages, **lm_kwargs
+        model=model, messages=client_safe_messages_messages, **api_params
     )
-    streaming = lm_kwargs.get("stream", False)
+    streaming = api_params.get("stream", False)
     if not streaming:
         model_result = [model_result]
 
     choices_progress = defaultdict(list)
-    n = lm_kwargs.get("n", 1)
+    n = api_params.get("n", 1)
 
     if config.verbose and not _exempt_from_tracking:
         model_usage_logger_post_start(_logging_color, n)
@@ -131,7 +131,7 @@ def call(
             if choice.refusal:
                 raise ValueError(choice.refusal)
                 # XXX: is this the best practice? try catch a parser?
-            if lm_kwargs.get("response_format", False):
+            if api_params.get("response_format", False):
                 content.append(ContentBlock(
                     parsed=choice.parsed
                 ))
@@ -160,6 +160,6 @@ def call(
             content=content
         ))
     
-    api_params = dict(model=model, messages=client_safe_messages_messages, lm_kwargs=lm_kwargs)
+    api_params = dict(model=model, messages=client_safe_messages_messages, api_params=api_params)
     
     return tracked_results[0] if n_choices == 1 else tracked_results, api_params, metadata

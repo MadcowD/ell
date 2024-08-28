@@ -110,7 +110,7 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
             # XXX: thread saftey note, if I prevent yielding right here and get the global context I should be fine re: cache key problem
 
             # get the prompt
-            (result, invocation_kwargs, metadata) = (
+            (result, invocation_api_params, metadata) = (
                 (func_to_track(*fn_args, **fn_kwargs), {}, {})
                 if lmp_type == LMPType.OTHER
                 else func_to_track(*fn_args, _invocation_origin=invocation_id, **fn_kwargs, )
@@ -133,7 +133,7 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
                 state_cache_key = compute_state_cache_key(ipstr, func_to_track.__ell_closure__)
 
             _write_invocation(func_to_track, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
-                            state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result, parent_invocation_id)
+                            state_cache_key, invocation_api_params, cleaned_invocation_params, consumes, result, parent_invocation_id)
 
             if _get_invocation_id:
                 return result, invocation_id
@@ -144,8 +144,8 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
 
 
     func_to_track.__wrapper__  = tracked_func
-    if hasattr(func_to_track, "__ell_lm_kwargs__"):
-        tracked_func.__ell_lm_kwargs__ = func_to_track.__ell_lm_kwargs__
+    if hasattr(func_to_track, "__ell_api_params__"):
+        tracked_func.__ell_api_params__ = func_to_track.__ell_api_params__
     if hasattr(func_to_track, "__ell_params_model__"):
         tracked_func.__ell_params_model__ = func_to_track.__ell_params_model__
     tracked_func.__ell_func__ = func_to_track
@@ -164,7 +164,7 @@ def _serialize_lmp(func):
     fn_closure = func.__ell_closure__
     lmp_type = func.__ell_type__
     name = func.__qualname__
-    lm_kwargs = getattr(func, "__ell_lm_kwargs__", None)
+    api_params = getattr(func, "__ell_api_params__", None)
 
     lmps = config._store.get_versions_by_fqn(fqn=name)
     version = 0
@@ -192,14 +192,14 @@ def _serialize_lmp(func):
             initial_global_vars=get_immutable_vars(fn_closure[2]),
             initial_free_vars=get_immutable_vars(fn_closure[3]),
             lmp_type=lmp_type,
-            lm_kwargs=lm_kwargs if lm_kwargs else None,
+            api_params=api_params if api_params else None,
             version_number=version,
         )
         config._store.write_lmp(serialized_lmp, [f.__ell_hash__ for f in func.__ell_uses__])
     func._has_serialized_lmp = True
 
 def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
-                     state_cache_key, invocation_kwargs, cleaned_invocation_params, consumes, result, parent_invocation_id):
+                     state_cache_key, invocation_api_params, cleaned_invocation_params, consumes, result, parent_invocation_id):
     
 
     invocation = Invocation(
@@ -212,7 +212,7 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
         state_cache_key=state_cache_key,
-        invocation_kwargs=invocation_kwargs,
+        invocation_api_params=invocation_api_params,
         params=cleaned_invocation_params,
         used_by_id=parent_invocation_id,
         results=result

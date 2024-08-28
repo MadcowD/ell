@@ -69,13 +69,13 @@ function LMPDetailsSidePanel({ lmp, uses, versionHistory }) {
           </div>
         </div>
 
-        {lmp.lm_kwargs && (
+        {lmp.api_params && (
           <div className="bg-card p-2 rounded">
             <h3 className="text-sm font-semibold text-card-foreground mb-1 flex items-center">
               <FiCode className="mr-1" size={14} /> LM Keywords
             </h3>
             <pre className="overflow-x-auto text-xs text-muted-foreground bg-muted p-1 rounded">
-              <code>{JSON.stringify(lmp.lm_kwargs, null, 2)}</code>
+              <code>{JSON.stringify(lmp.api_params, null, 2)}</code>
             </pre>
           </div>
         )}

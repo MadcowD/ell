@@ -17,7 +17,7 @@ class SerializedLMPUpdate(SQLModel):
     source: Optional[str] = None
     dependencies: Optional[str] = None
     is_lm: Optional[bool] = None
-    lm_kwargs: Optional[Dict[str, Any]] = None
+    api_params: Optional[Dict[str, Any]] = None
     initial_free_vars: Optional[Dict[str, Any]] = None
     initial_global_vars: Optional[Dict[str, Any]] = None
     commit_message: Optional[str] = None
@@ -40,7 +40,7 @@ class InvocationUpdate(SQLModel):
     prompt_tokens: Optional[int] = None
     completion_tokens: Optional[int] = None
     state_cache_key: Optional[str] = None
-    invocation_kwargs: Optional[Dict[str, Any]] = None
+    invocation_api_params: Optional[Dict[str, Any]] = None
 
 
 class SerializedLStrUpdate(SQLModel):

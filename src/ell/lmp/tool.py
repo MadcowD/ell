@@ -45,7 +45,7 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
 
             result = fn(*fn_args, **fn_kwargs)
 
-            _invocation_kwargs = dict(tool_kwargs=tool_kwargs)
+            _invocation_api_params = dict(tool_kwargs=tool_kwargs)
             
             # Here you might want to add logic for tracking the tool usage
             # Similar to how it's done in the lm decorator # Use _invocation_origin
@@ -73,9 +73,9 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
                         c.text = _lstr(c.parsed.model_dump_json(), _origin_trace=_invocation_origin)
                         c.parsed = None
                     assert not c.audio, "Audio in tool result"
-                return ToolResult(tool_call_id=_tool_call_id, result=content_results), _invocation_kwargs, {}
+                return ToolResult(tool_call_id=_tool_call_id, result=content_results), _invocation_api_params, {}
             else:
-                return result, _invocation_kwargs, {}
+                return result, _invocation_api_params, {}
 
 
         wrapper.__ell_tool_kwargs__ = tool_kwargs
