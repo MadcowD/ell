@@ -5,14 +5,14 @@ import { Card } from '../Card';
 import { getTimeAgo } from '../../utils/lmpUtils';
 import VersionBadge from '../VersionBadge';
 import { useNavigate } from 'react-router-dom';
-import { lstrCleanStringify } from '../../utils/lstrCleanStringify';
+
 import IORenderer from '../IORenderer';
 
 const mapInvocation = (invocation) => ({
   name: invocation.lmp?.name || 'Unknown',
   id: invocation.id,
-  input: lstrCleanStringify(invocation.contents?.params),
-  output: lstrCleanStringify(invocation.contents?.results.length === 1 ? invocation.contents?.results[0] : invocation.contents?.results),
+  input: (invocation.contents?.params),
+  output: (invocation.contents?.results.length === 1 ? invocation.contents?.results[0] : invocation.contents?.results),
   version: invocation.lmp.version_number + 1,
   created_at: new Date(invocation.created_at),
   children: [],

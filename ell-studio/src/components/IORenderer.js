@@ -54,6 +54,10 @@ const preprocessData = (data, currentLevel = 0, typeMatchLevel = 0) => {
 };
 
 const renderInline = (data, customRenderers) => {
+  if (data.__lstr) {
+    data = data.content;
+  }
+
   if (typeof data === 'object' && data !== null && 'type' in data) {
     const { type, ...rest } = data;
     const typeColor = {
@@ -100,6 +104,7 @@ const renderInline = (data, customRenderers) => {
   if (typeof data === 'object' && data !== null) {
     const isImage = data.__limage;
 
+
     if (isImage) {
       return (
          <img src={data.content} alt="PIL.Image" style={{display: 'inline-block', verticalAlign: 'middle', maxHeight: '1.5em'}} />
@@ -129,6 +134,10 @@ const renderInline = (data, customRenderers) => {
 };
 
 const renderNonInline = (data, customRenderers, level = 0, isArrayItem = false, postfix = '') => {
+  if (data.__lstr) {
+    data = data.content;
+  }
+
   if (typeof data === 'object' && data !== null && 'type' in data) {
     const { type, ...rest } = data;
     const typeColor = {
@@ -191,7 +200,7 @@ const renderNonInline = (data, customRenderers, level = 0, isArrayItem = false, 
           <img src={data.content} alt="Embedded Image" />
         </Indent>
       );
-    
+
     else 
       return (
         <>
@@ -211,6 +220,7 @@ const renderNonInline = (data, customRenderers, level = 0, isArrayItem = false, 
   }
   
   if (typeof data === 'string') {
+    
     if (data.includes('\n')) {
       const lines = data.split('\n');
       return (
@@ -247,7 +257,8 @@ const Indent = ({ children }) => (
   </div>
 );
 
-const IORenderer = ({ content, customRenderers = [], inline = true, typeMatchLevel = 0 }) => {
+const IORenderer = ({ content : content_obj, customRenderers = [], inline = true, typeMatchLevel = 0 }) => {
+  const content =  JSON.stringify(content_obj)
   try {
     const parsedContent = JSON.parse(content);
     const preprocessedContent = preprocessData(parsedContent, 0, typeMatchLevel);

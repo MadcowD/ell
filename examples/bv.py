@@ -28,11 +28,6 @@ def get_lmp(z = 10):
 
     return write_a_complete_python_class
 
-# class Agent:
-#     @ell.lm("gpt-4o-mini", temperature=0.1, max_tokens=6)
-#     def act(self, state :str):
-#         return [ell.system(f"""You are an AI!
-#         """), ell.user(state)]
 
 if __name__ == "__main__":
     ell.config.verbose = True
@@ -40,8 +35,3 @@ if __name__ == "__main__":
     # test[0] = "modified at execution :O"
     w = get_lmp(z=20)
     cls_Def = w("A class that represents a bank")
-    # another_serializeable_global.append("new value during execution")
-    # cls_Def = w("A class that represents a bank")
-
-    # a = Agent()
-    # a.act("Hello")

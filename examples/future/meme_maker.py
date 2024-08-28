@@ -9,7 +9,7 @@ ell.config.verbose = True
 # Load the cat meme image using PIL
 cat_meme_pil = Image.open(os.path.join(os.path.dirname(__file__), "catmeme.jpg"))
 
-@ell.complex(model="gpt-4o", temperature=0.5)
+@ell.simple(model="gpt-4o", temperature=0.5)
 def make_a_joke_about_the_image(image: Image.Image) -> str:
     return [
         ell.system("You are a comedian. Make a joke about the image."),

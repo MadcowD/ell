@@ -128,7 +128,7 @@ class ContentBlock(BaseModel):
             return {
                 "type": "image_url",
                 "image_url": {
-                    "url": f"data:image/png;base64,{base64_image}"
+                    "url": base64_image
                 }
             }
         elif self.text:
