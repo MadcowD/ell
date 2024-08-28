@@ -7,114 +7,98 @@ const typeMatchers = {
   Message: (data) => data && typeof data === 'object' && 'role' in data && 'content' in data,
 };
 
-const renderField = (key, value, customRenderers) => (
-  <React.Fragment key={key}>
-    <span className="text-sky-300">{key}</span>=<RecursiveObjectRenderer data={value} customRenderers={customRenderers} />
-  </React.Fragment>
-);
-
-const renderFields = (data, customRenderers) => (
-  Object.entries(data).map(([key, value], index, arr) => (
-    <React.Fragment key={key}>
-      {renderField(key, value, customRenderers)}
-      {index < arr.length - 1 && ', '}
-    </React.Fragment>
-  ))
-);
-
-const typeRenderers = {
-  ToolResult: (data, customRenderers) => (
-    <span className="text-gray-300">
-      <span className="text-blue-400">ToolResult</span>({renderFields(data, customRenderers)})
-    </span>
-  ),
-  ToolCall: (data, customRenderers) => (
-    <span className="text-gray-300">
-      <span className="text-purple-400">ToolCall</span>({renderFields(data, customRenderers)})
-    </span>
-  ),
-  ContentBlock: (data, customRenderers) => {
-    const type = Object.keys(data).find(key => ['text', 'image', 'audio', 'tool_call', 'parsed', 'tool_result'].includes(key));
-    return (
-      <span className="text-gray-300">
-        <span className="text-orange-400">ContentBlock</span>({renderField(type, data[type], customRenderers)})
-      </span>
-    );
-  },
-  Message: (data, customRenderers) => {
+const preprocessData = (data) => {
+  if (typeMatchers.Message(data)) {
     const { role, content } = data;
-    const renderContent = () => {
-      if (content.length === 1) {
-        const block = content[0];
-        const simpleTypes = ['text', 'image', 'audio'];
-        const simpleType = simpleTypes.find(type => block[type]);
-        if (simpleType) {
-          return <span className="text-green-300">"{block[simpleType]}"</span>;
-        }
-        const complexType = ['tool_call', 'parsed', 'tool_result'].find(type => block[type]);
-        if (complexType) {
-          return <RecursiveObjectRenderer data={block[complexType]} customRenderers={customRenderers} />;
-        }
+    if (content.length === 1) {
+      const block = content[0];
+      if (block.text) {
+        return { type: 'Message', role, content: block.text };
       }
-      return (
-        <span className="text-gray-300">
-          [{content.map((block, index) => (
-            <React.Fragment key={index}>
-              {index > 0 && ', '}
-              <RecursiveObjectRenderer data={block} customRenderers={customRenderers} />
-            </React.Fragment>
-          ))}]
-        </span>
-      );
-    };
-
-    return (
-      <span className="text-gray-300">
-        <span className="text-teal-400">Message</span>({renderContent()}, <span className="text-sky-300">role</span>=<span className="text-green-300">"{role}"</span>)
-      </span>
-    );
-  },
+      if (block.tool_call) {
+        return { type: 'Message', role, content: preprocessData(block.tool_call) };
+      }
+      const complexType = ['image', 'audio', 'parsed', 'tool_result'].find(type => block[type]);
+      if (complexType) {
+        return { type: 'Message', role, content: preprocessData(block[complexType]) };
+      }
+    }
+    return { type: 'Message', role, content: content.map(preprocessData) };
+  }
+  
+  if (typeMatchers.ContentBlock(data)) {
+    const contentType = Object.keys(data).find(key => ['text', 'image', 'audio', 'tool_call', 'parsed', 'tool_result'].includes(key));
+    return { type: 'ContentBlock', content: preprocessData(data[contentType]) };
+  }
+  
+  if (Array.isArray(data)) {
+    return data.map(preprocessData);
+  }
+  
+  if (typeof data === 'object' && data !== null) {
+    const typeRenderer = Object.entries(typeMatchers).find(([, matcher]) => matcher(data));
+    if (typeRenderer) {
+      const [type] = typeRenderer;
+      return { type, ...data };
+    }
+    return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, preprocessData(value)]));
+  }
+  
+  return data;
 };
 
-const RecursiveObjectRenderer = ({ data, customRenderers = [] }) => {
-  // Add type matchers to the custom renderers
-  const allRenderers = [
-    ...Object.entries(typeMatchers).map(([type, match]) => ({
-      match,
-      render: (data) => typeRenderers[type](data, customRenderers)
-    })),
-    ...customRenderers
-  ];
-
-  // Check if any custom renderer matches the current data
-  for (const { match, render } of allRenderers) {
-    if (match(data)) {
-      return render(data);
-    }
+const renderInline = (data, customRenderers) => {
+  if (typeof data === 'object' && data !== null && 'type' in data) {
+    const { type, ...rest } = data;
+    const typeColor = {
+      ToolResult: 'blue',
+      ToolCall: 'purple',
+      ContentBlock: 'orange',
+      Message: 'teal'
+    }[type];
+    
+    return (
+      <span className="text-gray-300">
+        <span className={`text-${typeColor}-400`}>{type}</span>(
+        {type === 'Message' ? (
+          <>
+            {renderInline(rest.content, customRenderers)},
+            <span className="text-sky-300">role</span>=<span className="text-green-300">"{rest.role}"</span>
+          </>
+        ) : (
+          Object.entries(rest).map(([key, value], index, arr) => (
+            <React.Fragment key={key}>
+              <span className="text-sky-300">{key}</span>=
+              {renderInline(value, customRenderers)}
+              {index < arr.length - 1 && ', '}
+            </React.Fragment>
+          ))
+        )}
+        )
+      </span>
+    );
   }
-
+  
   if (Array.isArray(data)) {
     return (
       <span className="text-gray-300">
-        [
-        {data.map((item, index) => (
+        [{data.map((item, index) => (
           <React.Fragment key={index}>
-            <RecursiveObjectRenderer data={item} customRenderers={customRenderers} />
-            {index < data.length - 1 && ', '}
+            {index > 0 && ', '}
+            {renderInline(item, customRenderers)}
           </React.Fragment>
-        ))}
-        ]
+        ))}]
       </span>
     );
   }
-
+  
   if (typeof data === 'object' && data !== null) {
     return (
       <span className="text-gray-300">
         {'{'}
         {Object.entries(data).map(([key, value], index, arr) => (
           <React.Fragment key={key}>
-            <span className="text-sky-300">{key}</span>: <RecursiveObjectRenderer data={value} customRenderers={customRenderers} />
+            <span className="text-sky-300">{key}</span>: {renderInline(value, customRenderers)}
             {index < arr.length - 1 && ', '}
           </React.Fragment>
         ))}
@@ -122,112 +106,130 @@ const RecursiveObjectRenderer = ({ data, customRenderers = [] }) => {
       </span>
     );
   }
-
+  
   if (typeof data === 'string') {
     return <span className="text-green-300">"{data}"</span>;
   }
+  
+  return <span className="text-yellow-300">{JSON.stringify(data)}</span>;
+};
 
-  if (typeof data === 'number') {
-    return <span className="text-yellow-300">{data}</span>;
+const renderNonInline = (data, customRenderers, level = 0, isArrayItem = false, postfix = '') => {
+  if (typeof data === 'object' && data !== null && 'type' in data) {
+    const { type, ...rest } = data;
+    const typeColor = {
+      ToolResult: 'blue',
+      ToolCall: 'purple',
+      ContentBlock: 'orange',
+      Message: 'teal'
+    }[type];
+    
+    return (
+      <div>
+        <span className={`text-${typeColor}-400`}>{type}</span>(
+        {type === 'Message' ? (
+          <>
+            <Indent level={level + 1}>
+              {renderNonInline(rest.content, customRenderers, level + 1, false, ',')}
+            </Indent>
+            <Indent level={level + 1}>
+              <span className="text-sky-300">role</span>: <span className="text-green-300">"{rest.role}"</span>
+            </Indent>
+          </>
+        ) : (
+          Object.entries(rest).map(([key, value], index, arr) => (
+            <React.Fragment key={key}>
+              <Indent level={level + 1}>
+                <span className="text-sky-300">{key}</span>: {
+                  renderNonInline(value, customRenderers, level + 1, false, index < arr.length - 1 ? ',' : '')
+                }
+              </Indent>
+            </React.Fragment>
+          ))
+        )}
+        <div>){postfix}</div>
+      </div>
+    );
   }
-
-  if (typeof data === 'boolean') {
-    return <span className="text-purple-300">{String(data)}</span>;
+  
+  if (Array.isArray(data)) {
+    return (
+      <>
+        {isArrayItem ? '[ ' : '['}
+        {data.map((item, index) => (
+          <React.Fragment key={index}>
+            <Indent level={level + 1}>
+              {renderNonInline(item, customRenderers, level + 1, true, index < data.length - 1 ? ',' : '')}
+            </Indent>
+          </React.Fragment>
+        ))}
+        <div>{isArrayItem ? ' ]' : ']'}{postfix}</div>
+      </>
+    );
   }
-
-  if (data === null) {
-    return <span className="text-red-300">null</span>;
+  
+  if (typeof data === 'object' && data !== null) {
+    return (
+      <>
+        {'{'}
+        {Object.entries(data).map(([key, value], index, arr) => (
+          <React.Fragment key={key}>
+            <Indent level={level + 1}>
+              <span className="text-sky-300">{key}</span>: {
+                renderNonInline(value, customRenderers, level + 1, false, index < arr.length - 1 ? ',' : '')
+              }
+            </Indent>
+          </React.Fragment>
+        ))}
+       <div>{'}'}{postfix}</div>
+      </>
+    );
   }
-
-  return <span className="text-gray-300">{JSON.stringify(data)}</span>;
+  
+  if (typeof data === 'string') {
+    if (data.includes('\n')) {
+      const lines = data.split('\n');
+      return (
+        <div>
+          <span className="text-green-300">"""</span>
+          {lines.map((line, index) => (
+            <div>
+              <span className="text-green-300">{line}</span>
+            </div>
+          ))}
+        <span className="text-green-300">"""</span>{postfix}
+        </div>
+      );
+    } else {
+      return (
+        <span>
+          <span className="text-green-300">"{data}"</span>{postfix}
+        </span>
+      );
+    }
+  }
+  
+  return (
+    <span>
+      {renderInline(data, customRenderers)}
+      {postfix}
+    </span>
+  );
 };
 
 const Indent = ({ level, children }) => (
-  <div style={{ marginLeft: `${level * 20}px` }}>{children}</div>
+  <div style={{ marginLeft: `${level * 7}px` }}>
+    <span>{children}</span>
+  </div>
 );
-
-const renderNonInline = (data, customRenderers, level = 0) => {
-  if (Array.isArray(data)) {
-    return (
-      <div>
-        [
-        {data.map((item, index) => (
-          <Indent key={index} level={level + 1}>
-            {renderNonInline(item, customRenderers, level + 1)}
-            {index < data.length - 1 && ','}
-          </Indent>
-        ))}
-        <Indent level={level}>]</Indent>
-      </div>
-    );
-  }
-
-  if (typeof data === 'object' && data !== null) {
-    const typeRenderer = Object.entries(typeMatchers).find(([, matcher]) => matcher(data));
-    if (typeRenderer) {
-      const [type] = typeRenderer;
-      return renderNonInlineType(type, data, customRenderers, level);
-    }
-
-    return (
-      <div>
-        {'{'}
-        {Object.entries(data).map(([key, value], index, arr) => (
-          <Indent key={key} level={level + 1}>
-            <span className="text-sky-300">{key}</span>: {renderNonInline(value, customRenderers, level + 1)}
-            {index < arr.length - 1 && ','}
-          </Indent>
-        ))}
-        <Indent level={level}>{'}'}</Indent>
-      </div>
-    );
-  }
-
-  return <span className="text-green-300">{JSON.stringify(data)}</span>;
-};
-
-const renderNonInlineType = (type, data, customRenderers, level) => {
-  const renderContent = () => {
-    if (type === 'Message') {
-      const { role, content } = data;
-      return (
-        <>
-          <Indent level={level + 1}>
-            {renderNonInline(content, customRenderers, level + 1)},
-          </Indent>
-          <Indent level={level + 1}>
-            <span className="text-sky-300">role</span>: <span className="text-green-300">"{role}"</span>
-          </Indent>
-        </>
-      );
-    }
-    return Object.entries(data).map(([key, value], index, arr) => (
-      <Indent key={key} level={level + 1}>
-        <span className="text-sky-300">{key}</span>: {renderNonInline(value, customRenderers, level + 1)}
-        {index < arr.length - 1 && ','}
-      </Indent>
-    ));
-  };
-
-  return (
-    <div>
-      <span className={`text-${type === 'ToolResult' ? 'blue' : type === 'ToolCall' ? 'purple' : type === 'ContentBlock' ? 'orange' : 'teal'}-400`}>{type}</span>(
-      {renderContent()}
-      <Indent level={level}>)</Indent>
-    </div>
-  );
-};
 
 const IORenderer = ({ content, customRenderers = [], inline = true }) => {
   try {
     const parsedContent = JSON.parse(content);
+    const preprocessedContent = preprocessData(parsedContent);
     return (
       <div className="text-sm font-mono">
-        {inline ? (
-          <RecursiveObjectRenderer data={parsedContent} customRenderers={customRenderers} />
-        ) : (
-          renderNonInline(parsedContent, customRenderers)
-        )}
+        {inline ? renderInline(preprocessedContent, customRenderers) : renderNonInline(preprocessedContent, customRenderers)}
       </div>
     );
   } catch {
