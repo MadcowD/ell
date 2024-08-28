@@ -70,11 +70,8 @@ def compute_state_cache_key(ipstr, fn_closure):
     return state_cache_key
 
 
-def prepare_invocation_params(fn_args, fn_kwargs):
-    invocation_params = dict(
-        args=(fn_args),
-        kwargs=(fn_kwargs),
-    )
+def prepare_invocation_params(params):
+    invocation_params = params
 
     cleaned_invocation_params = pydantic_ltype_aware_cattr.unstructure(invocation_params)
     

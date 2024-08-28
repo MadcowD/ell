@@ -7,21 +7,18 @@ const InvocationDataPane = ({ invocation }) => {
   const [inputExpanded, setInputExpanded] = useState(true);
   const [outputExpanded, setOutputExpanded] = useState(true);
 
-  const argsLines = useMemo(() => {
-    return invocation.args.length > 0 ? lstrCleanStringify(invocation.args, 1) : null;
-  }, [invocation.args]);
 
   const kwargsLines = useMemo(() => {
-    return lstrCleanStringify(invocation.kwargs, 1);
-  }, [invocation.kwargs]);
+    return lstrCleanStringify(invocation.params, 1);
+  }, [invocation.params]);
 
   const resultsLines = useMemo(() => {
     return lstrCleanStringify(invocation.results, 1);
   }, [invocation.results]);
 
   const hasKwargs = useMemo(() => {
-    return Object.keys(invocation.kwargs).length > 0;
-  }, [invocation.kwargs]);
+    return Object.keys(invocation.params).length > 0;
+  }, [invocation.params]);
 
   const hasResults = useMemo(() => {
     return Array.isArray(invocation.results) ? invocation.results.length > 0 : !!invocation.results;
@@ -29,20 +26,20 @@ const InvocationDataPane = ({ invocation }) => {
 
   // TODO: Properly implement collapse behaviour
   useEffect(() => {
-    if ((argsLines && argsLines.split('\n').length > 10) || (hasKwargs && kwargsLines.split('\n').length > 10)) {
+    if ((kwargsLines && kwargsLines.split('\n').length > 10) || (hasKwargs && kwargsLines.split('\n').length > 10)) {
       setInputExpanded(false);
     }
     if (hasResults && resultsLines.split('\n').length > 10) {
       setOutputExpanded(false);
     }
-  }, [argsLines, kwargsLines, resultsLines, hasKwargs, hasResults]);
+  }, [kwargsLines, resultsLines, hasKwargs, hasResults]);
 
   return (
     <div className="flex-grow p-4 overflow-y-auto w-[fullpx] hide-scrollbar">
       {hasKwargs && (
         <CodeSection
           title="Input"
-          raw={JSON.stringify(invocation.kwargs, null, 2)}
+          raw={JSON.stringify(invocation.params, null, 2)}
           showCode={inputExpanded}
           setShowCode={setInputExpanded}
           collapsedHeight={'300px'}
@@ -53,7 +50,7 @@ const InvocationDataPane = ({ invocation }) => {
           showCopyButton={true}
         >
           <div className="p-4">
-            <IORenderer content={lstrCleanStringify(invocation.kwargs, 1)} inline={false} />
+            <IORenderer content={lstrCleanStringify(invocation.params, 1)} inline={false} />
           </div>
         </CodeSection>
       )}

@@ -12,7 +12,7 @@ import IORenderer from '../IORenderer';
 const mapInvocation = (invocation) => ({
   name: invocation.lmp?.name || 'Unknown',
   id: invocation.id,
-  input: lstrCleanStringify(invocation.kwargs),
+  input: lstrCleanStringify(invocation.params),
   output: lstrCleanStringify(invocation.results.length === 1 ? invocation.results[0] : invocation.results),
   version: invocation.lmp.version_number + 1,
   created_at: new Date(invocation.created_at),

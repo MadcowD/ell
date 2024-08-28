@@ -109,7 +109,7 @@ class InvocationTrace(SQLModel, table=True):
 class InvocationBase(SQLModel):
     id: Optional[str] = Field(default=None, primary_key=True)
     lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)
-    kwargs: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    params: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     global_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     free_vars: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     latency_ms: float

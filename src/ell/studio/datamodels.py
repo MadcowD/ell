@@ -33,8 +33,7 @@ class InvocationCreate(InvocationBase):
     pass
 
 class InvocationUpdate(SQLModel):
-    args: Optional[List[Any]] = None
-    kwargs: Optional[Dict[str, Any]] = None
+    params: Optional[Dict[str, Any]] = None
     global_vars: Optional[Dict[str, Any]] = None
     free_vars: Optional[Dict[str, Any]] = None
     latency_ms: Optional[float] = None

@@ -75,7 +75,7 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
             all_kwargs = dict(bound_args.arguments)
 
             # Get the list of consumed lmps and clean the invocation params for serialization.
-            cleaned_invocation_params, ipstr, consumes = prepare_invocation_params([], all_kwargs)
+            cleaned_invocation_params, ipstr, consumes = prepare_invocation_params( all_kwargs)
 
             try_use_cache = hasattr(func_to_track.__wrapper__, "__ell_use_cache__")
 
@@ -213,8 +213,7 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         completion_tokens=completion_tokens,
         state_cache_key=state_cache_key,
         invocation_kwargs=invocation_kwargs,
-        args=[],  # We no longer use positional args
-        kwargs=cleaned_invocation_params.get('kwargs', {}),
+        params=cleaned_invocation_params,
         used_by_id=parent_invocation_id,
         results=result
     )
