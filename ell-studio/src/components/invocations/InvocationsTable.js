@@ -7,11 +7,12 @@ import VersionBadge from '../VersionBadge';
 import { useNavigate } from 'react-router-dom';
 import { lstrCleanStringify } from '../../utils/lstrCleanStringify';
 import { useTraces } from '../../hooks/useBackend';
+import IORenderer from '../IORenderer';
 
 const mapInvocation = (invocation) => ({
   name: invocation.lmp?.name || 'Unknown',
   id: invocation.id,
-  input: lstrCleanStringify(invocation.args.length === 1 ? invocation.args[0] : invocation.args),
+  input: lstrCleanStringify(invocation.kwargs),
   output: lstrCleanStringify(invocation.results.length === 1 ? invocation.results[0] : invocation.results),
   version: invocation.lmp.version_number + 1,
   created_at: new Date(invocation.created_at),
@@ -24,7 +25,6 @@ const mapInvocation = (invocation) => ({
 const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, onSelectTrace, currentlySelectedTrace, omitColumns = [], expandAll = false }) => {
   const navigate = useNavigate();
 
-
   const onClickLMP = useCallback(({lmp, id : invocationId}) => {
     navigate(`/lmp/${lmp.name}/${lmp.lmp_id}?i=${invocationId}`);
   }, [navigate]);
@@ -32,7 +32,6 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
   // const {data: traces} = useTraces(invocations?.map(i => i.lmp));  
 
   const isLoading = !invocations;
-
 
   const invocationTableData = useMemo(() => {
     if (!invocations) return [];
@@ -141,8 +140,8 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
       maxWidth: 150,
       sortable: true
     },
-    { header: 'Input', key: 'input', maxWidth: 300 },
-    { header: 'Output', key: 'output', render: (item) => `${item.output}...`, maxWidth: 600 },
+    { header: 'Input', key: 'input', maxWidth: 300, render: (item) => <IORenderer content={item.input} /> },
+    { header: 'Output', key: 'output', render: (item) => <IORenderer content={item.output} />, maxWidth: 600 },
     { 
       header: 'Start Time', 
       key: 'created_at', 
@@ -166,14 +165,11 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
     },
   ];
 
-
-
   const initialSortConfig = { key: 'created_at', direction: 'desc' };
 
   const hasNextPage = invocationTableData.length === pageSize;
 
   if (isLoading) return <div>Loading...</div>;
-
 
   return (
     <HierarchicalTable

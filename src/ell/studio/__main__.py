@@ -34,7 +34,7 @@ def main():
         async def serve_react_app(full_path: str):
             return FileResponse(os.path.join(static_dir, "index.html"))
 
-    db_path = os.path.join(args.storage_dir, "ell.db")
+    db_path = os.path.join(args.storage_dir)
 
     async def db_watcher(db_path, app):
         last_stat = None

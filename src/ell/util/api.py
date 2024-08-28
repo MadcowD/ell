@@ -131,7 +131,7 @@ def call(
             if choice.refusal:
                 raise ValueError(choice.refusal)
                 # XXX: is this the best practice? try catch a parser?
-            if choice.parsed:
+            if lm_kwargs.get("response_format", False):
                 content.append(ContentBlock(
                     parsed=choice.parsed
                 ))

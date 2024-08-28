@@ -4,15 +4,14 @@ from ell._lstr import _lstr
 from functools import cached_property
 
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlmodel import Field
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Type, Union
 _lstr_generic = Union[_lstr, str]
 InvocableTool = Callable[..., Union["ToolResult", _lstr_generic, List["ContentBlock"], ]]
-
 
 class ToolResult(BaseModel):
     tool_call_id: _lstr_generic
@@ -36,7 +35,7 @@ class ToolCall(BaseModel):
         return Message(role="user", content=[self.call_and_collect_as_message_block()])
 
 
-class ContentBlock(BaseModel):
+class ContentBlock(BaseModel):    
     text: Optional[_lstr_generic] = Field(default=None)
     image: Optional[_lstr_generic] = Field(default=None)
     audio: Optional[_lstr_generic] = Field(default=None)
@@ -93,6 +92,7 @@ def coerce_content_list(content: Union[str, List[ContentBlock], List[Union[str, 
 class Message(BaseModel):
     role: str
     content: List[ContentBlock]
+    
 
     def __init__(self, role, content: Union[str, List[ContentBlock], List[Union[str, ContentBlock, ToolCall, ToolResult, BaseModel]]] = None, **content_block_kwargs):
         content = coerce_content_list(content, **content_block_kwargs)

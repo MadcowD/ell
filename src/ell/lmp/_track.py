@@ -8,8 +8,6 @@ from ell._lstr import _lstr
 
 import inspect
 
-
-
 import secrets
 import time
 from datetime import datetime
@@ -54,7 +52,7 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
 
 
     @wraps(func_to_track)
-    def tracked_func(*fn_args,  _get_invocation_id=False, **fn_kwargs,) -> str:
+    def tracked_func(*fn_args, _get_invocation_id=False, **fn_kwargs) -> str:
         # XXX: Cache keys and global variable binding is not thread safe.
         # Compute the invocation id and hash the inputs for serialization.
         invocation_id = "invocation-" + secrets.token_hex(16)
@@ -66,8 +64,18 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
         parent_invocation_id = get_current_invocation()
         try:
             push_invocation(invocation_id)
-            # Get the list of consumed lmps and clean the invocation paramns for serialization.
-            cleaned_invocation_params, ipstr, consumes = prepare_invocation_params(fn_args, fn_kwargs)
+ 
+            # Convert all positional arguments to named keyword arguments
+            sig = inspect.signature(func_to_track)
+            # Filter out kwargs that are not in the function signature
+            filtered_kwargs = {k: v for k, v in fn_kwargs.items() if k in sig.parameters}
+            
+            bound_args = sig.bind(*fn_args, **filtered_kwargs)
+            bound_args.apply_defaults()
+            all_kwargs = dict(bound_args.arguments)
+
+            # Get the list of consumed lmps and clean the invocation params for serialization.
+            cleaned_invocation_params, ipstr, consumes = prepare_invocation_params([], all_kwargs)
 
             try_use_cache = hasattr(func_to_track.__wrapper__, "__ell_use_cache__")
 
@@ -82,7 +90,7 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
                 cache_store = func_to_track.__wrapper__.__ell_use_cache__
                 cached_invocations = cache_store.get_cached_invocations(func_to_track.__ell_hash__, state_cache_key)
                 
-
+        
                 if len(cached_invocations) > 0:
                     # TODO THis is bad?
                     results =  [d.deserialize() for  d in cached_invocations[0].results]
@@ -95,8 +103,8 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
                     # Todo: Unfiy this with the non-cached case. We should go through the same code pathway.
                 else:
                     logger.info(f"Attempted to use cache on {func_to_track.__qualname__} but it was not cached, or did not exist in the store. Refreshing cache...")
-            
-            
+        
+        
             _start_time = utc_now()
 
             # XXX: thread saftey note, if I prevent yielding right here and get the global context I should be fine re: cache key problem
@@ -205,7 +213,7 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         completion_tokens=completion_tokens,
         state_cache_key=state_cache_key,
         invocation_kwargs=invocation_kwargs,
-        args=cleaned_invocation_params.get('args', []),
+        args=[],  # We no longer use positional args
         kwargs=cleaned_invocation_params.get('kwargs', {}),
         used_by_id=parent_invocation_id,
         results=result

@@ -4,5 +4,5 @@ export const lstrCleanStringify = (obj_containing_lstrs, indentLevel = 2) => {
       return value.content;
     }
     return value;
-  }, indentLevel);
+  }, indentLevel)
 };
