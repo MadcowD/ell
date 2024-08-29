@@ -38,3 +38,4 @@ class InvocationsAggregate(BaseModel):
     # successful_invocations: int
     # success_rate: float
     graph_data: List[GraphDataPoint]
+

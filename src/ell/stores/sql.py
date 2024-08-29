@@ -17,11 +17,6 @@ from ell.util.serialization import pydantic_ltype_aware_cattr
 import gzip
 import json
 
-
-
-
-
-
 class SQLStore(ell.store.Store):
     def __init__(self, db_uri: str, has_blob_storage: bool = False):
         self.engine = create_engine(db_uri,
