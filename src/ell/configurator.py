@@ -95,7 +95,43 @@ class _Config:
 # Singleton instance
 config = _Config()
 
-# Todo: Is this the right way to expose global helpers.
+def init(
+    store: Optional[Union[Store, str]] = None,
+    verbose: bool = False,
+    autocommit: bool = True,
+    lazy_versioning: bool = True,
+    default_lm_params: Optional[Dict[str, Any]] = None,
+    default_system_prompt: Optional[str] = None,
+    default_openai_client: Optional[openai.Client] = None
+) -> None:
+    """
+    Initialize the ELL configuration with various settings.
+
+    Args:
+        verbose (bool): Set verbosity of ELL operations.
+        store (Union[Store, str], optional): Set the store for ELL. Can be a Store instance or a string path for SQLiteStore.
+        autocommit (bool): Set autocommit for the store operations.
+        lazy_versioning (bool): Enable or disable lazy versioning.
+        default_lm_params (Dict[str, Any], optional): Set default parameters for language models.
+        default_system_prompt (str, optional): Set the default system prompt.
+        default_openai_client (openai.Client, optional): Set the default OpenAI client.
+    """
+    config.verbose = verbose
+    config.lazy_versioning = lazy_versioning
+
+    if store is not None:
+        config.set_store(store, autocommit)
+
+    if default_lm_params is not None:
+        config.set_default_lm_params(**default_lm_params)
+
+    if default_system_prompt is not None:
+        config.set_default_system_prompt(default_system_prompt)
+
+    if default_openai_client is not None:
+        config.set_default_client(default_openai_client)
+
+# Existing helper functions
 @wraps(config.get_store)
 def get_store() -> Store:
     return config.get_store()
@@ -111,3 +147,5 @@ def set_default_lm_params(*args, **kwargs) -> None:
 @wraps(config.set_default_system_prompt)
 def set_default_system_prompt(*args, **kwargs) -> None:
     return config.set_default_system_prompt(*args, **kwargs)
+
+# You can add more helper functions here if needed
