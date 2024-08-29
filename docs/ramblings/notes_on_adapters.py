@@ -141,7 +141,7 @@ response = client.chat.completions.create(
 class ProviderMeta():
 from typing import List, Type
 
-from ell.types import MessageOrDict
+from ell.types.message import MessageOrDict
 
 class ProviderMeta(type):
     def __init__(cls, name, bases, attrs):

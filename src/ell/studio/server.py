@@ -3,13 +3,13 @@ from typing import Optional, Dict, Any
 from sqlmodel import Session
 from ell.stores.sql import PostgresStore, SQLiteStore
 from ell import __version__
-from fastapi import FastAPI, Query, HTTPException, Depends, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Query, HTTPException, Depends, Response, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import json
 from ell.studio.config import Config
 from ell.studio.connection_manager import ConnectionManager
-from ell.studio.datamodels import SerializedLMPWithUses
+from ell.studio.datamodels import InvocationPublicWithConsumes, SerializedLMPWithUses
 
 from ell.types import SerializedLMP
 from datetime import datetime, timedelta
@@ -108,7 +108,7 @@ def create_app(config:Config):
 
 
 
-    @app.get("/api/invocation/{invocation_id}")
+    @app.get("/api/invocation/{invocation_id}", response_model=InvocationPublicWithConsumes)
     def get_invocation(
         invocation_id: str,
         session: Session = Depends(get_session)
@@ -116,7 +116,7 @@ def create_app(config:Config):
         invocation = serializer.get_invocations(session, lmp_filters=dict(), filters={"id": invocation_id})[0]
         return invocation
 
-    @app.get("/api/invocations")
+    @app.get("/api/invocations", response_model=list[InvocationPublicWithConsumes])
     def get_invocations(
         id: Optional[str] = Query(None),
         hierarchical: Optional[bool] = Query(False),
@@ -154,13 +154,15 @@ def create_app(config:Config):
         traces = serializer.get_traces(session)
         return traces
 
-    @app.get("/api/traces/{invocation_id}")
-    def get_all_traces_leading_to(
-        invocation_id: str,
+
+
+    @app.get("/api/blob/{blob_id}", response_class=Response)
+    def get_blob(
+        blob_id: str,
         session: Session = Depends(get_session)
     ):
-        traces = serializer.get_all_traces_leading_to(session, invocation_id)
-        return traces
+        blob = serializer.read_external_blob(blob_id)
+        return Response(content=blob, media_type="application/json")
 
     @app.get("/api/lmp-history")
     def get_lmp_history(

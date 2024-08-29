@@ -5,7 +5,7 @@ from ell.stores.sql import SQLiteStore
 
 ell.config.verbose = True
 
-@ell.lm(model="gpt-4o-mini", temperature=0.1)
+@ell.simple(model="gpt-4o-mini", temperature=0.1)
 def generate_description(about : str):
     return [
         ell.system(f"""Provide a clear and concise description of what the issue is. Include any relevant information that helps to explain the problem. 
@@ -14,7 +14,7 @@ def generate_description(about : str):
         ell.user(f"Generate a issue description about {about}."),
     ]
 
-@ell.lm(model="gpt-4o-mini", temperature=0.1)
+@ell.simple(model="gpt-4o-mini", temperature=0.1)
 def generate_python_code_for_A_output_B(A: str, B: str = 'nothing'):
     return [
         ell.system(f"""You are a world-class python developer. Do not include code that can leak important privacy information that maybe of concern.
@@ -26,7 +26,7 @@ def generate_python_code_for_A_output_B(A: str, B: str = 'nothing'):
         ell.user(f"Write the python code for {A} and the code should have a local 'OUTPUT' as {B}. Only output the code and nothing else."),
     ]
 
-@ell.lm(model="gpt-4o", temperature=0.1)
+@ell.simple(model="gpt-4o", temperature=0.1)
 def generate_issue(
                     error: str,
                    ):

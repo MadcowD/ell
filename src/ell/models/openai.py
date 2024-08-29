@@ -43,11 +43,7 @@ default_client = None
 try:
     default_client = openai.Client()
 except openai.OpenAIError as e:
-    # TODO: Dont set default lcient if this is the case
-    import os
-    default_client = openai.Client(api_key=os.environ.get("OPENAI_API_KEY", ""))
+    pass
+
 register_openai_models(default_client)
 config._default_openai_client = default_client
-# assert openai.api_key is not None
-
-

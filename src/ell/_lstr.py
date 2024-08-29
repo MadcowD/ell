@@ -1,7 +1,6 @@
 """
 LM string that supports logits and keeps track of it's _origin_trace even after mutation.
 """
-
 import numpy as np
 from typing import (
     Optional,
@@ -16,9 +15,12 @@ from typing import (
     Callable,
 )
 from typing_extensions import override
+from pydantic import BaseModel, GetCoreSchemaHandler
+from pydantic_core import CoreSchema
 
+from pydantic_core import CoreSchema, core_schema
 
-class lstr(str):
+class _lstr(str):
     """
     A string class that supports logits and keeps track of its _origin_trace even after mutation.
     This class is designed to be used in prompt engineering libraries where it is essential to associate
@@ -94,8 +96,8 @@ class lstr(str):
         logits (np.ndarray, optional): The logits associated with this string. Defaults to None.
         _origin_trace (Union[str, FrozenSet[str]], optional): The _origin_trace(s) of this string. Defaults to None.
         """
-        instance = super(lstr, cls).__new__(cls, content)
-        instance._logits = logits
+        instance = super(_lstr, cls).__new__(cls, content)
+        # instance._logits = logits
         if isinstance(_origin_trace, str):
             instance.__origin_trace__ = frozenset({_origin_trace})
         else:
@@ -104,19 +106,45 @@ class lstr(str):
             )
         return instance
 
-    _logits: Optional[np.ndarray]
+    # _logits: Optional[np.ndarray]
     __origin_trace__: FrozenSet[str]
 
-    @property
-    def logits(self) -> Optional[np.ndarray]:
-        """
-        Get the logits associated with this lstr instance.
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        def validate_lstr(value):
+            if isinstance(value, dict) and value.get('__lstr', False):
+                content = value['content']
+                _origin_trace = value['__origin_trace__'].split(',')
+                return cls(content, _origin_trace=_origin_trace)
+            elif isinstance(value, str):
+                return cls(value)
+            elif isinstance(value, cls):
+                return value
+            else:
+                raise ValueError(f"Invalid value for lstr: {value}")
 
-        Returns:
-            Optional[np.ndarray]: The logits associated with this lstr instance, or None if no logits are available.
-        """
-        return self._logits
+        return core_schema.json_or_python_schema(
+            json_schema=core_schema.typed_dict_schema({
+                'content': core_schema.typed_dict_field(core_schema.str_schema()),
+                '__origin_trace__': core_schema.typed_dict_field(core_schema.str_schema()),
+                '__lstr': core_schema.typed_dict_field(core_schema.bool_schema()),
+            }),
+            python_schema=core_schema.union_schema([
+                core_schema.is_instance_schema(cls),
+                core_schema.no_info_plain_validator_function(validate_lstr),
+            ]),
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                lambda instance:  {
+                    "content": str(instance),
+                    "__origin_trace__": (instance.__origin_trace__),
+                    "__lstr": True
+                }
+            )
+        )
 
+    
     @property
     def _origin_trace(self) -> FrozenSet[str]:
         """
@@ -139,7 +167,7 @@ class lstr(str):
         """
         return super().__repr__()
 
-    def __add__(self, other: Union[str, "lstr"]) -> "lstr":
+    def __add__(self, other: Union[str, "_lstr"]) -> "_lstr":
         """
         Concatenate this lstr instance with another string or lstr instance.
 
@@ -149,18 +177,21 @@ class lstr(str):
         Returns:
             lstr: A new lstr instance containing the concatenated content, with the _origin_trace(s) updated accordingly.
         """
-        if type(other) is str:
-            new_content = super(lstr, self).__add__(other)
-            return lstr(new_content, None, self.__origin_trace__)
-        elif isinstance(other, lstr):
-            new_content = super(lstr, self).__add__(other)
-            new__origin_trace__ = self.__origin_trace__.union(other.__origin_trace__)
-            return lstr(new_content, None, new__origin_trace__)
-        return NotImplemented
+        new_content = super(_lstr, self).__add__(other)
+        self_origin = self.__origin_trace__
+        
+        if isinstance(other, _lstr):
+            new_origin = set(self_origin)
+            new_origin.update(other.__origin_trace__)
+            new_origin = frozenset(new_origin)
+        else:
+            new_origin = self_origin
+        
+        return _lstr(new_content, None, new_origin)
 
     def __mod__(
-        self, other: Union[str, "lstr", Tuple[Union[str, "lstr"], ...]]
-    ) -> "lstr":
+        self, other: Union[str, "_lstr", Tuple[Union[str, "_lstr"], ...]]
+    ) -> "_lstr":
         """
         Perform a modulo operation between this lstr instance and another string, lstr, or a tuple of strings and lstrs,
         tracing the operation by logging the operands and the result.
@@ -173,22 +204,22 @@ class lstr(str):
         """
         # If 'other' is a tuple, we need to handle each element
         if isinstance(other, tuple):
-            result_content = super(lstr, self).__mod__(tuple(str(o) for o in other))
+            result_content = super(_lstr, self).__mod__(tuple(str(o) for o in other))
             new__origin_trace__s = set(self.__origin_trace__)
             for item in other:
-                if isinstance(item, lstr):
+                if isinstance(item, _lstr):
                     new__origin_trace__s.update(item.__origin_trace__)
             new__origin_trace__ = frozenset(new__origin_trace__s)
         else:
-            result_content = super(lstr, self).__mod__(other)
-            if isinstance(other, lstr):
+            result_content = super(_lstr, self).__mod__(other)
+            if isinstance(other, _lstr):
                 new__origin_trace__ = self.__origin_trace__.union(other.__origin_trace__)
             else:
                 new__origin_trace__ = self.__origin_trace__
 
-        return lstr(result_content, None, new__origin_trace__)
+        return _lstr(result_content, None, new__origin_trace__)
 
-    def __mul__(self, other: SupportsIndex) -> "lstr":
+    def __mul__(self, other: SupportsIndex) -> "_lstr":
         """
         Perform a multiplication operation between this lstr instance and an integer or another lstr,
         tracing the operation by logging the operands and the result.
@@ -200,14 +231,14 @@ class lstr(str):
             lstr: A new lstr instance containing the result of the multiplication operation, with the _origin_trace(s) updated accordingly.
         """
         if isinstance(other, SupportsIndex):
-            result_content = super(lstr, self).__mul__(other)
+            result_content = super(_lstr, self).__mul__(other)
             new__origin_trace__ = self.__origin_trace__
         else:
             return NotImplemented
 
-        return lstr(result_content, None, new__origin_trace__)
+        return _lstr(result_content, None, new__origin_trace__)
 
-    def __rmul__(self, other: SupportsIndex) -> "lstr":
+    def __rmul__(self, other: SupportsIndex) -> "_lstr":
         """
         Perform a right multiplication operation between an integer or another lstr and this lstr instance,
         tracing the operation by logging the operands and the result.
@@ -220,7 +251,7 @@ class lstr(str):
         """
         return self.__mul__(other)  # Multiplication is commutative in this context
 
-    def __getitem__(self, key: Union[SupportsIndex, slice]) -> "lstr":
+    def __getitem__(self, key: Union[SupportsIndex, slice]) -> "_lstr":
         """
         Get a slice or index of this lstr instance.
 
@@ -230,14 +261,14 @@ class lstr(str):
         Returns:
             lstr: A new lstr instance containing the sliced or indexed content, with the _origin_trace(s) preserved.
         """
-        result = super(lstr, self).__getitem__(key)
+        result = super(_lstr, self).__getitem__(key)
         # This is a matter of opinon. I believe that when you Index into a language model output, you or divorcing the lodges of the indexed result from their contacts which produce them. Therefore, it is only reasonable to directly index into the lodges without changing the original context, and so any mutation on the string should invalidate the logits.
         # try:
         #     logit_subset = self._logits[key] if self._logits else None
         # except:
         #   logit_subset = None
         logit_subset = None
-        return lstr(result, logit_subset, self.__origin_trace__)
+        return _lstr(result, logit_subset, self.__origin_trace__)
 
     def __getattribute__(self, name: str) -> Union[Callable, Any]:
         """
@@ -260,7 +291,7 @@ class lstr(str):
         if name == "__class__":
             return type(self)
 
-        if callable(attr) and name not in lstr.__dict__:
+        if callable(attr) and name not in _lstr.__dict__:
 
             def wrapped(*args: Any, **kwargs: Any) -> Any:
                 result = attr(*args, **kwargs)
@@ -268,12 +299,12 @@ class lstr(str):
                 if isinstance(result, str):
                     _origin_traces = self.__origin_trace__
                     for arg in args:
-                        if isinstance(arg, lstr):
+                        if isinstance(arg, _lstr):
                             _origin_traces = _origin_traces.union(arg.__origin_trace__)
                     for key, value in kwargs.items():
-                        if isinstance(value, lstr):
+                        if isinstance(value, _lstr):
                             _origin_traces = _origin_traces.union(value.__origin_trace__)
-                    return lstr(result, None, _origin_traces)
+                    return _lstr(result, None, _origin_traces)
 
                 return result
 
@@ -282,7 +313,7 @@ class lstr(str):
         return attr
 
     @override
-    def join(self, iterable: Iterable[Union[str, "lstr"]]) -> "lstr":
+    def join(self, iterable: Iterable[Union[str, "_lstr"]]) -> "_lstr":
         """
         Join a sequence of strings or lstr instances into a single lstr instance.
 
@@ -293,17 +324,17 @@ class lstr(str):
             lstr: A new lstr instance containing the joined content, with the _origin_trace(s) updated accordingly.
         """
         parts = [str(item) for item in iterable]
-        new_content = super(lstr, self).join(parts)
+        new_content = super(_lstr, self).join(parts)
         new__origin_trace__ = self.__origin_trace__
         for item in iterable:
-            if isinstance(item, lstr):
+            if isinstance(item, _lstr):
                 new__origin_trace__ = new__origin_trace__.union(item.__origin_trace__)
-        return lstr(new_content, None, new__origin_trace__)
+        return _lstr(new_content, None, new__origin_trace__)
 
     @override
     def split(
-        self, sep: Optional[Union[str, "lstr"]] = None, maxsplit: SupportsIndex = -1
-    ) -> List["lstr"]:
+        self, sep: Optional[Union[str, "_lstr"]] = None, maxsplit: SupportsIndex = -1
+    ) -> List["_lstr"]:
         """
         Split this lstr instance into a list of lstr instances based on a separator.
 
@@ -314,12 +345,12 @@ class lstr(str):
         Returns:
             List["lstr"]: A list of lstr instances containing the split content, with the _origin_trace(s) preserved.
         """
-        return self._split_helper(super(lstr, self).split, sep, maxsplit)
+        return self._split_helper(super(_lstr, self).split, sep, maxsplit)
 
     @override
     def rsplit(
-        self, sep: Optional[Union[str, "lstr"]] = None, maxsplit: SupportsIndex = -1
-    ) -> List["lstr"]:
+        self, sep: Optional[Union[str, "_lstr"]] = None, maxsplit: SupportsIndex = -1
+    ) -> List["_lstr"]:
         """
         Split this lstr instance into a list of lstr instances based on a separator, starting from the right.
 
@@ -330,10 +361,10 @@ class lstr(str):
         Returns:
             List["lstr"]: A list of lstr instances containing the split content, with the _origin_trace(s) preserved.
         """
-        return self._split_helper(super(lstr, self).rsplit, sep, maxsplit)
+        return self._split_helper(super(_lstr, self).rsplit, sep, maxsplit)
 
     @override
-    def splitlines(self, keepends: bool = False) -> List["lstr"]:
+    def splitlines(self, keepends: bool = False) -> List["_lstr"]:
         """
         Split this lstr instance into a list of lstr instances based on line breaks.
 
@@ -344,12 +375,12 @@ class lstr(str):
             List["lstr"]: A list of lstr instances containing the split content, with the _origin_trace(s) preserved.
         """
         return [
-            lstr(p, None, self.__origin_trace__)
-            for p in super(lstr, self).splitlines(keepends=keepends)
+            _lstr(p, None, self.__origin_trace__)
+            for p in super(_lstr, self).splitlines(keepends=keepends)
         ]
 
     @override
-    def partition(self, sep: Union[str, "lstr"]) -> Tuple["lstr", "lstr", "lstr"]:
+    def partition(self, sep: Union[str, "_lstr"]) -> Tuple["_lstr", "_lstr", "_lstr"]:
         """
         Partition this lstr instance into three lstr instances based on a separator.
 
@@ -359,10 +390,10 @@ class lstr(str):
         Returns:
             Tuple["lstr", "lstr", "lstr"]: A tuple of three lstr instances containing the content before the separator, the separator itself, and the content after the separator, with the _origin_trace(s) updated accordingly.
         """
-        return self._partition_helper(super(lstr, self).partition, sep)
+        return self._partition_helper(super(_lstr, self).partition, sep)
 
     @override
-    def rpartition(self, sep: Union[str, "lstr"]) -> Tuple["lstr", "lstr", "lstr"]:
+    def rpartition(self, sep: Union[str, "_lstr"]) -> Tuple["_lstr", "_lstr", "_lstr"]:
         """
         Partition this lstr instance into three lstr instances based on a separator, starting from the right.
 
@@ -372,11 +403,11 @@ class lstr(str):
         Returns:
             Tuple["lstr", "lstr", "lstr"]: A tuple of three lstr instances containing the content before the separator, the separator itself, and the content after the separator, with the _origin_trace(s) updated accordingly.
         """
-        return self._partition_helper(super(lstr, self).rpartition, sep)
+        return self._partition_helper(super(_lstr, self).rpartition, sep)
 
     def _partition_helper(
-        self, method, sep: Union[str, "lstr"]
-    ) -> Tuple["lstr", "lstr", "lstr"]:
+        self, method, sep: Union[str, "_lstr"]
+    ) -> Tuple["_lstr", "_lstr", "_lstr"]:
         """
         Helper method for partitioning this lstr instance based on a separator.
 
@@ -390,21 +421,21 @@ class lstr(str):
         part1, part2, part3 = method(sep)
         new__origin_trace__ = (
             self.__origin_trace__ | sep.__origin_trace__
-            if isinstance(sep, lstr)
+            if isinstance(sep, _lstr)
             else self.__origin_trace__
         )
         return (
-            lstr(part1, None, new__origin_trace__),
-            lstr(part2, None, new__origin_trace__),
-            lstr(part3, None, new__origin_trace__),
+            _lstr(part1, None, new__origin_trace__),
+            _lstr(part2, None, new__origin_trace__),
+            _lstr(part3, None, new__origin_trace__),
         )
 
     def _split_helper(
         self,
         method,
-        sep: Optional[Union[str, "lstr"]] = None,
+        sep: Optional[Union[str, "_lstr"]] = None,
         maxsplit: SupportsIndex = -1,
-    ) -> List["lstr"]:
+    ) -> List["_lstr"]:
         """
         Helper method for splitting this lstr instance based on a separator.
 
@@ -418,8 +449,89 @@ class lstr(str):
         """
         _origin_traces = (
             self.__origin_trace__ | sep.__origin_trace__
-            if isinstance(sep, lstr)
+            if isinstance(sep, _lstr)
             else self.__origin_trace__
         )
         parts = method(sep, maxsplit)
-        return [lstr(part, None, _origin_traces) for part in parts]
+        return [_lstr(part, None, _origin_traces) for part in parts]
+
+
+if __name__ == "__main__":
+    import timeit
+    import random
+    import string
+
+    def generate_random_string(length):
+        return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+    def test_concatenation():
+        s1 = generate_random_string(1000)
+        s2 = generate_random_string(1000)
+        
+        lstr_time = timeit.timeit(lambda: _lstr(s1) + _lstr(s2), number=10000)
+        str_time = timeit.timeit(lambda: s1 + s2, number=10000)
+        
+        print(f"Concatenation: lstr: {lstr_time:.6f}s, str: {str_time:.6f}s")
+
+    def test_slicing():
+        s = generate_random_string(10000)
+        ls = _lstr(s)
+        
+        lstr_time = timeit.timeit(lambda: ls[1000:2000], number=10000)
+        str_time = timeit.timeit(lambda: s[1000:2000], number=10000)
+        
+        print(f"Slicing: lstr: {lstr_time:.6f}s, str: {str_time:.6f}s")
+
+    def test_splitting():
+        s = generate_random_string(10000)
+        ls = _lstr(s)
+        
+        lstr_time = timeit.timeit(lambda: ls.split(), number=1000)
+        str_time = timeit.timeit(lambda: s.split(), number=1000)
+        
+        print(f"Splitting: lstr: {lstr_time:.6f}s, str: {str_time:.6f}s")
+
+    def test_joining():
+        words = [generate_random_string(10) for _ in range(1000)]
+        lwords = [_lstr(word) for word in words]
+        
+        lstr_time = timeit.timeit(lambda: _lstr(' ').join(lwords), number=1000)
+        str_time = timeit.timeit(lambda: ' '.join(words), number=1000)
+        
+        print(f"Joining: lstr: {lstr_time:.6f}s, str: {str_time:.6f}s")
+
+    print("Running performance tests...")
+    test_concatenation()
+    test_slicing()
+    test_splitting()
+    test_joining()
+
+    import cProfile
+    import pstats
+    from io import StringIO
+
+    def test_add():
+        s1 = generate_random_string(1000)
+        s2 = generate_random_string(1000)
+        ls1 = _lstr(s1, None, "origin1")
+        ls2 = _lstr(s2, None, "origin2")
+        
+        for _ in range(100000):
+            result = ls1 + ls2
+
+    print("\nProfiling __add__ method:")
+    profiler = cProfile.Profile()
+    profiler.enable()
+    test_add()
+    profiler.disable()
+    
+    s = StringIO()
+    ps = pstats.Stats(profiler, stream=s).sort_stats('cumulative')
+    ps.print_stats(20)  # Print top 20 lines
+    print(s.getvalue())
+
+# if __name__ == "__main__":
+#     x = lstr("hello")
+#     y = lstr("world")
+#     z = x + y
+#     print(z)

@@ -14,7 +14,7 @@ class Test:
 test = # [Test object]
 
 import ell.caching
-@ell.lm("gpt-4-turbo", temperature=0.1, max_tokens=5)
+@ell.simple("gpt-4-turbo", temperature=0.1, max_tokens=5)
 def write_a_complete_python_class(user_spec : str):
     return [ell.system(f"""You are an expert python programmer capable of interpreting a user's spec and writing a python class to accomidate their request. You should document all your code, and you best practices.
     {CODE_INSTURCTIONS} {test.to_str()}

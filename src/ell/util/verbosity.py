@@ -4,10 +4,12 @@ import shutil
 import textwrap
 from typing import Dict, Tuple, List, Any, Optional
 from colorama import Fore, Style, init
-from ell.types import LMP, Message
+from ell.types import Message
 from ell.configurator import config
 import logging
 from functools import lru_cache
+
+from ell.types.message import LMP
 
 # Initialize colorama
 init(autoreset=True)
@@ -68,8 +70,8 @@ def print_wrapped_messages(messages: List[Message], max_role_length: int, color:
     wrapping_width = wrap_width or (terminal_width - len(prefix))
 
     for i, message in enumerate(messages):
-        role = message["role"]
-        text = message["content"]
+        role = message.role
+        text = message.content[0].text or "" # TODO: message repr
         role_color = SYSTEM_COLOR if role == "system" else USER_COLOR if role == "user" else ASSISTANT_COLOR
         
         role_line = f"{prefix}{role_color}{role.rjust(max_role_length)}: {RESET}"
@@ -107,7 +109,7 @@ def model_usage_logger_pre(
     print(f"{PIPE_COLOR}║ {BOLD}Prompt:{RESET}")
     print(f"{PIPE_COLOR}╟{'─' * (terminal_width - 2)}╢{RESET}")
 
-    max_role_length = max(len("assistant"), max(len(message["role"]) for message in messages))
+    max_role_length = max(len("assistant"), max(len(message.role) for message in messages))
     print_wrapped_messages(messages, max_role_length, color)
 
 def model_usage_logger_post_start(color: str = "", n: int = 1):
@@ -129,7 +131,7 @@ def model_usage_logger_post_intermediate(color: str = "", n: int = 1):
     subsequent_prefix = f"{PIPE_COLOR}│   {' ' * (len('assistant: '))}"
     chars_printed = len(subsequent_prefix)
 
-    def log_stream_chunk(stream_chunk: str):
+    def log_stream_chunk(stream_chunk: str, is_refusal: bool = False):
         nonlocal chars_printed
         if stream_chunk:
             lines = stream_chunk.split('\n')

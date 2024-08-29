@@ -1,71 +1,73 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { lstrCleanStringify } from '../../../utils/lstrCleanStringify';
+import React, { useState, useMemo } from "react";
 import { CodeSection } from '../../source/CodeSection';
+import IORenderer from '../../IORenderer';
+
+const SkeletonLoader = () => (
+  <div className="animate-pulse space-y-2">
+    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+    <div className="h-4 bg-gray-200 rounded"></div>
+    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+  </div>
+);
 
 const InvocationDataPane = ({ invocation }) => {
   const [inputExpanded, setInputExpanded] = useState(true);
   const [outputExpanded, setOutputExpanded] = useState(true);
 
-  const argsLines = useMemo(() => {
-    return invocation.args.length > 0 ? lstrCleanStringify(invocation.args, 1) : null;
-  }, [invocation.args]);
-
-  const kwargsLines = useMemo(() => {
-    return lstrCleanStringify(invocation.kwargs, 1);
-  }, [invocation.kwargs]);
+  const isExternalLoading = invocation.contents?.is_external && !invocation.contents?.is_external_loaded;
 
   const hasKwargs = useMemo(() => {
-    return Object.keys(invocation.kwargs).length > 0;
-  }, [invocation.kwargs]);
+    return typeof invocation.contents?.params === 'object' && 
+           invocation.contents?.params !== null && 
+           Object.keys(invocation.contents.params).length > 0;
+  }, [invocation.contents?.params]);
 
-  // TODO: Properly implement collapse behaviour
-  useEffect(() => {
-    if ((argsLines && argsLines.split('\n').length > 10) || (hasKwargs && kwargsLines.split('\n').length > 10)) {
-      setInputExpanded(false);
-    }
-  }, []);
+  const hasResults = useMemo(() => {
+    return Array.isArray(invocation.contents?.results) ? 
+           invocation.contents.results.length > 0 : 
+           invocation.contents?.results !== null && 
+           invocation.contents?.results !== undefined;
+  }, [invocation.contents?.results]);
+
+  const renderCodeSection = (title, content, expanded, setExpanded) => (
+    <CodeSection
+      title={title}
+      raw={isExternalLoading ? "Loading..." : JSON.stringify(content, null, 2)}
+      showCode={expanded}
+      setShowCode={setExpanded}
+      collapsedHeight={'300px'}
+      lines={1}
+      showLineNumbers={false}
+      offset={0}
+      enableFormatToggle={false}
+      showCopyButton={!isExternalLoading}
+    >
+      <div className="p-4">
+        {isExternalLoading ? (
+          <SkeletonLoader />
+        ) : (
+          <IORenderer content={content} typeMatchLevel={1} inline={false} />
+        )}
+      </div>
+    </CodeSection>
+  );
 
   return (
-    <div className="flex-grow p-4 overflow-y-auto w-[400px] hide-scrollbar">
-      {argsLines && (
-        <CodeSection
-          title="Args"
-          code={argsLines}
-          showCode={inputExpanded}
-          setShowCode={setInputExpanded}
-          collapsedHeight={'300px'}
-          lines={argsLines.split('\n').length}
-          language="json"
-          showLineNumbers={false}
-          enableFormatToggle={true}
-        />
-      )} 
-
-      {hasKwargs && (
-        <CodeSection
-          title="Kwargs"
-          code={kwargsLines}
-          showCode={inputExpanded}
-          setShowCode={setInputExpanded}
-          collapsedHeight={'300px'}
-          lines={kwargsLines.split('\n').length}
-          showLineNumbers={false}
-          enableFormatToggle={true}
-        />
+    <div className="flex-grow p-4 overflow-y-auto w-[fullpx] hide-scrollbar">
+      {(hasKwargs || isExternalLoading) && renderCodeSection(
+        "Input",
+        invocation.contents?.params,
+        inputExpanded,
+        setInputExpanded
       )}
 
-      {invocation.results.map((result, index) => (
-        <CodeSection
-          key={index}
-          title={`Output ${index + 1}`}
-          code={result.content}
-          showCode={outputExpanded}
-          setShowCode={setOutputExpanded}
-          lines={result.content.split('\n').length}
-          language="text"
-          showLineNumbers={false}
-        />
-      ))}
+      {(hasResults || isExternalLoading) && renderCodeSection(
+        "Results",
+        invocation.contents?.results,
+        outputExpanded,
+        setOutputExpanded
+      )}
     </div>
   );
 };

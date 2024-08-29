@@ -27,7 +27,7 @@ class VectorStore:
         ]
 
 
-@ell.lm(model="gpt-4o-mini")
+@ell.simple(model="gpt-4o-mini")
 def rag(query: str, context: str) -> str:
     """You are an AI assistant using Retrieval-Augmented Generation (RAG).
     RAG enhances your responses by retrieving relevant information from a knowledge base.

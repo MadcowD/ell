@@ -2,7 +2,7 @@ import dataclasses
 import random
 from typing import Callable, List, Tuple
 import ell
-from ell.lstr import lstr
+from ell._lstr import _lstr
 ell.config.verbose = True
 
 
@@ -10,13 +10,13 @@ ell.config.verbose = True
 # Option 0 (pythonic.)
 # This going to be NON Native to ell
 
-def parse_outputs(result : lstr) -> str:
+def parse_outputs(result : _lstr) -> str:
     name = result.split(":")[0]
     backstory = result.split(":")[1]
     return Personality(name, backstory)
 
 
-@ell.lm(model="gpt-4o-mini", temperature=1.0, output_parser=parse_outputs)
+@ell.simple(model="gpt-4o-mini", temperature=1.0, output_parser=parse_outputs)
 def create_random_personality():
     """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.
 
@@ -31,13 +31,13 @@ def get_personality():
 
 # Option 1.
 
-def parse_outputs(result : lstr) -> str:
+def parse_outputs(result : _lstr) -> str:
     name = result.split(":")[0]
     backstory = result.split(":")[1]
     return Personality(name, backstory)
 
 
-@ell.lm(model="gpt-4o-mini", temperature=1.0, output_parser=parse_outputs)
+@ell.simple(model="gpt-4o-mini", temperature=1.0, output_parser=parse_outputs)
 def create_random_personality():
     """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.
 
@@ -56,12 +56,12 @@ class Personality:
     backstory : str
 
     @staticmethod
-    def parse_outputs(result : lstr) -> str:
+    def parse_outputs(result : _lstr) -> str:
         name = result.split(":")[0]
         backstory = result.split(":")[1]
         return Personality(name, backstory)
 
-@ell.lm(model="gpt-4o-mini", temperature=1.0, output_parser=Personality.parse_outputs)
+@ell.simple(model="gpt-4o-mini", temperature=1.0, output_parser=Personality.parse_outputs)
 def create_random_personality():
     """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.
 
@@ -73,13 +73,13 @@ Backstory: <3 sentence backstory>'""" # System prompt
 
 # Option 3. Another decorator
 
-def parse_outputs(result : lstr) -> str:
+def parse_outputs(result : _lstr) -> str:
     name = result.split(":")[0]
     backstory = result.split(":")[1]
     return Personality(name, backstory)
 
 @ell.structure(parser=parse_outputs, retries=3)
-@ell.lm(model="gpt-4o-mini", temperature=1.0)
+@ell.simple(model="gpt-4o-mini", temperature=1.0)
 def create_random_personality():
     """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.
 
@@ -103,7 +103,7 @@ class PersonalitySchema(ell.Schema):
     name : str
     backstory : str
 
-    def parse_outputs(result : lstr) -> str:
+    def parse_outputs(result : _lstr) -> str:
         name = result.split(":")[0]
         backstory = result.split(":")[1]
         return Personality(name, backstory)
@@ -126,7 +126,7 @@ def create_random_personality():
 
 
 # or 
-def parser(result : lstr) -> OutputFormat:
+def parser(result : _lstr) -> OutputFormat:
     name = result.split(":")[0]
     backstory = result.split(":")[1]
     return OutputFormat(name, backstory)
@@ -134,7 +134,7 @@ def parser(result : lstr) -> OutputFormat:
 
 # 3. Define our LM we can use the format from our schema or something else
 @ell.structures(parserer=parser, retries=3)
-@ell.lm(model="gpt-4o-mini", temperature=1.0)
+@ell.simple(model="gpt-4o-mini", temperature=1.0)
 def create_random_personality():
     f"""Answer in the format {OutputFormat.get_format_prompt()}"""
 
@@ -159,7 +159,7 @@ def parser(pstr):
     return name, backstory
 
 @ell.structure(parserer=parser, retries=3)
-@ell.lm(model="gpt-4o-mini", temperature=1.0)
+@ell.simple(model="gpt-4o-mini", temperature=1.0)
 def create_random_personality():
     f"""Answer in the format {format}"""
 
@@ -169,7 +169,7 @@ def create_random_personality():
 ############################
 
 
-@ell.lm(model="gpt-4o-mini", temperature=1.0)
+@ell.simple(model="gpt-4o-mini", temperature=1.0)
 def create_random_personality_str():
     f"""Answer in the format {format}"""
 
@@ -197,7 +197,7 @@ def parser(pstr):
 
     return name, backstory
 
-@ell.lm(model="gpt-4o-mini", temperature=1.0, parser=parser)
+@ell.simple(model="gpt-4o-mini", temperature=1.0, parser=parser)
 def create_random_personality():
     f"""Answer in the format {format}"""
 
@@ -224,7 +224,7 @@ The whole conversation ultimatels boils down to if we decide to store strucutred
 
 If I have
 """
-@ell.lm(model="gpt-4o-mini", temperature=1.0, parser=parser)
+@ell.simple(model="gpt-4o-mini", temperature=1.0, parser=parser)
 def create_random_personality():
     f"""Answer in the format {format}"""
 
@@ -238,7 +238,7 @@ def parse_to_my_fucked_up_unserializable_format(pstr):
     return MyFuckedUpObject(pstr)
 
 @ell.structure(parser=parse_to_my_fucked_up_unserializable_format, retries=3)
-@ell.lm(model="gpt-4o-mini", temperature=1.0)
+@ell.simple(model="gpt-4o-mini", temperature=1.0)
 def create_random_personality():
     f"""Answer in the format {format}"""
 
@@ -255,7 +255,7 @@ Is there a utility to doing so. Do we have two types of invocations
 
 This is equivalent to the following
 """
-@ell.lm(model="gpt-4o-mini", temperature=1.0)
+@ell.simple(model="gpt-4o-mini", temperature=1.0)
 def create_random_personality():
     return "Come up with a backstory about " + random.choice(names_list)
 
@@ -296,7 +296,7 @@ def make_a_rpg_character(name : str):
 What the this does is:
 """
 # structured_lm.py
-def json(schema : ell.Schema,**lm_kwargs):
+def json(schema : ell.Schema,**api_params):
     def decorator(func):
         def converted_lm_func():
             system_prompt, user_prompt =  func()
@@ -307,13 +307,13 @@ def json(schema : ell.Schema,**lm_kwargs):
             return new_system_prompt, user_prompt
 
         return retry(schema.parse(
-            ell.lm(**lm_kwargs)(converted_lm_func)), tries=3)
+            ell.simple(**api_params)(converted_lm_func)), tries=3)
         
     return decorator
 
 # This does this:
 
-@ell.lm(model="gpt-4o-mini", temperature=1.0)
+@ell.simple(model="gpt-4o-mini", temperature=1.0)
 def internal_make_a_rpg_character(name : str):
     return [
         ell.system("You are a rpg character creator. You create rpg characters. You must respond only in JSON in the following format: " + {RPGSchema.get_format_prompt()}),
@@ -323,7 +323,7 @@ def internal_make_a_rpg_character(name : str):
 
 @ell.track
 @retry(tries=3)
-def parse(result : lstr):
+def parse(result : _lstr):
     return json.parse(result)
 
 

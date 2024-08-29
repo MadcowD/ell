@@ -12,13 +12,13 @@ import { LMPCardTitle } from '../depgraph/LMPCardTitle';
 
 const BoundedVariableWrapper = ({ children, selectedInvocation, content, initial_global_vars, initial_free_vars }) => {
   const var_name = content.split('=')[0].trim();
-  const invocationVars = selectedInvocation ? selectedInvocation.global_vars : initial_global_vars;
-  const invocationFreeVars = selectedInvocation ? selectedInvocation.free_vars : initial_free_vars;
+  const invocationVars = selectedInvocation ? selectedInvocation.contents?.global_vars : initial_global_vars;
+  const invocationFreeVars = selectedInvocation ? selectedInvocation.contents?.free_vars : initial_free_vars;
   const value = invocationVars?.[var_name] || invocationFreeVars?.[var_name];
 
   const isGlobal = var_name in invocationVars;
   const isFree = var_name in invocationFreeVars;
-  const formattedValue = `${var_name} = ${JSON.stringify(value).replace(/"<Object of type ([^>]+)>"/g, '<Object of type $1>')}`;
+  const formattedValue = `${var_name} = ${JSON.stringify(value)?.replace(/"<Object of type ([^>]+)>"/g, '<Object of type $1>')}`;
   
   return (
     <div className="relative rounded border border-gray-500 mt-2 py-2">
