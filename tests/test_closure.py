@@ -124,7 +124,6 @@ def test_lexical_closure_uses():
         return dependency_func() 
 
     
-    # main_func()
     assert isinstance(main_func.__ell_uses__, set)
     
     assert  dependency_func.__ell_hash__ in map(lambda x: x.__ell_hash__, main_func.__ell_uses__)
