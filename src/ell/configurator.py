@@ -54,16 +54,17 @@ class _Config:
     def get_client_for(self, model_name: str) -> Optional[openai.Client]:
         current_registry = self._local.stack[-1] if hasattr(self._local, 'stack') and self._local.stack else self.model_registry
         client = current_registry.get(model_name)
-        if client is None:
-            warning_message = f"Warning: A defualt provider for model '{model_name}' could not be found. Falling back to default OpenAI client from environment variables."
+        fallback = False
+        if model_name not in current_registry.keys():
+            warning_message = f"Warning: A default provider for model '{model_name}' could not be found. Falling back to default OpenAI client from environment variables."
             if self.verbose:
                 from colorama import Fore, Style
                 _config_logger.warning(f"{Fore.LIGHTYELLOW_EX}{warning_message}{Style.RESET_ALL}")
             else:
                 _config_logger.debug(warning_message)
             client = self._default_openai_client
-        
-        return client
+            fallback = True
+        return client, fallback
 
     def reset(self) -> None:
         with self._lock:

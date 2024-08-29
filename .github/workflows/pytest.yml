@@ -31,7 +31,5 @@ jobs:
         poetry install
     
     - name: Run pytest
-      env:
-        OPENAI_API_KEY: sk-fake-api-key-for-testing
       run: |
         poetry run pytest tests/

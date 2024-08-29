@@ -45,7 +45,12 @@ def call(
     Helper function to run the language model with the provided messages and parameters.
     """
     # Todo: Decide if the client specified via the context amanger default registry is the shit or if the cliennt specified via lmp invocation args are the hing.
-    client =   client or config.get_client_for(model)
+    if not client:
+        client, was_fallback = config.get_client_for(model)
+        if not client and not was_fallback:
+            # Someone registered you as None and you're trying to use this shit
+            raise RuntimeError(_no_api_key_warning(model, _name, '', long=True, error=True))
+            
     metadata = dict()
     if client is None:
         raise ValueError(f"No client found for model '{model}'. Ensure the model is registered using 'register_model' in 'config.py' or specify a client directly using the 'client' argument in the decorator or function call.")
