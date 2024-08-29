@@ -2,7 +2,7 @@ import pytest
 from datetime import datetime, timezone
 from sqlmodel import Session, select
 from ell.stores.sql import SQLStore, SerializedLMP
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, func
 
 from ell.types.lmp import LMPType
 from ell.types.lmp import utc_now
@@ -74,7 +74,6 @@ def test_write_lmp(sql_store: SQLStore):
     # Test that writing the same LMP again doesn't create a duplicate
 
     sql_store.write_lmp(SerializedLMP(lmp_id=lmp_id, name=name, source=source, dependencies=dependencies, lmp_type=LMPType.LM, api_params=api_params, version_number=version_number, initial_global_vars=global_vars, initial_free_vars=free_vars, commit_message=commit_message, created_at=created_at), uses)
-
     with Session(sql_store.engine) as session:
-        count = session.query(SerializedLMP).where(SerializedLMP.lmp_id == lmp_id).count()
+        count = session.exec(select(func.count()).where(SerializedLMP.lmp_id == lmp_id)).one()
         assert count == 1

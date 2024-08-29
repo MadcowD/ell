@@ -2,6 +2,8 @@ import pytest
 from pydantic import BaseModel
 import ell
 from src.ell.types.message import ContentBlock, ToolCall, ToolResult, Message
+import numpy as np
+from PIL import Image
 
 class DummyParams(BaseModel):
     param1: str
@@ -41,7 +43,7 @@ def test_content_block_coerce_base_model():
     result = ContentBlock.coerce(formatted_response)
     assert isinstance(result, ContentBlock)
     assert result.parsed == formatted_response
-    assert result.type == "formatted_response"
+    assert result.type == "parsed"
 
 def test_content_block_coerce_content_block():
     original_block = ContentBlock(text="Original content")
@@ -72,12 +74,19 @@ def test_message_coercion():
 def test_content_block_single_non_null():
     # Valid cases
     ContentBlock.model_validate(ContentBlock(text="Hello"))
-    ContentBlock.model_validate(ContentBlock(image="image.jpg"))
-    ContentBlock.model_validate(ContentBlock(audio="audio.mp3"))
+    # ContentBlock.model_validate(ContentBlock(image="image.jpg"))
+    # ContentBlock.model_validate(ContentBlock(audio="audio.mp3"))
     ContentBlock.model_validate(ContentBlock(tool_call=ToolCall(tool=dummy_tool, 
                                     params=DummyParams(param1="test", param2=42))))
     ContentBlock.model_validate(ContentBlock(parsed=DummyFormattedResponse(field1="test", field2=42)))
     ContentBlock.model_validate(ContentBlock(tool_result=ToolResult(tool_call_id="123", result=[ContentBlock(text="Tool result")])))
+
+    # New valid cases for image and audio
+    dummy_image = Image.new('RGB', (100, 100))
+    dummy_audio = np.array([0.1, 0.2, 0.3])
+
+    ContentBlock.model_validate(ContentBlock(image=dummy_image))
+    ContentBlock.model_validate(ContentBlock(audio=dummy_audio))
 
     # Invalid cases
     with pytest.raises(ValueError):
@@ -89,3 +98,29 @@ def test_content_block_single_non_null():
     
     with pytest.raises(ValueError):
         ContentBlock.model_validate(ContentBlock(image="image.jpg", audio="audio.mp3", parsed=DummyFormattedResponse(field1="test", field2=42)))
+
+    # New invalid cases for image and audio
+    with pytest.raises(ValueError):
+        ContentBlock.model_validate(ContentBlock(image="image.jpg"))
+    
+    with pytest.raises(ValueError):
+        ContentBlock.model_validate(ContentBlock(audio="audio.mp3"))
+
+# Add new tests for image and audio validation
+def test_content_block_image_validation():
+    valid_image = Image.new('RGB', (100, 100))
+    invalid_image = "image.jpg"
+
+    ContentBlock.model_validate(ContentBlock(image=valid_image))
+    
+    with pytest.raises(ValueError):
+        ContentBlock.model_validate(ContentBlock(image=invalid_image))
+
+def test_content_block_audio_validation():
+    valid_audio = np.array([0.1, 0.2, 0.3])
+    invalid_audio = "audio.mp3"
+
+    ContentBlock.model_validate(ContentBlock(audio=valid_audio))
+    
+    with pytest.raises(ValueError):
+        ContentBlock.model_validate(ContentBlock(audio=invalid_audio))

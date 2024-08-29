@@ -175,7 +175,3 @@ class Invocation(InvocationBase, table=True):
         Index('ix_invocation_created_at_latency_ms', 'created_at', 'latency_ms'),
         Index('ix_invocation_created_at_tokens', 'created_at', 'prompt_tokens', 'completion_tokens'),
     )
-
-# Update forward references
-Invocation.update_forward_refs()
-InvocationContents.update_forward_refs()
