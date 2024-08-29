@@ -154,14 +154,7 @@ def create_app(config:Config):
         traces = serializer.get_traces(session)
         return traces
 
-    @app.get("/api/traces/{invocation_id}")
-    def get_all_traces_leading_to(
-        invocation_id: str,
-        session: Session = Depends(get_session)
-    ):
-        traces = serializer.get_all_traces_leading_to(session, invocation_id)
-        return traces
-    
+
 
     @app.get("/api/blob/{blob_id}", response_class=Response)
     def get_blob(
