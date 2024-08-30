@@ -5,9 +5,93 @@ import openai
 from ell.lmp.complex import complex
 
 
-@wraps(complex)
 def simple(model: str, client: Optional[openai.Client] = None,  exempt_from_tracking=False, **api_params):
-    """a basic language model programming decorator for text only llm prompting."""
+    """
+    A basic language model programming decorator for text-only LLM outputs.
+
+    This decorator simplifies the process of creating Language Model Programs (LMPs) 
+    that return text-only outputs from language models, while supporting multimodal inputs.
+    It wraps the more complex 'complex' decorator, providing a streamlined interface for common use cases.
+
+    Args:
+        model (str): The name or identifier of the language model to use.
+        client (Optional[openai.Client]): An optional OpenAI client instance. If not provided, a default client will be used.
+        exempt_from_tracking (bool): If True, the LMP usage won't be tracked. Default is False.
+        **api_params: Additional keyword arguments to pass to the underlying API call.
+
+    Returns:
+        Callable: A decorator that can be applied to a function, transforming it into an LMP.
+
+    Functionality:
+    1. Simplifies LMP Creation:
+       - Provides a straightforward way to create LMPs with text-only outputs.
+       - Supports multimodal inputs (text, images, etc.) in the prompt.
+       - Automatically simplifies complex model responses to text-only format.
+
+    2. Integration with Language Models:
+       - Supports various language models through the 'model' parameter.
+       - Allows customization of API parameters for fine-tuned control.
+
+    3. Tracking and Monitoring:
+       - Integrates with ell's tracking system for monitoring LMP versions over time, usage and performance.
+
+    Usage:
+    The decorated function can return either a single prompt or a list of ell.Message objects:
+
+    @ell.simple(model="gpt-4", temperature=0.7)
+    def summarize_text(text: str) -> str:
+        '''You are an expert at summarizing text.''' # System prompt
+        return f"Please summarize the following text:\n\n{text}" # User prompt
+
+
+    @ell.simple(model="gpt-4", temperature=0.7)
+    def describe_image(image : PIL.Image.Image) -> List[ell.Message]:
+        '''Describe the contents of an image.''' # unused because we're returning a list of Messages
+        return [
+            # helper function for ell.Message(text="...", role="system")
+            ell.system("You are an AI trained to describe images."),
+            # helper function for ell.Message(content="...", role="user")
+            ell.user([ContentBlock(text="Describe this image in detail."), ContentBlock(image=image)]),
+        ]
+
+
+    image_description = describe_image(PIL.Image.open("https://example.com/image.jpg"))
+    print(image_description) 
+    # Output will be a string text-only description of the image
+
+    summary = summarize_text("Long text to summarize...")
+    print(summary)
+    # Output will be a text-only summary
+
+    Notes:
+    - This decorator is designed for text-only model outputs, but supports multimodal inputs.
+    - It simplifies complex responses from language models to text-only format, regardless of 
+      the model's capability for structured outputs, function calling, or multimodal outputs.
+    - For preserving complex model outputs (e.g., structured data, function calls, or multimodal 
+      outputs), use the @ell.complex decorator instead. @ell.complex returns a Message object (role='assistant')
+    - The decorated function can return a string or a list of ell.Message objects for more 
+      complex prompts, including multimodal inputs.
+    - If called with n > 1 in api_params, the wrapped LMP will return a list of strings for the n parallel outputs
+      of the model instead of just one string. Otherwise, it will return a single string.
+    - You can pass LM API parameters either in the decorator or when calling the decorated function.
+      Parameters passed during the function call will override those set in the decorator.
+
+    Example of passing LM API params:
+    @ell.simple(model="gpt-4", temperature=0.7)
+    def generate_story(prompt: str) -> str:
+        return f"Write a short story based on this prompt: {prompt}"
+
+    # Using default parameters
+    story1 = generate_story("A day in the life of a time traveler")
+
+    # Overriding parameters during function call
+    story2 = generate_story("An AI's first day of consciousness", lm_params={"temperature": 0.9, "max_tokens": 500})
+
+    See Also:
+    - ell.complex: For LMPs that preserve full structure of model responses, including multimodal outputs.
+    - ell.tool: For defining tools that can be used within complex LMPs.
+    - ell.studio: For visualizing and analyzing LMP executions.
+    """
     assert 'tools' not in api_params, "tools are not supported in lm decorator, use multimodal decorator instead"
     assert 'tool_choice' not in api_params, "tool_choice is not supported in lm decorator, use multimodal decorator instead"
     assert 'response_format' not in api_params, "response_format is not supported in lm decorator, use multimodal decorator instead"

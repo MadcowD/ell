@@ -1,10 +1,10 @@
 import logging
 import threading
 from ell.types import SerializedLMP, Invocation, InvocationTrace, InvocationContents
-from ell.types.lmp import LMPType, utc_now
+from ell.types.studio import LMPType, utc_now
 import ell.util.closure
 from ell.configurator import config
-from ell._lstr import _lstr
+from ell.types._lstr import _lstr
 
 import inspect
 

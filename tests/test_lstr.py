@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from ell._lstr import _lstr
+from ell.types._lstr import _lstr
 
 
 class TestLstr:

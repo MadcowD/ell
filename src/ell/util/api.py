@@ -5,7 +5,7 @@ import json
 from ell.configurator import config
 import openai
 from collections import defaultdict
-from ell._lstr import _lstr
+from ell.types._lstr import _lstr
 from ell.types import Message, ContentBlock, ToolCall
 
 

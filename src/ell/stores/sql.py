@@ -9,10 +9,10 @@ import cattrs
 import numpy as np
 from sqlalchemy.sql import text
 from ell.types import InvocationTrace, SerializedLMP, Invocation, InvocationContents
-from ell._lstr import _lstr
+from ell.types._lstr import _lstr
 from sqlalchemy import or_, func, and_, extract, FromClause
 from sqlalchemy.types import TypeDecorator, VARCHAR
-from ell.types.lmp import SerializedLMPUses, utc_now
+from ell.types.studio import SerializedLMPUses, utc_now
 from ell.util.serialization import pydantic_ltype_aware_cattr
 import gzip
 import json

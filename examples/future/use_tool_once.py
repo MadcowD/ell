@@ -7,7 +7,7 @@ import openai
 
 
 import ell.lmp.tool
-from ell._lstr import _lstr
+from ell.types._lstr import _lstr
 from ell.stores.sql import SQLiteStore
 
 ell.config.verbose = True

@@ -2,7 +2,7 @@ import dataclasses
 import random
 from typing import Callable, List, Tuple
 import ell
-from ell._lstr import _lstr
+from ell.types._lstr import _lstr
 ell.config.verbose = True
 
 

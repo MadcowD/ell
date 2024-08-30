@@ -4,8 +4,8 @@ from sqlmodel import Session, select
 from ell.stores.sql import SQLStore, SerializedLMP
 from sqlalchemy import Engine, create_engine, func
 
-from ell.types.lmp import LMPType
-from ell.types.lmp import utc_now
+from ell.types.studio import LMPType
+from ell.types.studio import utc_now
 
 @pytest.fixture
 def in_memory_db():

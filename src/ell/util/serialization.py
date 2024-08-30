@@ -8,7 +8,7 @@ import cattrs
 import numpy as np
 from pydantic import BaseModel
 import PIL
-from ell._lstr import _lstr
+from ell.types._lstr import _lstr
 
 
 pydantic_ltype_aware_cattr = cattrs.Converter()

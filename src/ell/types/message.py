@@ -1,6 +1,6 @@
 # todo: implement tracing for structured outs. this a v2 feature.
 import json
-from ell._lstr import _lstr
+from ell.types._lstr import _lstr
 from functools import cached_property
 from PIL.Image import Image
 import numpy as np

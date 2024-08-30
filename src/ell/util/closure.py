@@ -361,6 +361,47 @@ def get_referenced_names(code: str, module_name: str):
 CLOSURE_SOURCE: Dict[str, str] = {}
 
 def lexically_closured_source(func, forced_dependencies: Optional[Dict[str, Any]] = None):
+    """
+    Generate a lexically closured source for a given function.
+
+    This function takes a callable object (function, method, or class) and generates
+    a lexically closured source code. It captures all the dependencies, including
+    global variables, free variables, and nested functions, to create a self-contained
+    version of the function that can be executed independently.
+
+    Args:
+        func (Callable): The function or callable object to process.
+        forced_dependencies (Optional[Dict[str, Any]]): A dictionary of additional
+            dependencies to include in the closure. Keys are variable names, and
+            values are the corresponding objects.
+
+    Returns:
+        Tuple[str, Set[Any]]: A tuple containing two elements:
+            1. The lexically closured source code as a string.
+            2. A set of function objects that this closure uses.
+
+    Raises:
+        ValueError: If the input is not a callable object.
+
+    Example:
+        def outer(x):
+            y = 10
+            def inner():
+                return x + y
+            return inner
+
+        closured_source, uses = lexically_closured_source(outer)
+        print(closured_source)
+        # Output will include the source for both outer and inner functions,
+        # along with any necessary imports and variable definitions.
+
+    Note:
+        This function relies on the `lexical_closure` function to perform the
+        actual closure generation. It also uses the `__ell_closure__` attribute
+        of the function, which is expected to be set by the `lexical_closure` function.
+    """
+    if not callable(func):
+        raise ValueError("Input must be a callable object (function, method, or class).")
     _, fnclosure, uses = lexical_closure(func, initial_call=True, recursion_stack=[], forced_dependencies=forced_dependencies)
     return func.__ell_closure__, uses
 
