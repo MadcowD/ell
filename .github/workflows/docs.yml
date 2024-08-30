@@ -23,18 +23,18 @@ jobs:
         with:
             version: 1.5.1
         
-      - name: Install dependencies
+      - name: Install project dependencies
+        run: poetry install
+
+      - name: Install doc-specific dependencies
         run: |
-          poetry install
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r docs/requirements.txt  # Install any extra dependencies for your Sphinx docs
+          cd docs
+          poetry run pip install -r requirements.txt
 
       - name: Build the documentation
         run: |
           cd docs
-          make html  # Adjust this if you use a different build command
+          poetry run make html  # Use poetry run to ensure the correct environment is used
         env:
           SPHINXOPTS: "-W"  # Treat warnings as errors
 
