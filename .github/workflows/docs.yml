@@ -22,7 +22,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install sphinx
-          pip install -r docs/requirements.txt  # Install any extra dependencies for your Sphinx docs
+        #   pip install -r docs/requirements.txt  # Install any extra dependencies for your Sphinx docs
 
       - name: Build the documentation
         run: |
