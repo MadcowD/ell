@@ -24,14 +24,14 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
     It automatically extracts the tool's description and parameters from the function's
     docstring and type annotations, creating a structured representation for LMs to use.
 
-    Args:
-        exempt_from_tracking (bool): If True, the tool usage won't be tracked. Default is False.
-        **tool_kwargs: Additional keyword arguments for tool configuration.
-
-    Returns:
-        Callable: A wrapped version of the original function, usable as a tool by LMs.
+    :param exempt_from_tracking: If True, the tool usage won't be tracked. Default is False.
+    :type exempt_from_tracking: bool
+    :param tool_kwargs: Additional keyword arguments for tool configuration.
+    :return: A wrapped version of the original function, usable as a tool by LMs.
+    :rtype: Callable
 
     Requirements:
+
     - Function must have fully typed arguments (Pydantic-serializable).
     - Return value must be one of: str, JSON-serializable object, Pydantic model, or List[ContentBlock].
     - All parameters must have type annotations.
@@ -40,6 +40,7 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
     - Can only be used in LMPs with @ell.complex decorators
 
     Functionality:
+
     1. Metadata Extraction:
        - Uses function docstring as tool description.
        - Extracts parameter info from type annotations and docstring.
@@ -54,6 +55,7 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
        - Wraps results in appropriate types (e.g., _lstr) for tracking.
 
     Usage Modes:
+
     1. Normal Function Call:
        - Behaves like a regular Python function.
        - Example: result = my_tool(arg1="value", arg2=123)
@@ -64,65 +66,65 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
        - Example: result = my_tool(arg1="value", arg2=123, _tool_call_id="unique_id")
 
     Result Coercion:
+
     - String → ContentBlock(text=result)
     - Pydantic BaseModel → ContentBlock(parsed=result)
     - List[ContentBlock] → Used as-is
     - Other types → ContentBlock(text=json.dumps(result))
 
-    Example:
-    @ell.tool()
-    def create_claim_draft(
-        claim_details: str,
-        claim_type: str,
-        claim_amount: float,
-        claim_date: str = Field(description="Date format: YYYY-MM-DD")
-    ) -> str:
-        '''Create a claim draft. Returns the created claim ID.'''
-        return "12345"
+    Example::
 
-    For use in a complex LMP:
-    @ell.complex(model="gpt-4", tools=[create_claim_draft], temperature=0.1)
-    def insurance_chatbot(message_history: List[Message]) -> List[Message]:
-        # Chatbot implementation...
+        @ell.tool()
+        def create_claim_draft(
+            claim_details: str,
+            claim_type: str,
+            claim_amount: float,
+            claim_date: str = Field(description="Date format: YYYY-MM-DD")
+        ) -> str:
+            '''Create a claim draft. Returns the created claim ID.'''
+            return "12345"
 
-    x = insurance_chatbot([
-        ell.user("I crashed my car into a tree."),
-        ell.assistant("I'm sorry to hear that. Can you provide more details?"),
-        ell.user("The car is totaled and I need to file a claim. Happened on 2024-08-01. total value is like $5000")
-    ]) 
-    print(x)
-    '''ell.Message(content=[
-        ContentBlock(tool_call(
-            tool_call_id="asdas4e",
-            tool_fn=create_claim_draft,
-            input=create_claim_draftParams({
-                claim_details="The car is totaled and I need to file a claim. Happened on 2024-08-01. total value is like $5000",
-                claim_type="car",
-                claim_amount=5000,
-                claim_date="2024-08-01"
-            })
-        ))
-    ], role='assistant')'''
-    
-    if x.tool_calls:
-        next_user_message = response_message.call_tools_and_collect_as_message()
-        # This actually calls create_claim_draft
-        print(next_user_message)
-        '''
-        ell.Message(content=[
-            ContentBlock(tool_result=ToolResult(
+        # For use in a complex LMP:
+        @ell.complex(model="gpt-4", tools=[create_claim_draft], temperature=0.1)
+        def insurance_chatbot(message_history: List[Message]) -> List[Message]:
+            # Chatbot implementation...
+
+        x = insurance_chatbot([
+            ell.user("I crashed my car into a tree."),
+            ell.assistant("I'm sorry to hear that. Can you provide more details?"),
+            ell.user("The car is totaled and I need to file a claim. Happened on 2024-08-01. total value is like $5000")
+        ]) 
+        print(x)
+        '''ell.Message(content=[
+            ContentBlock(tool_call(
                 tool_call_id="asdas4e",
-                result=[ContentBlock(text="12345")]
+                tool_fn=create_claim_draft,
+                input=create_claim_draftParams({
+                    claim_details="The car is totaled and I need to file a claim. Happened on 2024-08-01. total value is like $5000",
+                    claim_type="car",
+                    claim_amount=5000,
+                    claim_date="2024-08-01"
+                })
             ))
-        ], role='user')
-        '''
-        y = insurance_chatbot(message_history + [x, next_user_message])
-        print(y)
-        '''
-        ell.Message("I've filed that for you!", role='assistant')
-        '''
-
-
+        ], role='assistant')'''
+        
+        if x.tool_calls:
+            next_user_message = response_message.call_tools_and_collect_as_message()
+            # This actually calls create_claim_draft
+            print(next_user_message)
+            '''
+            ell.Message(content=[
+                ContentBlock(tool_result=ToolResult(
+                    tool_call_id="asdas4e",
+                    result=[ContentBlock(text="12345")]
+                ))
+            ], role='user')
+            '''
+            y = insurance_chatbot(message_history + [x, next_user_message])
+            print(y)
+            '''
+            ell.Message("I've filed that for you!", role='assistant')
+            '''
 
     Note:
     - Tools are integrated into LMP calls via the 'tools' parameter in @ell.complex.

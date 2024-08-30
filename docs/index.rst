@@ -36,5 +36,4 @@ Contents
    :maxdepth: 2
    :caption: Contents:
 
-   ell
    reference/index

@@ -7,22 +7,25 @@ and interaction with language models. It is built on the principles that
 prompts are programs, not just strings, and that every interaction with a
 language model is valuable.
 
-Key Features:
--------------
+Key Features
+------------
+
 1. Functional approach to prompt engineering
 2. Visualization, tracking, and versioning of prompts using ell-studio
 3. Support for various storage backends (SQLite, PostgreSQL)
 4. Integration with popular language models
 
-Main Components:
-----------------
+Main Components
+---------------
+
 - Language Model Programs (LMPs): Discrete subroutines for interacting with language models
 - Storage backends: For persisting and analyzing interactions
 - ell-studio: A visualization tool for tracking prompt engineering processes
 
-Example Usage:
---------------
-Here's a simple example of how to use ell:
+Example Usage
+-------------
+
+Here's a simple example of how to use ell::
 
     import ell
 
@@ -43,10 +46,11 @@ Here's a simple example of how to use ell:
     # Run in terminal: python -m ell.studio --storage-dir ./my_project
 
 For more detailed information, refer to the specific module documentation:
-- ell.lmp: Language Model Program decorators and utilities
-- ell.types: Type definitions for messages and content blocks
-- ell.models: Supported language models
-- ell.configurator: Configuration utilities
+
+- ``ell.lmp``: Language Model Program decorators and utilities
+- ``ell.types``: Type definitions for messages and content blocks
+- ``ell.models``: Supported language models
+- ``ell.configurator``: Configuration utilities
 
 """
 

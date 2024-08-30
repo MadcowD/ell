@@ -22,25 +22,40 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
     multi-turn conversations, tool usage, and various output formats. It's designed for advanced
     use cases where full control over the LLM's capabilities is needed.
 
-    Args:
-        model (str): The name or identifier of the language model to use.
-        client (Optional[openai.Client]): An optional OpenAI client instance. If not provided, a default client will be used.
-        tools (Optional[List[Callable]]): A list of tool functions that can be used by the LLM. Only available for certain models.
-        response_format (Optional[Dict[str, Any]]): The response format for the LLM. Only available for certain models.
-        n (Optional[int]): The number of responses to generate for the LLM. Only available for certain models. 
-        temperature (Optional[float]): The temperature parameter for controlling the randomness of the LLM. 
-        max_tokens (Optional[int]): The maximum number of tokens to generate for the LLM.
-        top_p (Optional[float]): The top-p sampling parameter for controlling the diversity of the LLM.
-        frequency_penalty (Optional[float]): The frequency penalty parameter for controlling the LLM's repetition.
-        presence_penalty (Optional[float]): The presence penalty parameter for controlling the LLM's relevance.
-        stop (Optional[List[str]]): The stop sequence for the LLM.
-        exempt_from_tracking (bool): If True, the LMP usage won't be tracked. Default is False.
-        **api_params: Additional keyword arguments to pass to the underlying API call.
+    :param model: The name or identifier of the language model to use.
+    :type model: str
+    :param client: An optional OpenAI client instance. If not provided, a default client will be used.
+    :type client: Optional[openai.Client]
+    :param tools: A list of tool functions that can be used by the LLM. Only available for certain models.
+    :type tools: Optional[List[Callable]]
+    :param response_format: The response format for the LLM. Only available for certain models.
+    :type response_format: Optional[Dict[str, Any]]
+    :param n: The number of responses to generate for the LLM. Only available for certain models.
+    :type n: Optional[int]
+    :param temperature: The temperature parameter for controlling the randomness of the LLM.
+    :type temperature: Optional[float]
+    :param max_tokens: The maximum number of tokens to generate for the LLM.
+    :type max_tokens: Optional[int]
+    :param top_p: The top-p sampling parameter for controlling the diversity of the LLM.
+    :type top_p: Optional[float]
+    :param frequency_penalty: The frequency penalty parameter for controlling the LLM's repetition.
+    :type frequency_penalty: Optional[float]
+    :param presence_penalty: The presence penalty parameter for controlling the LLM's relevance.
+    :type presence_penalty: Optional[float]
+    :param stop: The stop sequence for the LLM.
+    :type stop: Optional[List[str]]
+    :param exempt_from_tracking: If True, the LMP usage won't be tracked. Default is False.
+    :type exempt_from_tracking: bool
+    :param post_callback: An optional function to process the LLM's output before returning.
+    :type post_callback: Optional[Callable]
+    :param api_params: Additional keyword arguments to pass to the underlying API call.
+    :type api_params: Any
 
-    Returns:
-        Callable: A decorator that can be applied to a function, transforming it into a complex LMP.
+    :return: A decorator that can be applied to a function, transforming it into a complex LMP.
+    :rtype: Callable
 
     Functionality:
+
     1. Advanced LMP Creation:
        - Supports multi-turn conversations and stateful interactions.
        - Enables tool usage within the LLM context.
@@ -61,6 +76,9 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
     Usage Modes and Examples:
 
     1. Basic Prompt:
+
+    .. code-block:: python
+
        @ell.complex(model="gpt-4")
        def generate_story(prompt: str) -> List[Message]:
            '''You are a creative story writer''' # System prompt
@@ -72,6 +90,9 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
        print(story.text)  # Access the text content of the last message
 
     2. Multi-turn Conversation:
+
+    .. code-block:: python
+
        @ell.complex(model="gpt-4")
        def chat_bot(message_history: List[Message]) -> List[Message]:
            return [
@@ -87,6 +108,9 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
        print(response.text)  # Print the assistant's response
 
     3. Tool Usage:
+
+    .. code-block:: python
+
        @ell.tool()
        def get_weather(location: str) -> str:
            # Implementation to fetch weather
@@ -112,6 +136,9 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
            print("Final response:", final_response.text)
 
     4. Structured Output:
+
+    .. code-block:: python
+
        from pydantic import BaseModel
 
        class PersonInfo(BaseModel):
@@ -131,6 +158,9 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
        print(f"Name: {person_info.name}, Age: {person_info.age}")
 
     5. Multimodal Input:
+
+    .. code-block:: python
+
        @ell.complex(model="gpt-4-vision-preview")
        def describe_image(image: PIL.Image.Image) -> List[Message]:
            return [
@@ -146,7 +176,10 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
        print(description.text)
 
     6. Parallel Tool Execution:
-       @ell.complex(model="gpt-4", tools=[tool1, tool2, tool3], )
+
+    .. code-block:: python
+
+       @ell.complex(model="gpt-4", tools=[tool1, tool2, tool3])
        def parallel_assistant(message_history: List[Message]) -> List[Message]:
            return [
                ell.system("You can use multiple tools in parallel."),
@@ -158,6 +191,7 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
            print("Parallel tool results:", tool_results.text)
 
     Helper Functions for Output Processing:
+
     - response.text: Get the full text content of the last message.
     - response.text_only: Get only the text content, excluding non-text elements.
     - response.tool_calls: Access the list of tool calls in the message.
@@ -167,6 +201,7 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
     - Message(role="user", content=[...]).to_openai_message(): Convert to OpenAI API format.
 
     Notes:
+
     - The decorated function should return a list of Message objects.
     - For tool usage, ensure that tools are properly decorated with @ell.tool().
     - When using structured outputs, specify the response_format in the decorator.
@@ -174,6 +209,7 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
     - Use helper functions and properties to easily access and process different types of outputs.
 
     See Also:
+
     - ell.simple: For simpler text-only LMP interactions.
     - ell.tool: For defining tools that can be used within complex LMPs.
     - ell.studio: For visualizing and analyzing LMP executions.
