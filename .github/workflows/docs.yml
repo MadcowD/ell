@@ -5,6 +5,10 @@ on:
     branches:
       - main  # Trigger the workflow only on pushes to the main branch
 
+# Add this permissions block
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
