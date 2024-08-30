@@ -24,7 +24,7 @@ def capture_webcam_image():
     return None
 
 if __name__ == "__main__":
-    ell.set_store('sqlite_example', autocommit=True)
+    ell.set_store('./logdir', autocommit=True)
     
     print("Press Ctrl+C to stop the program.")
     try:

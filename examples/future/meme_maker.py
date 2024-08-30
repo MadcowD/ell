@@ -18,6 +18,6 @@ def make_a_joke_about_the_image(image: Image.Image) -> str:
 
 
 if __name__ == "__main__":
-    ell.set_store('sqlite_example', autocommit=True)
+    ell.set_store('./logdir', autocommit=True)
     joke = make_a_joke_about_the_image(cat_meme_pil)
     print(joke)

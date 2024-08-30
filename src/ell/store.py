@@ -6,15 +6,28 @@ from ell.types._lstr import _lstr
 from ell.types import SerializedLMP, Invocation
 from ell.types.message import InvocableLM
 
+class BlobStore(ABC):
+    @abstractmethod
+    def store_blob(self, blob: bytes, metadata: Optional[Dict[str, Any]] = None) -> str:
+        """Store a blob and return its identifier."""
+        pass
+
+    @abstractmethod
+    def retrieve_blob(self, blob_id: str) -> bytes:
+        """Retrieve a blob by its identifier."""
+        pass
 
 class Store(ABC):
     """
     Abstract base class for serializers. Defines the interface for serializing and deserializing LMPs and invocations.
     """
 
-    def __init__(self, has_blob_storage: bool = False):
-        self.has_blob_storage = has_blob_storage
+    def __init__(self, blob_store: Optional[BlobStore] = None):
+        self.blob_store = blob_store
 
+    @property
+    def has_blob_storage(self) -> bool:
+        return self.blob_store is not None
 
     @abstractmethod
     def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:

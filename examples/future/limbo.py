@@ -4,7 +4,7 @@ from ell.types.message import Message
 
 
 
-ell.set_store('sqlite_example', autocommit=True)
+ell.set_store('./logdir', autocommit=True)
 ell.config.verbose = True
 
 

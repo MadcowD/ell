@@ -55,7 +55,7 @@ def generate_issue(
 
 if __name__ == "__main__":
 
-    store = SQLiteStore('sqlite_example')
+    store = './logdir'
     store.install(autocommit=True)
 
     # This is an example from ell's early day error

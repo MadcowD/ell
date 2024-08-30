@@ -5,7 +5,7 @@ from ell.stores.sql import SQLiteStore
 
 
 ell.config.verbose = True
-ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
+ell.set_store('./logdir', autocommit=True)
 
 
 

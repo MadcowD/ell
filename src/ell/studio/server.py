@@ -161,8 +161,16 @@ def create_app(config:Config):
         blob_id: str,
         session: Session = Depends(get_session)
     ):
-        blob = serializer.read_external_blob(blob_id)
-        return Response(content=blob, media_type="application/json")
+        if serializer.blob_store is None:
+            raise HTTPException(status_code=400, detail="Blob storage is not configured")
+        try:
+            blob_data = serializer.blob_store.retrieve_blob(blob_id)
+            return Response(content=blob_data.decode('utf-8'), media_type="application/json")
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="Blob not found")
+        except Exception as e:
+            logger.error(f"Error retrieving blob: {str(e)}")
+            raise HTTPException(status_code=500, detail="Internal server error")
 
     @app.get("/api/lmp-history")
     def get_lmp_history(

@@ -1,29 +1,29 @@
 from functools import wraps
 from typing import Dict, Any, Optional, Union
-from dataclasses import dataclass, field
 import openai
 import logging
 from contextlib import contextmanager
 import threading
+from pydantic import BaseModel, ConfigDict, Field
 from ell.store import Store
 
 _config_logger = logging.getLogger(__name__)
 
-@dataclass
-class _Config:
-    model_registry: Dict[str, openai.Client] = field(default_factory=dict)
+class Config(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_registry: Dict[str, openai.Client] = Field(default_factory=dict)
     verbose: bool = False
     wrapped_logging: bool = True
     override_wrapped_logging_width: Optional[int] = None
     _store: Optional[Store] = None
     autocommit: bool = False
-    lazy_versioning : bool = True # Optimizes computation of versionoing to the initial invocaiton
-    # XXX: This might lead to incorrect serialization of globals/
-    default_lm_params: Dict[str, Any] = field(default_factory=dict)
+    lazy_versioning: bool = True
+    default_lm_params: Dict[str, Any] = Field(default_factory=dict)
     default_system_prompt: str = "You are a helpful AI assistant."
     _default_openai_client: Optional[openai.Client] = None
 
-    def __post_init__(self):
+    def __init__(self, **data):
+        super().__init__(**data)
         self._lock = threading.Lock()
         self._local = threading.local()
 
@@ -94,7 +94,7 @@ class _Config:
 
 
 # Singleton instance
-config = _Config()
+config = Config()
 
 def init(
     store: Optional[Union[Store, str]] = None,

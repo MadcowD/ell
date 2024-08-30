@@ -49,7 +49,7 @@ Your goal is to come up with a response to a chat. Only respond in one sentence 
 
 if __name__ == "__main__":
     from ell.stores.sql import SQLiteStore
-    ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
+    ell.set_store('./logdir', autocommit=True)
         
     messages : List[Tuple[str, str]]= []
     personalities = [create_personality(), create_personality()]

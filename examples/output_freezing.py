@@ -28,7 +28,7 @@ def write_unit_for_a_class(class_def : str):
 
 
 if __name__ == "__main__":
-    store = SQLiteStore("sqlite_example")
+    store = SQLiteStore("./logdir")
     ell.set_store(store, autocommit=True)
 
     with store.freeze(create_a_python_class):

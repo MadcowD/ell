@@ -74,7 +74,7 @@ To visaulize and track your promtps over the course of prompt engineering you ne
 # The entry point to your program
 if __name__ == "__main__":
 
-    store = SQLiteStore('sqlite_example') # <---- automatically stores all LMP's invocations, and version history in a sqlite database in ./sqlite_example
+    store = './logdir' # <---- automatically stores all LMP's invocations, and version history in a sqlite database in ./logdir
     store.install(autocommit=True) # <---- installs the store into your project so that tracking happens and change log commit messages are automatically generated using gpt-4o-mini
 
     your_language_model_program()
@@ -85,7 +85,7 @@ if __name__ == "__main__":
 Now you can visualize your prompt engineering process just like tensorboard by using `ell.studio`:
 
 ```
-python3 -m ell.studio --storage-dir ./sqlite_example
+python3 -m ell.studio --storage-dir ./logdir
 ```
 
 Then visit `http://localhost:8000` in your browser to see your prompt engineering process visualized.
@@ -110,7 +110,7 @@ npm run start:dev
 To start the backend:
 
 ```
-python -m ell.studio --storage-dir ./sqlite_example --dev # the dev flag is important!
+python -m ell.studio --storage-dir ./logdir --dev # the dev flag is important!
 ```
 
 You can then visualize your promtps by visiting the frontend on `http://localhost:3000`

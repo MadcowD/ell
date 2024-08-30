@@ -31,7 +31,7 @@ Choose the better piece of literature"""
 
 if __name__ == "__main__":
     from ell.stores.sql import SQLiteStore
-    ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
+    ell.set_store('./logdir', autocommit=True)
 
 
     num = random_number()

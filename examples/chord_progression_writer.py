@@ -57,7 +57,7 @@ def play_midi_file(file_path):
 from ell.stores.sql import SQLiteStore
 
 if __name__ == "__main__":
-    ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
+    ell.set_store('./logdir', autocommit=True)
     
     genre = input("Enter the genre of the song (or press Enter to skip): ").strip() or None
     key = input("Enter the key of the song (or press Enter to skip): ").strip() or None
