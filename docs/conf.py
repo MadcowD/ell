@@ -25,3 +25,12 @@ html_theme = "pydata_sphinx_theme"
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../src'))
+
+# Add configuration for the logo
+html_logo = "_static/logo.png"
+html_theme_options = {
+    "logo": {
+        "image_light": "_static/logo.png",
+        "image_dark": "_static/logo.png",
+    }
+}

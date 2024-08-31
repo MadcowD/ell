@@ -7,13 +7,13 @@
 
 > **IMPORTANT**: This repository is currently pre-v1.0, highly experimental, and not yet packaged for general use. It contains numerous bugs, and the schemas are subject to frequent changes. While we welcome contributions, please be aware that submitting pull requests at this stage is at your own discretion, as the codebase is rapidly evolving.
 
-> **[JOIN THE DISCORD](https://discord.gg/vWntgU52Xb)** We are developing this in public and I want all hands on deck regarding design decisions! Join us at [https://discord.gg/vWntgU52Xb](https://discord.gg/vWntgU52Xb)
+> **[JOIN THE DISCORD](https://discord.gg/vWntgU52Xb)** We are developing this in public and want all hands on deck regarding design decisions! Join us at [https://discord.gg/vWntgU52Xb](https://discord.gg/vWntgU52Xb)
 
 # What is `ell`?
 
 `ell` is a lightweight, functional prompt engineering framework built on a few core principles:
 
-### 1. Prompts are programs not strings.
+### 1. Prompts are programs, not strings.
 
 Prompts aren't just strings; they are all the code that leads to strings being sent to a language model. In `ell` we think of one particular way of using a language model as a discrete subroutine called a **language model program**.
 
