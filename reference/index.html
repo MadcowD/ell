@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>ell: A Lightweight, Functional Prompt Engineering Framework &#8212; ell  documentation</title>
+    <title>API Reference &#8212; ell  documentation</title>
   
   
   
@@ -113,8 +113,14 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="ell  documentation - Home"/>
+    <script>document.write(`<img src="../_static/logo.png" class="logo__image only-dark" alt="ell  documentation - Home"/>`);</script>
   
-    <p class="title logo__title">ell  documentation</p>
   
 </a></div>
     
@@ -130,7 +136,7 @@
     
                     <li class="nav-item current active">
                       <a class="nav-link nav-internal" href="#">
-                        ell: A Lightweight, Functional Prompt Engineering Framework
+                        API Reference
                       </a>
                     </li>
                 
@@ -218,7 +224,7 @@ document.write(`
     
                     <li class="nav-item current active">
                       <a class="nav-link nav-internal" href="#">
-                        ell: A Lightweight, Functional Prompt Engineering Framework
+                        API Reference
                       </a>
                     </li>
                 
@@ -288,7 +294,7 @@ document.write(`
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page">ell: A...</li>
+    <li class="breadcrumb-item active" aria-current="page">API Reference</li>
   </ul>
 </nav>
 </div>
@@ -305,497 +311,12 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="ell-a-lightweight-functional-prompt-engineering-framework">
-<span id="module-ell"></span><h1>ell: A Lightweight, Functional Prompt Engineering Framework<a class="headerlink" href="#ell-a-lightweight-functional-prompt-engineering-framework" title="Link to this heading">#</a></h1>
-<p>ell is a Python library that provides a novel approach to prompt engineering
-and interaction with language models. It is built on the principles that
-prompts are programs, not just strings, and that every interaction with a
-language model is valuable.</p>
-<section id="key-features">
-<h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p>Functional approach to prompt engineering</p></li>
-<li><p>Visualization, tracking, and versioning of prompts using ell-studio</p></li>
-<li><p>Support for various storage backends (SQLite, PostgreSQL)</p></li>
-<li><p>Integration with popular language models</p></li>
-</ol>
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading">#</a></h1>
+<p>Automatically generated API reference for <code class="docutils literal notranslate"><span class="pre">ell</span></code>.</p>
+<p id="module-ell">ell is a Python library for language model programming (LMP). It provides a simple
+and intuitive interface for working with large language models.</p>
 </section>
-<section id="main-components">
-<h2>Main Components<a class="headerlink" href="#main-components" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>Language Model Programs (LMPs): Discrete subroutines for interacting with language models</p></li>
-<li><p>Storage backends: For persisting and analyzing interactions</p></li>
-<li><p>ell-studio: A visualization tool for tracking prompt engineering processes</p></li>
-</ul>
-</section>
-<section id="example-usage">
-<h2>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">#</a></h2>
-<p>Here’s a simple example of how to use ell:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ell</span>
-
-<span class="nd">@ell</span><span class="o">.</span><span class="n">lm</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">generate_poem</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;You are a helpful assistant that writes poems.&#39;&#39;&#39;</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Write a short poem about </span><span class="si">{</span><span class="n">topic</span><span class="si">}</span><span class="s2">.&quot;</span>
-
-<span class="c1"># Use SQLite as the storage backend</span>
-<span class="n">store</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">SQLiteStore</span><span class="p">(</span><span class="s1">&#39;my_project&#39;</span><span class="p">)</span>
-<span class="n">store</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="n">autocommit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="c1"># Generate a poem</span>
-<span class="n">poem</span> <span class="o">=</span> <span class="n">generate_poem</span><span class="p">(</span><span class="s2">&quot;autumn leaves&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">poem</span><span class="p">)</span>
-
-<span class="c1"># Visualize your prompt engineering process</span>
-<span class="c1"># Run in terminal: python -m ell.studio --storage-dir ./my_project</span>
-</pre></div>
-</div>
-<p>For more detailed information, refer to the specific module documentation:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ell.lmp</span></code>: Language Model Program decorators and utilities</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ell.types</span></code>: Type definitions for messages and content blocks</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ell.models</span></code>: Supported language models</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ell.configurator</span></code>: Configuration utilities</p></li>
-</ul>
-</section>
-</section>
-<dl class="py function">
-<dt class="sig sig-object py" id="ell.assistant">
-<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">assistant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ContentBlock</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Message</span></span></span><a class="headerlink" href="#ell.assistant" title="Link to this definition">#</a></dt>
-<dd><p>Create an assistant message with the given content.</p>
-<p>Args:
-content (str): The content of the assistant message.</p>
-<p>Returns:
-Message: A Message object with role set to ‘assistant’ and the provided content.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="ell.complex">
-<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">complex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OpenAI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exempt_from_tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_callback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">api_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.complex" title="Link to this definition">#</a></dt>
-<dd><p>A sophisticated language model programming decorator for complex LLM interactions.</p>
-<p>This decorator transforms a function into a Language Model Program (LMP) capable of handling
-multi-turn conversations, tool usage, and various output formats. It’s designed for advanced
-use cases where full control over the LLM’s capabilities is needed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>str</em>) – The name or identifier of the language model to use.</p></li>
-<li><p><strong>client</strong> (<em>Optional</em><em>[</em><em>openai.Client</em><em>]</em>) – An optional OpenAI client instance. If not provided, a default client will be used.</p></li>
-<li><p><strong>tools</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>Callable</em><em>]</em><em>]</em>) – A list of tool functions that can be used by the LLM. Only available for certain models.</p></li>
-<li><p><strong>response_format</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – The response format for the LLM. Only available for certain models.</p></li>
-<li><p><strong>n</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The number of responses to generate for the LLM. Only available for certain models.</p></li>
-<li><p><strong>temperature</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – The temperature parameter for controlling the randomness of the LLM.</p></li>
-<li><p><strong>max_tokens</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of tokens to generate for the LLM.</p></li>
-<li><p><strong>top_p</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – The top-p sampling parameter for controlling the diversity of the LLM.</p></li>
-<li><p><strong>frequency_penalty</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – The frequency penalty parameter for controlling the LLM’s repetition.</p></li>
-<li><p><strong>presence_penalty</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – The presence penalty parameter for controlling the LLM’s relevance.</p></li>
-<li><p><strong>stop</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – The stop sequence for the LLM.</p></li>
-<li><p><strong>exempt_from_tracking</strong> (<em>bool</em>) – If True, the LMP usage won’t be tracked. Default is False.</p></li>
-<li><p><strong>post_callback</strong> (<em>Optional</em><em>[</em><em>Callable</em><em>]</em>) – An optional function to process the LLM’s output before returning.</p></li>
-<li><p><strong>api_params</strong> (<em>Any</em>) – Additional keyword arguments to pass to the underlying API call.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A decorator that can be applied to a function, transforming it into a complex LMP.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Callable</p>
-</dd>
-</dl>
-<p>Functionality:</p>
-<ol class="arabic simple">
-<li><p>Advanced LMP Creation:
-- Supports multi-turn conversations and stateful interactions.
-- Enables tool usage within the LLM context.
-- Allows for various output formats, including structured data and function calls.</p></li>
-<li><p>Flexible Input Handling:
-- Can process both single prompts and conversation histories.
-- Supports multimodal inputs (text, images, etc.) in the prompt.</p></li>
-<li><p>Comprehensive Integration:
-- Integrates with ell’s tracking system for monitoring LMP versions, usage, and performance.
-- Supports various language models and API configurations.</p></li>
-<li><p>Output Processing:
-- Can return raw LLM outputs or process them through a post-callback function.
-- Supports returning multiple message types (e.g., text, function calls, tool results).</p></li>
-</ol>
-<p>Usage Modes and Examples:</p>
-<ol class="arabic simple">
-<li><p>Basic Prompt:</p></li>
-</ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;You are a creative story writer&#39;&#39;&#39;</span> <span class="c1"># System prompt</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Write a short story based on this prompt: </span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="p">]</span>
-
-<span class="n">story</span> <span class="p">:</span> <span class="n">ell</span><span class="o">.</span><span class="n">Message</span> <span class="o">=</span> <span class="n">generate_story</span><span class="p">(</span><span class="s2">&quot;A robot discovers emotions&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">story</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># Access the text content of the last message</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="2">
-<li><p>Multi-turn Conversation:</p></li>
-</ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;You are a helpful assistant.&quot;</span><span class="p">),</span>
-    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
-
-<span class="n">conversation</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">&quot;Hello, who are you?&quot;</span><span class="p">),</span>
-    <span class="n">ell</span><span class="o">.</span><span class="n">assistant</span><span class="p">(</span><span class="s2">&quot;I&#39;m an AI assistant. How can I help you today?&quot;</span><span class="p">),</span>
-    <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">&quot;Can you explain quantum computing?&quot;</span><span class="p">)</span>
-<span class="p">]</span>
-<span class="n">response</span> <span class="p">:</span> <span class="n">ell</span><span class="o">.</span><span class="n">Message</span> <span class="o">=</span> <span class="n">chat_bot</span><span class="p">(</span><span class="n">conversation</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># Print the assistant&#39;s response</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="3">
-<li><p>Tool Usage:</p></li>
-</ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@ell</span><span class="o">.</span><span class="n">tool</span><span class="p">()</span>
-<span class="k">def</span> <span class="nf">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="c1"># Implementation to fetch weather</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;The weather in </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s2"> is sunny.&quot;</span>
-
-<span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4&quot;</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_weather</span><span class="p">])</span>
-<span class="k">def</span> <span class="nf">weather_assistant</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;You are a weather assistant. Use the get_weather tool when needed.&quot;</span><span class="p">),</span>
-    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
-
-<span class="n">conversation</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">&quot;What&#39;s the weather like in New York?&quot;</span><span class="p">)</span>
-<span class="p">]</span>
-<span class="n">response</span> <span class="p">:</span> <span class="n">ell</span><span class="o">.</span><span class="n">Message</span> <span class="o">=</span> <span class="n">weather_assistant</span><span class="p">(</span><span class="n">conversation</span><span class="p">)</span>
-
-<span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
-    <span class="n">tool_results</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">call_tools_and_collect_as_message</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tool results:&quot;</span><span class="p">,</span> <span class="n">tool_results</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-
-    <span class="c1"># Continue the conversation with tool results</span>
-    <span class="n">final_response</span> <span class="o">=</span> <span class="n">weather_assistant</span><span class="p">(</span><span class="n">conversation</span> <span class="o">+</span> <span class="p">[</span><span class="n">response</span><span class="p">,</span> <span class="n">tool_results</span><span class="p">])</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final response:&quot;</span><span class="p">,</span> <span class="n">final_response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="4">
-<li><p>Structured Output:</p></li>
-</ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
-
-<span class="k">class</span> <span class="nc">PersonInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span>
-
-<span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4&quot;</span><span class="p">,</span> <span class="n">response_format</span><span class="o">=</span><span class="n">PersonInfo</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">extract_person_info</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;Extract person information from the given text.&quot;</span><span class="p">),</span>
-        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
-    <span class="p">]</span>
-
-<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;John Doe is a 30-year-old software engineer.&quot;</span>
-<span class="n">result</span> <span class="p">:</span> <span class="n">ell</span><span class="o">.</span><span class="n">Message</span> <span class="o">=</span> <span class="n">extract_person_info</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
-<span class="n">person_info</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">parsed_content</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Name: </span><span class="si">{</span><span class="n">person_info</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, Age: </span><span class="si">{</span><span class="n">person_info</span><span class="o">.</span><span class="n">age</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="5">
-<li><p>Multimodal Input:</p></li>
-</ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4-vision-preview&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;Describe the contents of the image in detail.&quot;</span><span class="p">),</span>
-        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span>
-            <span class="n">ContentBlock</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;What do you see in this image?&quot;</span><span class="p">),</span>
-            <span class="n">ContentBlock</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
-        <span class="p">])</span>
-    <span class="p">]</span>
-
-<span class="n">image</span> <span class="o">=</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;example.jpg&quot;</span><span class="p">)</span>
-<span class="n">description</span> <span class="o">=</span> <span class="n">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">description</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="6">
-<li><p>Parallel Tool Execution:</p></li>
-</ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4&quot;</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">tool1</span><span class="p">,</span> <span class="n">tool2</span><span class="p">,</span> <span class="n">tool3</span><span class="p">])</span>
-<span class="k">def</span> <span class="nf">parallel_assistant</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;You can use multiple tools in parallel.&quot;</span><span class="p">),</span>
-    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
-
-<span class="n">response</span> <span class="o">=</span> <span class="n">parallel_assistant</span><span class="p">([</span><span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">&quot;Perform tasks A, B, and C simultaneously.&quot;</span><span class="p">)])</span>
-<span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
-    <span class="n">tool_results</span> <span class="p">:</span> <span class="n">ell</span><span class="o">.</span><span class="n">Message</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">call_tools_and_collect_as_message</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Parallel tool results:&quot;</span><span class="p">,</span> <span class="n">tool_results</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Helper Functions for Output Processing:</p>
-<ul class="simple">
-<li><p>response.text: Get the full text content of the last message.</p></li>
-<li><p>response.text_only: Get only the text content, excluding non-text elements.</p></li>
-<li><p>response.tool_calls: Access the list of tool calls in the message.</p></li>
-<li><p>response.tool_results: Access the list of tool results in the message.</p></li>
-<li><p>response.parsed_content: Access structured data outputs.</p></li>
-<li><p>response.call_tools_and_collect_as_message(): Execute tool calls and collect results.</p></li>
-<li><p>Message(role=”user”, content=[…]).to_openai_message(): Convert to OpenAI API format.</p></li>
-</ul>
-<p>Notes:</p>
-<ul class="simple">
-<li><p>The decorated function should return a list of Message objects.</p></li>
-<li><p>For tool usage, ensure that tools are properly decorated with &#64;ell.tool().</p></li>
-<li><p>When using structured outputs, specify the response_format in the decorator.</p></li>
-<li><p>The complex decorator supports all features of simpler decorators like &#64;ell.simple.</p></li>
-<li><p>Use helper functions and properties to easily access and process different types of outputs.</p></li>
-</ul>
-<p>See Also:</p>
-<ul class="simple">
-<li><p>ell.simple: For simpler text-only LMP interactions.</p></li>
-<li><p>ell.tool: For defining tools that can be used within complex LMPs.</p></li>
-<li><p>ell.studio: For visualizing and analyzing LMP executions.</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="ell.simple">
-<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">simple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OpenAI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exempt_from_tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">api_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.simple" title="Link to this definition">#</a></dt>
-<dd><p>A basic language model programming decorator for text-only LLM outputs.</p>
-<p>This decorator simplifies the process of creating Language Model Programs (LMPs)
-that return text-only outputs from language models, while supporting multimodal inputs.
-It wraps the more complex ‘complex’ decorator, providing a streamlined interface for common use cases.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>str</em>) – The name or identifier of the language model to use.</p></li>
-<li><p><strong>client</strong> (<em>Optional</em><em>[</em><em>openai.Client</em><em>]</em>) – An optional OpenAI client instance. If not provided, a default client will be used.</p></li>
-<li><p><strong>exempt_from_tracking</strong> (<em>bool</em>) – If True, the LMP usage won’t be tracked. Default is False.</p></li>
-<li><p><strong>api_params</strong> (<em>Any</em>) – Additional keyword arguments to pass to the underlying API call.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A decorator that can be applied to a function, transforming it into an LMP.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Callable</p>
-</dd>
-</dl>
-<p>Functionality:</p>
-<ol class="arabic simple">
-<li><p>Simplifies LMP Creation:
-- Provides a straightforward way to create LMPs with text-only outputs.
-- Supports multimodal inputs (text, images, etc.) in the prompt.
-- Automatically simplifies complex model responses to text-only format.</p></li>
-<li><p>Integration with Language Models:
-- Supports various language models through the ‘model’ parameter.
-- Allows customization of API parameters for fine-tuned control.</p></li>
-<li><p>Tracking and Monitoring:
-- Integrates with ell’s tracking system for monitoring LMP versions over time, usage and performance.</p></li>
-</ol>
-<p>Usage:
-The decorated function can return either a single prompt or a list of ell.Message objects:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4&quot;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">summarize_text</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;You are an expert at summarizing text.&#39;&#39;&#39;</span> <span class="c1"># System prompt</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Please summarize the following text:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span> <span class="c1"># User prompt</span>
-
-
-<span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4&quot;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span> <span class="p">:</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ell</span><span class="o">.</span><span class="n">Message</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;Describe the contents of an image.&#39;&#39;&#39;</span> <span class="c1"># unused because we&#39;re returning a list of Messages</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="c1"># helper function for ell.Message(text=&quot;...&quot;, role=&quot;system&quot;)</span>
-        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;You are an AI trained to describe images.&quot;</span><span class="p">),</span>
-        <span class="c1"># helper function for ell.Message(content=&quot;...&quot;, role=&quot;user&quot;)</span>
-        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span><span class="n">ContentBlock</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;Describe this image in detail.&quot;</span><span class="p">),</span> <span class="n">ContentBlock</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)]),</span>
-    <span class="p">]</span>
-
-
-<span class="n">image_description</span> <span class="o">=</span> <span class="n">describe_image</span><span class="p">(</span><span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;https://example.com/image.jpg&quot;</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">image_description</span><span class="p">)</span>
-<span class="c1"># Output will be a string text-only description of the image</span>
-
-<span class="n">summary</span> <span class="o">=</span> <span class="n">summarize_text</span><span class="p">(</span><span class="s2">&quot;Long text to summarize...&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span>
-<span class="c1"># Output will be a text-only summary</span>
-</pre></div>
-</div>
-<p>Notes:</p>
-<ul class="simple">
-<li><p>This decorator is designed for text-only model outputs, but supports multimodal inputs.</p></li>
-<li><p>It simplifies complex responses from language models to text-only format, regardless of
-the model’s capability for structured outputs, function calling, or multimodal outputs.</p></li>
-<li><p>For preserving complex model outputs (e.g., structured data, function calls, or multimodal
-outputs), use the &#64;ell.complex decorator instead. &#64;ell.complex returns a Message object (role=’assistant’)</p></li>
-<li><p>The decorated function can return a string or a list of ell.Message objects for more
-complex prompts, including multimodal inputs.</p></li>
-<li><p>If called with n &gt; 1 in api_params, the wrapped LMP will return a list of strings for the n parallel outputs
-of the model instead of just one string. Otherwise, it will return a single string.</p></li>
-<li><p>You can pass LM API parameters either in the decorator or when calling the decorated function.
-Parameters passed during the function call will override those set in the decorator.</p></li>
-</ul>
-<p>Example of passing LM API params:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4&quot;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Write a short story based on this prompt: </span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="s2">&quot;</span>
-
-<span class="c1"># Using default parameters</span>
-<span class="n">story1</span> <span class="o">=</span> <span class="n">generate_story</span><span class="p">(</span><span class="s2">&quot;A day in the life of a time traveler&quot;</span><span class="p">)</span>
-
-<span class="c1"># Overriding parameters during function call</span>
-<span class="n">story2</span> <span class="o">=</span> <span class="n">generate_story</span><span class="p">(</span><span class="s2">&quot;An AI&#39;s first day of consciousness&quot;</span><span class="p">,</span> <span class="n">lm_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s2">&quot;max_tokens&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">})</span>
-</pre></div>
-</div>
-<p>See Also:</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="#ell.complex" title="ell.complex"><code class="xref py py-func docutils literal notranslate"><span class="pre">ell.complex()</span></code></a>: For LMPs that preserve full structure of model responses, including multimodal outputs.</p></li>
-<li><p><a class="reference internal" href="#ell.tool" title="ell.tool"><code class="xref py py-func docutils literal notranslate"><span class="pre">ell.tool()</span></code></a>: For defining tools that can be used within complex LMPs.</p></li>
-<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">ell.studio</span></code>: For visualizing and analyzing LMP executions.</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="ell.system">
-<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ContentBlock</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Message</span></span></span><a class="headerlink" href="#ell.system" title="Link to this definition">#</a></dt>
-<dd><p>Create a system message with the given content.</p>
-<p>Args:
-content (str): The content of the system message.</p>
-<p>Returns:
-Message: A Message object with role set to ‘system’ and the provided content.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="ell.tool">
-<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">tool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exempt_from_tracking</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">tool_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.tool" title="Link to this definition">#</a></dt>
-<dd><p>Defines a tool for use in language model programs (LMPs) that support tool use.</p>
-<p>This decorator wraps a function, adding metadata and handling for tool invocations.
-It automatically extracts the tool’s description and parameters from the function’s
-docstring and type annotations, creating a structured representation for LMs to use.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>exempt_from_tracking</strong> (<em>bool</em>) – If True, the tool usage won’t be tracked. Default is False.</p></li>
-<li><p><strong>tool_kwargs</strong> – Additional keyword arguments for tool configuration.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A wrapped version of the original function, usable as a tool by LMs.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Callable</p>
-</dd>
-</dl>
-<p>Requirements:</p>
-<ul class="simple">
-<li><p>Function must have fully typed arguments (Pydantic-serializable).</p></li>
-<li><p>Return value must be one of: str, JSON-serializable object, Pydantic model, or List[ContentBlock].</p></li>
-<li><p>All parameters must have type annotations.</p></li>
-<li><p>Complex types should be Pydantic models.</p></li>
-<li><p>Function should have a descriptive docstring.</p></li>
-<li><p>Can only be used in LMPs with &#64;ell.complex decorators</p></li>
-</ul>
-<p>Functionality:</p>
-<ol class="arabic simple">
-<li><p>Metadata Extraction:
-- Uses function docstring as tool description.
-- Extracts parameter info from type annotations and docstring.
-- Creates a Pydantic model for parameter validation and schema generation.</p></li>
-<li><p>Integration with LMs:
-- Can be passed to &#64;ell.complex decorators.
-- Provides structured tool information to LMs.</p></li>
-<li><p>Invocation Handling:
-- Manages tracking, logging, and result processing.
-- Wraps results in appropriate types (e.g., _lstr) for tracking.</p></li>
-</ol>
-<p>Usage Modes:</p>
-<ol class="arabic simple">
-<li><p>Normal Function Call:
-- Behaves like a regular Python function.
-- Example: result = my_tool(arg1=”value”, arg2=123)</p></li>
-<li><p>LMP Tool Call:
-- Used within LMPs or with explicit _tool_call_id.
-- Returns a ToolResult object.
-- Example: result = my_tool(arg1=”value”, arg2=123, _tool_call_id=”unique_id”)</p></li>
-</ol>
-<p>Result Coercion:</p>
-<ul class="simple">
-<li><p>String → ContentBlock(text=result)</p></li>
-<li><p>Pydantic BaseModel → ContentBlock(parsed=result)</p></li>
-<li><p>List[ContentBlock] → Used as-is</p></li>
-<li><p>Other types → ContentBlock(text=json.dumps(result))</p></li>
-</ul>
-<p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@ell</span><span class="o">.</span><span class="n">tool</span><span class="p">()</span>
-<span class="k">def</span> <span class="nf">create_claim_draft</span><span class="p">(</span>
-    <span class="n">claim_details</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">claim_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">claim_amount</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">claim_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Date format: YYYY-MM-DD&quot;</span><span class="p">)</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;Create a claim draft. Returns the created claim ID.&#39;&#39;&#39;</span>
-    <span class="k">return</span> <span class="s2">&quot;12345&quot;</span>
-
-<span class="c1"># For use in a complex LMP:</span>
-<span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4&quot;</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">create_claim_draft</span><span class="p">],</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">insurance_chatbot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
-    <span class="c1"># Chatbot implementation...</span>
-
-<span class="n">x</span> <span class="o">=</span> <span class="n">insurance_chatbot</span><span class="p">([</span>
-    <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">&quot;I crashed my car into a tree.&quot;</span><span class="p">),</span>
-    <span class="n">ell</span><span class="o">.</span><span class="n">assistant</span><span class="p">(</span><span class="s2">&quot;I&#39;m sorry to hear that. Can you provide more details?&quot;</span><span class="p">),</span>
-    <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">&quot;The car is totaled and I need to file a claim. Happened on 2024-08-01. total value is like $5000&quot;</span><span class="p">)</span>
-<span class="p">])</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="sd">&#39;&#39;&#39;ell.Message(content=[</span>
-<span class="sd">    ContentBlock(tool_call(</span>
-<span class="sd">        tool_call_id=&quot;asdas4e&quot;,</span>
-<span class="sd">        tool_fn=create_claim_draft,</span>
-<span class="sd">        input=create_claim_draftParams({</span>
-<span class="sd">            claim_details=&quot;The car is totaled and I need to file a claim. Happened on 2024-08-01. total value is like $5000&quot;,</span>
-<span class="sd">            claim_type=&quot;car&quot;,</span>
-<span class="sd">            claim_amount=5000,</span>
-<span class="sd">            claim_date=&quot;2024-08-01&quot;</span>
-<span class="sd">        })</span>
-<span class="sd">    ))</span>
-<span class="sd">], role=&#39;assistant&#39;)&#39;&#39;&#39;</span>
-
-<span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
-    <span class="n">next_user_message</span> <span class="o">=</span> <span class="n">response_message</span><span class="o">.</span><span class="n">call_tools_and_collect_as_message</span><span class="p">()</span>
-    <span class="c1"># This actually calls create_claim_draft</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">next_user_message</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    ell.Message(content=[</span>
-<span class="sd">        ContentBlock(tool_result=ToolResult(</span>
-<span class="sd">            tool_call_id=&quot;asdas4e&quot;,</span>
-<span class="sd">            result=[ContentBlock(text=&quot;12345&quot;)]</span>
-<span class="sd">        ))</span>
-<span class="sd">    ], role=&#39;user&#39;)</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">insurance_chatbot</span><span class="p">(</span><span class="n">message_history</span> <span class="o">+</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">next_user_message</span><span class="p">])</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    ell.Message(&quot;I&#39;ve filed that for you!&quot;, role=&#39;assistant&#39;)</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-</pre></div>
-</div>
-<p>Note:
-- Tools are integrated into LMP calls via the ‘tools’ parameter in &#64;ell.complex.
-- LMs receive structured tool information, enabling understanding and usage within the conversation context.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="ell.user">
-<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ContentBlock</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Message</span></span></span><a class="headerlink" href="#ell.user" title="Link to this definition">#</a></dt>
-<dd><p>Create a user message with the given content.</p>
-<p>Args:
-content (str): The content of the user message.</p>
-<p>Returns:
-Message: A Message object with role set to ‘user’ and the provided content.</p>
-</dd></dl>
-
 
 
                 </article>
@@ -825,30 +346,6 @@ Message: A Message object with role set to ‘user’ and the provided content.<
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
-
-  <div class="sidebar-secondary-item">
-<div
-    id="pst-page-navigation-heading-2"
-    class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">ell: A Lightweight, Functional Prompt Engineering Framework</a><ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-features">Key Features</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#main-components">Main Components</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-usage">Example Usage</a></li>
-</ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#ell.assistant"><code class="docutils literal notranslate"><span class="pre">assistant()</span></code></a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#ell.complex"><code class="docutils literal notranslate"><span class="pre">complex()</span></code></a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#ell.simple"><code class="docutils literal notranslate"><span class="pre">simple()</span></code></a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#ell.system"><code class="docutils literal notranslate"><span class="pre">system()</span></code></a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#ell.tool"><code class="docutils literal notranslate"><span class="pre">tool()</span></code></a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#ell.user"><code class="docutils literal notranslate"><span class="pre">user()</span></code></a></li>
-</ul>
-
-  </nav></div>
 
   <div class="sidebar-secondary-item">
 
