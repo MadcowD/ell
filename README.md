@@ -1,4 +1,7 @@
-# `ell` [WIP, unreleased, experimental]
+
+![ell](ell.png)
+
+--------------------------------------------------------------------------------
 
 [![](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)
 [![](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)
