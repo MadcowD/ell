@@ -1,5 +1,8 @@
-
-![ell](ell-wide.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="ell-wide-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="ell-wide-light.png">
+  <img alt="ell logo that inverts based on color scheme" src="ell-wide.png">
+</picture>
 
 --------------------------------------------------------------------------------
 
