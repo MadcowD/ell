@@ -1,21 +1,14 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="ell-wide-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="ell-wide-light.png">
-  <img alt="ell logo that inverts based on color scheme" src="ell-wide.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/_static/ell-wide-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/_static/ell-wide-light.png">
+  <img alt="ell logo that inverts based on color scheme" src="docs/_static/ell-wide.png">
 </picture>
 
 --------------------------------------------------------------------------------
 
-[![](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)
-[![](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)
-[![](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)
-[![](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)
 
-> **IMPORTANT**: This repository is currently pre-v1.0, highly experimental, and not yet packaged for general use. It contains numerous bugs, and the schemas are subject to frequent changes. While we welcome contributions, please be aware that submitting pull requests at this stage is at your own discretion, as the codebase is rapidly evolving.
+[![Documentation Status]( https://img.shields.io/badge/documentation-go)]( https://docs.ell.so/) [![Install](https://img.shields.io/badge/get_started-blue)]( https://docs.ell.so/getting-started/installation/) [![Discord](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)
 
-> **[JOIN THE DISCORD](https://discord.gg/vWntgU52Xb)** We are developing this in public and want all hands on deck regarding design decisions! Join us at [https://discord.gg/vWntgU52Xb](https://discord.gg/vWntgU52Xb)
-
-# What is `ell`?
 
 `ell` is a lightweight, functional prompt engineering framework built on a few core principles:
 

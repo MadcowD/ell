@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import LMP from './pages/LMP';
-import Traces from './pages/Invocations';
+import Invocations from './pages/Invocations';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './styles/globals.css';
 import './styles/sourceCode.css';
@@ -51,7 +51,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/lmp/:name/:id?" element={<LMP />} />
-                  <Route path="/traces" element={<Traces />} />
+                  <Route path="/invocations" element={<Invocations />} />
                 </Routes>
               </main>
             </div>

@@ -13,24 +13,31 @@ author = 'William Guss'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-# Add autodoc and napoleon to the extensions
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon']
+# Correct the extension name
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinxawesome_theme']
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-html_theme = "pydata_sphinx_theme"
+html_theme = "sphinxawesome_theme"
 
-# Add the following lines if not already present
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../src'))
+# Configure syntax highlighting for Awesome Sphinx Theme
+pygments_style = "friendly"
+pygments_style_dark = "monokai"
 
-# Add configuration for the logo
-html_logo = "_static/logo.png"
+# Additional theme configuration
 html_theme_options = {
-    "logo": {
-        "image_light": "_static/logo.png",
-        "image_dark": "_static/logo.png",
-    }
+    "show_prev_next": True,
+    "show_scrolltop": True,
+    "extra_header_links": {
+        "API Reference": "reference/index",
+        "Discord": "https://discord.gg/vWntgU52Xb",
+    },
+
+    "logo_light": "_static/ell-wide-light.png",
+    "logo_dark": "_static/ell-wide-dark.png",
 }
+
+
+
+templates_path = ['_templates']
