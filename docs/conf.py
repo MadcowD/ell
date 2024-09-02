@@ -29,7 +29,7 @@ pygments_style_dark = "monokai"
 html_theme_options = {
     "show_prev_next": True,
     "show_scrolltop": True,
-    "extra_header_links": {
+    "main_nav_links": {
         "API Reference": "reference/index",
         "Discord": "https://discord.gg/vWntgU52Xb",
     },
