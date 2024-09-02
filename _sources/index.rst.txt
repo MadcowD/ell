@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-=================
-ell documentation
-=================
+============
+Introduction
+============
 
 Welcome to the documentation for ``ell``, a lightweight, functional prompt engineering framework.
 
