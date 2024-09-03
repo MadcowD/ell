@@ -44,4 +44,3 @@ Let's start by exploring Language Model Programs, the fundamental building block
    decorators
    messages_and_content_blocks
    tools
-   .. structured_outputs

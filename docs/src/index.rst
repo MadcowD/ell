@@ -40,7 +40,6 @@
    observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
    </script>
 
-.. _introduction: 
 ===========================================
 ell: The Language Model Programming Library
 ===========================================
@@ -176,6 +175,9 @@ Using ``@ell.simple`` causes LMPs to yield **simple string outputs.** But when m
 
 To get started with ``ell``, see the :doc:`Getting Started <getting_started/index>` section, or go onto :doc:`Installation <installation>` and get ell installed.
 
+
+
+
 .. toctree::
    :maxdepth: 3
    :caption: User Guide:
@@ -186,7 +188,12 @@ To get started with ``ell``, see the :doc:`Getting Started <getting_started/inde
    installation
    getting_started/index
    core_concepts/index
-   advanced_features/index
-   ell_studio/index
-   best_practices/index
-   
+   best_practices/designing_effective_lmps
+   advanced_features/multimodal_inputs
+
+.. toctree::
+   :maxdepth: 3
+   :caption: API Reference:
+   :hidden:
+
+   reference/index
