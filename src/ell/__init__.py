@@ -15,5 +15,3 @@ import ell.models
 
 # Import everything from configurator
 from ell.configurator import *
-
-

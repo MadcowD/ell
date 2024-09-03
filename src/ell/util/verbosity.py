@@ -104,7 +104,7 @@ def model_usage_logger_pre(
     logger.info(f"Invoking LMP: {invoking_lmp.__name__} (hash: {lmp_hash[:8]})")
     
     print(f"{PIPE_COLOR}╔{'═' * (terminal_width - 2)}╗{RESET}")
-    print(f"{PIPE_COLOR}║ {color}{BOLD}{UNDERLINE}{invoking_lmp.__name__}{RESET}{color}({formatted_params}) # ({lmp_hash[:8]}...){RESET}")
+    print(f"{PIPE_COLOR}║ {color}{BOLD}{UNDERLINE}{invoking_lmp.__name__}{RESET}{color}({formatted_params}){RESET}")
     print(f"{PIPE_COLOR}╠{'═' * (terminal_width - 2)}╣{RESET}")
     print(f"{PIPE_COLOR}║ {BOLD}Prompt:{RESET}")
     print(f"{PIPE_COLOR}╟{'─' * (terminal_width - 2)}╢{RESET}")

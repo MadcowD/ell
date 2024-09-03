@@ -1,0 +1,192 @@
+
+.. raw:: html
+
+   <style>
+       .rounded-image {
+           border-radius: 10px;
+           overflow: hidden;
+       }
+
+   </style>
+.. raw:: html
+
+   <script>
+   function invertImage(dark) {
+       var images = document.querySelectorAll('.invertible-image img');
+       var htmlElement = document.documentElement;
+       images.forEach(function(image) {
+           if (!dark) {
+               image.style.filter = 'invert(100%) hue-rotate(160deg)';
+           } else {
+               image.style.filter = 'none';
+           }
+       });
+   }
+
+   
+
+   // Run when the 'dark' class is added or removed from the <html> element
+   const htmlElement = document.documentElement;
+   
+   // Use MutationObserver to detect changes in the class attribute
+   const observer = new MutationObserver((mutations) => {
+   console.log(document.documentElement.classList)
+       mutations.forEach((mutation) => {
+               invertImage(document.documentElement.classList.contains('dark'));
+   
+       });
+   });
+
+   observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
+   </script>
+
+.. _introduction: 
+===========================================
+ell: The Language Model Programming Library
+===========================================
+
+
+.. title:: Introduction
+
+
+
+``ell`` is a lightweight, functional prompt engineering library built on a few key principles.
+
+
+Prompts are programs, not strings
+----------------------------------
+
+.. code-block:: python
+
+    import ell
+    ell.init(verbose=True)
+
+    @ell.simple(model="gpt-4o-mini")
+    def hello(world: str):
+        """You are a helpful assistant""" # System prompt
+        name = world.capitalize()
+        return f"Say hello to {name}!" # User prompt
+
+    hello("sam altman") # just a str, "Hello Sam Altman! ..."
+
+
+
+.. image:: _static/gif1.webp
+   :alt: ell demonstration
+   :class: rounded-image invertible-image
+   :width: 100%
+
+
+
+
+Prompts aren't just strings; they are all the code that leads to strings being sent to a language model. In ell, we think of one particular way of using a language model as a discrete subroutine called a **language model program** (LMP).
+
+LMPs are fully encapsulated functions that produce either a string prompt or a list of messages to be sent to various multimodal language models. This encapsulation creates a clean interface for users, who only need to be aware of the required data specified to the LMP.
+
+
+
+Prompt engineering libraries shouldn't interfere with your workflow
+--------------------------------------------------------------------
+
+``ell`` is designed to be a lightweight and unobtrusive library. It doesn't require you to change your coding style or use special editors. 
+
+.. image:: _static/useitanywhere_compressed.webp
+   :alt: ell demonstration
+   :class: rounded-image 
+   :width: 100%
+
+You can continue to use regular Python code in your IDE to define and modify your prompts, while leveraging ell's features to visualize and analyze your prompts. Migrate from langchain to ``ell`` one function at a time.
+
+Prompt engineering is an optimization process
+------------------------------------------------
+
+The process of prompt engineering involves many iterations, similar to the optimization processes in machine learning. Because LMPs are just functions, ``ell`` procides rich tooling for this process.
+
+.. image:: _static/versions_small.webp
+   :alt: ell demonstration
+   :class: rounded-image .invertible-image
+   :width: 100%
+
+
+``ell`` provides **automatic versioning and serialization of prompts** through static and dynamic analysis. This process is similar to `checkpointing` in a machine learning training loop, but it doesn't require any special IDE or editor - it's all done with regular Python code.
+
+.. code-block:: python
+   :emphasize-lines: 3,3
+
+    import ell
+
+    ell.init(store='./logdir')  # Versions your LMPs and their calls
+
+    # ... define your lmps
+
+    hello("strawberry") # the source code of the LMP the call is saved to the store
+   
+
+
+
+Every call to a language model is valuable
+------------------------------------------------
+Every call to a language model is worth its weight in credits. In practice, LLM invocations are used for fine tuning, distillation, k-shot prompting, reinforcement learning from human feedback, and more. A good prompt engineering system should capture these as first class concepts.
+
+.. image:: _static/invocations.webp
+   :alt: ell demonstration
+   :class: rounded-image invertible-image
+   :width: 100%
+
+
+In addition to storing the source code of every LMP, ``ell`` optionally saves every call to a language model locally. This allows you to generate invocaiton datasets, compare LMP outputs by version, and generally do more with the full spectrum of prompt engineering artifacts.
+
+
+
+Complexity when you need it, simplicity when you don't
+--------------------------------------------------------
+
+Using language models is **just passing strings around, except when it's not.**
+
+.. code-block:: python
+   :emphasize-lines: 7,7
+
+   import ell
+
+   @ell.tool()
+   def scrape_website(url : str):
+      return requests.get(url).text
+
+   @ell.complex(model="gpt-5-omni", tools=[scrape_website])
+   def get_news_story(topic : str):
+      return [
+         ell.system("""Use the web to find a news story about the topic"""),
+         ell.user(f"Find a news story about {topic}.")
+      ]
+
+   message_response = get_news_story("stock market") 
+   if message_response.tool_calls:
+      for tool_call in message_response.tool_calls:
+         #...
+   if message_response.text:
+      print(message_response.text)
+   if message_response.audio:
+      # message_response.play_audio() supprot for multimodal outputs will work as soon as the LLM supports it
+      pass
+
+Using ``@ell.simple`` causes LMPs to yield **simple string outputs.** But when more complex or multimodal output is needed, ``@ell.complex`` can be used to yield ``Message`` objects responses from language mdoels.
+
+
+----------------------------
+
+To get started with ``ell``, see the :doc:`Getting Started <getting_started/index>` section, or go onto :doc:`Installation <installation>` and get ell installed.
+
+.. toctree::
+   :maxdepth: 3
+   :caption: User Guide:
+   :hidden:
+
+   Introduction <self>
+   
+   installation
+   getting_started/index
+   core_concepts/index
+   advanced_features/index
+   ell_studio/index
+   best_practices/index
+   

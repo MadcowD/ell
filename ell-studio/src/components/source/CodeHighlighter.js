@@ -50,8 +50,8 @@ export function CodeHighlighter({
   const diffRenderer = useCallback(
   ({ stylesheet, useInlineStyles }) => 
     DiffRenderer({
-        previousCode: code,
-        code: previousCode,
+        previousCode: previousCode,
+        code: code,
         stylesheet,
         useInlineStyles,
         startingLineNumber,

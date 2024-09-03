@@ -22,8 +22,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme = "sphinxawesome_theme"
 
 # Configure syntax highlighting for Awesome Sphinx Theme
-pygments_style = "friendly"
-pygments_style_dark = "monokai"
+pygments_style = "default"
+pygments_style_dark = "dracula"
 
 # Additional theme configuration
 html_theme_options = {
@@ -44,6 +44,8 @@ html_theme_options = {
     "logo_light": "_static/ell-wide-light.png",
     "logo_dark": "_static/ell-wide-dark.png",
 }
+
+
 
 
 

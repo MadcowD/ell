@@ -11,7 +11,7 @@ _config_logger = logging.getLogger(__name__)
 
 class Config(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    model_registry: Dict[str, openai.Client] = Field(default_factory=dict)
+    registry: Dict[str, openai.Client] = Field(default_factory=dict)
     verbose: bool = False
     wrapped_logging: bool = True
     override_wrapped_logging_width: Optional[int] = None
@@ -29,7 +29,7 @@ class Config(BaseModel):
 
     def register_model(self, model_name: str, client: openai.Client) -> None:
         with self._lock:
-            self.model_registry[model_name] = client
+            self.registry[model_name] = client
 
     @property 
     def has_store(self) -> bool:
@@ -41,7 +41,7 @@ class Config(BaseModel):
             self._local.stack = []
         
         with self._lock:
-            current_registry = self._local.stack[-1] if self._local.stack else self.model_registry
+            current_registry = self._local.stack[-1] if self._local.stack else self.registry
             new_registry = current_registry.copy()
             new_registry.update(overrides)
         
@@ -52,7 +52,7 @@ class Config(BaseModel):
             self._local.stack.pop()
 
     def get_client_for(self, model_name: str) -> Optional[openai.Client]:
-        current_registry = self._local.stack[-1] if hasattr(self._local, 'stack') and self._local.stack else self.model_registry
+        current_registry = self._local.stack[-1] if hasattr(self._local, 'stack') and self._local.stack else self.registry
         client = current_registry.get(model_name)
         fallback = False
         if model_name not in current_registry.keys():

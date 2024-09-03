@@ -11,7 +11,7 @@ import time
 
 
 def main():
-    parser = ArgumentParser(description="ELL Studio Data Server")
+    parser = ArgumentParser(description="ell studio")
     parser.add_argument("--storage-dir" , default=None,
                         help="Directory for filesystem serializer storage (default: current directory)")
     parser.add_argument("--pg-connection-string", default=None,
@@ -49,7 +49,7 @@ def main():
                     await app.notify_clients("database_updated")
                 else:
                     # Use a threshold for time comparison to account for filesystem differences
-                    time_threshold = 1  # 1 second threshold
+                    time_threshold = 0.1  # 1 second threshold
                     time_changed = abs(current_stat.st_mtime - last_stat.st_mtime) > time_threshold
                     size_changed = current_stat.st_size != last_stat.st_size
                     inode_changed = current_stat.st_ino != last_stat.st_ino

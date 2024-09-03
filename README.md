@@ -1,7 +1,7 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/_static/ell-wide-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="docs/_static/ell-wide-light.png">
-  <img alt="ell logo that inverts based on color scheme" src="docs/_static/ell-wide.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/src/_static/ell-wide-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/src/_static/ell-wide-light.png">
+  <img alt="ell logo that inverts based on color scheme" src="docs/src/_static/ell-wide.png">
 </picture>
 
 --------------------------------------------------------------------------------

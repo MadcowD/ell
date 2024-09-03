@@ -6,9 +6,9 @@ ell.config.verbose = True
 
  
 class Test(BaseModel):
-    name: str
-    age: int
-    height_precise: float
+    name: str = Field(description="The name of the person")
+    age: int = Field(description="The age of the person")
+    height_precise: float = Field(description="The height of the person in meters")
     is_cool: bool
 
 @ell.complex(model='gpt-4o-2024-08-06', response_format=Test)

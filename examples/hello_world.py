@@ -6,7 +6,8 @@ from ell.stores.sql import SQLiteStore
 
 ell.config.verbose = True
 ell.set_store('./logdir', autocommit=True)
-
+# equivalent to
+# ell.init(store='./logdir', autocommit=True, verbose=True)
 
 
 def get_random_length():
