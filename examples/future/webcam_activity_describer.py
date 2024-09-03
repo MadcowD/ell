@@ -1,17 +1,19 @@
+from typing import List
 import cv2
 import time
 from PIL import Image
-import numpy as np
 import ell
 
-ell.config.verbose = True
+ell.init(verbose=True, store='./logdir', autocommit=True)
 
-@ell.simple(model="gpt-4o-mini", temperature=0.1)
-def describe_activity(image: Image.Image) -> str:
+@ell.simple(model="gpt-4o", temperature=0.1)
+def describe_activity(image: Image.Image):
     return [
-        ell.system("You are an observant assistant. Describe what the person in the image is doing in one short sentence <5 words all lower case."),
-        ell.user(image)
+        ell.system("You are VisionGPT. Answer <5 words all lower case."),
+        ell.user(["Describe what the person in the image is doing:", image])
     ]
+
+
 
 def capture_webcam_image():
     cap = cv2.VideoCapture(0)
@@ -24,7 +26,6 @@ def capture_webcam_image():
     return None
 
 if __name__ == "__main__":
-    ell.set_store('./logdir', autocommit=True)
     
     print("Press Ctrl+C to stop the program.")
     try:

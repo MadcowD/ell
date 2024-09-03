@@ -156,6 +156,7 @@ class Message(BaseModel):
 
     def __init__(self, role, content: Union[str, List[ContentBlock], List[Union[str, ContentBlock, ToolCall, ToolResult, BaseModel]]] = None, **content_block_kwargs):
         content = coerce_content_list(content, **content_block_kwargs)
+        
         super().__init__(content=content, role=role)
 
     @cached_property
@@ -191,10 +192,11 @@ class Message(BaseModel):
 
         message = {
             "role": "tool" if self.tool_results else self.role,
-            "content": self.text_only if self.text_only else filter(None, [
+            "content": list(filter(None, [
                 c.to_openai_content_block() for c in self.content
-            ])
+            ]))
         }
+        print(message, self.content)
         if self.tool_calls:
             message["tool_calls"] = [
                 {
