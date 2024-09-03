@@ -7,14 +7,15 @@
 <meta content="white" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="black" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>ell package | ell  documentation</title>
-<meta content="ell package | ell  documentation" property="og:title"/>
-<meta content="ell package | ell  documentation" name="twitter:title"/>
+<title>Language Model Programs (LMPs) | ell  documentation</title>
+<meta content="Language Model Programs (LMPs) | ell  documentation" property="og:title"/>
+<meta content="Language Model Programs (LMPs) | ell  documentation" name="twitter:title"/>
 <link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../search.html" rel="search" title="Search"/>
 <link href="../genindex.html" rel="index" title="Index"/>
-<link href="../advanced_features/multimodal_inputs.html" rel="prev" title="Multimodal Inputs in ell"/>
+<link href="decorators.html" rel="next" title="Decorators in ell"/>
+<link href="index.html" rel="prev" title="Core Concepts in ell"/>
 <script>
     <!-- Prevent Flash of wrong theme -->
       const userPreference = localStorage.getItem('darkMode');
@@ -37,7 +38,7 @@
 <img alt="Logo" class="mr-2 hidden dark:block" height="24" src="../_static/ell-wide-dark.png" width="120"/>
 <img alt="Logo" class="mr-2 dark:hidden" height="24" src="../_static/ell-wide-light.png" width="120"/></a>
 <nav class="flex items-center space-x-6 text-sm font-medium">
-<a class="transition-colors hover:text-foreground/80 text-foreground" href="#">API Reference</a>
+<a class="transition-colors hover:text-foreground/80 text-foreground/60" href="../reference/index.html">API Reference</a>
 </nav></div><button @click="showSidebar = true" class="inline-flex items-center justify-center h-10 px-0 py-2 mr-2 text-base font-medium transition-colors rounded-md hover:text-accent-foreground hover:bg-transparent md:hidden" type="button">
 <svg aria-hidden="true" fill="currentColor" height="24" viewbox="0 96 960 960" width="24" xmlns="http://www.w3.org/2000/svg">
 <path d="M152.587 825.087q-19.152 0-32.326-13.174t-13.174-32.326q0-19.152 13.174-32.326t32.326-13.174h440q19.152 0 32.326 13.174t13.174 32.326q0 19.152-13.174 32.326t-32.326 13.174h-440Zm0-203.587q-19.152 0-32.326-13.174T107.087 576q0-19.152 13.174-32.326t32.326-13.174h320q19.152 0 32.326 13.174T518.087 576q0 19.152-13.174 32.326T472.587 621.5h-320Zm0-203.587q-19.152 0-32.326-13.174t-13.174-32.326q0-19.152 13.174-32.326t32.326-13.174h440q19.152 0 32.326 13.174t13.174 32.326q0 19.152-13.174 32.326t-32.326 13.174h-440ZM708.913 576l112.174 112.174q12.674 12.674 12.674 31.826t-12.674 31.826Q808.413 764.5 789.261 764.5t-31.826-12.674l-144-144Q600 594.391 600 576t13.435-31.826l144-144q12.674-12.674 31.826-12.674t31.826 12.674q12.674 12.674 12.674 31.826t-12.674 31.826L708.913 576Z"></path>
@@ -78,10 +79,10 @@
 </a>
 <div class="relative overflow-hidden md:overflow-auto my-4 md:my-0 h-[calc(100vh-8rem)] md:h-auto">
 <div class="overflow-y-auto h-full w-full relative pr-6"><nav class="flex md:hidden flex-col font-medium mt-4">
-<a href="#">API Reference</a>
+<a href="../reference/index.html">API Reference</a>
 </nav><nav class="table w-full min-w-full my-6 lg:my-8">
 <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../getting_started/index.html">Getting Started<button @click.prevent.stop="expanded = !expanded" type="button"><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-show="expanded">
@@ -89,19 +90,19 @@
 <li class="toctree-l2"><a class="reference internal" href="../getting_started/configuration.html">Configuration</a></li>
 </ul>
 </li>
-<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../core_concepts/index.html">Core Concepts in ell<button @click.prevent.stop="expanded = !expanded" type="button"><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-show="expanded">
-<li class="toctree-l2"><a class="reference internal" href="../core_concepts/language_model_programs.html">Language Model Programs (LMPs)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../core_concepts/decorators.html">Decorators in ell</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../core_concepts/messages_and_content_blocks.html">Messages and Content Blocks in ell</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../core_concepts/tools.html">Tools in ell</a></li>
+<li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="index.html">Core Concepts in ell<button @click.prevent.stop="expanded = !expanded" type="button"><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul class="current" x-show="expanded">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Language Model Programs (LMPs)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="decorators.html">Decorators in ell</a></li>
+<li class="toctree-l2"><a class="reference internal" href="messages_and_content_blocks.html">Messages and Content Blocks in ell</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools in ell</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../best_practices/designing_effective_lmps.html">Designing Effective Language Model Programs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced_features/multimodal_inputs.html">Multimodal Inputs in ell</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">ell package</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">ell package</a></li>
 </ul>
 </nav>
 </div>
@@ -121,25 +122,130 @@
 <path d="M240 856h120V616h240v240h120V496L480 316 240 496v360Zm-80 80V456l320-240 320 240v480H520V696h-80v240H160Zm320-350Z"></path>
 </svg>
 </a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">ell package</span>
+<div class="mr-1">/</div><a class="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap" href="index.html">Core Concepts in ell</a>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Language Model Programs (LMPs)</span>
 </nav>
 <div id="content" role="main">
-<section id="ell-package">
-<h1>ell package<a class="headerlink" href="#ell-package" title="Link to this heading">¶</a></h1>
-<p>Automatically generated API reference for <code class="docutils literal notranslate"><span class="pre">ell</span></code>.</p>
-<p id="module-ell">ell is a Python library for language model programming (LMP). It provides a simple
-and intuitive interface for working with large language models.</p>
+<section id="language-model-programs-lmps">
+<h1>Language Model Programs (LMPs)<a class="headerlink" href="#language-model-programs-lmps" title="Link to this heading">¶</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#introduction'">¶</a></h2>
+<p>Language Model Programs (LMPs) are a core concept in ell. They represent a paradigm shift in how we interact with large language models, treating prompts not as simple strings, but as full-fledged programs with logic, structure, and reusability.</p>
+</section>
+<section id="what-are-language-model-programs">
+<h2>What are Language Model Programs?<a class="headerlink" href="#what-are-language-model-programs" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#what-are-language-model-programs'">¶</a></h2>
+<p>An LMP in ell is a Python function decorated with either <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> or <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code>. This function encapsulates the logic for generating a prompt or a series of messages to be sent to a language model.</p>
+<p>Key characteristics of LMPs:</p>
+<ol class="arabic simple">
+<li><p><strong>Encapsulation</strong>: All the logic for creating a prompt is contained within a single function.</p></li>
+<li><p><strong>Reusability</strong>: LMPs can be easily reused across different parts of your application.</p></li>
+<li><p><strong>Versioning</strong>: ell automatically versions your LMPs, allowing you to track changes over time.</p></li>
+<li><p><strong>Tracing</strong>: Every invocation of an LMP is traced, providing insights into your application’s behavior.</p></li>
+</ol>
+</section>
+<section id="simple-vs-complex-lmps">
+<h2>Simple vs Complex LMPs<a class="headerlink" href="#simple-vs-complex-lmps" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#simple-vs-complex-lmps'">¶</a></h2>
+<p>ell provides two main types of LMPs:</p>
+<section id="simple-lmps">
+<h3>Simple LMPs<a class="headerlink" href="#simple-lmps" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#simple-lmps'">¶</a></h3>
+<p>Simple LMPs are created using the <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> decorator. They are designed for straightforward, single-turn interactions with a language model.</p>
+<p>Example of a Simple LMP:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">summarize_text</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-3"><span class="w">    </span><span class="sd">"""You are an expert at summarizing text."""</span>
+</span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Please summarize the following text:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span>
+</span></code></pre></div>
+</div>
+<p>Key points:</p>
+<ul class="simple">
+<li><p>The function’s docstring becomes the system prompt.</p></li>
+<li><p>The return value becomes the user prompt.</p></li>
+<li><p>The LMP returns a single string response from the model.</p></li>
+</ul>
+</section>
+<section id="complex-lmps">
+<h3>Complex LMPs<a class="headerlink" href="#complex-lmps" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#complex-lmps'">¶</a></h3>
+<p>Complex LMPs are created using the <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> decorator. They allow for more advanced scenarios, including:</p>
+<ul class="simple">
+<li><p>Multi-turn conversations</p></li>
+<li><p>Tool usage</p></li>
+<li><p>Structured inputs and outputs</p></li>
+<li><p>Multimodal interactions</p></li>
+</ul>
+<p>Example of a Complex LMP:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">some_tool</span><span class="p">])</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">interactive_assistant</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ell</span><span class="o">.</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ell</span><span class="o">.</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant with access to tools."</span><span class="p">),</span>
+</span><span id="line-5">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
+</span></code></pre></div>
+</div>
+<p>Key points:</p>
+<ul class="simple">
+<li><p>Complex LMPs work with lists of <code class="docutils literal notranslate"><span class="pre">ell.Message</span></code> objects.</p></li>
+<li><p>They can integrate tools and handle multi-turn conversations.</p></li>
+<li><p>They offer more control over the interaction with the language model.</p></li>
+</ul>
+</section>
+</section>
+<section id="benefits-of-language-model-programs">
+<h2>Benefits of Language Model Programs<a class="headerlink" href="#benefits-of-language-model-programs" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#benefits-of-language-model-programs'">¶</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Modularity</strong>: LMPs encourage breaking down complex prompt engineering tasks into manageable, reusable components.</p></li>
+<li><p><strong>Versioning</strong>: Automatic versioning allows you to track changes and compare different iterations of your prompts.</p></li>
+<li><p><strong>Tracing</strong>: Invocation tracing helps in debugging and optimizing your language model interactions.</p></li>
+<li><p><strong>Type Safety</strong>: By using Python’s type hints, LMPs provide better code clarity and catch potential errors early.</p></li>
+<li><p><strong>Testability</strong>: LMPs can be easily unit tested, improving the reliability of your prompt engineering process.</p></li>
+</ol>
+</section>
+<section id="best-practices-for-lmps">
+<h2>Best Practices for LMPs<a class="headerlink" href="#best-practices-for-lmps" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#best-practices-for-lmps'">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Keep each LMP focused on a single task or concept.</p></li>
+<li><p>Use descriptive names for your LMP functions.</p></li>
+<li><p>Leverage the function’s docstring to provide clear instructions to the language model.</p></li>
+<li><p>Use type hints to clarify the expected inputs and outputs of your LMPs.</p></li>
+<li><p>For complex interactions, break down your logic into multiple LMPs that can be composed together.</p></li>
+</ol>
+</section>
+<section id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#conclusion'">¶</a></h2>
+<p>Language Model Programs are a powerful abstraction that allows you to work with language models in a more structured, maintainable, and scalable way. By thinking of prompts as programs, ell enables you to apply software engineering best practices to the field of prompt engineering.</p>
+</section>
 </section>
 </div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
 <div class="mr-auto">
-<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="../advanced_features/multimodal_inputs.html">
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="index.html">
 <svg class="mr-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 <polyline points="15 18 9 12 15 6"></polyline>
 </svg>
-        Multimodal Inputs in ell
+        Core Concepts in ell
       </a>
 </div>
-</div></div>
+<div class="ml-auto">
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="decorators.html">
+        Decorators in ell
+        <svg class="ml-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<polyline points="9 18 15 12 9 6"></polyline>
+</svg>
+</a>
+</div>
+</div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
+<div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
+<ul>
+<li><a :data-current="activeSection === '#introduction'" class="reference internal" href="#introduction">Introduction</a></li>
+<li><a :data-current="activeSection === '#what-are-language-model-programs'" class="reference internal" href="#what-are-language-model-programs">What are Language Model Programs?</a></li>
+<li><a :data-current="activeSection === '#simple-vs-complex-lmps'" class="reference internal" href="#simple-vs-complex-lmps">Simple vs Complex LMPs</a><ul>
+<li><a :data-current="activeSection === '#simple-lmps'" class="reference internal" href="#simple-lmps">Simple LMPs</a></li>
+<li><a :data-current="activeSection === '#complex-lmps'" class="reference internal" href="#complex-lmps">Complex LMPs</a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#benefits-of-language-model-programs'" class="reference internal" href="#benefits-of-language-model-programs">Benefits of Language Model Programs</a></li>
+<li><a :data-current="activeSection === '#best-practices-for-lmps'" class="reference internal" href="#best-practices-for-lmps">Best Practices for LMPs</a></li>
+<li><a :data-current="activeSection === '#conclusion'" class="reference internal" href="#conclusion">Conclusion</a></li>
+</ul>
+</div>
+</aside>
 </main>
 </div>
 </div><footer class="py-6 border-t border-border md:py-0">

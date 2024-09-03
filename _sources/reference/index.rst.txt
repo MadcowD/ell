@@ -1,5 +1,5 @@
 =============
-API Reference
+ell package
 =============
 
 Automatically generated API reference for ``ell``.
