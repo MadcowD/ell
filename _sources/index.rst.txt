@@ -171,6 +171,37 @@ Using language models is **just passing strings around, except when it's not.**
 Using ``@ell.simple`` causes LMPs to yield **simple string outputs.** But when more complex or multimodal output is needed, ``@ell.complex`` can be used to yield ``Message`` objects responses from language mdoels.
 
 
+Multimodality should be first class
+------------------------------------------------
+
+LLMs can process and generate various types of content, including text, images, audio, and video. Prompt engineering with these data types should be as easy as it is with text.
+
+.. code-block:: python
+   :emphasize-lines: 1,1, 9,9
+
+   from PIL import Image
+   import ell
+
+
+   @ell.simple(model="gpt-4o", temperature=0.1)
+   def describe_activity(image: Image.Image):
+      return [
+         ell.system("You are VisionGPT. Answer <5 words all lower case."),
+         ell.user(["Describe what the person in the image is doing:", image])
+      ]
+
+   # Capture an image from the webcam
+   describe_activity(capture_webcam_image()) # "they are holding a book"
+
+
+.. image:: _static/multimodal_compressed.webp
+   :alt: ell demonstration
+   :class: rounded-image invertible-image
+   :width: 100%
+
+
+``ell`` supports rich type coercion for multimodal inputs and outputs. You can use PIL images, audio, and other multimodal inputs inline in ``Message`` objects returned by LMPs.
+
 ----------------------------
 
 To get started with ``ell``, see the :doc:`Getting Started <getting_started/index>` section, or go onto :doc:`Installation <installation>` and get ell installed.
