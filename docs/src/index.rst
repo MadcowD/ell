@@ -44,12 +44,20 @@
 ell: The Language Model Programming Library
 ===========================================
 
+.. raw:: html
+   
+   <div style="display: flex; gap: 10px;">
+   <a href="https://docs.ell.so/getting-started/installation/" target="_blank">
+       <img src="https://img.shields.io/badge/get_started-blue" alt="Install">
+   </a>
+   <a href="https://discord.gg/vWntgU52Xb" target="_blank">
+       <img src="https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat" alt="Discord">
+   </a>
+   </div>
 
 .. title:: Introduction
 
-
-
-``ell`` is a lightweight, functional prompt engineering library built on a few key principles.
+``ell`` is a lightweight prompt engineering library treating prompts as functions. After years of building and using language models at OpenAI and in the startup ecosystem, ``ell`` was designed from the following principles:
 
 
 Prompts are programs, not strings
@@ -58,7 +66,6 @@ Prompts are programs, not strings
 .. code-block:: python
 
     import ell
-    ell.init(verbose=True)
 
     @ell.simple(model="gpt-4o-mini")
     def hello(world: str):
@@ -82,19 +89,6 @@ Prompts aren't just strings; they are all the code that leads to strings being s
 
 LMPs are fully encapsulated functions that produce either a string prompt or a list of messages to be sent to various multimodal language models. This encapsulation creates a clean interface for users, who only need to be aware of the required data specified to the LMP.
 
-
-
-Prompt engineering libraries shouldn't interfere with your workflow
---------------------------------------------------------------------
-
-``ell`` is designed to be a lightweight and unobtrusive library. It doesn't require you to change your coding style or use special editors. 
-
-.. image:: _static/useitanywhere_compressed.webp
-   :alt: ell demonstration
-   :class: rounded-image 
-   :width: 100%
-
-You can continue to use regular Python code in your IDE to define and modify your prompts, while leveraging ell's features to visualize and analyze your prompts. Migrate from langchain to ``ell`` one function at a time.
 
 Prompt engineering is an optimization process
 ------------------------------------------------
@@ -120,6 +114,45 @@ The process of prompt engineering involves many iterations, similar to the optim
 
     hello("strawberry") # the source code of the LMP the call is saved to the store
    
+
+
+Test-time compute is important
+--------------------------------
+
+.. Note on how in promtp engineering going from a demo to something that acutally works often requires test time compute (calling a lm many times) techniques like lm critics, bon sampling, reward mdoels, etc and so the LMP abstraction enables extremely readable decomposition of difficult problems in to many calls to language models
+
+Going from a demo to something that actually works, often means prompt engineering solutions that involve multiple calls to a language model.
+By forcing a functional decomposition of the problem, ``ell`` makes it easy to implement test-time compute leveraged techniques in a readable and modular way.
+
+
+.. image:: _static/compositionality.webp
+   :alt: ell demonstration
+   :class: rounded-image invertible-image
+   :width: 100%
+
+
+
+.. code-block:: python
+
+   import ell
+   
+   @ell.simple(model="gpt-4o-mini", temperature=1.0, n=10)
+   def write_ten_drafts(idea : str):
+      """You are an adept story writer. The story should only be 3 paragraphs"""
+      return f"Write a story about {idea}."
+
+   @ell.simple(model="gpt-4o", temperature=0.1)
+   def choose_the_best_draft(drafts : List[str]):
+      """You are an expert fiction editor."""
+      return f"Choose the best draft from the following list: {'\n'.join(drafts)}."
+
+   drafts = write_ten_drafts(idea)
+
+   best_draft = choose_the_best_draft(drafts) # Best of 10 sampling.
+
+   
+
+
 
 
 
@@ -201,6 +234,21 @@ LLMs can process and generate various types of content, including text, images, 
 
 
 ``ell`` supports rich type coercion for multimodal inputs and outputs. You can use PIL images, audio, and other multimodal inputs inline in ``Message`` objects returned by LMPs.
+
+
+
+
+Prompt engineering libraries shouldn't interfere with your workflow
+--------------------------------------------------------------------
+
+``ell`` is designed to be a lightweight and unobtrusive library. It doesn't require you to change your coding style or use special editors. 
+
+.. image:: _static/useitanywhere_compressed.webp
+   :alt: ell demonstration
+   :class: rounded-image 
+   :width: 100%
+
+You can continue to use regular Python code in your IDE to define and modify your prompts, while leveraging ell's features to visualize and analyze your prompts. Migrate from langchain to ``ell`` one function at a time.
 
 ----------------------------
 
