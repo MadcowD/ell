@@ -136,6 +136,11 @@ class ContentBlock(BaseModel):
                 "type": "text",
                 "text": self.text
             }
+        elif self.parsed:
+            return {
+                "type": "text",
+                "json": self.parsed.model_dump_json()
+            }
         else:
             return None 
         

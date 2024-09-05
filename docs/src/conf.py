@@ -32,6 +32,7 @@ html_theme_options = {
     "main_nav_links": {
         "Docs": "index",
         "API Reference": "reference/index",
+        "AI Jobs Board": "https://jobs.ell.so",
     },
     "extra_header_link_icons": {
         "Discord": {
@@ -44,8 +45,8 @@ html_theme_options = {
 
     "logo_light": "_static/ell-wide-light.png",
     "logo_dark": "_static/ell-wide-dark.png",
+    
 }
-
 
 
 

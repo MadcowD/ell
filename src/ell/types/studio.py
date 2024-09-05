@@ -11,7 +11,7 @@ from typing import Optional
 from dataclasses import dataclass
 from typing import Dict, List, Literal, Union, Any, Optional
 
-from pydantic import field_validator
+from pydantic import BaseModel, field_validator
 
 from datetime import datetime
 from typing import Any, List, Optional
@@ -139,7 +139,7 @@ class InvocationContentsBase(SQLModel):
         ]
         
         total_size = sum(
-            len(json.dumps(field).encode('utf-8')) for field in json_fields if field is not None
+            len(json.dumps(field, default=(lambda x: x.model_dump_json() if isinstance(x, BaseModel) else str(x))).encode('utf-8')) for field in json_fields if field is not None
         )
         # print("total_size", total_size)
         
