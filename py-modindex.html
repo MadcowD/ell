@@ -37,11 +37,13 @@
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-220ZB10X27"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
 
-  gtag('config', 'G-220ZB10X27');
+    gtag('config', 'G-220ZB10X27');
+  }
 </script>
 
 
@@ -140,11 +142,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="getting_started/index.html">Getting Started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="getting_started/basic_usage.html">Basic Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started/configuration.html">Configuration</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="core_concepts/index.html">Core Concepts in ell</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="core_concepts/language_model_programs.html">Language Model Programs (LMPs)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core_concepts/decorators.html">Decorators in ell</a></li>
