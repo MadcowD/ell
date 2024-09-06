@@ -29,7 +29,7 @@ Ell Studio .rst
 - how to use it locally
 - the lmp graph
 - the invocations view
-- viewing an individual lmp
+- viewing an individual lmp#
 
 @ell.complex .rst
 

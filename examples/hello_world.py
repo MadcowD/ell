@@ -1,6 +1,10 @@
 import ell
 import numpy as np
 
+
+
+
+
 from ell.stores.sql import SQLiteStore
 
 
@@ -15,7 +19,7 @@ def get_random_length():
 
 @ell.simple(model="gpt-4o-mini")
 def hello(world : str):
-    """Your goal is to be really meant to the other guy whiel say hello"""
+    """Your goal is to be really meant to the other guy while sayi hello"""
     name = world.capitalize()
     number_of_chars_in_name = get_random_length()
 

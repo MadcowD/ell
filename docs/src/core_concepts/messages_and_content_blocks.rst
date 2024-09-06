@@ -117,7 +117,7 @@ You can access the content of a Message in different ways:
     # Access specific content types
     tool_calls = message.tool_calls
     tool_results = message.tool_results
-    parsed_content = message.parsed_content
+    structured = message.structured
 
 Best Practices
 --------------

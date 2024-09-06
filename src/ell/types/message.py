@@ -181,7 +181,7 @@ class Message(BaseModel):
         return [c.tool_result for c in self.content if c.tool_result is not None]
 
     @cached_property
-    def parsed_content(self) -> List[BaseModel]:
+    def structured(self) -> List[BaseModel]:
         return [c.parsed for c in self.content if c.parsed is not None]
     
     def call_tools_and_collect_as_message(self, parallel=False, max_workers=None):

@@ -154,7 +154,7 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
 
        text = "John Doe is a 30-year-old software engineer."
        result : ell.Message = extract_person_info(text)
-       person_info = result.parsed_content[0]
+       person_info = result.structured[0]
        print(f"Name: {person_info.name}, Age: {person_info.age}")
 
     5. Multimodal Input:
@@ -196,7 +196,7 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
     - response.text_only: Get only the text content, excluding non-text elements.
     - response.tool_calls: Access the list of tool calls in the message.
     - response.tool_results: Access the list of tool results in the message.
-    - response.parsed_content: Access structured data outputs.
+    - response.structured: Access structured data outputs.
     - response.call_tools_and_collect_as_message(): Execute tool calls and collect results.
     - Message(role="user", content=[...]).to_openai_message(): Convert to OpenAI API format.
 
