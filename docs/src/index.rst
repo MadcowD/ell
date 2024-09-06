@@ -48,7 +48,7 @@ ell: The Language Model Programming Library
 .. raw:: html
    
    <div style="display: flex; gap: 10px;">
-   <a href="https://docs.ell.so/getting-started/installation/" target="_blank">
+   <a href="https://docs.ell.so/installation" target="_blank">
        <img src="https://img.shields.io/badge/get_started-blue" alt="Install">
    </a>
    <a href="https://discord.gg/vWntgU52Xb" target="_blank">
