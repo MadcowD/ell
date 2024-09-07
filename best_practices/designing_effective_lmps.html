@@ -14,8 +14,8 @@
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../search.html" rel="search" title="Search"/>
 <link href="../genindex.html" rel="index" title="Index"/>
-<link href="../advanced_features/multimodal_inputs.html" rel="next" title="Multimodal Inputs in ell"/>
-<link href="../core_concepts/tools.html" rel="prev" title="Tools in ell"/>
+<link href="../reference/index.html" rel="next" title="ell package"/>
+<link href="../core_concepts/configuration.html" rel="prev" title="Configuration"/>
 <script>
     <!-- Prevent Flash of wrong theme -->
       const userPreference = localStorage.getItem('darkMode');
@@ -138,17 +138,20 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../core_concepts/ell_simple.html">@ell.simple</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core_concepts/ell_complex.html">@ell.complex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core_concepts/message_api.html">Message API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core_concepts/tool_usage.html">Tool Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core_concepts/structured_outputs.html">Structured Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core_concepts/multimodality.html">Multimodality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core_concepts/models_and_api_clients.html">Models &amp; API Clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core_concepts/configuration.html">Configuration</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
 <ul class="current">
-<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../core_concepts/index.html">Core Concepts in ell<button @click.prevent.stop="expanded = !expanded" type="button"><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-show="expanded">
-<li class="toctree-l2"><a class="reference internal" href="../core_concepts/language_model_programs.html">Language Model Programs (LMPs)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../core_concepts/decorators.html">Decorators in ell</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../core_concepts/messages_and_content_blocks.html">Messages and Content Blocks in ell</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../core_concepts/tools.html">Tools in ell</a></li>
-</ul>
-</li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Designing Effective Language Model Programs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced_features/multimodal_inputs.html">Multimodal Inputs in ell</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
 <ul>
@@ -391,16 +394,16 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </section>
 </div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
 <div class="mr-auto">
-<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="../core_concepts/tools.html">
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="../core_concepts/configuration.html">
 <svg class="mr-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 <polyline points="15 18 9 12 15 6"></polyline>
 </svg>
-        Tools in ell
+        Configuration
       </a>
 </div>
 <div class="ml-auto">
-<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="../advanced_features/multimodal_inputs.html">
-        Multimodal Inputs in ell
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="../reference/index.html">
+        ell package
         <svg class="ml-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 <polyline points="9 18 15 12 9 6"></polyline>
 </svg>

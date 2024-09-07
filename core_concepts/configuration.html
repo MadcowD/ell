@@ -7,14 +7,15 @@
 <meta content="white" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="black" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>ell package | ell  documentation</title>
-<meta content="ell package | ell  documentation" property="og:title"/>
-<meta content="ell package | ell  documentation" name="twitter:title"/>
+<title>Configuration | ell  documentation</title>
+<meta content="Configuration | ell  documentation" property="og:title"/>
+<meta content="Configuration | ell  documentation" name="twitter:title"/>
 <link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../search.html" rel="search" title="Search"/>
 <link href="../genindex.html" rel="index" title="Index"/>
-<link href="../best_practices/designing_effective_lmps.html" rel="prev" title="Designing Effective Language Model Programs"/>
+<link href="../best_practices/designing_effective_lmps.html" rel="next" title="Designing Effective Language Model Programs"/>
+<link href="models_and_api_clients.html" rel="prev" title="Models &amp; API Clients"/>
 <script>
     <!-- Prevent Flash of wrong theme -->
       const userPreference = localStorage.getItem('darkMode');
@@ -85,7 +86,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <img alt="Logo" class="mr-2 dark:hidden" height="24" src="../_static/ell-wide-light.png" width="120"/></a>
 <nav class="flex items-center space-x-6 text-sm font-medium">
 <a class="transition-colors hover:text-foreground/80 text-foreground/60" href="../index.html">Docs</a>
-<a class="transition-colors hover:text-foreground/80 text-foreground" href="#">API Reference</a>
+<a class="transition-colors hover:text-foreground/80 text-foreground/60" href="../reference/index.html">API Reference</a>
 <a class="transition-colors hover:text-foreground/80 text-foreground/60" href="https://jobs.ell.so" rel="noopener nofollow">AI Jobs Board</a>
 </nav></div><button @click="showSidebar = true" class="inline-flex items-center justify-center h-10 px-0 py-2 mr-2 text-base font-medium transition-colors rounded-md hover:text-accent-foreground hover:bg-transparent md:hidden" type="button">
 <svg aria-hidden="true" fill="currentColor" height="24" viewbox="0 96 960 960" width="24" xmlns="http://www.w3.org/2000/svg">
@@ -128,7 +129,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <div class="relative overflow-hidden md:overflow-auto my-4 md:my-0 h-[calc(100vh-8rem)] md:h-auto">
 <div class="overflow-y-auto h-full w-full relative pr-6"><nav class="flex md:hidden flex-col font-medium mt-4">
 <a href="../index.html">Docs</a>
-<a href="#">API Reference</a>
+<a href="../reference/index.html">API Reference</a>
 <a href="https://jobs.ell.so" rel="nofollow noopener">AI Jobs Board</a>
 </nav><nav class="table w-full min-w-full my-6 lg:my-8">
 <p class="caption" role="heading"><span class="caption-text">The Basics:</span></p>
@@ -138,23 +139,23 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Core Concepts:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/ell_simple.html">@ell.simple</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/ell_complex.html">@ell.complex</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/message_api.html">Message API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/tool_usage.html">Tool Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/structured_outputs.html">Structured Outputs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/multimodality.html">Multimodality</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/models_and_api_clients.html">Models &amp; API Clients</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/configuration.html">Configuration</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="ell_simple.html">@ell.simple</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ell_complex.html">@ell.complex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="message_api.html">Message API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tool_usage.html">Tool Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structured_outputs.html">Structured Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multimodality.html">Multimodality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_and_api_clients.html">Models &amp; API Clients</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../best_practices/designing_effective_lmps.html">Designing Effective Language Model Programs</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">ell package</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">ell package</a></li>
 </ul>
 </nav>
 </div>
@@ -174,23 +175,40 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <path d="M240 856h120V616h240v240h120V496L480 316 240 496v360Zm-80 80V456l320-240 320 240v480H520V696h-80v240H160Zm320-350Z"></path>
 </svg>
 </a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">ell package</span>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Configuration</span>
 </nav>
 <div id="content" role="main">
-<section id="ell-package">
-<h1>ell package<a class="headerlink" href="#ell-package" title="Link to this heading">¶</a></h1>
-<p>Automatically generated API reference for <code class="docutils literal notranslate"><span class="pre">ell</span></code>.</p>
-<p id="module-ell">ell is a Python library for language model programming (LMP). It provides a simple
-and intuitive interface for working with large language models.</p>
+<section id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h1>
+<p>ell provides various configuration options to customize its behavior.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="n">ell</span><span class="o">.</span><span class="n">init</span><span class="p">(</span>
+</span><span id="line-4">    <span class="n">store</span><span class="o">=</span><span class="s1">'./logdir'</span><span class="p">,</span>
+</span><span id="line-5">    <span class="n">autocommit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="line-6">    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="line-7"><span class="p">)</span>
+</span><span id="line-8">
+</span><span id="line-9"><span class="c1"># Your ell code here</span>
+</span></code></pre></div>
+</div>
 </section>
 </div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
 <div class="mr-auto">
-<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="../best_practices/designing_effective_lmps.html">
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="models_and_api_clients.html">
 <svg class="mr-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 <polyline points="15 18 9 12 15 6"></polyline>
 </svg>
-        Designing Effective Language Model Programs
+        Models &amp; API Clients
       </a>
+</div>
+<div class="ml-auto">
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="../best_practices/designing_effective_lmps.html">
+        Designing Effective Language Model Programs
+        <svg class="ml-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<polyline points="9 18 15 12 9 6"></polyline>
+</svg>
+</a>
 </div>
 </div></div>
 </main>

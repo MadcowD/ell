@@ -7,15 +7,15 @@
 <meta content="white" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="black" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Core Concepts in ell | ell  documentation</title>
-<meta content="Core Concepts in ell | ell  documentation" property="og:title"/>
-<meta content="Core Concepts in ell | ell  documentation" name="twitter:title"/>
+<title>Structured Outputs | ell  documentation</title>
+<meta content="Structured Outputs | ell  documentation" property="og:title"/>
+<meta content="Structured Outputs | ell  documentation" name="twitter:title"/>
 <link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../search.html" rel="search" title="Search"/>
 <link href="../genindex.html" rel="index" title="Index"/>
-<link href="language_model_programs.html" rel="next" title="Language Model Programs (LMPs)"/>
-<link href="../getting_started.html" rel="prev" title="Getting Started"/>
+<link href="multimodality.html" rel="next" title="Multimodality"/>
+<link href="tool_usage.html" rel="prev" title="Tool Usage"/>
 <script>
     <!-- Prevent Flash of wrong theme -->
       const userPreference = localStorage.getItem('darkMode');
@@ -138,17 +138,20 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts:</span></p>
 <ul class="current">
-<li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="current reference internal expandable" href="#">Core Concepts in ell<button @click.prevent.stop="expanded = !expanded" type="button"><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-show="expanded">
-<li class="toctree-l2"><a class="reference internal" href="language_model_programs.html">Language Model Programs (LMPs)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="decorators.html">Decorators in ell</a></li>
-<li class="toctree-l2"><a class="reference internal" href="messages_and_content_blocks.html">Messages and Content Blocks in ell</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools in ell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ell_simple.html">@ell.simple</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ell_complex.html">@ell.complex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="message_api.html">Message API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tool_usage.html">Tool Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Structured Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multimodality.html">Multimodality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_and_api_clients.html">Models &amp; API Clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 </ul>
-</li>
+<p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../best_practices/designing_effective_lmps.html">Designing Effective Language Model Programs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced_features/multimodal_inputs.html">Multimodal Inputs in ell</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
 <ul>
@@ -172,78 +175,44 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <path d="M240 856h120V616h240v240h120V496L480 316 240 496v360Zm-80 80V456l320-240 320 240v480H520V696h-80v240H160Zm320-350Z"></path>
 </svg>
 </a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Core Concepts in ell</span>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Structured Outputs</span>
 </nav>
 <div id="content" role="main">
-<section id="core-concepts-in-ell">
-<h1>Core Concepts in ell<a class="headerlink" href="#core-concepts-in-ell" title="Link to this heading">¶</a></h1>
-<p>Welcome to the Core Concepts section of the ell documentation. This section covers the fundamental ideas and components that form the backbone of ell. Understanding these concepts is crucial for effectively using ell in your projects.</p>
-<section id="in-this-section">
-<h2>In this section:<a class="headerlink" href="#in-this-section" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#in-this-section'">¶</a></h2>
-<ol class="arabic simple">
-<li><p><a class="reference internal" href="language_model_programs.html"><span class="doc">Language Model Programs (LMPs)</span></a></p>
-<ul class="simple">
-<li><p>What are Language Model Programs?</p></li>
-<li><p>The philosophy behind treating prompts as programs</p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="decorators.html"><span class="doc">Decorators</span></a></p>
-<ul class="simple">
-<li><p>The @ell.simple decorator</p></li>
-<li><p>The @ell.complex decorator</p></li>
-<li><p>Choosing between simple and complex LMPs</p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="messages_and_content_blocks.html"><span class="doc">Messages and Content Blocks</span></a></p>
-<ul class="simple">
-<li><p>Understanding the Message system</p></li>
-<li><p>Working with different types of ContentBlocks</p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="tools.html"><span class="doc">Tools</span></a></p>
-<ul class="simple">
-<li><p>Defining and using tools in ell</p></li>
-<li><p>Integrating tools with Language Model Programs</p></li>
-</ul>
-</li>
-</ol>
-<p>By mastering these core concepts, you’ll have a solid foundation for building sophisticated applications with ell. Each concept builds upon the others, so we recommend going through them in order.</p>
-<p>Let’s start by exploring Language Model Programs, the fundamental building blocks of ell!</p>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Core Concepts:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="language_model_programs.html">Language Model Programs (LMPs)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="decorators.html">Decorators in ell</a></li>
-<li class="toctree-l1"><a class="reference internal" href="messages_and_content_blocks.html">Messages and Content Blocks in ell</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools in ell</a></li>
-</ul>
+<section id="structured-outputs">
+<h1>Structured Outputs<a class="headerlink" href="#structured-outputs" title="Link to this heading">¶</a></h1>
+<p>Structured outputs allow for more controlled and predictable responses from language models.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="k">class</span> <span class="nc">MovieReview</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="line-4">    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="line-5">    <span class="n">rating</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="line-6">    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="line-7">
+</span><span id="line-8"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
+</span><span id="line-9"><span class="k">def</span> <span class="nf">generate_movie_review</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MovieReview</span><span class="p">:</span>
+</span><span id="line-10">    <span class="c1"># Implementation</span>
+</span><span id="line-11">    <span class="k">pass</span>
+</span></code></pre></div>
 </div>
-</section>
 </section>
 </div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
 <div class="mr-auto">
-<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="../getting_started.html">
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="tool_usage.html">
 <svg class="mr-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 <polyline points="15 18 9 12 15 6"></polyline>
 </svg>
-        Getting Started
+        Tool Usage
       </a>
 </div>
 <div class="ml-auto">
-<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="language_model_programs.html">
-        Language Model Programs (LMPs)
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="multimodality.html">
+        Multimodality
         <svg class="ml-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 <polyline points="9 18 15 12 9 6"></polyline>
 </svg>
 </a>
 </div>
-</div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
-<div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
-<ul>
-<li><a :data-current="activeSection === '#in-this-section'" class="reference internal" href="#in-this-section">In this section:</a></li>
-</ul>
-</div>
-</aside>
+</div></div>
 </main>
 </div>
 </div><footer class="py-6 border-t border-border md:py-0">
