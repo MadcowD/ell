@@ -3,6 +3,8 @@ from typing import Any, Dict, Optional, Protocol, List
 from ell.api.types import LMP, GetLMPResponse, WriteLMPInput, WriteInvocationInput
 from ell.stores.sql import SQLiteStore
 from ell.types import SerializedLMP
+import logging
+from httpx import HTTPStatusError
 
 
 class EllClient(Protocol):
@@ -42,11 +44,18 @@ class EllAPIClient(EllClient):
         return LMP(**data)
 
     async def write_lmp(self, lmp: WriteLMPInput, uses: List[str]) -> None:
-        response = await self.client.post("/lmp", json={
-            "lmp": lmp.model_dump(mode="json"),
-            "uses": uses
-        })
-        response.raise_for_status()
+        try:
+            response = await self.client.post("/lmp", json={
+                "lmp": lmp.model_dump(mode="json"),
+                "uses": uses
+            })
+            response.raise_for_status()
+        except HTTPStatusError as e:
+            if e.response.status_code == 422:
+                error_detail = e.response.json().get("detail", "No detailed error message provided")
+                logging.error(f"Unprocessable Entity (422) Error: {error_detail}")
+                raise ValueError(f"Invalid input: {error_detail}") from e
+            raise
 
     async def write_invocation(self, input: WriteInvocationInput) -> None:
         response = await self.client.post(

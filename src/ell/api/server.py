@@ -108,7 +108,7 @@ def create_app(config: Config):
     @app.post("/lmp")
     async def write_lmp(
         lmp: WriteLMPInput,
-        uses: Dict[str, Any],  # SerializedLMPUses,
+        uses: List[str],  # SerializedLMPUses,
         publisher: Publisher = Depends(get_publisher),
         serializer: Store = Depends(get_serializer)
     ):

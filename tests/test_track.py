@@ -149,7 +149,7 @@ def test_track_decorator_api(
             lmp.name = fqn
             return [lmp_factory.build()]
 
-        async def write_lmp(self, lmp: WriteLMPInput, uses: Dict[str, Any]):
+        async def write_lmp(self, lmp: WriteLMPInput, uses: List[str]):
             return None
 
         async def write_invocation(self, input: WriteInvocationInput):

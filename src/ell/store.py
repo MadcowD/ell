@@ -41,7 +41,7 @@ class Store(ABC):
         pass
 
     @abstractmethod
-    def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:
+    def write_lmp(self, serialized_lmp: SerializedLMP, uses: List[str]) -> Optional[Any]:
         """
         Write an LMP (Language Model Package) to the storage.
 

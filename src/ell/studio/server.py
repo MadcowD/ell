@@ -14,7 +14,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 import json
 from ell.studio.config import Config
-from ell.studio.connection_manager import ConnectionManager
 from ell.studio.datamodels import InvocationPublicWithConsumes, SerializedLMPWithUses
 from ell.studio.datamodels import SerializedLMPWithUses,InvocationsAggregate
 from ell.studio.pubsub import MqttWebSocketPubSub, NoOpPubSub, WebSocketPubSub

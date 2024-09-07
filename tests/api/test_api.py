@@ -2,7 +2,7 @@ from datetime import timezone
 from logging import DEBUG
 from uuid import uuid4
 import pytest
-from typing import Any, Dict
+from typing import Any, Dict, List
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 from ell.api.server import NoopPublisher, create_app, get_publisher, get_serializer, get_session
@@ -130,10 +130,10 @@ def test_write_lmp(sql_store: SQLStore):
         "commit_message": "Initial commit",
         "created_at": utc_now().isoformat().replace("+00:00", "Z")
     }
-    uses: Dict[str, Any] = {
-        "used_lmp_1": {},
-        "used_lmp_2": {}
-    }
+    uses: List[str] = [
+        "used_lmp_1",
+        "used_lmp_2"
+    ]
 
     response = client.post(
         "/lmp",

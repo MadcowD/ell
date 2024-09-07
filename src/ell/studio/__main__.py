@@ -45,7 +45,6 @@ def main():
         async def serve_react_app(full_path: str):
             return FileResponse(os.path.join(static_dir, "index.html"))
 
-    db_path = os.path.join(args.storage_dir)
 
     async def db_watcher(db_path: str, app: FastAPI):
         last_stat = None
@@ -91,8 +90,8 @@ def main():
     tasks = []
     tasks.append(loop.create_task(server.serve()))
 
-    if db_path:
-        tasks.append(loop.create_task(db_watcher(db_path, app)))
+    if args.storage_dir:
+        tasks.append(loop.create_task(db_watcher(args.storage_dir, app)))
 
     loop.run_forever()
 
