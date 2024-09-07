@@ -181,7 +181,7 @@ class Message(BaseModel):
         return [c.tool_result for c in self.content if c.tool_result is not None]
 
     @cached_property
-    def structured(self) -> List[BaseModel]:
+    def parsed(self) -> List[BaseModel]:
         return [c.parsed for c in self.content if c.parsed is not None]
     
     def call_tools_and_collect_as_message(self, parallel=False, max_workers=None):
@@ -201,7 +201,6 @@ class Message(BaseModel):
                 c.to_openai_content_block() for c in self.content
             ]))
         }
-        print(message, self.content)
         if self.tool_calls:
             message["tool_calls"] = [
                 {

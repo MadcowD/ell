@@ -1,34 +1,21 @@
 import ell
-import numpy as np
+import random
 
+ell.init(store='./logdir', autocommit=True)
 
+def get_random_adjective():
+    adjectives = ["enthusiastic", "cheerful", "warm", "friendly", "heartfelt", "sincere"]
+    return random.choice(adjectives)
 
+def get_random_punctuation():
+    return random.choice(["!", "!!", "!!!"])
 
+@ell.simple(model="gpt-3.5-turbo")
+def hello(name: str):
+    """You are a helpful and expressive assistant."""
+    adjective = get_random_adjective()
+    punctuation = get_random_punctuation()
+    return f"Say a {adjective} hello to {name}{punctuation}"
 
-from ell.stores.sql import SQLiteStore
-
-
-ell.config.verbose = True
-ell.set_store('./logdir', autocommit=True)
-# equivalent to
-# ell.init(store='./logdir', autocommit=True, verbose=True)
-
-
-def get_random_length():
-    return int(np.random.beta(2, 6) * 3000)
-
-@ell.simple(model="gpt-4o-mini")
-def hello(world : str):
-    """Your goal is to be really meant to the other guy while sayi hello"""
-    name = world.capitalize()
-    number_of_chars_in_name = get_random_length()
-
-    return f"Say hello to {name} in {number_of_chars_in_name} characters or more!"
-
-
-
-if __name__ == "__main__":
-    greeting = hello("sam altman") # > "hello sama! ... "
-
-    # List of strings
-    print(greeting.split(" ")[-1])
+greeting = hello("Sam Altman")
+print(greeting)

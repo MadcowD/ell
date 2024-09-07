@@ -1,44 +1,5 @@
 
-.. raw:: html
 
-   <style>
-       .rounded-image {
-           border-radius: 10px;
-           overflow: hidden;
-       }
-
-   </style>
-.. raw:: html
-
-   <script>
-   function invertImage(dark) {
-       var images = document.querySelectorAll('.invertible-image img');
-       var htmlElement = document.documentElement;
-       images.forEach(function(image) {
-           if (!dark) {
-               image.style.filter = 'invert(100%) hue-rotate(160deg)';
-           } else {
-               image.style.filter = 'none';
-           }
-       });
-   }
-
-   
-
-   // Run when the 'dark' class is added or removed from the <html> element
-   const htmlElement = document.documentElement;
-   
-   // Use MutationObserver to detect changes in the class attribute
-   const observer = new MutationObserver((mutations) => {
-   console.log(document.documentElement.classList)
-       mutations.forEach((mutation) => {
-               invertImage(document.documentElement.classList.contains('dark'));
-   
-       });
-   });
-
-   observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
-   </script>
 
 ===========================================
 ell: The Language Model Programming Library
