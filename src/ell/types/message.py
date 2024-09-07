@@ -215,35 +215,91 @@ class Message(BaseModel):
         content = coerce_content_list(content, **content_block_kwargs)
         
         super().__init__(content=content, role=role)
-
     @cached_property
     def text(self) -> str:
+        """Returns all text content, replacing non-text content with type indicators.
+
+        Example:
+            >>> message = Message(role="user", content=["Hello", PILImage.new('RGB', (100, 100)), "World"])
+            >>> message.text
+            'Hello\\n<image>\\nWorld'
+        """
         return "\n".join(c.text or f"<{c.type}>" for c in self.content)
     
     @cached_property
     def images(self) -> List[PILImage.Image]:
+        """Returns a list of all image content.
+
+        Example:
+            >>> image1 = PILImage.new('RGB', (100, 100))
+            >>> image2 = PILImage.new('RGB', (200, 200))
+            >>> message = Message(role="user", content=["Text", image1, "More text", image2])
+            >>> len(message.images)
+            2
+        """
         return [c.image for c in self.content if c.image]
     
     @cached_property
     def audios(self) -> List[np.ndarray]:
+        """Returns a list of all audio content.
+
+        Example:
+            >>> audio1 = np.array([0.1, 0.2, 0.3])
+            >>> audio2 = np.array([0.4, 0.5, 0.6])
+            >>> message = Message(role="user", content=["Text", audio1, "More text", audio2])
+            >>> len(message.audios)
+            2
+        """
         return [c.audio for c in self.content if c.audio]
 
     @cached_property
     def text_only(self) -> str:
+        """Returns only the text content, ignoring non-text content.
+
+        Example:
+            >>> message = Message(role="user", content=["Hello", PILImage.new('RGB', (100, 100)), "World"])
+            >>> message.text_only
+            'Hello\\nWorld'
+        """
         return "\n".join(c.text for c in self.content if c.text)
 
     @cached_property
     def tool_calls(self) -> List[ToolCall]:
+        """Returns a list of all tool calls.
+
+        Example:
+            >>> tool_call = ToolCall(tool=lambda x: x, params=BaseModel())
+            >>> message = Message(role="user", content=["Text", tool_call])
+            >>> len(message.tool_calls)
+            1
+        """
         return [c.tool_call for c in self.content if c.tool_call is not None]
     
     @cached_property
     def tool_results(self) -> List[ToolResult]:
+        """Returns a list of all tool results.
+
+        Example:
+            >>> tool_result = ToolResult(tool_call_id="123", result=[ContentBlock(text="Result")])
+            >>> message = Message(role="user", content=["Text", tool_result])
+            >>> len(message.tool_results)
+            1
+        """
         return [c.tool_result for c in self.content if c.tool_result is not None]
 
     @cached_property
     def parsed(self) -> List[BaseModel]:
+        """Returns a list of all parsed content.
+
+        Example:
+            >>> class CustomModel(BaseModel):
+            ...     value: int
+            >>> parsed_content = CustomModel(value=42)
+            >>> message = Message(role="user", content=["Text", ContentBlock(parsed=parsed_content)])
+            >>> len(message.parsed)
+            1
+        """
         return [c.parsed for c in self.content if c.parsed is not None]
-    
     def call_tools_and_collect_as_message(self, parallel=False, max_workers=None):
         if parallel:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:

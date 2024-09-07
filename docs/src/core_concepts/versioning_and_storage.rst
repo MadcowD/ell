@@ -1,4 +1,4 @@
 =================================================
-Prompt Versioning, Ell Studio
+Versioning & Visualization: Ell Studio
 =================================================
 
