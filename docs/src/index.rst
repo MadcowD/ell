@@ -242,13 +242,19 @@ To get started with ``ell``, see the :doc:`Getting Started <getting_started>` se
 
 .. toctree::
    :maxdepth: 3
-   :caption: User Guide:
+   :caption: The Basics:
    :hidden:
 
    Introduction <self>
    
    installation
    getting_started
+
+.. toctree::
+   :maxdepth: 3
+   :caption: User Guide:
+   :hidden:
+
    core_concepts/index
    best_practices/designing_effective_lmps
    advanced_features/multimodal_inputs
