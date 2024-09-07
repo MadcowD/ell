@@ -100,7 +100,7 @@ While the previous example used the docstring for the system message and the ret
 
 This approach allows you to construct more complex conversations within your LMP. Importantly, you'll want to use this approach when you have a variable system prompt because python only allows you to have a static system prompt.
 
-Prompts as Programs
+Prompting as Language Model Programming
 ----------------------------------------
 
 One of ell's most powerful features is its treatment of prompts as programs rather than simple strings. This approach allows you to leverage the full power of Python in your prompt engineering. Let's see how this works:
@@ -124,6 +124,74 @@ One of ell's most powerful features is its treatment of prompts as programs rath
     print(greeting)
 
 In this example, our hello LMP depends on the ``get_random_adjective`` function. Each time ``hello`` is called, it generates a different adjective, creating dynamic, varied prompts.
+
+
+Taking this concept further, LMPs can call other LMPs, allowing for more complex and powerful prompt engineering strategies. Let's look at an example:
+
+
+.. image:: _static/compositionality.webp
+   :alt: ell demonstration
+   :class: rounded-image invertible-image
+   :width: 100%
+
+
+
+.. code-block:: python
+    
+    import ell
+    from typing import List
+
+    ell.init(verbose=True)
+
+
+    @ell.simple(model="gpt-4o-mini", temperature=1.0)
+    def generate_story_ideas(about : str):
+        """You are an expert story ideator. Only answer in a single sentence."""
+        return f"Generate a story idea about {about}."
+
+    @ell.simple(model="gpt-4o-mini", temperature=1.0)
+    def write_a_draft_of_a_story(idea : str):
+        """You are an adept story writer. The story should only be 3 paragraphs."""
+        return f"Write a story about {idea}."
+
+    @ell.simple(model="gpt-4o", temperature=0.1)
+    def choose_the_best_draft(drafts : List[str]):
+        """You are an expert fiction editor."""
+        return f"Choose the best draft from the following list: {'\n'.join(drafts)}."
+
+    @ell.simple(model="gpt-4-turbo", temperature=0.2)
+    def write_a_really_good_story(about : str):
+        """You are an expert novelist that writes in the style of Hemmingway. You write in lowercase."""
+        # Note: You can pass in lm_params to control the language model call
+        # in the case n = 4 tells OpenAI to generate a batch of 4 outputs.
+        ideas = generate_story_ideas(about, lm_params=(dict(n=4))) 
+
+        drafts = [write_a_draft_of_a_story(idea) for idea in ideas]
+
+        best_draft = choose_the_best_draft(drafts)
+
+        
+        return f"Make a final revision of this story in your voice: {best_draft}."
+
+    story = write_a_really_good_story("a dog")
+
+In this example, ``write_a_really_good_story`` is our main LMP that calls several other LMPs to produce a high-quality story. Here's how it works:
+
+1. First, it calls ``generate_story_ideas`` to create four different story ideas about the given topic.
+2. Then, it uses ``write_a_draft_of_a_story`` to write a draft for each of these ideas.
+3. Next, it uses ``choose_the_best_draft`` to select the best story from these drafts.
+4. Finally, it revises the best draft in the style of Hemingway.
+
+This approach leverages test-time compute techniques, specifically Best-of-N (BoN) sampling. By generating multiple ideas and drafts, then selecting the best one, we increase the chances of producing a high-quality output. This strategy allows us to really leverage the most out of language models in several ways:
+
+1. **Diversity**: By generating multiple ideas and drafts, we explore a broader space of possible outputs.
+2. **Quality Control**: The selection step helps filter out lower-quality outputs.
+3. **Specialization**: Each step is handled by a specialized LMP, allowing for more focused and effective prompts.
+4. **Iterative Improvement**: The final revision step allows for further refinement of the chosen draft.
+
+This compositional approach to prompt engineering enables us to break down complex tasks into smaller, more manageable steps. It also allows us to apply different strategies (like varying temperature or using different models) at each stage of the process, giving us fine-grained control over the output generation.
+
+
 
 Storing and Versioning Your Prompts
 -----------------------------------

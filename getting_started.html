@@ -251,8 +251,8 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <p>This approach allows you to construct more complex conversations within your LMP. Importantly, you’ll want to use this approach when you have a variable system prompt because python only allows you to have a static system prompt.</p>
 </section>
 </section>
-<section id="prompts-as-programs">
-<h2>Prompts as Programs<a class="headerlink" href="#prompts-as-programs" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#prompts-as-programs'">¶</a></h2>
+<section id="prompting-as-language-model-programming">
+<h2>Prompting as Language Model Programming<a class="headerlink" href="#prompting-as-language-model-programming" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#prompting-as-language-model-programming'">¶</a></h2>
 <p>One of ell’s most powerful features is its treatment of prompts as programs rather than simple strings. This approach allows you to leverage the full power of Python in your prompt engineering. Let’s see how this works:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
 </span><span id="line-2"><span class="kn">import</span> <span class="nn">random</span>
@@ -272,6 +272,61 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </span></code></pre></div>
 </div>
 <p>In this example, our hello LMP depends on the <code class="docutils literal notranslate"><span class="pre">get_random_adjective</span></code> function. Each time <code class="docutils literal notranslate"><span class="pre">hello</span></code> is called, it generates a different adjective, creating dynamic, varied prompts.</p>
+<p>Taking this concept further, LMPs can call other LMPs, allowing for more complex and powerful prompt engineering strategies. Let’s look at an example:</p>
+<a class="rounded-image invertible-image reference internal image-reference" href="_images/compositionality.webp"><img alt="ell demonstration" class="rounded-image invertible-image" src="_images/compositionality.webp" style="width: 100%;"/></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-2"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="n">ell</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-5">
+</span><span id="line-6">
+</span><span id="line-7"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-mini"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</span><span id="line-8"><span class="k">def</span> <span class="nf">generate_story_ideas</span><span class="p">(</span><span class="n">about</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-9"><span class="w">    </span><span class="sd">"""You are an expert story ideator. Only answer in a single sentence."""</span>
+</span><span id="line-10">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Generate a story idea about </span><span class="si">{</span><span class="n">about</span><span class="si">}</span><span class="s2">."</span>
+</span><span id="line-11">
+</span><span id="line-12"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-mini"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</span><span id="line-13"><span class="k">def</span> <span class="nf">write_a_draft_of_a_story</span><span class="p">(</span><span class="n">idea</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-14"><span class="w">    </span><span class="sd">"""You are an adept story writer. The story should only be 3 paragraphs."""</span>
+</span><span id="line-15">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Write a story about </span><span class="si">{</span><span class="n">idea</span><span class="si">}</span><span class="s2">."</span>
+</span><span id="line-16">
+</span><span id="line-17"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</span><span id="line-18"><span class="k">def</span> <span class="nf">choose_the_best_draft</span><span class="p">(</span><span class="n">drafts</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+</span><span id="line-19"><span class="w">    </span><span class="sd">"""You are an expert fiction editor."""</span>
+</span><span id="line-20">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Choose the best draft from the following list: </span><span class="si">{</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">drafts</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+</span><span id="line-21">
+</span><span id="line-22"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-turbo"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+</span><span id="line-23"><span class="k">def</span> <span class="nf">write_a_really_good_story</span><span class="p">(</span><span class="n">about</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-24"><span class="w">    </span><span class="sd">"""You are an expert novelist that writes in the style of Hemmingway. You write in lowercase."""</span>
+</span><span id="line-25">    <span class="c1"># Note: You can pass in lm_params to control the language model call</span>
+</span><span id="line-26">    <span class="c1"># in the case n = 4 tells OpenAI to generate a batch of 4 outputs.</span>
+</span><span id="line-27">    <span class="n">ideas</span> <span class="o">=</span> <span class="n">generate_story_ideas</span><span class="p">(</span><span class="n">about</span><span class="p">,</span> <span class="n">lm_params</span><span class="o">=</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">4</span><span class="p">)))</span>
+</span><span id="line-28">
+</span><span id="line-29">    <span class="n">drafts</span> <span class="o">=</span> <span class="p">[</span><span class="n">write_a_draft_of_a_story</span><span class="p">(</span><span class="n">idea</span><span class="p">)</span> <span class="k">for</span> <span class="n">idea</span> <span class="ow">in</span> <span class="n">ideas</span><span class="p">]</span>
+</span><span id="line-30">
+</span><span id="line-31">    <span class="n">best_draft</span> <span class="o">=</span> <span class="n">choose_the_best_draft</span><span class="p">(</span><span class="n">drafts</span><span class="p">)</span>
+</span><span id="line-32">
+</span><span id="line-33">
+</span><span id="line-34">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Make a final revision of this story in your voice: </span><span class="si">{</span><span class="n">best_draft</span><span class="si">}</span><span class="s2">."</span>
+</span><span id="line-35">
+</span><span id="line-36"><span class="n">story</span> <span class="o">=</span> <span class="n">write_a_really_good_story</span><span class="p">(</span><span class="s2">"a dog"</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>In this example, <code class="docutils literal notranslate"><span class="pre">write_a_really_good_story</span></code> is our main LMP that calls several other LMPs to produce a high-quality story. Here’s how it works:</p>
+<ol class="arabic simple">
+<li><p>First, it calls <code class="docutils literal notranslate"><span class="pre">generate_story_ideas</span></code> to create four different story ideas about the given topic.</p></li>
+<li><p>Then, it uses <code class="docutils literal notranslate"><span class="pre">write_a_draft_of_a_story</span></code> to write a draft for each of these ideas.</p></li>
+<li><p>Next, it uses <code class="docutils literal notranslate"><span class="pre">choose_the_best_draft</span></code> to select the best story from these drafts.</p></li>
+<li><p>Finally, it revises the best draft in the style of Hemingway.</p></li>
+</ol>
+<p>This approach leverages test-time compute techniques, specifically Best-of-N (BoN) sampling. By generating multiple ideas and drafts, then selecting the best one, we increase the chances of producing a high-quality output. This strategy allows us to really leverage the most out of language models in several ways:</p>
+<ol class="arabic simple">
+<li><p><strong>Diversity</strong>: By generating multiple ideas and drafts, we explore a broader space of possible outputs.</p></li>
+<li><p><strong>Quality Control</strong>: The selection step helps filter out lower-quality outputs.</p></li>
+<li><p><strong>Specialization</strong>: Each step is handled by a specialized LMP, allowing for more focused and effective prompts.</p></li>
+<li><p><strong>Iterative Improvement</strong>: The final revision step allows for further refinement of the chosen draft.</p></li>
+</ol>
+<p>This compositional approach to prompt engineering enables us to break down complex tasks into smaller, more manageable steps. It also allows us to apply different strategies (like varying temperature or using different models) at each stage of the process, giving us fine-grained control over the output generation.</p>
 </section>
 <section id="storing-and-versioning-your-prompts">
 <h2>Storing and Versioning Your Prompts<a class="headerlink" href="#storing-and-versioning-your-prompts" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#storing-and-versioning-your-prompts'">¶</a></h2>
@@ -422,7 +477,7 @@ Version 2 output: “Here’s a heartfelt hello to Sam Altman!!!”</p>
 <li><a :data-current="activeSection === '#alternative-message-formats'" class="reference internal" href="#alternative-message-formats">Alternative Message Formats</a></li>
 </ul>
 </li>
-<li><a :data-current="activeSection === '#prompts-as-programs'" class="reference internal" href="#prompts-as-programs">Prompts as Programs</a></li>
+<li><a :data-current="activeSection === '#prompting-as-language-model-programming'" class="reference internal" href="#prompting-as-language-model-programming">Prompting as Language Model Programming</a></li>
 <li><a :data-current="activeSection === '#storing-and-versioning-your-prompts'" class="reference internal" href="#storing-and-versioning-your-prompts">Storing and Versioning Your Prompts</a><ul>
 <li><a :data-current="activeSection === '#lexical-closures'" class="reference internal" href="#lexical-closures">Lexical closures</a></li>
 <li><a :data-current="activeSection === '#exploring-your-prompts-with-ell-studio'" class="reference internal" href="#exploring-your-prompts-with-ell-studio">Exploring Your Prompts with ell-studio</a></li>
