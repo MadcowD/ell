@@ -25,8 +25,7 @@ ell_event_loop = None
 def get_ell_event_loop():
     global ell_event_loop
     if not ell_event_loop:
-        logger.info(f"Creating new event loop for ell, thread id: {
-                    threading.get_ident()}")
+        logger.info(f"Creating new event loop for ell, thread id: {threading.get_ident()}")
         ell_event_loop = asyncio.new_event_loop()
     return ell_event_loop
 
