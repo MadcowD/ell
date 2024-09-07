@@ -1,19 +1,14 @@
 from typing import Optional
 from pydantic import BaseModel, Field
+
+from bs4 import BeautifulSoup
 import ell
 import requests
 
-import openai
-
-
 import ell.lmp.tool
-from ell.types._lstr import _lstr
-from ell.stores.sql import SQLiteStore
 
-ell.config.verbose = True
-ell.set_store(SQLiteStore("./logdir"), autocommit=True)
+ell.init(verbose=True, store=("./logdir"), autocommit=True)
 
-from bs4 import BeautifulSoup
 
 @ell.tool()
 def get_html_content(
@@ -33,7 +28,7 @@ def summarize_website(website :str) -> str:
 
 
 if __name__ == "__main__":
-    output = summarize_website("langchains website") # Message{[MessageContentBlock[function_call]]}
+    output = summarize_website("langchains website")
     print(output)
     if output.tool_calls:
         tool_results = output.call_tools_and_collect_as_message()

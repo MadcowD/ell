@@ -57,7 +57,7 @@ def simple(model: str, client: Optional[openai.Client] = None,  exempt_from_trac
                # helper function for ell.Message(text="...", role="system")
                ell.system("You are an AI trained to describe images."),
                # helper function for ell.Message(content="...", role="user")
-               ell.user([ContentBlock(text="Describe this image in detail."), ContentBlock(image=image)]),
+               ell.user(["Describe this image in detail.", image]),
            ]
 
 
