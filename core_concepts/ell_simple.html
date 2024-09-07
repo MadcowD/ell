@@ -12,9 +12,10 @@
 <meta content="@ell.simple | ell  documentation" name="twitter:title"/>
 <link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
+<link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
 <link href="../search.html" rel="search" title="Search"/>
 <link href="../genindex.html" rel="index" title="Index"/>
-<link href="ell_complex.html" rel="next" title="@ell.complex"/>
+<link href="versioning_and_storage.html" rel="next" title="Versioning &amp; Visualization: Ell Studio"/>
 <link href="../getting_started.html" rel="prev" title="Getting Started"/>
 <script>
     <!-- Prevent Flash of wrong theme -->
@@ -141,8 +142,9 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <p class="caption" role="heading"><span class="caption-text">Core Concepts:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">@ell.simple</a></li>
+<li class="toctree-l1"><a class="reference internal" href="versioning_and_storage.html">Versioning &amp; Visualization: Ell Studio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="message_api.html">Messages</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ell_complex.html">@ell.complex</a></li>
-<li class="toctree-l1"><a class="reference internal" href="message_api.html">Message API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tool_usage.html">Tool Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structured_outputs.html">Structured Outputs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="multimodality.html">Multimodality</a></li>
@@ -230,7 +232,7 @@ The decorated function can return either a single prompt or a list of ell.Messag
 </span><span id="line-11">        <span class="c1"># helper function for ell.Message(text="...", role="system")</span>
 </span><span id="line-12">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are an AI trained to describe images."</span><span class="p">),</span>
 </span><span id="line-13">        <span class="c1"># helper function for ell.Message(content="...", role="user")</span>
-</span><span id="line-14">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span><span class="n">ContentBlock</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">"Describe this image in detail."</span><span class="p">),</span> <span class="n">ContentBlock</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)]),</span>
+</span><span id="line-14">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span><span class="s2">"Describe this image in detail."</span><span class="p">,</span> <span class="n">image</span><span class="p">]),</span>
 </span><span id="line-15">    <span class="p">]</span>
 </span><span id="line-16">
 </span><span id="line-17">
@@ -311,8 +313,8 @@ Parameters passed during the function call will override those set in the decora
       </a>
 </div>
 <div class="ml-auto">
-<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="ell_complex.html">
-        @ell.complex
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="versioning_and_storage.html">
+        Versioning &amp; Visualization: Ell Studio
         <svg class="ml-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 <polyline points="9 18 15 12 9 6"></polyline>
 </svg>
