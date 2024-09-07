@@ -2,33 +2,10 @@
 docs todo:
 
 
-Getting Started.rst
+core concepts:
 
-- creating ur first lmp hello world example,
-- verbose mode on
-- then add depending on another functions
-- show doc string system promtp and return string user prompt or returnign a list of messages (ell.user, ell.system, ell.assistant)
-- storing and versioning your prompts
-    * show adding ell.init(store='./logdir', autocommit=True), explain that it will store all the promtps and their versions in ./logdir/ell.db plus a blob store for iamges and autocomit will use gpt4o-mini to write commit messages automaticlaly between prompt versions, seem ore later
-    explain how promtps get stored by computing the lexical closure of the function wrapped with @ell.simple, (this gets the fucniton and all its global free vars it dpeendson including other fucniton's source code)
-    * now run the script and show ls ./logdir now has an ell db.
-    * show runnign ell-studio --storage_dir ./logdir to open the studio
-    * show the prompt in the lmp graph view, and clicking on it image (u can just put placehodlers here)
-    * then show modifying the prompt and auto generated commit messages
-    (read more about this on versioning)
 
-- what's next
-    * @ell.complex (tool usage, structured outputs, multimodality, message api)
-    * multimodal (images, videos, audio)
-    * api clients & models
-    * designing effective language model programs
-    * tutorials
-
-    
-
-- visualizing your prompts & invocations using ell studio
-
-@ell.simple .rst
+@ell.simple.rst
 
 - autodoc doc string
 - usage (can be doc string or )

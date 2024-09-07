@@ -35,16 +35,18 @@ Now, let's see how we can achieve the same result using ell:
 
     @ell.simple(model="gpt-4o")
     def hello(name: str):
-        """You are a helpful assistant."""
-        return f"Say hello to {name}!"
+        """You are a helpful assistant.""" # System prompt
+        return f"Say hello to {name}!" # User prompt    
 
     greeting = hello("Sam Altman")
     print(greeting)
 
-In this ell example, we've encapsulated the entire interaction within a function decorated with ``@ell.simple``. The docstring becomes the system message, and the return value becomes the user message.
+``ell`` simplifies prompting by encouraging you to define prompts as functional units. In this example, the ``hello`` function defines a system prompt via the docstring and a user prompt via the return string. Users of your prompt can then simply call the function with the defined arguments, rather than manually constructing the messages. This approach makes prompts more readable, maintainable, and reusable.
+
+
 
 Understanding ``@ell.simple``
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``@ell.simple`` decorator is a key concept in ell. It transforms a regular Python function into a **Language Model Program (LMP)**. Here's what's happening:
 
@@ -54,8 +56,10 @@ The ``@ell.simple`` decorator is a key concept in ell. It transforms a regular P
 
 This encapsulation allows for cleaner, more reusable code. You can now call your LMP like any other Python function.
 
+
+
 Verbose Mode
-------------
+^^^^^^^^^^^^^
 
 To get more insight into what's happening behind the scenes, you can enable verbose mode:
 
@@ -74,7 +78,7 @@ With verbose mode enabled, you'll see detailed information about the inputs and 
 
 
 Alternative Message Formats
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 While the previous example used the docstring for the system message and the return value for the user message, ell offers more flexibility. You can explicitly define messages using ``ell.system``, ``ell.user``, and ``ell.assistant``:
 
