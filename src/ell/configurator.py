@@ -57,8 +57,9 @@ class Config(BaseModel):
         client = current_registry.get(model_name)
         fallback = False
         if model_name not in current_registry.keys():
-            warning_message = f"Warning: A default provider for model '{
-                model_name}' could not be found. Falling back to default OpenAI client from environment variables."
+            warning_message = (f"Warning: A default provider for model '{model_name}' "
+                               "could not be found. Falling back to default OpenAI "
+                               "client from environment variables.")
             if self.verbose:
                 from colorama import Fore, Style
                 _config_logger.warning(f"{Fore.LIGHTYELLOW_EX}{
