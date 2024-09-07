@@ -93,8 +93,7 @@ class MqttWebSocketPubSub(WebSocketPubSub):
         logger.info("Starting mqtt listener")
         async for message in self.mqtt_client.messages:
             try:
-                logger.info(f"Received message on topic {
-                            message.topic}: {message.payload}")
+                logger.info(f"Received message on topic {message.topic}: {message.payload}")
                 await super().publish(str(message.topic), json.loads(
                     message.payload  # type: ignore
                 ))

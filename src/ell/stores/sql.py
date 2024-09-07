@@ -324,4 +324,3 @@ class PostgresStore(SQLStore):
             logger.warning("No blob store provided.")
             # raise NotImplementedError("Not implemented")
             # self.blob_store = PostgresBlobStore(db_uri)
-    

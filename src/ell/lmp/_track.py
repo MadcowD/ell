@@ -113,16 +113,14 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
                     results = [d.deserialize()
                                for d in cached_invocations[0].results]
 
-                    logger.info(f"Using cached result for {
-                                func_to_track.__qualname__} with state cache key: {state_cache_key}")
+                    logger.info(f"Using cached result for {func_to_track.__qualname__} with state cache key: {state_cache_key}")
                     if len(results) == 1:
                         return results[0]
                     else:
                         return results
                     # Todo: Unfiy this with the non-cached case. We should go through the same code pathway.
                 else:
-                    logger.info(f"Attempted to use cache on {
-                                func_to_track.__qualname__} but it was not cached, or did not exist in the store. Refreshing cache...")
+                    logger.info(f"Attempted to use cache on {func_to_track.__qualname__} but it was not cached, or did not exist in the store. Refreshing cache...")
 
             _start_time = utc_now()
 
