@@ -39,6 +39,42 @@
     gtag('config', 'G-220ZB10X27');
   }
 </script>
+<style>
+    .rounded-image {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+</style>
+<script>
+function invertImage(dark) {
+    var images = document.querySelectorAll('.invertible-image img');
+    var htmlElement = document.documentElement;
+    images.forEach(function(image) {
+        if (!dark) {
+            image.style.filter = 'invert(100%) hue-rotate(160deg)';
+        } else {
+            image.style.filter = 'none';
+        }
+    });
+}
+
+
+
+// Run when the 'dark' class is added or removed from the <html> element
+const htmlElement = document.documentElement;
+
+// Use MutationObserver to detect changes in the class attribute
+const observer = new MutationObserver((mutations) => {
+console.log(document.documentElement.classList)
+    mutations.forEach((mutation) => {
+            invertImage(document.documentElement.classList.contains('dark'));
+
+    });
+});
+
+observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
+</script>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false }">
 <div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="#content">
@@ -96,11 +132,14 @@
 <a href="../reference/index.html">API Reference</a>
 <a href="https://jobs.ell.so" rel="nofollow noopener">AI Jobs Board</a>
 </nav><nav class="table w-full min-w-full my-6 lg:my-8">
-<p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
-<ul class="current">
+<p class="caption" role="heading"><span class="caption-text">The Basics:</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul class="current">
 <li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="index.html">Core Concepts in ell<button @click.prevent.stop="expanded = !expanded" type="button"><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul class="current" x-show="expanded">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Language Model Programs (LMPs)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="decorators.html">Decorators in ell</a></li>

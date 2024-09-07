@@ -47,6 +47,45 @@
 </script>
 
 
+<style>
+    .rounded-image {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+</style>
+
+<script>
+function invertImage(dark) {
+    var images = document.querySelectorAll('.invertible-image img');
+    var htmlElement = document.documentElement;
+    images.forEach(function(image) {
+        if (!dark) {
+            image.style.filter = 'invert(100%) hue-rotate(160deg)';
+        } else {
+            image.style.filter = 'none';
+        }
+    });
+}
+
+
+
+// Run when the 'dark' class is added or removed from the <html> element
+const htmlElement = document.documentElement;
+
+// Use MutationObserver to detect changes in the class attribute
+const observer = new MutationObserver((mutations) => {
+console.log(document.documentElement.classList)
+    mutations.forEach((mutation) => {
+            invertImage(document.documentElement.classList.contains('dark'));
+
+    });
+});
+
+observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
+</script>
+
+
     <script>
       DOCUMENTATION_OPTIONS.COLLAPSE_INDEX = true;
     </script>
@@ -138,11 +177,14 @@
   <a href="reference/index.html">API Reference</a>
   <a href="https://jobs.ell.so" rel="nofollow noopener">AI Jobs Board</a>
 </nav><nav class="table w-full min-w-full my-6 lg:my-8">
-  <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+  <p class="caption" role="heading"><span class="caption-text">The Basics:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="core_concepts/index.html">Core Concepts in ell</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="core_concepts/language_model_programs.html">Language Model Programs (LMPs)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core_concepts/decorators.html">Decorators in ell</a></li>

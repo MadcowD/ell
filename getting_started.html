@@ -39,6 +39,42 @@
     gtag('config', 'G-220ZB10X27');
   }
 </script>
+<style>
+    .rounded-image {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+</style>
+<script>
+function invertImage(dark) {
+    var images = document.querySelectorAll('.invertible-image img');
+    var htmlElement = document.documentElement;
+    images.forEach(function(image) {
+        if (!dark) {
+            image.style.filter = 'invert(100%) hue-rotate(160deg)';
+        } else {
+            image.style.filter = 'none';
+        }
+    });
+}
+
+
+
+// Run when the 'dark' class is added or removed from the <html> element
+const htmlElement = document.documentElement;
+
+// Use MutationObserver to detect changes in the class attribute
+const observer = new MutationObserver((mutations) => {
+console.log(document.documentElement.classList)
+    mutations.forEach((mutation) => {
+            invertImage(document.documentElement.classList.contains('dark'));
+
+    });
+});
+
+observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
+</script>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false }">
 <div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="#content">
@@ -96,11 +132,14 @@
 <a href="reference/index.html">API Reference</a>
 <a href="https://jobs.ell.so" rel="nofollow noopener">AI Jobs Board</a>
 </nav><nav class="table w-full min-w-full my-6 lg:my-8">
-<p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<p class="caption" role="heading"><span class="caption-text">The Basics:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
 <li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="core_concepts/index.html">Core Concepts in ell<button @click.prevent.stop="expanded = !expanded" type="button"><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-show="expanded">
 <li class="toctree-l2"><a class="reference internal" href="core_concepts/language_model_programs.html">Language Model Programs (LMPs)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="core_concepts/decorators.html">Decorators in ell</a></li>
@@ -138,79 +177,223 @@
 <div id="content" role="main">
 <section id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h1>
-<p>This guide will walk you through creating and running your first Language Model Program (LMP) using ell. We’ll start with a simple example and gradually introduce more features.</p>
-<section id="creating-your-first-language-model-program">
-<h2>Creating Your First Language Model Program<a class="headerlink" href="#creating-your-first-language-model-program" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#creating-your-first-language-model-program'">¶</a></h2>
-<p>Let’s create a simple LMP that generates a short story based on a given prompt.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+<p>Welcome to ell, the Language Model Programming Library. This guide will walk you through creating your first Language Model Program (LMP), exploring ell’s unique features, and leveraging its powerful versioning and visualization capabilities.</p>
+<section id="from-traditional-api-calls-to-ell">
+<h2>From Traditional API Calls to ell<a class="headerlink" href="#from-traditional-api-calls-to-ell" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#from-traditional-api-calls-to-ell'">¶</a></h2>
+<p>Let’s start by comparing a traditional API call to ell’s approach. Here’s a simple example using the OpenAI chat completions API:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">openai</span>
 </span><span id="line-2">
-</span><span id="line-3"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
-</span><span id="line-4"><span class="k">def</span> <span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-5"><span class="w">    </span><span class="sd">"""You are a helpful AI assistant."""</span>
-</span><span id="line-6">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Write a short story based on this prompt: </span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="s2">"</span>
-</span><span id="line-7">
-</span><span id="line-8"><span class="c1"># Use the LMP</span>
-</span><span id="line-9"><span class="n">story</span> <span class="o">=</span> <span class="n">generate_story</span><span class="p">(</span><span class="s2">"A time traveler's first day in the future"</span><span class="p">)</span>
-</span><span id="line-10"><span class="nb">print</span><span class="p">(</span><span class="n">story</span><span class="p">)</span>
-</span></code></pre></div>
-</div>
-<p>Let’s break down this example:</p>
-<ol class="arabic simple">
-<li><p>We import the <code class="docutils literal notranslate"><span class="pre">ell</span></code> library.</p></li>
-<li><p>We define a function called <code class="docutils literal notranslate"><span class="pre">generate_story</span></code> and decorate it with <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code>.</p></li>
-<li><p>The decorator specifies that we want to use the “gpt-4” model.</p></li>
-<li><p>Our function takes a <code class="docutils literal notranslate"><span class="pre">prompt</span></code> as input and returns a string.</p></li>
-<li><p>The function’s docstring becomes the system prompt for the language model.</p></li>
-<li><p>The return value of the function becomes the user prompt.</p></li>
-<li><p>We call the function with a prompt and print the result.</p></li>
-</ol>
-</section>
-<section id="understanding-the-output">
-<h2>Understanding the Output<a class="headerlink" href="#understanding-the-output" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#understanding-the-output'">¶</a></h2>
-<p>When you run this code, ell will:</p>
-<ol class="arabic simple">
-<li><p>Construct the full prompt by combining the system prompt (the docstring) and the user prompt (the return value of the function).</p></li>
-<li><p>Send this prompt to the specified language model (in this case, GPT-4).</p></li>
-<li><p>Receive the generated text from the model.</p></li>
-<li><p>Return this text as the result of the <code class="docutils literal notranslate"><span class="pre">generate_story</span></code> function call.</p></li>
-</ol>
-<p>The output you see will be a short story generated by the language model based on the prompt you provided.</p>
-</section>
-<section id="using-verbose-mode">
-<h2>Using Verbose Mode<a class="headerlink" href="#using-verbose-mode" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#using-verbose-mode'">¶</a></h2>
-<p>Before using ell in a project, it’s a good practice to set up some basic configuration. Here’s how you can do that:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
-</span><span id="line-2">
-</span><span id="line-3"><span class="n">ell</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-3"><span class="n">openai</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="s2">"your-api-key-here"</span>
 </span><span id="line-4">
-</span><span id="line-5"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
-</span><span id="line-6"><span class="k">def</span> <span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-7"><span class="w">    </span><span class="sd">"""You are a helpful AI assistant."""</span>
-</span><span id="line-8">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Write a short story based on this prompt: </span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="line-5"><span class="n">messages</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="line-6">    <span class="p">{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"system"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"You are a helpful assistant."</span><span class="p">},</span>
+</span><span id="line-7">    <span class="p">{</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"Say hello to Sam Altman!"</span><span class="p">}</span>
+</span><span id="line-8"><span class="p">]</span>
 </span><span id="line-9">
-</span><span id="line-10"><span class="c1"># Use the LMP</span>
-</span><span id="line-11"><span class="n">story</span> <span class="o">=</span> <span class="n">generate_story</span><span class="p">(</span><span class="s2">"A time traveler's first day in the future"</span><span class="p">)</span>
-</span><span id="line-12"><span class="nb">print</span><span class="p">(</span><span class="n">story</span><span class="p">)</span>
-</span><span id="line-13"><span class="c1"># Your LMPs and code here...</span>
+</span><span id="line-10"><span class="n">response</span> <span class="o">=</span> <span class="n">openai</span><span class="o">.</span><span class="n">ChatCompletion</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span><span id="line-11">    <span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span>
+</span><span id="line-12">    <span class="n">messages</span><span class="o">=</span><span class="n">messages</span>
+</span><span id="line-13"><span class="p">)</span>
+</span><span id="line-14">
+</span><span id="line-15"><span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s1">'choices'</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">'message'</span><span class="p">][</span><span class="s1">'content'</span><span class="p">])</span>
 </span></code></pre></div>
 </div>
-<p>This configuration:</p>
-<ul class="simple">
-<li><p>Sets up a local storage directory for versioning and tracing.</p></li>
-<li><p>Enables verbose output for more detailed logging.</p></li>
-<li><p>Turns on autocommit for automatic saving of versions and traces.</p></li>
-</ul>
+<p>Now, let’s see how we can achieve the same result using ell:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">)</span>
+</span><span id="line-4"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-5"><span class="w">    </span><span class="sd">"""You are a helpful assistant."""</span> <span class="c1"># System prompt</span>
+</span><span id="line-6">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Say hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span> <span class="c1"># User prompt</span>
+</span><span id="line-7">
+</span><span id="line-8"><span class="n">greeting</span> <span class="o">=</span> <span class="n">hello</span><span class="p">(</span><span class="s2">"Sam Altman"</span><span class="p">)</span>
+</span><span id="line-9"><span class="nb">print</span><span class="p">(</span><span class="n">greeting</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">ell</span></code> simplifies prompting by encouraging you to define prompts as functional units. In this example, the <code class="docutils literal notranslate"><span class="pre">hello</span></code> function defines a system prompt via the docstring and a user prompt via the return string. Users of your prompt can then simply call the function with the defined arguments, rather than manually constructing the messages. This approach makes prompts more readable, maintainable, and reusable.</p>
+<section id="understanding-ell-simple">
+<h3>Understanding <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code><a class="headerlink" href="#understanding-ell-simple" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#understanding-ell-simple'">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> decorator is a key concept in ell. It transforms a regular Python function into a <strong>Language Model Program (LMP)</strong>. Here’s what’s happening:</p>
+<ol class="arabic simple">
+<li><p>The function’s <strong>docstring</strong> becomes the <strong>system message</strong>.</p></li>
+<li><p>The <strong>return value</strong> of the function becomes the <strong>user message</strong>.</p></li>
+<li><p>The decorator <strong>handles the API call</strong> and returns the model’s response as a string.</p></li>
+</ol>
+<p>This encapsulation allows for cleaner, more reusable code. You can now call your LMP like any other Python function.</p>
 </section>
-<section id="next-steps">
-<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#next-steps'">¶</a></h2>
-<p>You’ve now created your first Language Model Program with ell! From here, you can explore more advanced features such as:</p>
+<section id="verbose-mode">
+<h3>Verbose Mode<a class="headerlink" href="#verbose-mode" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#verbose-mode'">¶</a></h3>
+<p>To get more insight into what’s happening behind the scenes, you can enable verbose mode:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="n">ell</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>With verbose mode enabled, you’ll see detailed information about the inputs and outputs of your language model calls.</p>
+<a class="rounded-image invertible-image reference internal image-reference" href="_images/gif1.webp"><img alt="ell demonstration" class="rounded-image invertible-image" src="_images/gif1.webp" style="width: 100%;"/></a>
+</section>
+<section id="alternative-message-formats">
+<h3>Alternative Message Formats<a class="headerlink" href="#alternative-message-formats" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#alternative-message-formats'">¶</a></h3>
+<p>While the previous example used the docstring for the system message and the return value for the user message, ell offers more flexibility. You can explicitly define messages using <code class="docutils literal notranslate"><span class="pre">ell.system</span></code>, <code class="docutils literal notranslate"><span class="pre">ell.user</span></code>, and <code class="docutils literal notranslate"><span class="pre">ell.assistant</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">)</span>
+</span><span id="line-4"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-5">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-6">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant."</span><span class="p">),</span>
+</span><span id="line-7">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Say hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span><span class="p">),</span>
+</span><span id="line-8">        <span class="n">ell</span><span class="o">.</span><span class="n">assistant</span><span class="p">(</span><span class="s2">"Hello! I'd be happy to greet Sam Altman."</span><span class="p">),</span>
+</span><span id="line-9">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">"Great! Now do it more enthusiastically."</span><span class="p">)</span>
+</span><span id="line-10">    <span class="p">]</span>
+</span><span id="line-11">
+</span><span id="line-12"><span class="n">greeting</span> <span class="o">=</span> <span class="n">hello</span><span class="p">(</span><span class="s2">"Sam Altman"</span><span class="p">)</span>
+</span><span id="line-13"><span class="nb">print</span><span class="p">(</span><span class="n">greeting</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>This approach allows you to construct more complex conversations within your LMP. Importantly, you’ll want to use this approach when you have a variable system prompt because python only allows you to have a static system prompt.</p>
+</section>
+</section>
+<section id="prompts-as-programs">
+<h2>Prompts as Programs<a class="headerlink" href="#prompts-as-programs" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#prompts-as-programs'">¶</a></h2>
+<p>One of ell’s most powerful features is its treatment of prompts as programs rather than simple strings. This approach allows you to leverage the full power of Python in your prompt engineering. Let’s see how this works:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-2"><span class="kn">import</span> <span class="nn">random</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="k">def</span> <span class="nf">get_random_adjective</span><span class="p">():</span>
+</span><span id="line-5">    <span class="n">adjectives</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"enthusiastic"</span><span class="p">,</span> <span class="s2">"cheerful"</span><span class="p">,</span> <span class="s2">"warm"</span><span class="p">,</span> <span class="s2">"friendly"</span><span class="p">]</span>
+</span><span id="line-6">    <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">adjectives</span><span class="p">)</span>
+</span><span id="line-7">
+</span><span id="line-8"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">)</span>
+</span><span id="line-9"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-10"><span class="w">    </span><span class="sd">"""You are a helpful assistant."""</span>
+</span><span id="line-11">    <span class="n">adjective</span> <span class="o">=</span> <span class="n">get_random_adjective</span><span class="p">()</span>
+</span><span id="line-12">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Say a </span><span class="si">{</span><span class="n">adjective</span><span class="si">}</span><span class="s2"> hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span>
+</span><span id="line-13">
+</span><span id="line-14"><span class="n">greeting</span> <span class="o">=</span> <span class="n">hello</span><span class="p">(</span><span class="s2">"Sam Altman"</span><span class="p">)</span>
+</span><span id="line-15"><span class="nb">print</span><span class="p">(</span><span class="n">greeting</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>In this example, our hello LMP depends on the <code class="docutils literal notranslate"><span class="pre">get_random_adjective</span></code> function. Each time <code class="docutils literal notranslate"><span class="pre">hello</span></code> is called, it generates a different adjective, creating dynamic, varied prompts.</p>
+</section>
+<section id="storing-and-versioning-your-prompts">
+<h2>Storing and Versioning Your Prompts<a class="headerlink" href="#storing-and-versioning-your-prompts" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#storing-and-versioning-your-prompts'">¶</a></h2>
+<p>ell provides powerful versioning capabilities for your LMPs. To enable this feature, add the following line near the beginning of your script:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="n">ell</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="s1">'./logdir'</span><span class="p">,</span> <span class="n">autocommit</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>This line sets up a store in the <code class="docutils literal notranslate"><span class="pre">./logdir</span></code> directory and enables autocommit. ell will now store all your prompts and their versions in <code class="docutils literal notranslate"><span class="pre">./logdir/ell.db</span></code>, along with a blob store for images.</p>
+<section id="lexical-closures">
+<h3>Lexical closures<a class="headerlink" href="#lexical-closures" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#lexical-closures'">¶</a></h3>
+<p>When you version a Language Model Program (LMP) like the <code class="docutils literal notranslate"><span class="pre">hello</span></code> function above, ell actually stores more than just the function itself. It captures what’s called the “lexical closure” of the LMP. This includes all the code necessary to reproduce the LMP, including its dependencies. For example, for the <code class="docutils literal notranslate"><span class="pre">hello</span></code> LMP, ell would store:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">random</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="k">def</span> <span class="nf">get_random_adjective</span><span class="p">():</span>
+</span><span id="line-4">    <span class="n">adjectives</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"enthusiastic"</span><span class="p">,</span> <span class="s2">"cheerful"</span><span class="p">,</span> <span class="s2">"warm"</span><span class="p">,</span> <span class="s2">"friendly"</span><span class="p">]</span>
+</span><span id="line-5">    <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">adjectives</span><span class="p">)</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">)</span>
+</span><span id="line-8"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-9"><span class="w">    </span><span class="sd">"""You are a helpful assistant."""</span>
+</span><span id="line-10">    <span class="n">adjective</span> <span class="o">=</span> <span class="n">get_random_adjective</span><span class="p">()</span>
+</span><span id="line-11">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Say a </span><span class="si">{</span><span class="n">adjective</span><span class="si">}</span><span class="s2"> hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span>
+</span></code></pre></div>
+</div>
+<p>This lexically closured source allows you to keep track of prompts as they change over time, even if those changes happen elsewhere in your codebase. For instance, if you modify the <code class="docutils literal notranslate"><span class="pre">get_random_adjective</span></code> function, ell will capture that change as part of the <code class="docutils literal notranslate"><span class="pre">hello</span></code> LMP’s version history.</p>
+<p>This approach has several benefits:</p>
+<ol class="arabic simple">
+<li><p><strong>Completeness</strong>: You always have the full context needed to understand and reproduce an LMP.</p></li>
+<li><p><strong>Flexibility</strong>: Your LMPs can live embedded anywhere in your codebase - in any source file, Jupyter notebook, etc.</p></li>
+<li><p><strong>Efficiency</strong>: When LMPs are serialized to the ell store, only the minimal set of code they depend on is extracted and stored.</p></li>
+</ol>
+<p>This feature allows for robust versioning and makes it easier to track the evolution of your prompts over time, even as your codebase grows and changes.</p>
+</section>
+<section id="exploring-your-prompts-with-ell-studio">
+<h3>Exploring Your Prompts with ell-studio<a class="headerlink" href="#exploring-your-prompts-with-ell-studio" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#exploring-your-prompts-with-ell-studio'">¶</a></h3>
+<p>After running your script with versioning enabled, you can explore your prompts using ell-studio. In your terminal, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">ell-studio<span class="w"> </span>--storage_dir<span class="w"> </span>./logdir
+</span></code></pre></div>
+</div>
+<p>This command opens the ell-studio interface in your web browser. Here, you can visualize your LMPs, see their dependencies, and track changes over time.</p>
+<a class="rounded-image reference internal image-reference" href="_images/ell_studio_better.webp"><img alt="ell demonstration" class="rounded-image" src="_images/ell_studio_better.webp" style="width: 100%;"/></a>
+</section>
+<section id="iterating-and-auto-committing">
+<h3>Iterating and Auto-Committing<a class="headerlink" href="#iterating-and-auto-committing" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#iterating-and-auto-committing'">¶</a></h3>
+<p>Let’s see how ell’s versioning works as we iterate on our <code class="docutils literal notranslate"><span class="pre">hello</span></code> LMP:</p>
+<p>Version 1:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-2"><span class="kn">import</span> <span class="nn">random</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="n">ell</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="s1">'./logdir'</span><span class="p">,</span> <span class="n">autocommit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-5">
+</span><span id="line-6"><span class="k">def</span> <span class="nf">get_random_adjective</span><span class="p">():</span>
+</span><span id="line-7">    <span class="n">adjectives</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"enthusiastic"</span><span class="p">,</span> <span class="s2">"cheerful"</span><span class="p">,</span> <span class="s2">"warm"</span><span class="p">,</span> <span class="s2">"friendly"</span><span class="p">]</span>
+</span><span id="line-8">    <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">adjectives</span><span class="p">)</span>
+</span><span id="line-9">
+</span><span id="line-10"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">)</span>
+</span><span id="line-11"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-12"><span class="w">    </span><span class="sd">"""You are a helpful assistant."""</span>
+</span><span id="line-13">    <span class="n">adjective</span> <span class="o">=</span> <span class="n">get_random_adjective</span><span class="p">()</span>
+</span><span id="line-14">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Say a </span><span class="si">{</span><span class="n">adjective</span><span class="si">}</span><span class="s2"> hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span>
+</span><span id="line-15">
+</span><span id="line-16"><span class="n">greeting</span> <span class="o">=</span> <span class="n">hello</span><span class="p">(</span><span class="s2">"Sam Altman"</span><span class="p">)</span>
+</span><span id="line-17"><span class="nb">print</span><span class="p">(</span><span class="n">greeting</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>After running this script, ell will generate an initial commit message like:</p>
+<blockquote>
+<div><p>“Initial version of hello LMP with random adjective selection.”</p>
+</div></blockquote>
+<p>Now, let’s modify our LMP:</p>
+<p>Version 2:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-2"><span class="kn">import</span> <span class="nn">random</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="n">ell</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="s1">'./logdir'</span><span class="p">,</span> <span class="n">autocommit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-5">
+</span><span id="line-6"><span class="k">def</span> <span class="nf">get_random_adjective</span><span class="p">():</span>
+</span><span id="line-7">    <span class="n">adjectives</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"enthusiastic"</span><span class="p">,</span> <span class="s2">"cheerful"</span><span class="p">,</span> <span class="s2">"warm"</span><span class="p">,</span> <span class="s2">"friendly"</span><span class="p">,</span> <span class="s2">"heartfelt"</span><span class="p">,</span> <span class="s2">"sincere"</span><span class="p">]</span>
+</span><span id="line-8">    <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">adjectives</span><span class="p">)</span>
+</span><span id="line-9">
+</span><span id="line-10"><span class="k">def</span> <span class="nf">get_random_punctuation</span><span class="p">():</span>
+</span><span id="line-11">    <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="s2">"!"</span><span class="p">,</span> <span class="s2">"!!"</span><span class="p">,</span> <span class="s2">"!!!"</span><span class="p">])</span>
+</span><span id="line-12">
+</span><span id="line-13"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">)</span>
+</span><span id="line-14"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-15"><span class="w">    </span><span class="sd">"""You are a helpful and expressive assistant."""</span>
+</span><span id="line-16">    <span class="n">adjective</span> <span class="o">=</span> <span class="n">get_random_adjective</span><span class="p">()</span>
+</span><span id="line-17">    <span class="n">punctuation</span> <span class="o">=</span> <span class="n">get_random_punctuation</span><span class="p">()</span>
+</span><span id="line-18">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Say a </span><span class="si">{</span><span class="n">adjective</span><span class="si">}</span><span class="s2"> hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}{</span><span class="n">punctuation</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="line-19">
+</span><span id="line-20"><span class="n">greeting</span> <span class="o">=</span> <span class="n">hello</span><span class="p">(</span><span class="s2">"Sam Altman"</span><span class="p">)</span>
+</span><span id="line-21"><span class="nb">print</span><span class="p">(</span><span class="n">greeting</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>Running this updated script will generate a new commit message:</p>
+<blockquote>
+<div><p>“Updated hello LMP: Added more adjectives, introduced random punctuation, and modified system prompt.”</p>
+</div></blockquote>
+<p>ell’s autocommit feature uses <code class="docutils literal notranslate"><span class="pre">gpt-4o-mini</span></code> to generate these commit messages automatically, providing a clear history of how your LMPs evolve.</p>
+<a class="rounded-image invertible-image reference internal image-reference" href="_images/auto_commit.png"><img alt="ell demonstration" class="rounded-image invertible-image" src="_images/auto_commit.png" style="width: 100%;"/></a>
+</section>
+<section id="comparing-outputs-across-versions">
+<h3>Comparing Outputs Across Versions<a class="headerlink" href="#comparing-outputs-across-versions" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#comparing-outputs-across-versions'">¶</a></h3>
+<p>One of the powerful features of ell-studio is the ability to compare outputs of your LMPs across different versions. This helps you understand how changes in your code affect the language model’s responses.</p>
+<p>For example, you can select the two versions of the <code class="docutils literal notranslate"><span class="pre">hello</span></code> LMP we created and compare their outputs:</p>
+<a class="rounded-image invertible-image reference internal image-reference" href="_images/compare.png"><img alt="ell demonstration" class="rounded-image invertible-image" src="_images/compare.png" style="width: 100%;"/></a>
+<p>This comparison might show:</p>
+<p>Version 1 output: “Here’s a warm hello to Sam Altman!”
+Version 2 output: “Here’s a heartfelt hello to Sam Altman!!!”</p>
+<p>By visualizing these differences, you can quickly assess the impact of your changes and make informed decisions about your prompt engineering process.</p>
+</section>
+</section>
+<section id="what-s-next">
+<h2>What’s Next?<a class="headerlink" href="#what-s-next" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#what-s-next'">¶</a></h2>
+<p>Now that you’ve created your first LMP, explored versioning, and learned about ell-studio, there’s much more to discover:</p>
 <ul class="simple">
-<li><p>Using the <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> decorator for multi-turn conversations and tool use.</p></li>
-<li><p>Working with structured inputs and outputs.</p></li>
-<li><p>Integrating multimodal inputs like images.</p></li>
-<li><p>Leveraging ell’s versioning and tracing capabilities.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code>: For advanced use cases involving tool usage, structured outputs, and the full message API.</p></li>
+<li><p>Multimodal inputs and outputs: Work with images, videos, and audio in your LMPs.</p></li>
+<li><p>API clients and models: Explore various language models and APIs supported by ell.</p></li>
+<li><p>Designing effective Language Model Programs: Discover best practices for creating robust and efficient LMPs.</p></li>
+<li><p>Tutorials: Check out in-depth tutorials for real-world applications of ell.</p></li>
 </ul>
-<p>Check out the Core Concepts section to dive deeper into these topics.</p>
 </section>
 </section>
 </div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
@@ -233,10 +416,21 @@
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
-<li><a :data-current="activeSection === '#creating-your-first-language-model-program'" class="reference internal" href="#creating-your-first-language-model-program">Creating Your First Language Model Program</a></li>
-<li><a :data-current="activeSection === '#understanding-the-output'" class="reference internal" href="#understanding-the-output">Understanding the Output</a></li>
-<li><a :data-current="activeSection === '#using-verbose-mode'" class="reference internal" href="#using-verbose-mode">Using Verbose Mode</a></li>
-<li><a :data-current="activeSection === '#next-steps'" class="reference internal" href="#next-steps">Next Steps</a></li>
+<li><a :data-current="activeSection === '#from-traditional-api-calls-to-ell'" class="reference internal" href="#from-traditional-api-calls-to-ell">From Traditional API Calls to ell</a><ul>
+<li><a :data-current="activeSection === '#understanding-ell-simple'" class="reference internal" href="#understanding-ell-simple">Understanding <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code></a></li>
+<li><a :data-current="activeSection === '#verbose-mode'" class="reference internal" href="#verbose-mode">Verbose Mode</a></li>
+<li><a :data-current="activeSection === '#alternative-message-formats'" class="reference internal" href="#alternative-message-formats">Alternative Message Formats</a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#prompts-as-programs'" class="reference internal" href="#prompts-as-programs">Prompts as Programs</a></li>
+<li><a :data-current="activeSection === '#storing-and-versioning-your-prompts'" class="reference internal" href="#storing-and-versioning-your-prompts">Storing and Versioning Your Prompts</a><ul>
+<li><a :data-current="activeSection === '#lexical-closures'" class="reference internal" href="#lexical-closures">Lexical closures</a></li>
+<li><a :data-current="activeSection === '#exploring-your-prompts-with-ell-studio'" class="reference internal" href="#exploring-your-prompts-with-ell-studio">Exploring Your Prompts with ell-studio</a></li>
+<li><a :data-current="activeSection === '#iterating-and-auto-committing'" class="reference internal" href="#iterating-and-auto-committing">Iterating and Auto-Committing</a></li>
+<li><a :data-current="activeSection === '#comparing-outputs-across-versions'" class="reference internal" href="#comparing-outputs-across-versions">Comparing Outputs Across Versions</a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#what-s-next'" class="reference internal" href="#what-s-next">What’s Next?</a></li>
 </ul>
 </div>
 </aside>
