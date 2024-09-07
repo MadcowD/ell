@@ -62,8 +62,7 @@ class Config(BaseModel):
                                "client from environment variables.")
             if self.verbose:
                 from colorama import Fore, Style
-                _config_logger.warning(f"{Fore.LIGHTYELLOW_EX}{
-                                       warning_message}{Style.RESET_ALL}")
+                _config_logger.warning(f"{Fore.LIGHTYELLOW_EX}{warning_message}{Style.RESET_ALL}")
             else:
                 _config_logger.debug(warning_message)
             client = self._default_openai_client
