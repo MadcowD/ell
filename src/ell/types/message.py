@@ -76,6 +76,58 @@ class ContentBlock(BaseModel):
 
     @classmethod
     def coerce(cls, content: Union[str, ToolCall, ToolResult, BaseModel, "ContentBlock", PILImage.Image, np.ndarray]) -> "ContentBlock":
+        """
+        Coerce various types of content into a ContentBlock.
+
+        This method provides a flexible way to create ContentBlock instances from different types of input.
+
+        The content to be coerced into a ContentBlock. Can be one of the following types:
+        - str: Will be converted to a text ContentBlock.
+        - ToolCall: Will be converted to a tool_call ContentBlock.
+        - ToolResult: Will be converted to a tool_result ContentBlock.
+        - BaseModel: Will be converted to a parsed ContentBlock.
+        - ContentBlock: Will be returned as-is.
+        - PILImage.Image: Will be converted to an image ContentBlock.
+        - np.ndarray: Will be converted to an image ContentBlock if it represents an image.
+
+        Examples:
+        ---------
+        >>> ContentBlock.coerce("Hello, world!")
+        ContentBlock(text="Hello, world!")
+
+        >>> tool_call = ToolCall(...)
+        >>> ContentBlock.coerce(tool_call)
+        ContentBlock(tool_call=tool_call)
+
+        >>> tool_result = ToolResult(...)
+        >>> ContentBlock.coerce(tool_result)
+        ContentBlock(tool_result=tool_result)
+
+        >>> class MyModel(BaseModel):
+        ...     field: str
+        >>> model_instance = MyModel(field="value")
+        >>> ContentBlock.coerce(model_instance)
+        ContentBlock(parsed=model_instance)
+
+        >>> from PIL import Image
+        >>> img = Image.new('RGB', (100, 100))
+        >>> ContentBlock.coerce(img)
+        ContentBlock(image=img)
+
+        >>> import numpy as np
+        >>> arr = np.random.rand(100, 100, 3)
+        >>> ContentBlock.coerce(arr)
+        ContentBlock(image=<PIL.Image.Image>)
+
+        Notes:
+        ------
+        - This method is particularly useful when working with heterogeneous content types
+          and you want to ensure they are all properly encapsulated in ContentBlock instances.
+        - The method performs type checking and appropriate conversions to ensure the resulting
+          ContentBlock is valid according to the model's constraints.
+        - For image content, both PIL Image objects and numpy arrays are supported, with
+          automatic conversion to the appropriate format.
+        """
         if isinstance(content, ContentBlock):
             return content
         if isinstance(content, str):
@@ -167,6 +219,14 @@ class Message(BaseModel):
     @cached_property
     def text(self) -> str:
         return "\n".join(c.text or f"<{c.type}>" for c in self.content)
+    
+    @cached_property
+    def images(self) -> List[PILImage.Image]:
+        return [c.image for c in self.content if c.image]
+    
+    @cached_property
+    def audios(self) -> List[np.ndarray]:
+        return [c.audio for c in self.content if c.audio]
 
     @cached_property
     def text_only(self) -> str:

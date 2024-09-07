@@ -256,8 +256,9 @@ To get started with ``ell``, see the :doc:`Getting Started <getting_started>` se
    :hidden:
 
    core_concepts/ell_simple
-   core_concepts/ell_complex
+   core_concepts/versioning_and_storage
    core_concepts/message_api
+   core_concepts/ell_complex
    core_concepts/tool_usage
    core_concepts/structured_outputs
    core_concepts/multimodality
