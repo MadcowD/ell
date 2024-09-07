@@ -7,6 +7,21 @@ logger = logging.getLogger(__name__)
 client = None
 
 def register(base_url):
+    """
+    Registers Ollama models with the provided base URL.
+
+    This function sets up the Ollama client with the given base URL and
+    fetches available models from the Ollama API. It then registers these
+    models with the global configuration, allowing them to be used within
+    the ell framework.
+
+    Args:
+        base_url (str): The base URL of the Ollama API endpoint.
+
+    Note:
+        This function updates the global client and configuration.
+        It logs any errors encountered during the process.
+    """
     global client
     client = openai.Client(base_url=base_url)
     

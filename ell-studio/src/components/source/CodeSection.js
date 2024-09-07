@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiChevronDown, FiChevronRight } from 'react-icons/fi';
+import { FiChevronDown, FiChevronRight, FiCopy, FiCheck } from 'react-icons/fi';
 import { CodeHighlighter } from './CodeHighlighter';
 import '../../styles/SourceCodeView.css';
 import YAML from 'yaml';
@@ -8,17 +8,21 @@ export function CodeSection({
   title, 
   showCode, 
   setShowCode, 
-  lines, 
+  lines : linesOverride, 
   isDependent = false, 
   collapsedHeight = '150px',
   enableFormatToggle = false,
   code,
+  children,
+  showCopyButton = false,
+  raw,
   ...rest // Add rest operator to collect remaining props
 }) {
     const [isHovering, setIsHovering] = useState(false);
     const [isYamlFormat, setIsYamlFormat] = useState(true);
+    const [isCopied, setIsCopied] = useState(false);
     const codeRef = useRef(null);
-  
+    const lines = linesOverride ? linesOverride : (raw || code).split('\n').length;
     useEffect(() => {
       if (codeRef.current) {
         codeRef.current.style.maxHeight = showCode ? 'none' : collapsedHeight;
@@ -38,6 +42,15 @@ export function CodeSection({
         console.error("Error parsing JSON:", error);
         return code; // Return original code if parsing fails
       }
+    };
+
+    const copyToClipboard = () => {
+      navigator.clipboard.writeText(raw || getFormattedCode())
+        .then(() => {
+          setIsCopied(true);
+          setTimeout(() => setIsCopied(false), 2000); // Reset after 2 seconds
+        })
+        .catch(err => console.error('Failed to copy code: ', err));
     };
 
     return (
@@ -66,6 +79,15 @@ export function CodeSection({
                 {isYamlFormat ? 'YAML' : 'JSON'}
               </button>
             )}
+            {showCopyButton && (
+              <button
+                onClick={copyToClipboard}
+                className="mr-4 text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 flex items-center rounded"
+              >
+                {isCopied ? <FiCheck className="mr-2 text-green-500" /> : <FiCopy className="mr-2" />}
+                {isCopied ? 'Copied!' : 'JSON'}
+              </button>
+            )}
             <span className="text-xs text-gray-400">
               {lines} lines
             </span>
@@ -78,11 +100,13 @@ export function CodeSection({
           ref={codeRef}
           onClick={() => !showCode && setShowCode(true)}
         >
-          <CodeHighlighter
-            code={getFormattedCode()}
+          {children ? children : (
+            <CodeHighlighter
+              code={getFormattedCode()}
             {...rest} // Spread the remaining props to CodeHighlighter
-            language={enableFormatToggle ? (isYamlFormat ? 'yaml' : 'json') : undefined}
-          />
+              language={enableFormatToggle ? (isYamlFormat ? 'yaml' : 'json') : undefined}
+            />
+          )}
           {!showCode && (
             <div className="gradient-overlay">
               {isHovering && (

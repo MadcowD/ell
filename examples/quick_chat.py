@@ -19,7 +19,7 @@ names_list = [
 
 
 
-@ell.lm(model="gpt-4o-2024-08-06", temperature=1.0)
+@ell.simple(model="gpt-4o-2024-08-06", temperature=1.0)
 def create_personality() -> str:
     """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.
 
@@ -31,12 +31,10 @@ Backstory: <3 sentence backstory>'""" # System prompt
 
 
 
-
-
 def format_message_history(message_history : List[Tuple[str, str]]) -> str:
     return "\n".join([f"{name}: {message}" for name, message in message_history])
 
-@ell.lm(model="gpt-4o-2024-08-06", temperature=0.3, max_tokens=20)
+@ell.simple(model="gpt-4o-2024-08-06", temperature=0.3, max_tokens=20)
 def chat(message_history : List[Tuple[str, str]], *, personality : str):
 
         return [
@@ -51,7 +49,7 @@ Your goal is to come up with a response to a chat. Only respond in one sentence 
 
 if __name__ == "__main__":
     from ell.stores.sql import SQLiteStore
-    ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
+    ell.set_store('./logdir', autocommit=True)
         
     messages : List[Tuple[str, str]]= []
     personalities = [create_personality(), create_personality()]
@@ -61,7 +59,7 @@ if __name__ == "__main__":
     names = []
     backstories = []    
     for personality in personalities:
-        parts = personality.split("\n")
+        parts = list(filter(None, personality.split("\n")))
         names.append(parts[0].split(": ")[1])
         backstories.append(parts[1].split(": ")[1])
     print(names)

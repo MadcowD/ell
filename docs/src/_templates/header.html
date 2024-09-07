@@ -1,0 +1,15 @@
+{% extends "!header.html" %}
+
+{% block header_logo %}
+      <a href="{{ pathto(master_doc) }}" class="flex items-center mr-6">
+        {%- if logo_url %}
+          <img height="24" width="120" class="mr-2 dark:invert" src="{{ logo_url }}" alt="Logo" />
+        {%- endif -%}
+        {%- if theme_logo_dark and not logo_url %}
+          <img width="120" height="24" class="mr-2 hidden dark:block" src="{{ pathto('_static/' + theme_logo_dark, 1) }}" alt="Logo" />
+        {%- endif -%}
+        {%- if theme_logo_light and not logo_url %}
+        <img width="120" height="24" class="mr-2 dark:hidden" src="{{ pathto('_static/' + theme_logo_light, 1) }}" alt="Logo" />
+        {%- endif -%}
+      </a>
+{% endblock header_logo %}

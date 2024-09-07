@@ -3,7 +3,6 @@ import ell
 from typing import Any, Literal, Type, Union
 import pydantic
 
-from ell.stores.sql import SQLiteStore
 
 ell.config.verbose = True
 
@@ -39,7 +38,7 @@ class Div:
 CalcOp = Union[Add, Sub, Mul, Div]
 
 
-@ell.lm(model="gpt-4o", temperature=0.1)
+@ell.simple(model="gpt-4o", temperature=0.1)
 def parse_json(task: str, type: Type[Any]):
     return [
         ell.system(
@@ -70,9 +69,9 @@ def calc_structured(task: str) -> float:
 
 if __name__ == "__main__":
     # Local
-    # ell.init(autocommit=True)
+    ell.init(storage_dir='./logdir', autocommit=True)
 
     # API server
-    ell.init(base_url="http://localhost:8081", autocommit=True)
+    # ell.init(base_url="http://localhost:8081", autocommit=True)
 
     print(calc_structured("What is two plus two?"))

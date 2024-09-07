@@ -30,7 +30,7 @@ numpy = "^2.0.1"
 dill = "^0.3.8"
 colorama = "^0.4.6"
 cattrs = "^23.2.3"
-openai = "^1.37.1"
+openai = "^1.40.6"
 sqlmodel = "^0.0.21"
 uvicorn = "^0.30.3"
 requests = "^2.32.3"
@@ -38,13 +38,17 @@ typing-extensions = "^4.12.2"
 
 
 black = "^24.8.0"
-psycopg2 = "^2.9.9"
+json-fix = "^1.0.0"
+pillow = "^10.4.0"
 aiomqtt = "^2.3.0"
+psycopg2 = "^2.9.9"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
 polyfactory = "^2.16.2"
 pytest-mock = "^3.14.0"
 
+sphinx = "<8.0.0"
+sphinx-rtd-theme = "^2.0.0"
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
 build-backend = "poetry_dynamic_versioning.backend"

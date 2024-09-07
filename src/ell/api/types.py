@@ -1,5 +1,7 @@
-from typing import Any, Dict, List,  Optional, Set, Tuple, cast
+from functools import cached_property
+from typing import Any, Dict, List,  Optional, Set, Tuple, Union, cast
 from datetime import datetime
+import uuid
 from numpy import ndarray
 
 from openai import BaseModel
@@ -8,6 +10,8 @@ from ell.lstr import lstr
 
 from ell.types import SerializedLMP, SerializedLStr, utc_now
 import ell.types
+from ell.types.message import Message
+from ell.types.studio import LMPType
 
 
 class WriteLMPInput(BaseModel):
@@ -48,8 +52,8 @@ class LMP(BaseModel):
     name: str
     source: str
     dependencies: str
-    is_lm: bool
-    lm_kwargs: Optional[Dict[str, Any]]
+    lmp_type: LMPType
+    api_params: Optional[Dict[str, Any]]
     initial_free_vars: Optional[Dict[str, Any]]
     initial_global_vars: Optional[Dict[str, Any]]
     created_at: AwareDatetime
@@ -64,8 +68,8 @@ class LMP(BaseModel):
             name=serialized.name,
             source=serialized.source,
             dependencies=serialized.dependencies,
-            is_lm=serialized.is_lm,
-            lm_kwargs=serialized.lm_kwargs,
+            lmp_type=serialized.lmp_type,
+            api_params=serialized.api_params,
             initial_free_vars=serialized.initial_free_vars,
             initial_global_vars=serialized.initial_global_vars,
             created_at=serialized.created_at,
@@ -84,6 +88,34 @@ GetLMPResponse = Optional[LMP]
 #     lmp: LMP
 #     uses: List[str]
 
+InvocationResults = Union[List[Message], Any]
+class InvocationContents(BaseModel):
+    invocation_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    params: Optional[Dict[str, Any]] = None
+    results: Optional[InvocationResults] = None
+    invocation_api_params: Optional[Dict[str, Any]] = None
+    global_vars: Optional[Dict[str, Any]] = None
+    free_vars: Optional[Dict[str, Any]] = None
+    is_external : bool = Field(default=False)
+
+    @cached_property
+    def total_size_bytes(self) -> int:
+        """
+        Returns the total uncompressed size of the invocation contents as JSON in bytes.
+        """
+        import json
+        json_fields = [
+            self.params,
+            self.results,
+            self.invocation_api_params,
+            self.global_vars,
+            self.free_vars
+        ]
+        return sum(len(json.dumps(field, default=(lambda x: x.model_dump_json() if isinstance(x, BaseModel) else str(x))).encode('utf-8')) for field in json_fields if field is not None)   
+
+    @cached_property
+    def should_externalize(self) -> bool:
+        return self.total_size_bytes > 102400  # Precisely 100kb in bytes
 
 class Invocation(BaseModel):
     """
@@ -91,17 +123,13 @@ class Invocation(BaseModel):
     """
     id: Optional[str] = None
     lmp_id: str
-    args: List[Any]
-    kwargs: Dict[str, Any]
-    global_vars: Dict[str, Any]
-    free_vars: Dict[str, Any]
     latency_ms: int
-    invocation_kwargs: Dict[str, Any]
     prompt_tokens: Optional[int] = None
     completion_tokens: Optional[int] = None
-    state_cache: Optional[str] = None
+    state_cache_key: Optional[str] = None
     created_at: AwareDatetime = Field(default_factory=utc_now)
-    # used_by_id: Optional[str] = None
+    used_by_id: Optional[str] = None
+    contents: InvocationContents
 
     def to_serialized_invocation(self):
         return ell.types.Invocation(
@@ -109,42 +137,19 @@ class Invocation(BaseModel):
         )
 
 
-class WriteInvocationInputLStr(BaseModel):
-    id: Optional[str] = None
-    content: str
-    logits: Optional[List[float]] = None
-
-
-def lstr_to_serialized_lstr(ls: lstr) -> SerializedLStr:
-    return SerializedLStr(
-        content=str(ls),
-        logits=ls.logits if ls.logits is not None else None
-    )
-
 
 class WriteInvocationInput(BaseModel):
     """
     Arguments to write an invocation.
     """
     invocation: Invocation
-    results: List[WriteInvocationInputLStr]
     consumes: List[str]
 
-    def to_serialized_invocation_input(self) -> Tuple[ell.types.Invocation, List[SerializedLStr], List[str]]:
-        results = [
-            SerializedLStr(
-                id=ls.id,
-                content=ls.content,
-                logits=ndarray(
-                    ls.logits) if ls.logits is not None else None
-            )
-            for ls in self.results]
-
+    def to_serialized_invocation_input(self) -> Tuple[ell.types.Invocation, List[str]]:
         sinvo = self.invocation.to_serialized_invocation()
-        return  sinvo, results, self.consumes
+        return  sinvo,  self.consumes
 
 class LMPInvokedEvent(BaseModel):
     lmp_id: str
     # invocation_id: str
-    results: List[SerializedLStr]
     consumes: List[str]

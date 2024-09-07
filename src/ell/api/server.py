@@ -132,13 +132,14 @@ def create_app(config: Config):
         serializer: Store = Depends(get_serializer)
     ):
         logger.info(f"Writing invocation {input.invocation.lmp_id}")
-        invocation, results, consumes = input.to_serialized_invocation_input()
+        invocation, consumes = input.to_serialized_invocation_input()
         # TODO: return anything this might create like invocation id
         _invo = serializer.write_invocation(
             invocation,
-            results,
             consumes  # type: ignore
         )
+        
+
         loop = asyncio.get_event_loop()
         loop.create_task(
             publisher.publish(
@@ -146,7 +147,6 @@ def create_app(config: Config):
                 LMPInvokedEvent(
                     lmp_id=input.invocation.lmp_id,
                     # invocation_id=invo.id,
-                    results=results,
                     consumes=consumes
                 ).model_dump_json()
             )

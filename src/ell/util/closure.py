@@ -31,8 +31,9 @@ def xD():
 import collections
 import ast
 import hashlib
+import itertools
 import os
-from typing import Any, Dict, Set, Tuple, Callable
+from typing import Any, Dict, Iterable, Optional, Set, Tuple, Callable
 import dill
 import inspect
 import types
@@ -42,6 +43,8 @@ import re
 from collections import deque
 import black
 
+from ell.util.serialization import is_immutable_variable
+
 DELIM = "$$$$$$$$$$$$$$$$$$$$$$$$$"
 FORBIDDEN_NAMES = ["ell", "lstr"]
 
@@ -49,7 +52,8 @@ def lexical_closure(
     func: Any,
     already_closed: Set[int] = None,
     initial_call: bool = False,
-    recursion_stack: list = None
+    recursion_stack: list = None,
+    forced_dependencies: Optional[Dict[str, Any]] = None
 ) -> Tuple[str, Tuple[str, str], Set[str]]:
     """
     Generate a lexical closure for a given function or callable.
@@ -68,6 +72,7 @@ def lexical_closure(
     """
     already_closed = already_closed or set()
     uses = set()
+    forced_dependencies = forced_dependencies or {}
     recursion_stack = recursion_stack or []
 
     if hash(func) in already_closed:
@@ -84,6 +89,9 @@ def lexical_closure(
 
     globals_and_frees = _get_globals_and_frees(func)
     dependencies, imports, modules = _process_dependencies(func, globals_and_frees, already_closed, recursion_stack, uses)
+    for k,v in forced_dependencies.items():
+        # Todo: dictionary not necessary
+        _process_signature_dependency(v, dependencies, already_closed, recursion_stack, uses, k)
     
     cur_src = _build_initial_source(imports, dependencies, source)
     
@@ -104,7 +112,7 @@ def lexical_closure(
     
     _update_ell_func(outer_ell_func, source, dsrc, globals_and_frees['globals'], globals_and_frees['frees'], fn_hash, uses)
     
-    return (dirty_src, (source, dsrc), ({fn_hash} if not initial_call and hasattr(outer_ell_func, "__ell_func__") else uses))
+    return (dirty_src, (source, dsrc), ({outer_ell_func} if not initial_call and hasattr(outer_ell_func, "__ell_func__") else uses))
 
 
 def _format_source(source: str) -> str:
@@ -137,7 +145,7 @@ def _process_dependencies(func, globals_and_frees, already_closed, recursion_sta
     if isinstance(func, (types.FunctionType, types.MethodType)):
         _process_default_kwargs(func, dependencies, already_closed, recursion_stack, uses)
 
-    for var_name, var_value in {**globals_and_frees['globals'], **globals_and_frees['frees']}.items():
+    for var_name, var_value in itertools.chain(globals_and_frees['globals'].items(), globals_and_frees['frees'].items()):
         _process_variable(var_name, var_value, dependencies, modules, imports, already_closed, recursion_stack, uses)
 
     return dependencies, imports, modules
@@ -147,20 +155,52 @@ def _process_default_kwargs(func, dependencies, already_closed, recursion_stack,
     ps = inspect.signature(func).parameters
     default_kwargs = collections.OrderedDict({k: v.default for k, v in ps.items() if v.default is not inspect.Parameter.empty})
     for name, val in default_kwargs.items():
+        _process_signature_dependency(val, dependencies, already_closed, recursion_stack, uses, name)
+
+def _process_signature_dependency(val, dependencies, already_closed, recursion_stack, uses, name : Optional[str] = None):
+    # Todo: Buidl general cattr like utility for unstructureing python objects with ooks that keep track of state variables.
+    # Todo: break up closure into types and fucntions.
+    
+    if  (name not in FORBIDDEN_NAMES):
         try:
-            is_builtin = val.__class__.__module__ == "builtins" or val.__class__.__module__ == "__builtins__"
-        except:
-            is_builtin = False
-        if name not in FORBIDDEN_NAMES and not is_builtin:
-            try:
-                dep, _, _uses = lexical_closure(type(val), already_closed=already_closed, recursion_stack=recursion_stack.copy())
-                dependencies.append(dep)
-                uses.update(_uses)
-            except Exception as e:
-                _raise_error(f"Failed to capture the lexical closure of default parameter {name}", e, recursion_stack)
+            dep = None
+            _uses = None
+            if isinstance(val, (types.FunctionType, type, types.MethodType)):
+                dep, _, _uses = lexical_closure(val, already_closed=already_closed, recursion_stack=recursion_stack.copy())
+
+            elif isinstance(val, (list, tuple, set)): # Todo: Figure out recursive ypye closurex
+                # print(val)
+                for item in val:
+                    _process_signature_dependency(item, dependencies, already_closed, recursion_stack, uses)
+            else:
+                try:
+                    is_builtin = (val.__class__.__module__ == "builtins" or val.__class__.__module__ == "__builtins__" )
+                except:
+                    is_builtin = False
+
+                if not is_builtin:
+                    if should_import(val.__class__.__module__):
+                
+                        dependencies.append(dill.source.getimport(val.__class__, alias=val.__class__.__name__))
+                    else:
+                        dep, _, _uses = lexical_closure(type(val), already_closed=already_closed, recursion_stack=recursion_stack.copy())
+
+            if dep: dependencies.append(dep)
+            if _uses: uses.update(_uses)
+        except Exception as e:
+            _raise_error(f"Failed to capture the lexical closure of default parameter {name}", e, recursion_stack)
+
 
 def _process_variable(var_name, var_value, dependencies, modules, imports, already_closed, recursion_stack , uses):
     """Process a single variable."""
+    try:
+        name = inspect.getmodule(var_value).__name__
+        if should_import(name):
+            imports.append(dill.source.getimport(var_value, alias=var_name))
+            return
+    except:
+        pass
+    
     if isinstance(var_value, (types.FunctionType, type, types.MethodType)):
         _process_callable(var_name, var_value, dependencies, already_closed, recursion_stack, uses)
     elif isinstance(var_value, types.ModuleType):
@@ -187,7 +227,7 @@ def _process_callable(var_name, var_value, dependencies, already_closed, recursi
 
 def _process_module(var_name, var_value, modules, imports, uses):
     """Process a module."""
-    if should_import(var_value):
+    if should_import(var_value.__name__):
         imports.append(dill.source.getimport(var_value, alias=var_name))
     else:
         modules.append((var_name, var_value))
@@ -255,8 +295,12 @@ def _generate_function_hash(source, dsrc, qualname):
 
 def _update_ell_func(outer_ell_func, source, dsrc, globals_dict, frees_dict, fn_hash, uses):
     """Update the ell function attributes."""
+    formatted_source = _format_source(source)
+    formatted_dsrc = _format_source(dsrc)
+    
     if hasattr(outer_ell_func, "__ell_func__"):
-        outer_ell_func.__ell_closure__ = (source, dsrc, globals_dict, frees_dict)
+        
+        outer_ell_func.__ell_closure__ = (formatted_source, formatted_dsrc, globals_dict, frees_dict)
         outer_ell_func.__ell_hash__ = fn_hash
         outer_ell_func.__ell_uses__ = uses
 
@@ -266,62 +310,23 @@ def _raise_error(message, exception, recursion_stack):
     error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
     raise Exception(error_msg)
 
-def is_immutable_variable(value):
-    """
-    Check if a value is immutable.
-    
-    This function determines whether the given value is of an immutable type in Python.
-    Immutable types are objects whose state cannot be modified after they are created.
-    
-    Args:
-        value: Any Python object to check for immutability.
-    
-    Returns:
-        bool: True if the value is immutable, False otherwise.
-    
-    Note:
-        - This function checks for common immutable types in Python.
-        - Custom classes are considered mutable unless they explicitly implement
-          immutability (which this function doesn't check for).
-        - For some types like tuple, immutability is shallow (i.e., the tuple itself
-          is immutable, but its contents might not be).
-    """
-    immutable_types = (
-        int, float, complex, str, bytes,
-        tuple, frozenset, type(None),
-        bool,  # booleans are immutable
-        range,  # range objects are immutable
-        slice,  # slice objects are immutable
-    )
-    
-    if isinstance(value, immutable_types):
-        return True
-    
-    # Check for immutable instances of mutable types
-    if isinstance(value, (tuple, frozenset)):
-        return all(is_immutable_variable(item) for item in value)
-    
-    return False
-
-def should_import(module: types.ModuleType):
+def should_import(module_name : str):
     """
     This function checks if a module should be imported based on its origin.
     It returns False if the module is in the local directory or if the module's spec is None.
     Otherwise, it returns True.
 
-    Parameters:
-    module (ModuleType): The module to check.
-
     Returns:
     bool: True if the module should be imported, False otherwise.
     """
+
     # Define the local directory
     DIRECTORY_TO_WATCH = os.environ.get("DIRECTORY_TO_WATCH", os.getcwd())
 
     # Get the module's spec
-    spec = importlib.util.find_spec(module.__name__)
+    spec = importlib.util.find_spec(module_name)
 
-    if module.__name__.startswith("ell"):
+    if module_name.startswith("ell"):
         return True
     
     # Return False if the spec is None or if the spec's origin starts with the local directory
@@ -355,12 +360,50 @@ def get_referenced_names(code: str, module_name: str):
 
 CLOSURE_SOURCE: Dict[str, str] = {}
 
-def lexically_closured_source(func):
-    _, fnclosure, uses = lexical_closure(func, initial_call=True, recursion_stack=[])
-    source, dsrc = fnclosure
-    formatted_source = _format_source(source)
-    formatted_dsrc = _format_source(dsrc)
-    return (formatted_source, formatted_dsrc,) + func.__ell_closure__[2:], uses
+def lexically_closured_source(func, forced_dependencies: Optional[Dict[str, Any]] = None):
+    """
+    Generate a lexically closured source for a given function.
+
+    This function takes a callable object (function, method, or class) and generates
+    a lexically closured source code. It captures all the dependencies, including
+    global variables, free variables, and nested functions, to create a self-contained
+    version of the function that can be executed independently.
+
+    Args:
+        func (Callable): The function or callable object to process.
+        forced_dependencies (Optional[Dict[str, Any]]): A dictionary of additional
+            dependencies to include in the closure. Keys are variable names, and
+            values are the corresponding objects.
+
+    Returns:
+        Tuple[str, Set[Any]]: A tuple containing two elements:
+            1. The lexically closured source code as a string.
+            2. A set of function objects that this closure uses.
+
+    Raises:
+        ValueError: If the input is not a callable object.
+
+    Example:
+        def outer(x):
+            y = 10
+            def inner():
+                return x + y
+            return inner
+
+        closured_source, uses = lexically_closured_source(outer)
+        print(closured_source)
+        # Output will include the source for both outer and inner functions,
+        # along with any necessary imports and variable definitions.
+
+    Note:
+        This function relies on the `lexical_closure` function to perform the
+        actual closure generation. It also uses the `__ell_closure__` attribute
+        of the function, which is expected to be set by the `lexical_closure` function.
+    """
+    if not callable(func):
+        raise ValueError("Input must be a callable object (function, method, or class).")
+    _, fnclosure, uses = lexical_closure(func, initial_call=True, recursion_stack=[], forced_dependencies=forced_dependencies)
+    return func.__ell_closure__, uses
 
 import ast
 
@@ -480,3 +523,5 @@ def globalvars(func, recurse=True, builtin=False):
     #NOTE: if name not in __globals__, then we skip it...
     return dict((name,globs[name]) for name in func if name in globs)
 
+
+# XXX: This is a mess. COuld probably be about 100 lines of code max.

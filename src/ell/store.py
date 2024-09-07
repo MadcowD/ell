@@ -1,15 +1,34 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from sqlmodel import Session
+from ell.types import SerializedLMP, Invocation
+from ell.types.message import InvocableLM
 from typing import Any, Optional, Dict, List, Set
 
-from sqlmodel import Session
-from ell.types import InvocableLM, SerializedLMP, Invocation, SerializedLStr
 
+
+class BlobStore(ABC):
+    @abstractmethod
+    def store_blob(self, blob: bytes, metadata: Optional[Dict[str, Any]] = None) -> str:
+        """Store a blob and return its identifier."""
+        pass
+
+    @abstractmethod
+    def retrieve_blob(self, blob_id: str) -> bytes:
+        """Retrieve a blob by its identifier."""
+        pass
 
 class Store(ABC):
     """
     Abstract base class for serializers. Defines the interface for serializing and deserializing LMPs and invocations.
     """
+
+    def __init__(self, blob_store: Optional[BlobStore] = None):
+        self.blob_store = blob_store
+
+    @property
+    def has_blob_storage(self) -> bool:
+        return self.blob_store is not None
 
     @abstractmethod
     def get_lmp(self, lmp_id: str, session: Optional[Session] = None) -> Optional[SerializedLMP]:
@@ -33,12 +52,11 @@ class Store(ABC):
         pass
 
     @abstractmethod
-    def write_invocation(self, invocation: Invocation, results: List[SerializedLStr], consumes: Set[str]) -> Optional[Any]:
+    def write_invocation(self, invocation: Invocation,  consumes: Set[str]) -> Optional[Any]:
         """
         Write an invocation of an LMP to the storage.
 
         :param invocation: Invocation object containing all invocation details.
-        :param results: List of SerializedLStr objects representing the results.
         :param consumes: Set of invocation IDs consumed by this invocation.
         :return: Optional return value.
         """
@@ -58,62 +76,6 @@ class Store(ABC):
         """
         pass
 
-    # @abstractmethod
-    # def get_lmps(self, skip: int = 0, limit: int = 10, subquery=None, **filters: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    #     """
-    #     Retrieve LMPs from the storage.
-
-    #     :param skip: Number of records to skip.
-    #     :param limit: Maximum number of records to return.
-    #     :param subquery: Optional subquery for filtering.
-    #     :param filters: Optional dictionary of filters to apply.
-    #     :return: List of LMPs.
-    #     """
-    #     pass
-
-    # @abstractmethod
-    # def get_invocations(self, lmp_filters: Dict[str, Any], skip: int = 0, limit: int = 10, filters: Optional[Dict[str, Any]] = None, hierarchical: bool = False) -> List[Dict[str, Any]]:
-    #     """
-    #     Retrieve invocations of an LMP from the storage.
-
-    #     :param lmp_filters: Filters to apply on the LMP level.
-    #     :param skip: Number of records to skip.
-    #     :param limit: Maximum number of records to return.
-    #     :param filters: Optional dictionary of filters to apply on the invocation level.
-    #     :param hierarchical: Whether to include hierarchical information.
-    #     :return: List of invocations.
-    #     """
-    #     pass
-
-    # @abstractmethod
-    # def get_latest_lmps(self, skip: int = 0, limit: int = 10) -> List[Dict[str, Any]]:
-    #     """
-    #     Retrieve the latest versions of all LMPs from the storage.
-
-    #     :param skip: Number of records to skip.
-    #     :param limit: Maximum number of records to return.
-    #     :return: List of the latest LMPs.
-    #     """
-    #     pass
-
-    # @abstractmethod
-    # def get_traces(self) -> List[Dict[str, Any]]:
-    #     """
-    #     Retrieve all traces from the storage.
-
-    #     :return: List of traces.
-    #     """
-    #     pass
-
-    # @abstractmethod
-    # def get_all_traces_leading_to(self, invocation_id: str) -> List[Dict[str, Any]]:
-    #     """
-    #     Retrieve all traces leading to a specific invocation.
-
-    #     :param invocation_id: ID of the invocation to trace.
-    #     :return: List of traces leading to the specified invocation.
-    #     """
-    #     pass
 
     @contextmanager
     def freeze(self, *lmps: InvocableLM):

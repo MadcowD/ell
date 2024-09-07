@@ -1,0 +1,50 @@
+name: Build and Deploy Sphinx Docs
+
+on:
+  push:
+    branches:
+      - main  # Trigger the workflow only on pushes to the main branch
+
+# Add this permissions block
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'  # Specify the Python version
+    
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+            version: 1.5.1
+        
+      - name: Install project dependencies
+        run: poetry install
+
+      - name: Install doc-specific dependencies
+        run: |
+          cd docs
+          poetry run pip install -r requirements.txt
+
+      - name: Build the documentation
+        run: |
+          cd docs
+          poetry run make html  # Use poetry run to ensure the correct environment is used
+        env:
+          SPHINXOPTS: "-W"  # Treat warnings as errors
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/_build/html  # Path to the built documentation
+          cname: docs.ell.so

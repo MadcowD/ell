@@ -5,12 +5,12 @@ from typing import Set, Any
 import numpy as np
 from ell.util.closure import (
     lexical_closure,
-    is_immutable_variable,
     should_import,
     get_referenced_names,
     is_function_called,
 )
 import ell
+from ell.util.serialization import is_immutable_variable
 
 
 def test_lexical_closure_simple_function():
@@ -63,12 +63,12 @@ def test_is_immutable_variable(value, expected):
 
 def test_should_import():
     import os
-    assert should_import(os)
+    assert should_import(os.__name__)
     
     class DummyModule:
         __name__ = "dummy"
     dummy = DummyModule()
-    assert not should_import(dummy)
+    assert not should_import(dummy.__name__)
 
 def test_get_referenced_names():
     code = """
@@ -113,25 +113,24 @@ def test_lexical_closure_uses_type():
 
 
 def test_lexical_closure_uses():
-
-    @ell.lm(model="gpt-4")
+    ell.config.lazy_versioning = False
+    @ell.simple(model="gpt-4")
     def dependency_func():
         return "42"
     
 
-    @ell.lm(model="gpt-4")
+    @ell.simple(model="gpt-4")
     def main_func():
         return dependency_func() 
 
     
-    # Check that uses is a set
+    # print(main_func.__ell_uses__)
     assert isinstance(main_func.__ell_uses__, set)
     
-    # Check that the set contains exactly one item
-    assert  dependency_func.__ell_hash__ in main_func.__ell_uses__
+    assert  dependency_func.__ell_hash__ in list(map(lambda x: x.__ell_hash__, main_func.__ell_uses__))
     assert len(main_func.__ell_uses__) == 1
     # Check that the item in the set starts with 'lmp-'
-    assert list(main_func.__ell_uses__)[0].startswith('lmp-')
+    assert all(hash.startswith('lmp-') for hash in map(lambda x: x.__ell_hash__, main_func.__ell_uses__))
     assert len(dependency_func.__ell_uses__) == 0
     
 

@@ -9,17 +9,24 @@ import json
 from sqlmodel import Session
 from ell.stores.sql import PostgresStore, SQLiteStore
 from ell import __version__
-from fastapi import FastAPI, Query, HTTPException, Depends, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Query, HTTPException, Depends, Response, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+import logging
+import json
+from ell.studio.config import Config
+from ell.studio.connection_manager import ConnectionManager
+from ell.studio.datamodels import InvocationPublicWithConsumes, SerializedLMPWithUses
 from ell.studio.datamodels import SerializedLMPWithUses,InvocationsAggregate
 from ell.studio.pubsub import MqttWebSocketPubSub, NoOpPubSub, WebSocketPubSub
-from ell.studio.config import Config
 
 from ell.types import SerializedLMP
 from datetime import datetime, timedelta
 from sqlmodel import select
 
 logger = logging.getLogger(__name__)
+
+
+from ell.studio.datamodels import InvocationsAggregate
 
 
 def get_serializer(config: Config):
@@ -101,9 +108,6 @@ def create_app(config:Config):
             pubsub = None  # Reset pubsub after exiting the context
 
 
-
-
-
     app = FastAPI(title="ell Studio", version=__version__, lifespan=lifespan)
 
     # Enable CORS for all origins
@@ -174,7 +178,7 @@ def create_app(config:Config):
 
 
 
-    @app.get("/api/invocation/{invocation_id}")
+    @app.get("/api/invocation/{invocation_id}", response_model=InvocationPublicWithConsumes)
     def get_invocation(
         invocation_id: str,
         session: Session = Depends(get_session)
@@ -182,7 +186,7 @@ def create_app(config:Config):
         invocation = serializer.get_invocations(session, lmp_filters=dict(), filters={"id": invocation_id})[0]
         return invocation
 
-    @app.get("/api/invocations")
+    @app.get("/api/invocations", response_model=list[InvocationPublicWithConsumes])
     def get_invocations(
         id: Optional[str] = Query(None),
         hierarchical: Optional[bool] = Query(False),
@@ -220,13 +224,23 @@ def create_app(config:Config):
         traces = serializer.get_traces(session)
         return traces
 
-    @app.get("/api/traces/{invocation_id}")
-    def get_all_traces_leading_to(
-        invocation_id: str,
+
+
+    @app.get("/api/blob/{blob_id}", response_class=Response)
+    def get_blob(
+        blob_id: str,
         session: Session = Depends(get_session)
     ):
-        traces = serializer.get_all_traces_leading_to(session, invocation_id)
-        return traces
+        if serializer.blob_store is None:
+            raise HTTPException(status_code=400, detail="Blob storage is not configured")
+        try:
+            blob_data = serializer.blob_store.retrieve_blob(blob_id)
+            return Response(content=blob_data.decode('utf-8'), media_type="application/json")
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="Blob not found")
+        except Exception as e:
+            logger.error(f"Error retrieving blob: {str(e)}")
+            raise HTTPException(status_code=500, detail="Internal server error")
 
     @app.get("/api/lmp-history")
     def get_lmp_history(

@@ -1,29 +1,43 @@
-import ell.store
+from datetime import datetime, timedelta
+import json
 import os
-from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLStr
-from sqlalchemy import Engine, func, and_
-from sqlalchemy.sql import text
+from typing import Any, Optional, Dict, List, Set, Union
+from pydantic import BaseModel
 from sqlmodel import Session, SQLModel, create_engine, select
+import ell.store
+import cattrs
+import numpy as np
+from sqlalchemy.sql import text
+from ell.types import InvocationTrace, SerializedLMP, Invocation, InvocationContents
+from ell.types._lstr import _lstr
+from sqlalchemy import or_, func, and_, extract, FromClause
+from sqlalchemy.types import TypeDecorator, VARCHAR
+from ell.types.studio import SerializedLMPUses, utc_now
+from ell.util.serialization import pydantic_ltype_aware_cattr
+import gzip
+import json
+import logging
 from typing import Any, Optional, Dict, List, Set
 from datetime import datetime, timedelta
-from sqlalchemy.sql import text
-from ell.types import InvocationTrace, SerializedLMP, Invocation, SerializedLStr
-import logging
+from sqlalchemy import Engine, func, and_
 
 logger = logging.getLogger(__name__)
 
-
 class SQLStore(ell.store.Store):
-    def __init__(self, db_uri: Optional[str] = None, engine: Optional[Engine] = None):
+    def __init__(self, db_uri: Optional[str] = None, blob_store: Optional[ell.store.BlobStore] = None, engine: Optional[Engine] = None):
+
         if engine is not None:
             self.engine = engine
         elif db_uri is None:
             raise ValueError(
                 "db_uri cannot be None when engine is not provided as an argument")
         else:
-            self.engine = create_engine(db_uri)
-
+            self.engine = create_engine(
+                db_uri,
+                json_serializer=lambda obj: json.dumps(pydantic_ltype_aware_cattr.unstructure(obj),
+                                                       sort_keys=True, default=repr))
         SQLModel.metadata.create_all(self.engine)
+        super().__init__(blob_store)
 
     def get_lmp(self, lmp_id: str,session:Optional[Session] = None) -> Optional[SerializedLMP]:
         if session is None:
@@ -36,10 +50,11 @@ class SQLStore(ell.store.Store):
         with Session(self.engine) as session:
             logger.debug(f"Begin writing LMP {serialized_lmp.lmp_id}")
             # Bind the serialized_lmp to the session
+            lmp = session.exec(select(SerializedLMP).filter(SerializedLMP.lmp_id == serialized_lmp.lmp_id)).first()
             lmp = None
             if serialized_lmp.lmp_id:
                 lmp = self.get_lmp(serialized_lmp.lmp_id, session)
-            
+
             if lmp:
                 # Already added to the DB.
                 logger.debug(f"LMP {serialized_lmp.lmp_id} already exists in the DB. Skipping write.")
@@ -56,8 +71,9 @@ class SQLStore(ell.store.Store):
             logger.debug(f"Wrote new LMP {serialized_lmp.lmp_id} to the DB.")
         return None
 
-    def write_invocation(self, invocation: Invocation, results: List[SerializedLStr], consumes: Set[str]) -> Optional[Any]:
+    def write_invocation(self, invocation: Invocation, consumes: Set[str]) -> Optional[Any]:
         with Session(self.engine) as session:
+            lmp = session.exec(select(SerializedLMP).filter(SerializedLMP.lmp_id == invocation.lmp_id)).first()
             logger.debug(f"Begin writing invocation {invocation.id}")
             lmp = self.get_lmp(invocation.lmp_id, session)
             assert lmp is not None, f"LMP with id {invocation.lmp_id} not found. Writing invocation erroneously"
@@ -68,11 +84,11 @@ class SQLStore(ell.store.Store):
             else:
                 lmp.num_invocations += 1
 
-            session.add(invocation)
+            # Add the invocation contents
+            session.add(invocation.contents)
 
-            for result in results:
-                result.producer_invocation = invocation
-                session.add(result)
+            # Add the invocation
+            session.add(invocation)
 
             logger.debug(f"Committing invocation {invocation.id}")
             session.commit()
@@ -139,35 +155,8 @@ class SQLStore(ell.store.Store):
         return results
 
     def get_invocations(self, session: Session, lmp_filters: Dict[str, Any], skip: int = 0, limit: int = 10, filters: Optional[Dict[str, Any]] = None, hierarchical: bool = False) -> List[Dict[str, Any]]:
-        def fetch_invocation(inv_id):
-            query = (
-                select(Invocation, SerializedLStr, SerializedLMP)
-                .join(SerializedLMP)
-                .outerjoin(SerializedLStr)
-                .where(Invocation.id == inv_id)
-            )
-            results = session.exec(query).all()
 
-            if not results:
-                return None
-
-            inv, lstr, lmp = results[0]
-            inv_dict = inv.model_dump()
-            inv_dict['lmp'] = lmp.model_dump()
-            inv_dict['results'] = [dict(**l.model_dump(), __lstr=True) for l in [r[1] for r in results if r[1]]]
-
-            # Fetch consumes and consumed_by invocation IDs
-            consumes_query = select(InvocationTrace.invocation_consuming_id).where(InvocationTrace.invocation_consumer_id == inv_id)
-            consumed_by_query = select(InvocationTrace.invocation_consumer_id).where(InvocationTrace.invocation_consuming_id == inv_id)
-
-            inv_dict['consumes'] = [r for r in session.exec(consumes_query).all()]
-            inv_dict['consumed_by'] = [r for r in session.exec(consumed_by_query).all()]
-            inv_dict['uses'] = list([d.id for d in inv.uses]) 
-
-
-            return inv_dict
-
-        query = select(Invocation.id).join(SerializedLMP)
+        query = select(Invocation).join(SerializedLMP)
 
         # Apply LMP filters
         for key, value in lmp_filters.items():
@@ -181,21 +170,9 @@ class SQLStore(ell.store.Store):
         # Sort from newest to oldest
         query = query.order_by(Invocation.created_at.desc()).offset(skip).limit(limit)
 
-        invocation_ids = session.exec(query).all()
-
-        invocations = [fetch_invocation(inv_id) for inv_id in invocation_ids if inv_id]
-
-        if hierarchical:
-            # Fetch all related "uses" invocations
-            used_ids = set()
-            for inv in invocations:
-                
-                used_ids.update(inv['uses'])
-
-            used_invocations = [fetch_invocation(inv_id) for inv_id in used_ids if inv_id not in invocation_ids]
-            invocations.extend(used_invocations)
-
+        invocations = session.exec(query).all()
         return invocations
+
 
     def get_traces(self, session: Session):
         query = text("""
@@ -220,48 +197,6 @@ class SQLStore(ell.store.Store):
             })
         
         return traces
-        
-
-    def get_all_traces_leading_to(self, session: Session, invocation_id: str) -> List[Dict[str, Any]]:
-
-        traces = []
-        visited = set()
-        queue = [(invocation_id, 0)]
-
-        while queue:
-            current_invocation_id, depth = queue.pop(0)
-            if depth > 4:
-                continue
-
-            if current_invocation_id in visited:
-                continue
-
-            visited.add(current_invocation_id)
-
-            results = session.exec(
-                select(InvocationTrace, Invocation, SerializedLMP)
-                .join(Invocation, InvocationTrace.invocation_consuming_id == Invocation.id)
-                .join(SerializedLMP, Invocation.lmp_id == SerializedLMP.lmp_id)
-                .where(InvocationTrace.invocation_consumer_id == current_invocation_id)
-            ).all()
-            for row in results:
-                trace = {
-                    'consumer_id': row.InvocationTrace.invocation_consumer_id,
-                    'consumed': {key: value for key, value in row.Invocation.__dict__.items() if key not in ['invocation_consumer_id', 'invocation_consuming_id']},
-                    'consumed_lmp': row.SerializedLMP.model_dump()
-                }
-                traces.append(trace)
-                queue.append((row.Invocation.id, depth + 1))
-                
-        # Create a dictionary to store unique traces based on consumed.id
-        unique_traces = {}
-        for trace in traces:
-            consumed_id = trace['consumed']['id']
-            if consumed_id not in unique_traces:
-                unique_traces[consumed_id] = trace
-        
-        # Convert the dictionary values back to a list
-        return list(unique_traces.values())
 
     def get_invocations_aggregate(self, session: Session, lmp_filters: Dict[str, Any] = None, filters: Dict[str, Any] = None, days: int = 30) -> Dict[str, Any]:
         # Calculate the start date for the graph data
@@ -269,7 +204,7 @@ class SQLStore(ell.store.Store):
 
         # Base subquery
         base_subquery = (
-            select(Invocation.created_at, Invocation.latency_ms, Invocation.prompt_tokens, Invocation.completion_tokens)
+            select(Invocation.created_at, Invocation.latency_ms, Invocation.prompt_tokens, Invocation.completion_tokens, Invocation.lmp_id)
             .join(SerializedLMP, Invocation.lmp_id == SerializedLMP.lmp_id)
             .filter(Invocation.created_at >= start_date)
         )
@@ -287,7 +222,7 @@ class SQLStore(ell.store.Store):
         total_invocations = len(data)
         total_tokens = sum(row.prompt_tokens + row.completion_tokens for row in data)
         avg_latency = sum(row.latency_ms for row in data) / total_invocations if total_invocations > 0 else 0
-        unique_lmps = len(set(row.name for row in data))
+        unique_lmps = len(set(row.lmp_id for row in data))
 
         # Prepare graph data
         graph_data = []
@@ -309,12 +244,17 @@ class SQLStore(ell.store.Store):
 
 
 class SQLiteStore(SQLStore):
-    def __init__(self, storage_dir: str):
-        if ":memory:" not in storage_dir:
-            db_path = os.path.join(storage_dir, 'ell.db')
-            return super().__init__(f'sqlite:///{db_path}')
+    def __init__(self, db_dir: str):
+        assert not db_dir.endswith('.db'), "Create store with a directory not a db."
+        if ":memory:" not in db_dir:
+            os.makedirs(db_dir, exist_ok=True)
+            self.db_dir = db_dir
+            db_path = os.path.join(db_dir, 'ell.db')
+            blob_store = SQLBlobStore(db_dir)
+            super().__init__(f'sqlite:///{db_path}', blob_store=blob_store)
         else:
             from sqlalchemy.pool import StaticPool
+            # todo. set up blob store for in-memory
             engine = create_engine(
                 'sqlite://',
                 connect_args={'check_same_thread': False},
@@ -324,6 +264,68 @@ class SQLiteStore(SQLStore):
             return super().__init__(engine=engine)
 
 
-class PostgresStore(SQLStore):
+    def write_external_blob(self, id: str, json_dump: str, depth: int = 2):
+        assert self.blob_store is not None, "Blob store is not initialized"
+        self.blob_store.store_blob(json_dump.encode('utf-8'), metadata={'id': id, 'depth': depth})
+
+    def read_external_blob(self, id: str, depth: int = 2) -> str:
+        assert self.blob_store is not None, "Blob store is not initialized"
+        return self.blob_store.retrieve_blob(id).decode('utf-8')
+
+# todo. rename to sqlite blob store or local fs blob store
+class SQLBlobStore(ell.store.BlobStore):
+    def __init__(self, db_dir: str):
+        self.db_dir = db_dir
+
+    def store_blob(self, blob: bytes, metadata: Optional[Dict[str, Any]] = None) -> str:
+        blob_id = f"blob-{utc_now().isoformat()}"
+        file_path = self._get_blob_path(blob_id)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with gzip.open(file_path, "wb") as f:
+            f.write(blob)
+        return blob_id
+
+    def retrieve_blob(self, blob_id: str) -> bytes:
+        file_path = self._get_blob_path(blob_id)
+        with gzip.open(file_path, "rb") as f:
+            return f.read()
+
+    def _get_blob_path(self, id: str, depth: int = 2) -> str:
+        assert "-" in id, "Blob id must have a single - in it to split on."
+        _type, _id = id.split("-")
+        increment = 2
+        dirs = [_type] + [_id[i:i+increment] for i in range(0, depth*increment, increment)]
+        file_name = _id[depth*increment:]
+        return os.path.join(self.db_dir, "blob", *dirs, file_name)
+
+# i think we should consider for multimedia inputs
+# having the image available at a url ahead of time (ie don't call the llm with base64)
+# to reduce transactional issues later
+# it's recommended to use image urls for long running conversations anyway
+# suppodely it's generally bad to store blobs in postgres so i'm not sure i'll implement this
+class PostgresBlobStore(ell.store.BlobStore):
+    """
+    Blob store that uses postgres as the backing store.
+    Not recommended for production use.
+
+    """
     def __init__(self, db_uri: str):
-        super().__init__(db_uri)
+        self.db_uri = db_uri
+        raise NotImplementedError("Not implemented")
+
+    def store_blob(self, blob: bytes, metadata: Optional[Dict[str, Any]] = None) -> str:
+        raise NotImplementedError("Not implemented")
+
+    def retrieve_blob(self, blob_id: str) -> bytes:
+        raise NotImplementedError("Not implemented")
+
+class PostgresStore(SQLStore):
+    def __init__(self, db_uri: str, blob_store: Optional[ell.store.BlobStore] = None):
+        super().__init__(db_uri )
+        if blob_store is not None:
+            self.blob_store = blob_store
+        else:
+            logger.warning("No blob store provided.")
+            # raise NotImplementedError("Not implemented")
+            # self.blob_store = PostgresBlobStore(db_uri)
+    

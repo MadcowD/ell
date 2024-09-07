@@ -1,6 +1,6 @@
 import ell
 
-@ell.lm(model="llama3", temperature=0.1)
+@ell.simple(model="llama3", temperature=0.1)
 def write_a_story():
     return "write me a story"
 

@@ -1,19 +1,18 @@
-# `ell` [WIP, unreleased, experimental]
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/src/_static/ell-wide-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/src/_static/ell-wide-light.png">
+  <img alt="ell logo that inverts based on color scheme" src="docs/src/_static/ell-wide.png">
+</picture>
 
-[![](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)
-[![](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)
-[![](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)
-[![](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)
+--------------------------------------------------------------------------------
 
-> **IMPORTANT**: This repository is currently pre-v1.0, highly experimental, and not yet packaged for general use. It contains numerous bugs, and the schemas are subject to frequent changes. While we welcome contributions, please be aware that submitting pull requests at this stage is at your own discretion, as the codebase is rapidly evolving.
 
-> **[JOIN THE DISCORD](https://discord.gg/vWntgU52Xb)** We are developing this in public and I want all hands on deck regarding design decisions! Join us at [https://discord.gg/vWntgU52Xb](https://discord.gg/vWntgU52Xb)
+[![Documentation Status]( https://img.shields.io/badge/documentation-go)]( https://docs.ell.so/) [![Install](https://img.shields.io/badge/get_started-blue)](https://docs.ell.so/installation/) [![Discord](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)
 
-# What is `ell`?
 
 `ell` is a lightweight, functional prompt engineering framework built on a few core principles:
 
-### 1. Prompts are programs not strings.
+### 1. Prompts are programs, not strings.
 
 Prompts aren't just strings; they are all the code that leads to strings being sent to a language model. In `ell` we think of one particular way of using a language model as a discrete subroutine called a **language model program**.
 
@@ -74,7 +73,7 @@ To visaulize and track your promtps over the course of prompt engineering you ne
 # The entry point to your program
 if __name__ == "__main__":
 
-    store = SQLiteStore('sqlite_example') # <---- automatically stores all LMP's invocations, and version history in a sqlite database in ./sqlite_example
+    store = './logdir' # <---- automatically stores all LMP's invocations, and version history in a sqlite database in ./logdir
     store.install(autocommit=True) # <---- installs the store into your project so that tracking happens and change log commit messages are automatically generated using gpt-4o-mini
 
     your_language_model_program()
@@ -85,7 +84,7 @@ if __name__ == "__main__":
 Now you can visualize your prompt engineering process just like tensorboard by using `ell.studio`:
 
 ```
-python3 -m ell.studio --storage-dir ./sqlite_example
+python3 -m ell.studio --storage-dir ./logdir
 ```
 
 Then visit `http://localhost:8000` in your browser to see your prompt engineering process visualized.
@@ -110,7 +109,7 @@ npm run start:dev
 To start the backend:
 
 ```
-python -m ell.studio --storage-dir ./sqlite_example --dev # the dev flag is important!
+python -m ell.studio --storage-dir ./logdir --dev # the dev flag is important!
 ```
 
 You can then visualize your promtps by visiting the frontend on `http://localhost:3000`

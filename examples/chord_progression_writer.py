@@ -10,7 +10,7 @@ CHORD_FORMAT = "| Chord | Chord | ... |"
 
 
 
-@ell.lm(model="gpt-4o", temperature=0.5)
+@ell.simple(model="gpt-4o", temperature=0.5)
 def write_a_chord_progression_for_song(genre: Optional[str], key : Optional[str]) :
     return [
         ell.system(f"You are a world class music theorist and composer. Your goal is to write chord progressions to songs given parameters. They should be fully featured and compositionally sound. Feel free to use advanced chords of your choosing. Only answer with the chord progression in {CHORD_FORMAT} format. Do not provide any additional text. Feel free to occaisonally use 13 chrods and complex chords if necessary etc."),
@@ -18,7 +18,7 @@ def write_a_chord_progression_for_song(genre: Optional[str], key : Optional[str]
 
     ]
 
-@ell.lm(model="gpt-4o", temperature=0.0)
+@ell.simple(model="gpt-4o", temperature=0.0)
 def parse_chords_to_midi(chords : List[str]) -> str:
     """You are MusicGPT. You are extremely skilled at all music related tasks."""
 
@@ -57,7 +57,7 @@ def play_midi_file(file_path):
 from ell.stores.sql import SQLiteStore
 
 if __name__ == "__main__":
-    ell.set_store(SQLiteStore('sqlite_example'), autocommit=True)
+    ell.set_store('./logdir', autocommit=True)
     
     genre = input("Enter the genre of the song (or press Enter to skip): ").strip() or None
     key = input("Enter the key of the song (or press Enter to skip): ").strip() or None

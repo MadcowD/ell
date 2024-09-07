@@ -7,7 +7,7 @@
             "module": "ell.studio",
             "args": [
                 "--storage-dir",
-                "${workspaceFolder}/sqlite_example",
+                "${workspaceFolder}/./logdir",
                 "--dev"
             ],
             "justMyCode": false

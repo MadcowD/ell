@@ -12,9 +12,8 @@ import time
 
 
 def main():
-    setup_logging()
-    parser = ArgumentParser(description="ELL Studio Data Server")
-    parser.add_argument("--storage-dir", default=None,
+    parser = ArgumentParser(description="ell studio")
+    parser.add_argument("--storage-dir" , default=None,
                         help="Directory for filesystem serializer storage (default: current directory)")
     parser.add_argument("--pg-connection-string", default=None,
                         help="PostgreSQL connection string (default: None)")
@@ -46,8 +45,7 @@ def main():
         async def serve_react_app(full_path: str):
             return FileResponse(os.path.join(static_dir, "index.html"))
 
-    db_path = os.path.join(
-        args.storage_dir, "ell.db") if args.storage_dir else None
+    db_path = os.path.join(args.storage_dir)
 
     async def db_watcher(db_path: str, app: FastAPI):
         last_stat = None
@@ -62,27 +60,24 @@ def main():
                     await app.notify_clients("database_updated")
                 else:
                     # Use a threshold for time comparison to account for filesystem differences
-                    time_threshold = 1  # 1 second threshold
-                    time_changed = abs(
-                        current_stat.st_mtime - last_stat.st_mtime) > time_threshold
+                    time_threshold = 0.1  # 1 second threshold
+                    time_changed = abs(current_stat.st_mtime - last_stat.st_mtime) > time_threshold
                     size_changed = current_stat.st_size != last_stat.st_size
                     inode_changed = current_stat.st_ino != last_stat.st_ino
 
                     if time_changed or size_changed or inode_changed:
                         print(f"Database changed: mtime {time.ctime(last_stat.st_mtime)} -> {time.ctime(current_stat.st_mtime)}, "
-                              f"size {
-                                  last_stat.st_size} -> {current_stat.st_size}, "
+                              f"size {last_stat.st_size} -> {current_stat.st_size}, "
                               f"inode {last_stat.st_ino} -> {current_stat.st_ino}")
                         await app.notify_clients("database_updated")
-
+                
                 last_stat = current_stat
             except FileNotFoundError:
                 if last_stat is not None:
                     print(f"Database file deleted: {db_path}")
                     await app.notify_clients("database_updated")
                 last_stat = None
-                # Wait a bit longer if the file is missing
-                await asyncio.sleep(1)
+                await asyncio.sleep(1)  # Wait a bit longer if the file is missing
             except Exception as e:
                 print(f"Error checking database file: {e}")
                 await asyncio.sleep(1)  # Wait a bit longer on errors

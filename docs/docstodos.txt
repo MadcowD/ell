@@ -1,0 +1,67 @@
+
+docs todo:
+
+
+Getting Started.rst
+
+- simple lmps
+- basic config like verbose, store, autocommit
+- visualizing your prompts & invocations using ell studio
+
+@ell.simple .rst
+
+- autodoc doc string
+- usage (can be doc string or )
+
+Prompt Versioning .rst
+- how to start using it (ell.init(store='.logdir', autocommit=True))
+- exampels of it working
+- how it works under the hood 
+ * lexical closures
+ * computing relationship between prompts & tools / other tracked functions
+- how it commit messages are automatically generated.
+
+-explain how all invocations are save as well as the prompts
+
+
+Ell Studio .rst
+
+- how to use it locally
+- the lmp graph
+- the invocations view
+- viewing an individual lmp
+
+@ell.complex .rst
+
+Tool Usage .rst
+
+Structured Outputs .rst
+
+Multimodality .rst
+
+Message API .rst
+
+API Clients & Models .rst
+
+Configuration .rst
+
+Designing Effective Language Model Programs .rst
+
+Related Work .rst
+
+* why this is better than langchain
+* why this is better than langsmith
+* why this is better than weave 
+* instructor
+* why not use the openai api directly? 
+    - u can definitely use numpy to do deep learning, but it's not advisable for large apps
+
+
+
+
+Whole tutorials seciton:
+
+RAG
+Vector DBs
+Agents
+Chatbots
