@@ -101,7 +101,7 @@ While the previous example used the docstring for the system message and the ret
 This approach allows you to construct more complex conversations within your LMP. Importantly, you'll want to use this approach when you have a variable system prompt because python only allows you to have a static system prompt.
 
 Prompting as Language Model Programming
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
 
 One of ell's most powerful features is its treatment of prompts as programs rather than simple strings. This approach allows you to leverage the full power of Python in your prompt engineering. Let's see how this works:
 
@@ -160,13 +160,16 @@ Taking this concept further, LMPs can call other LMPs, allowing for more complex
 
     @ell.simple(model="gpt-4-turbo", temperature=0.2)
     def write_a_really_good_story(about : str):
-        ideas = generate_story_ideas(about, lm_params=(dict(n=4)))
+        """You are an expert novelist that writes in the style of Hemmingway. You write in lowercase."""
+        # Note: You can pass in lm_params to control the language model call
+        # in the case n = 4 tells OpenAI to generate a batch of 4 outputs.
+        ideas = generate_story_ideas(about, lm_params=(dict(n=4))) 
 
         drafts = [write_a_draft_of_a_story(idea) for idea in ideas]
 
         best_draft = choose_the_best_draft(drafts)
 
-        """You are an expert novelist that writes in the style of Hemmingway. You write in lowercase."""
+        
         return f"Make a final revision of this story in your voice: {best_draft}."
 
     story = write_a_really_good_story("a dog")
@@ -186,9 +189,6 @@ This approach leverages test-time compute techniques, specifically Best-of-N (Bo
 4. **Iterative Improvement**: The final revision step allows for further refinement of the chosen draft.
 
 This compositional approach to prompt engineering enables us to break down complex tasks into smaller, more manageable steps. It also allows us to apply different strategies (like varying temperature or using different models) at each stage of the process, giving us fine-grained control over the output generation.
-
-
-
 
 
 
