@@ -2,20 +2,16 @@ import asyncio
 import logging
 import threading
 
-from ell.api.types import WriteInvocationInput, WriteLMPInput, Invocation
-from ell.types import SerializedLMP, InvocationTrace, InvocationContents
+from ell.api.types import WriteInvocationInput, WriteLMPInput, Invocation, InvocationContents
 from ell.types.studio import LMPType, utc_now
 import ell.util.closure
 from ell.configurator import config
-from ell.types._lstr import _lstr
 
 import inspect
 
 import secrets
-import time
-from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Dict, Iterable, Optional, OrderedDict, Tuple
+from typing import Any, Callable, Dict, Optional
 
 from ell.util.serialization import get_immutable_vars
 from ell.util.serialization import compute_state_cache_key
@@ -75,7 +71,7 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
         invocation_id = "invocation-" + secrets.token_hex(16)
 
         state_cache_key: str = None
-        if not config._store or config._client:
+        if not config._client:
             return func_to_track(*fn_args, **fn_kwargs, _invocation_origin=invocation_id)[0]
 
         parent_invocation_id = get_current_invocation()
@@ -158,7 +154,7 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
                 state_cache_key = compute_state_cache_key(
                     ipstr, func_to_track.__ell_closure__)
 
-            _write_invocation(func_to_track, invocation_id, latency_ms, prompt_tokens, completion_tokens,
+            _write_invocation_sync(func_to_track, invocation_id, latency_ms, prompt_tokens, completion_tokens,
                               state_cache_key, invocation_api_params, cleaned_invocation_params, consumes, result, parent_invocation_id)
 
             if _get_invocation_id:
@@ -182,7 +178,7 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
 async def _serialize_lmp(func):
     # Serialize deptjh first all fo the used lmps.
     for f in func.__ell_uses__:
-        _serialize_lmp(f)
+        await _serialize_lmp(f)
 
     if getattr(func, "_has_serialized_lmp", False):
         return
@@ -224,7 +220,6 @@ async def _serialize_lmp(func):
         )
         uses = [f.__ell_hash__ for f in func.__ell_uses__]
         await config._client.write_lmp(input, uses)
-        # config._store.write_lmp(serialized_lmp, [f.__ell_hash__ for f in func.__ell_uses__])
     func._has_serialized_lmp = True
 
 
@@ -245,11 +240,11 @@ async def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, comp
         free_vars=get_immutable_vars(func.__ell_closure__[3])
     )
 
-    if invocation_contents.should_externalize and config._store.has_blob_storage:
+    if invocation_contents.should_externalize:
         invocation_contents.is_external = True
 
         # Write to the blob store
-        blob_id = config._store.blob_store.store_blob(
+        blob_id = await config._client.store_blob(
             invocation_contents.model_dump_json().encode('utf-8'),
             metadata={'invocation_id': invocation_id}
         )
@@ -262,7 +257,7 @@ async def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, comp
         id=invocation_id,
         lmp_id=func.__ell_hash__,
         created_at=utc_now(),
-        latency_ms=latency_ms,
+        latency_ms=int(latency_ms),
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
         state_cache_key=state_cache_key,

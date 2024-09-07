@@ -10,6 +10,7 @@ from ell.api.client import EllAPIClient, EllClient, EllSqliteClient
 
 _config_logger = logging.getLogger(__name__)
 
+
 class Config(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     registry: Dict[str, openai.Client] = Field(default_factory=dict)
@@ -19,6 +20,7 @@ class Config(BaseModel):
     _client: Optional[EllClient] = None
     autocommit: bool = False
     lazy_versioning: bool = True
+    store_blobs: bool = True
     default_lm_params: Dict[str, Any] = Field(default_factory=dict)
     default_system_prompt: str = "You are a helpful AI assistant."
     _default_openai_client: Optional[openai.Client] = None
@@ -32,20 +34,17 @@ class Config(BaseModel):
         with self._lock:
             self.registry[model_name] = client
 
-    @property 
-    def has_store(self) -> bool:
-        return self._store is not None
 
     @contextmanager
     def model_registry_override(self, overrides: Dict[str, openai.Client]):
         if not hasattr(self._local, 'stack'):
             self._local.stack = []
-        
+
         with self._lock:
             current_registry = self._local.stack[-1] if self._local.stack else self.registry
             new_registry = current_registry.copy()
             new_registry.update(overrides)
-        
+
         self._local.stack.append(new_registry)
         try:
             yield
@@ -53,14 +52,17 @@ class Config(BaseModel):
             self._local.stack.pop()
 
     def get_client_for(self, model_name: str) -> Optional[openai.Client]:
-        current_registry = self._local.stack[-1] if hasattr(self._local, 'stack') and self._local.stack else self.registry
+        current_registry = self._local.stack[-1] if hasattr(
+            self._local, 'stack') and self._local.stack else self.registry
         client = current_registry.get(model_name)
         fallback = False
         if model_name not in current_registry.keys():
-            warning_message = f"Warning: A default provider for model '{model_name}' could not be found. Falling back to default OpenAI client from environment variables."
+            warning_message = f"Warning: A default provider for model '{
+                model_name}' could not be found. Falling back to default OpenAI client from environment variables."
             if self.verbose:
                 from colorama import Fore, Style
-                _config_logger.warning(f"{Fore.LIGHTYELLOW_EX}{warning_message}{Style.RESET_ALL}")
+                _config_logger.warning(f"{Fore.LIGHTYELLOW_EX}{
+                                       warning_message}{Style.RESET_ALL}")
             else:
                 _config_logger.debug(warning_message)
             client = self._default_openai_client
@@ -73,20 +75,9 @@ class Config(BaseModel):
             if hasattr(self._local, 'stack'):
                 del self._local.stack
 
-    def set_store(self, store: Union[Store, str], autocommit: bool = True) -> None:
-        if isinstance(store, str):
-            from ell.stores.sql import SQLiteStore
-            self._store = SQLiteStore(store)
-        else:
-            self._store = store
-        self.autocommit = autocommit or self.autocommit
-
-    def get_store(self) -> Store:
-        return self._store
-    
     def set_default_lm_params(self, **params: Dict[str, Any]) -> None:
         self.default_lm_params = params
-    
+
     def set_default_system_prompt(self, prompt: str) -> None:
         self.default_system_prompt = prompt
 
@@ -102,10 +93,10 @@ config = Config()
 
 
 def init(
-        client: Optional[EllClient] = None,
-        base_url: Optional[str] = None,
+    client: Optional[EllClient] = None,
+    base_url: Optional[str] = None,
     storage_dir: Optional[str] = None,
-        store: Optional[Union[Store, str]] = None,
+    store_blobs: bool = True,
     verbose: bool = False,
     autocommit: bool = True,
     lazy_versioning: bool = True,
@@ -126,6 +117,7 @@ def init(
         default_openai_client (openai.Client, optional): Set the default OpenAI client.
     """
     config.verbose = verbose
+    config.store_blobs = store_blobs
     config.lazy_versioning = lazy_versioning
     config.autocommit = autocommit
 
@@ -135,9 +127,6 @@ def init(
         config.set_ell_client(EllAPIClient(base_url))
     elif storage_dir is not None:
         config.set_ell_client(EllSqliteClient(storage_dir))
-
-    if store is not None:
-        config.set_store(store, autocommit)
 
     if default_lm_params is not None:
         config.set_default_lm_params(**default_lm_params)
@@ -149,17 +138,10 @@ def init(
         config.set_default_client(default_openai_client)
 
 # Existing helper functions
-@wraps(config.get_store)
-def get_store() -> Store:
-    return config.get_store()
-
-@wraps(config.set_store)
-def set_store(*args, **kwargs) -> None:
-    return config.set_store(*args, **kwargs)
-
 @wraps(config.set_default_lm_params)
 def set_default_lm_params(*args, **kwargs) -> None:
     return config.set_default_lm_params(*args, **kwargs)
+
 
 @wraps(config.set_default_system_prompt)
 def set_default_system_prompt(*args, **kwargs) -> None:

@@ -1,21 +1,15 @@
 from datetime import datetime, timedelta
 import json
 import os
-from typing import Any, Optional, Dict, List, Set, Union
-from pydantic import BaseModel
+from typing import Any, Optional, Dict, List, Set
 from sqlmodel import Session, SQLModel, create_engine, select
 import ell.store
-import cattrs
-import numpy as np
 from sqlalchemy.sql import text
-from ell.types import InvocationTrace, SerializedLMP, Invocation, InvocationContents
-from ell.types._lstr import _lstr
-from sqlalchemy import or_, func, and_, extract, FromClause
-from sqlalchemy.types import TypeDecorator, VARCHAR
-from ell.types.studio import SerializedLMPUses, utc_now
+from ell.types import InvocationTrace, SerializedLMP, Invocation
+from sqlalchemy import func, and_
+from ell.types.studio import utc_now
 from ell.util.serialization import pydantic_ltype_aware_cattr
 import gzip
-import json
 import logging
 from typing import Any, Optional, Dict, List, Set
 from datetime import datetime, timedelta
@@ -39,18 +33,21 @@ class SQLStore(ell.store.Store):
         SQLModel.metadata.create_all(self.engine)
         super().__init__(blob_store)
 
-    def get_lmp(self, lmp_id: str,session:Optional[Session] = None) -> Optional[SerializedLMP]:
+    def get_lmp(self, lmp_id: str, session: Optional[Session] = None) -> Optional[SerializedLMP]:
         if session is None:
             with Session(self.engine) as session:
                 return session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == lmp_id)).first()
         else:
             return session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == lmp_id)).first()
 
-    def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:
+    def write_lmp(self, serialized_lmp: SerializedLMP, uses: List[str]) -> Optional[Any]:
+        """
+        Creates an LMP if it does not exist.
+        LMPs as entities are not unique by fqn but by lmp_id. 
+        """
         with Session(self.engine) as session:
             logger.debug(f"Begin writing LMP {serialized_lmp.lmp_id}")
             # Bind the serialized_lmp to the session
-            lmp = session.exec(select(SerializedLMP).filter(SerializedLMP.lmp_id == serialized_lmp.lmp_id)).first()
             lmp = None
             if serialized_lmp.lmp_id:
                 lmp = self.get_lmp(serialized_lmp.lmp_id, session)
@@ -73,7 +70,6 @@ class SQLStore(ell.store.Store):
 
     def write_invocation(self, invocation: Invocation, consumes: Set[str]) -> Optional[Any]:
         with Session(self.engine) as session:
-            lmp = session.exec(select(SerializedLMP).filter(SerializedLMP.lmp_id == invocation.lmp_id)).first()
             logger.debug(f"Begin writing invocation {invocation.id}")
             lmp = self.get_lmp(invocation.lmp_id, session)
             assert lmp is not None, f"LMP with id {invocation.lmp_id} not found. Writing invocation erroneously"

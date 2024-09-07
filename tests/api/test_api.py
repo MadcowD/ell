@@ -12,6 +12,7 @@ from ell.api.types import WriteLMPInput
 from ell.stores.sql import SQLStore, SQLiteStore
 from ell.studio.logger import setup_logging
 from ell.types import SerializedLMP, utc_now
+from ell.types.studio import LMPType
 
 
 @pytest.fixture
@@ -25,8 +26,8 @@ def test_construct_serialized_lmp():
         name="Test LMP",
         source="def test_function(): pass",
         dependencies=str(["dep1", "dep2"]),
-        lm_kwargs={"param1": "value1"},
-        is_lm=True,
+        lmp_type=LMPType.LM,
+        api_params={"param1": "value1"},
         version_number=1,
         # uses={"used_lmp_1": {}, "used_lmp_2": {}},
         initial_global_vars={"global_var1": "value1"},
@@ -38,7 +39,7 @@ def test_construct_serialized_lmp():
     assert serialized_lmp.name == "Test LMP"
     assert serialized_lmp.source == "def test_function(): pass"
     assert serialized_lmp.dependencies == str(["dep1", "dep2"])
-    assert serialized_lmp.lm_kwargs == {"param1": "value1"}
+    assert serialized_lmp.api_params == {"param1": "value1"}
     assert serialized_lmp.version_number == 1
     assert serialized_lmp.created_at is not None
 
@@ -50,8 +51,8 @@ def test_write_lmp_input():
         name="Test LMP",
         source="def test_function(): pass",
         dependencies=str(["dep1", "dep2"]),
-        is_lm=True,
-        lm_kwargs={"param1": "value1"},
+        lmp_type=LMPType.LM,
+        api_params={"param1": "value1"},
         initial_global_vars={"global_var1": "value1"},
         initial_free_vars={"free_var1": "value2"},
         commit_message="Initial commit",
@@ -71,8 +72,8 @@ def test_write_lmp_input():
         name="Test LMP",
         source="def test_function(): pass",
         dependencies=str(["dep1", "dep2"]),
-        is_lm=True,
-        lm_kwargs={"param1": "value1"},
+        lmp_type=LMPType.LM,
+        api_params={"param1": "value1"},
         initial_global_vars={"global_var1": "value1"},
         initial_free_vars={"free_var1": "value2"},
         commit_message="Initial commit",
@@ -120,8 +121,8 @@ def test_write_lmp(sql_store: SQLStore):
         "name": "Test LMP",
         "source": "def test_function(): pass",
         "dependencies": str(["dep1", "dep2"]),
-        "is_lm": True,
-        "lm_kwargs": {"param1": "value1"},
+        "lmp_type": LMPType.LM,
+        "api_params": {"param1": "value1"},
         "version_number": 1,
         "uses": {"used_lmp_1": {}, "used_lmp_2": {}},
         "initial_global_vars": {"global_var1": "value1"},
@@ -159,7 +160,8 @@ def test_write_invocation(sql_store: SQLStore):
         "name": "Test LMP",
         "source": "def test_function(): pass",
         "dependencies": str(["dep1", "dep2"]),
-        "is_lm": True,
+        "lmp_type": LMPType.LM,
+        "api_params": {"param1": "value1"},
     }
     response = client.post(
         "/lmp",
@@ -175,22 +177,15 @@ def test_write_invocation(sql_store: SQLStore):
         "global_vars": {"global_var1": "value1"},
         "free_vars": {"free_var1": "value2"},
         "latency_ms": 100.0,
-        "invocation_kwargs": {"model": "gpt-4o", "messages": [{"role": "system", "content": "You are a JSON parser. You respond only in JSON. Do not format using markdown."}, {"role": "user", "content": "You are given the following task: \"What is two plus two?\"\n            Parse the task into the following type:\n            {'$defs': {'Add': {'properties': {'op': {'const': '+', 'enum': ['+'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Add', 'type': 'object'}, 'Div': {'properties': {'op': {'const': '/', 'enum': ['/'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Div', 'type': 'object'}, 'Mul': {'properties': {'op': {'const': '*', 'enum': ['*'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Mul', 'type': 'object'}, 'Sub': {'properties': {'op': {'const': '-', 'enum': ['-'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Sub', 'type': 'object'}}, 'anyOf': [{'$ref': '#/$defs/Add'}, {'$ref': '#/$defs/Sub'}, {'$ref': '#/$defs/Mul'}, {'$ref': '#/$defs/Div'}]}\n            "}], "lm_kwargs": {"temperature": 0.1}, "client": None}
-    }
-    results_data = [
-        {
-            "content": """{
-  "op": "+",
-  "a": 2,
-  "b": 2
-}"""
+        "invocation_kwargs": {"model": "gpt-4o", "messages": [{"role": "system", "content": "You are a JSON parser. You respond only in JSON. Do not format using markdown."}, {"role": "user", "content": "You are given the following task: \"What is two plus two?\"\n            Parse the task into the following type:\n            {'$defs': {'Add': {'properties': {'op': {'const': '+', 'enum': ['+'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Add', 'type': 'object'}, 'Div': {'properties': {'op': {'const': '/', 'enum': ['/'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Div', 'type': 'object'}, 'Mul': {'properties': {'op': {'const': '*', 'enum': ['*'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Mul', 'type': 'object'}, 'Sub': {'properties': {'op': {'const': '-', 'enum': ['-'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Sub', 'type': 'object'}}, 'anyOf': [{'$ref': '#/$defs/Add'}, {'$ref': '#/$defs/Sub'}, {'$ref': '#/$defs/Mul'}, {'$ref': '#/$defs/Div'}]}\n            "}], "lm_kwargs": {"temperature": 0.1}, "client": None},
+        "contents": {
+
         }
-    ]
+    }
     consumes_data = []
 
     input = {
         "invocation": invocation_data,
-        "results": results_data,
         "consumes": consumes_data
     }
     response = client.post(

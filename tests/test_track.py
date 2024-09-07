@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import openai
 from openai.types.chat.chat_completion import ChatCompletion, Choice
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
@@ -112,7 +112,7 @@ def test_track_decorator_sqlite(mock_openai_chatcompletion: openai.Client):
                               client=mock_openai_chatcompletion)
     ell.init(client=EllSqliteClient(storage_dir=':memory:'))
 
-    @ell.lm(model="test-model")
+    @ell.simple(model="test-model")
     def test_fn():
         return f"this is a test"
 
@@ -130,6 +130,9 @@ def test_track_decorator_api(
     lmp_factory: LMPFactory
 ):
     ell.config.register_model(model_name="test-model",
+                              client=mock_openai_chatcompletion)
+
+    ell.config.register_model(model_name='gpt-4o-mini',
                               client=mock_openai_chatcompletion)
 
     class TestAPIClient(EllClient):
@@ -151,6 +154,12 @@ def test_track_decorator_api(
 
         async def write_invocation(self, input: WriteInvocationInput):
             return None
+        
+        async def store_blob(self, blob: bytes, metadata: Optional[Dict[str, Any]] = None) -> str:
+            return "foo"
+
+        async def retrieve_blob(self, blob_id: str) -> bytes:
+            return b"bar"
 
         async def close(self):
             pass
@@ -162,7 +171,7 @@ def test_track_decorator_api(
 
     ell.init(client=api_client)
 
-    @ell.lm(model="test-model")
+    @ell.simple(model="test-model")
     def test_fn():
         return f"this is a test"
 

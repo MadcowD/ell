@@ -1,14 +1,12 @@
 from functools import cached_property
-from typing import Any, Dict, List,  Optional, Set, Tuple, Union, cast
+from typing import Any, Dict, List,  Optional, Tuple, Union, cast
 from datetime import datetime
 import uuid
-from numpy import ndarray
 
 from openai import BaseModel
 from pydantic import AwareDatetime, Field
-from ell.lstr import lstr
 
-from ell.types import SerializedLMP, SerializedLStr, utc_now
+from ell.types import SerializedLMP, utc_now
 import ell.types
 from ell.types.message import Message
 from ell.types.studio import LMPType
@@ -22,11 +20,13 @@ class WriteLMPInput(BaseModel):
     name: str
     source: str
     dependencies: str
-    is_lm: bool
-    lm_kwargs: Optional[Dict[str, Any]] = None
+    lmp_type: LMPType
+    api_params: Optional[Dict[str, Any]] = None
     initial_free_vars: Optional[Dict[str, Any]] = None
     initial_global_vars: Optional[Dict[str, Any]] = None
-    # num_invocations: Optional[int]
+
+    # this is omitted so as to not confuse whether the number should be incremented (should always happen at the db level)
+    # num_invocations: Optional[int] = None
     commit_message: Optional[str] = None
     version_number: Optional[int] = None
     created_at:  Optional[AwareDatetime] = Field(default_factory=utc_now)
@@ -34,11 +34,11 @@ class WriteLMPInput(BaseModel):
     def to_serialized_lmp(self):
         return SerializedLMP(
             lmp_id=self.lmp_id,
+            lmp_type=self.lmp_type,
             name=self.name,
             source=self.source,
             dependencies=self.dependencies,
-            is_lm=self.is_lm,
-            lm_kwargs=self.lm_kwargs,
+            api_params=self.api_params,
             version_number=self.version_number,
             initial_global_vars=self.initial_global_vars,
             initial_free_vars=self.initial_free_vars,
@@ -89,6 +89,8 @@ GetLMPResponse = Optional[LMP]
 #     uses: List[str]
 
 InvocationResults = Union[List[Message], Any]
+
+
 class InvocationContents(BaseModel):
     invocation_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     params: Optional[Dict[str, Any]] = None
@@ -96,7 +98,12 @@ class InvocationContents(BaseModel):
     invocation_api_params: Optional[Dict[str, Any]] = None
     global_vars: Optional[Dict[str, Any]] = None
     free_vars: Optional[Dict[str, Any]] = None
-    is_external : bool = Field(default=False)
+    is_external: bool = Field(default=False)
+
+    def to_serialized_invocation_contents(self):
+        return ell.types.InvocationContents(
+            **self.model_dump()
+        )
 
     @cached_property
     def total_size_bytes(self) -> int:
@@ -111,11 +118,12 @@ class InvocationContents(BaseModel):
             self.global_vars,
             self.free_vars
         ]
-        return sum(len(json.dumps(field, default=(lambda x: x.model_dump_json() if isinstance(x, BaseModel) else str(x))).encode('utf-8')) for field in json_fields if field is not None)   
+        return sum(len(json.dumps(field, default=(lambda x: x.model_dump_json() if isinstance(x, BaseModel) else str(x))).encode('utf-8')) for field in json_fields if field is not None)
 
     @cached_property
     def should_externalize(self) -> bool:
         return self.total_size_bytes > 102400  # Precisely 100kb in bytes
+
 
 class Invocation(BaseModel):
     """
@@ -133,9 +141,9 @@ class Invocation(BaseModel):
 
     def to_serialized_invocation(self):
         return ell.types.Invocation(
-            **self.model_dump()
+            **self.model_dump(exclude={"contents"}),
+            contents=self.contents.to_serialized_invocation_contents()
         )
-
 
 
 class WriteInvocationInput(BaseModel):
@@ -147,7 +155,8 @@ class WriteInvocationInput(BaseModel):
 
     def to_serialized_invocation_input(self) -> Tuple[ell.types.Invocation, List[str]]:
         sinvo = self.invocation.to_serialized_invocation()
-        return  sinvo,  self.consumes
+        return sinvo, list(set(self.consumes))
+
 
 class LMPInvokedEvent(BaseModel):
     lmp_id: str
