@@ -10,6 +10,22 @@ core concepts:
 - autodoc doc string
 - usage (can be doc string or )
 
+@ell.complex.rst
+
+- autodoc doc string
+- usage (can be doc string or )
+
+Message API .rst
+
+Tool Usage.rst
+Structured Outputs.rst
+Multimodality.rst
+Models & API Clients .rst
+Configuration.rst
+
+
+
+
 Prompt Versioning .rst
 - how to start using it (ell.init(store='.logdir', autocommit=True))
 - exampels of it working

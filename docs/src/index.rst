@@ -252,12 +252,24 @@ To get started with ``ell``, see the :doc:`Getting Started <getting_started>` se
 
 .. toctree::
    :maxdepth: 3
+   :caption: Core Concepts:
+   :hidden:
+
+   core_concepts/ell_simple
+   core_concepts/ell_complex
+   core_concepts/message_api
+   core_concepts/tool_usage
+   core_concepts/structured_outputs
+   core_concepts/multimodality
+   core_concepts/models_and_api_clients
+   core_concepts/configuration
+
+.. toctree::
+   :maxdepth: 3
    :caption: User Guide:
    :hidden:
 
-   core_concepts/index
    best_practices/designing_effective_lmps
-   advanced_features/multimodal_inputs
 
 .. toctree::
    :maxdepth: 3
