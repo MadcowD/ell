@@ -183,17 +183,140 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <div id="content" role="main">
 <section id="multimodality">
 <h1>Multimodality<a class="headerlink" href="#multimodality" title="Link to this heading">¶</a></h1>
-<p>ell supports multimodal inputs and outputs, allowing you to work with text, images, audio, and more.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
-</span><span id="line-2">
-</span><span id="line-3"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-vision"</span><span class="p">)</span>
-</span><span id="line-4"><span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
-</span><span id="line-5">    <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-6">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"Describe the contents of the image."</span><span class="p">),</span>
-</span><span id="line-7">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span><span class="n">ell</span><span class="o">.</span><span class="n">ContentBlock</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">"What's in this image?"</span><span class="p">),</span> <span class="n">ell</span><span class="o">.</span><span class="n">ContentBlock</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)])</span>
-</span><span id="line-8">    <span class="p">]</span>
+<p>As the capabilities of language models continue to expand, so too does the need for frameworks that can seamlessly handle multiple modalities of input and output. ell rises to this challenge by providing robust support for multimodal interactions, allowing developers to work with text, images, audio, and more within a unified framework.</p>
+<section id="the-evolution-of-multimodal-interactions">
+<h2>The Evolution of Multimodal Interactions<a class="headerlink" href="#the-evolution-of-multimodal-interactions" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#the-evolution-of-multimodal-interactions'">¶</a></h2>
+<p>Traditionally, working with language models has been primarily text-based. However, the landscape is rapidly changing. Models like GPT-4 with vision capabilities, or DALL-E for image generation, have opened up new possibilities for multimodal applications. This shift presents both opportunities and challenges for developers.</p>
+<p>Consider the complexity of constructing a prompt that includes both text and an image using a traditional API:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="n">result</span> <span class="o">=</span> <span class="n">openai</span><span class="o">.</span><span class="n">ChatCompletion</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span><span id="line-2">    <span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-vision-preview"</span><span class="p">,</span>
+</span><span id="line-3">    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+</span><span id="line-4">        <span class="p">{</span>
+</span><span id="line-5">            <span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span>
+</span><span id="line-6">            <span class="s2">"content"</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="line-7">                <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"text"</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"What's in this image?"</span><span class="p">},</span>
+</span><span id="line-8">                <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"image_url"</span><span class="p">,</span> <span class="s2">"image_url"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"url"</span><span class="p">:</span> <span class="s2">"https://example.com/image.jpg"</span><span class="p">}}</span>
+</span><span id="line-9">            <span class="p">]</span>
+</span><span id="line-10">        <span class="p">}</span>
+</span><span id="line-11">    <span class="p">]</span>
+</span><span id="line-12"><span class="p">)</span>
 </span></code></pre></div>
 </div>
+<p>This approach, while functional, is verbose and can become unwieldy as the complexity of inputs increases. It doesn’t align well with the natural flow of programming and can make code less readable and more error-prone.</p>
+</section>
+<section id="ell-s-approach-to-multimodality">
+<h2>ell’s Approach to Multimodality<a class="headerlink" href="#ell-s-approach-to-multimodality" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell-s-approach-to-multimodality'">¶</a></h2>
+<p>ell addresses these challenges by treating multimodal inputs and outputs as first-class citizens within its framework. Let’s explore how ell simplifies working with multiple modalities:</p>
+<ol class="arabic simple">
+<li><p>Simplified Input Construction</p></li>
+</ol>
+<p>ell’s Message and ContentBlock objects, which we explored in the Message API chapter, shine when it comes to multimodal inputs. They allow for intuitive construction of complex prompts:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span><span id="line-2"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-vision-preview"</span><span class="p">)</span>
+</span><span id="line-5"><span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
+</span><span id="line-6">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-7">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant that describes images."</span><span class="p">),</span>
+</span><span id="line-8">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span><span class="s2">"What's in this image?"</span><span class="p">,</span> <span class="n">image</span><span class="p">])</span>
+</span><span id="line-9">    <span class="p">]</span>
+</span><span id="line-10">
+</span><span id="line-11"><span class="n">result</span> <span class="o">=</span> <span class="n">describe_image</span><span class="p">(</span><span class="n">some_pil_image</span><span class="p">)</span> <span class="c1"># 'There's a cat in the image'</span>
+</span></code></pre></div>
+</div>
+<p>Notice how ell automatically handles the conversion of the PIL Image object into the appropriate format for the language model. This abstraction allows developers to focus on their application logic rather than the intricacies of API payloads.</p>
+<ol class="arabic simple" start="2">
+<li><p>Flexible Output Handling</p></li>
+</ol>
+<p>Just as ell simplifies input construction, it also provides flexible ways to handle multimodal outputs. The Message object returned by @ell.complex decorators offers convenient properties for accessing different types of content:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-5-omni"</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">generate_audiovisual_novel</span><span class="p">(</span><span class="n">topic</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant that can generate audiovisual novels. Output images, text, and audio simultaneously."</span><span class="p">),</span>
+</span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">"Generate a novel on the topic of </span><span class="si">{topic}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-6">    <span class="p">]</span>
+</span></code></pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">generate_audiovisual_novel</span><span class="p">(</span><span class="s2">"A pirate adventure"</span><span class="p">)</span>
+</span><span id="line-2"><span class="go">Message(role="assistant", content=[</span>
+</span><span id="line-3"><span class="go">    ContentBlock(type="text", text="Chapter 1: The Treasure Map"),</span>
+</span><span id="line-4"><span class="go">    ContentBlock(type="image", image=PIL.Image.Image(...)),</span>
+</span><span id="line-5"><span class="go">    ContentBlock(type="text", text="The crew of the ship set sail on a quest to find the lost treasure of the pirate king. They must navigate treacherous waters, avoid the wrath of the sea monsters, and outsmart the other pirates who are also searching for the treasure."),</span>
+</span><span id="line-6"><span class="go">    ContentBlock(type="audio", audio=np.array([...])),</span>
+</span><span id="line-7"><span class="go">])</span>
+</span></code></pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">images</span><span class="p">:</span>
+</span><span id="line-2">    <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">images</span><span class="p">:</span>
+</span><span id="line-3">        <span class="n">display</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+</span><span id="line-6">    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</span><span id="line-7">
+</span><span id="line-8"><span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">audios</span><span class="p">:</span>
+</span><span id="line-9">    <span class="k">for</span> <span class="n">audio</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">audios</span><span class="p">:</span>
+</span><span id="line-10">        <span class="n">play</span><span class="p">(</span><span class="n">audio</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>This approach allows for intuitive interaction with complex, multimodal outputs without the need for extensive parsing or type checking.</p>
+<ol class="arabic simple" start="3">
+<li><p>Seamless Integration with Python Ecosystem</p></li>
+</ol>
+<p>ell’s design philosophy extends to its integration with popular Python libraries for handling different media types. For instance, it works seamlessly with PIL for images, making it easy to preprocess or postprocess visual data:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageEnhance</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="k">def</span> <span class="nf">enhance_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">:</span>
+</span><span id="line-4">    <span class="n">enhancer</span> <span class="o">=</span> <span class="n">ImageEnhance</span><span class="o">.</span><span class="n">Contrast</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</span><span id="line-5">    <span class="k">return</span> <span class="n">enhancer</span><span class="o">.</span><span class="n">enhance</span><span class="p">(</span><span class="mf">1.5</span><span class="p">)</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-vision-preview"</span><span class="p">)</span>
+</span><span id="line-8"><span class="k">def</span> <span class="nf">analyze_enhanced_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
+</span><span id="line-9">    <span class="n">enhanced</span> <span class="o">=</span> <span class="n">enhance_image</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</span><span id="line-10">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-11">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"Analyze the enhanced image and describe any notable features."</span><span class="p">),</span>
+</span><span id="line-12">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">enhanced</span><span class="p">)</span>
+</span><span id="line-13">    <span class="p">]</span>
+</span></code></pre></div>
+</div>
+<p>This example demonstrates how ell allows for the seamless integration of image processing techniques within the language model workflow.</p>
+</section>
+<section id="the-power-of-multimodal-composition">
+<h2>The Power of Multimodal Composition<a class="headerlink" href="#the-power-of-multimodal-composition" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#the-power-of-multimodal-composition'">¶</a></h2>
+<p>One of the most powerful aspects of ell’s multimodal support is the ability to compose complex workflows that involve multiple modalities. Let’s consider a more advanced example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">generate_image_caption</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
+</span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"Generate a concise, engaging caption for the image."</span><span class="p">),</span>
+</span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</span><span id="line-6">    <span class="p">]</span>
+</span><span id="line-7">
+</span><span id="line-8"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-audio"</span><span class="p">)</span>
+</span><span id="line-9"><span class="k">def</span> <span class="nf">text_to_speech</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-10">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-11">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"Convert the following text to speech."</span><span class="p">),</span>
+</span><span id="line-12">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span id="line-13">    <span class="p">]</span>
+</span><span id="line-14">
+</span><span id="line-15"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
+</span><span id="line-16"><span class="k">def</span> <span class="nf">create_social_media_post</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
+</span><span id="line-17">    <span class="n">caption</span> <span class="o">=</span> <span class="n">generate_image_caption</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</span><span id="line-18">    <span class="n">audio</span> <span class="o">=</span> <span class="n">text_to_speech</span><span class="p">(</span><span class="n">caption</span><span class="p">)</span>
+</span><span id="line-19">
+</span><span id="line-20">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-21">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"Create a social media post using the provided image, caption, and audio."</span><span class="p">),</span>
+</span><span id="line-22">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span>
+</span><span id="line-23">            <span class="s2">"Image:"</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span>
+</span><span id="line-24">            <span class="s2">"Caption:"</span><span class="p">,</span> <span class="n">caption</span><span class="p">,</span>
+</span><span id="line-25">            <span class="s2">"Audio:"</span><span class="p">,</span> <span class="n">audio</span><span class="o">.</span><span class="n">audios</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-26">        <span class="p">])</span>
+</span><span id="line-27">    <span class="p">]</span>
+</span><span id="line-28">
+</span><span id="line-29"><span class="n">post</span> <span class="o">=</span> <span class="n">create_social_media_post</span><span class="p">(</span><span class="n">some_image</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>In this example, we’ve created a workflow that takes an image, generates a caption for it, converts that caption to speech, and then combines all these elements into a social media post. ell’s multimodal support makes this complex interaction feel natural and intuitive.</p>
+<p>Multimodality in ell isn’t just a feature; it’s a fundamental design principle that reflects the evolving landscape of AI and machine learning. By providing a unified, intuitive interface for working with various types of data, ell empowers developers to create sophisticated, multimodal applications with ease.</p>
+</section>
 </section>
 </div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
 <div class="mr-auto">
@@ -212,7 +335,15 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </svg>
 </a>
 </div>
-</div></div>
+</div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
+<div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
+<ul>
+<li><a :data-current="activeSection === '#the-evolution-of-multimodal-interactions'" class="reference internal" href="#the-evolution-of-multimodal-interactions">The Evolution of Multimodal Interactions</a></li>
+<li><a :data-current="activeSection === '#ell-s-approach-to-multimodality'" class="reference internal" href="#ell-s-approach-to-multimodality">ell’s Approach to Multimodality</a></li>
+<li><a :data-current="activeSection === '#the-power-of-multimodal-composition'" class="reference internal" href="#the-power-of-multimodal-composition">The Power of Multimodal Composition</a></li>
+</ul>
+</div>
+</aside>
 </main>
 </div>
 </div><footer class="py-6 border-t border-border md:py-0">
