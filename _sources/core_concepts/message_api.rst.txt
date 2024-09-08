@@ -110,7 +110,7 @@ Common roles
 
 .. code-block:: python
 
-    message = ell.user("What is the capital of the moon?", some_PIL_image_object)
+    message = ell.user(["What is the capital of the moon?", some_PIL_image_object])
 
 Ell's message API provides several common helper functions for constructing messages with specific roles in language model APIs. These functions essentially partially compose the Message constructor with a specific role. All of the type coercion and convenient functionality from before is automatically handled.
 

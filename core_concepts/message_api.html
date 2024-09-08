@@ -283,7 +283,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <p>Coercion is an important concept in ell, and you can read more about it in the Content Block Coercion API reference page.</p>
 <section id="common-roles">
 <h4>Common roles<a class="headerlink" href="#common-roles" title="Link to this heading">¶</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="n">message</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">"What is the capital of the moon?"</span><span class="p">,</span> <span class="n">some_PIL_image_object</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="n">message</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span><span class="s2">"What is the capital of the moon?"</span><span class="p">,</span> <span class="n">some_PIL_image_object</span><span class="p">])</span>
 </span></code></pre></div>
 </div>
 <p>Ell’s message API provides several common helper functions for constructing messages with specific roles in language model APIs. These functions essentially partially compose the Message constructor with a specific role. All of the type coercion and convenient functionality from before is automatically handled.</p>
