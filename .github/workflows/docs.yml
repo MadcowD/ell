@@ -33,12 +33,12 @@ jobs:
       - name: Install doc-specific dependencies
         run: |
           cd docs
-          rm -rf _build  # Remove existing build directory
           poetry run pip install -r requirements.txt
 
       - name: Build the documentation
         run: |
           cd docs
+          rm -rf _build  # Remove existing build directory
           poetry run make html  # Use poetry run to ensure the correct environment is used
         env:
           SPHINXOPTS: "-W"  # Treat warnings as errors
