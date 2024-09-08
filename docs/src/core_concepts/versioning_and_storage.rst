@@ -70,12 +70,12 @@ However, this approach isn't quite sufficient. If the dependency `some_other_fun
 
 Full closure can be computed through static analysis by inspecting the Abstract Syntax Tree (AST) of the function and all of its bound globals. This process recursively enumerates dependencies to compute a minimal set of source code that would enable you to reproduce the function. For brevity, we can ignore system and user libraries that were installed by package managers, as these are typically considered part of the execution environment rather than the function's specific closure.
 
-Dependencies
-~~~~~~~~~~~~
+Prompt Composition and Dependencies
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition, when a language model program depends on another prompt (i.e., when one language model program calls another), the dependent prompt will automatically appear within the lexical closure of the calling prompt. This allows us to construct a computation graph that illustrates how language model programs depend on one another to execute, effectively leveraging test-time compute. This graph provides a clear visualization of the relationships and dependencies between different prompts in a complex language model program.
 
-.. image:: _static/compositionality.webp
+.. image:: ../_static/compositionality.webp
    :alt: ell demonstration
    :class: rounded-image invertible-image
    :width: 100%
@@ -84,8 +84,6 @@ In addition, when a language model program depends on another prompt (i.e., when
     
     import ell
     from typing import List
-
-    ell.init(verbose=True)
 
 
     @ell.simple(model="gpt-4o-mini", temperature=1.0)
