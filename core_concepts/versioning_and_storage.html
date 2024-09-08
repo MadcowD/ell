@@ -282,11 +282,111 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </section>
 <section id="automatic-versioning">
 <h2>Automatic Versioning<a class="headerlink" href="#automatic-versioning" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#automatic-versioning'">¶</a></h2>
+<p>With the ability to checkpoint and serialize prompts, we can now facilitate a key promise of a useful prompt engineering library: automatic versioning.</p>
+<p>Prompt versioning comes in two flavors: automatic versioning during the prompt engineering process, and archival versioning in storage during production deployments. The former is important for the reasons previously mentioned; as a prompt engineer changes and tunes the prompt over time, they may often revert to previous versions or need to compare across them. The latter is crucial for debugging and regression checks of production deployments, as well as the creation of large-scale fine-tuning and comparison datasets. ell is designed with both of these in mind.</p>
+<p>In designing ell, it was essential that this versioning system happened entirely behind the scenes and did not dictate any specific way in which the prompt engineer needs to facilitate their own process. Therefore, to enable automatic versioning, one simply passes in a storage parameter to the initialization function of ell, where various settings are configured:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="n">ell</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="s1">'./logdir'</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>The argument ‘store’ points to either a local path to store data or an ell.storage.Store object. An ell store is an interface for storing prompts and their invocations, i.e., the input and outputs of a language model program as well as the language model called, generated, and any other metadata. By default, when a path is specified, ell uses a local SQLite DB and an expandable file-based blob store for larger language model programs or invocations that cannot effectively fit into rows of the database.</p>
+<p>When ell is initialized with a store of any kind, anytime a language model program is invoked (actually, the first time it’s invoked), the lexical closure of source of that language model program is computed and hashed to create a version hash for that language model program. In addition, the aforementioned dependency graph is computed, and this language model program is then written to the store. After the invocation occurs, all of the input and output data associated with that version of the language model program is also stored in the database for later analysis. As the prompt engineering process continues, new versions of the language model programs are only added to the store if they are invoked at least once.</p>
+<p>[show a fictitious row in the db and a code example]</p>
+<section id="autocommitting-subsection">
+<h3>Autocommitting subsection<a class="headerlink" href="#autocommitting-subsection" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#autocommitting-subsection'">¶</a></h3>
+<p>Because prompts are just their source code and versions and diffs between versions are automatically computed in the background, we can additionally automatically create human-readable commit messages between versions:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="n">ell</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="s1">'./logdir'</span><span class="p">,</span> <span class="n">autocommit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>By providing the autocommit=True argument to the initialization function for ell, every time a version is created that supersedes a previous version of a prompt (as collocated by their fully qualified name), ell will use GPT-4-mini to automatically generate a human-readable commit message that can then be viewed later to show effective changes across versions. This works both for the local automatic prompt versioning during prompt engineering to quickly locate an ideal prompt or previous prompt that was developed, and for archival prompt versioning in production when seeking out regressions or previously differently performing language model programs.</p>
+<a class="rounded-image invertible-image reference internal image-reference" href="../_images/auto_commit.png"><img alt="ell demonstration" class="rounded-image invertible-image" src="../_images/auto_commit.png" style="width: 100%;"/></a>
+</section>
 </section>
 <section id="tracing">
 <h2>Tracing<a class="headerlink" href="#tracing" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#tracing'">¶</a></h2>
+<p>Central to the prompt engineering process is understanding not just how prompts change, but how they are used.</p>
+<p>Traditionally, without a dedicated prompt engineering framework, developers resort to manually storing inputs and outputs from language model API providers. This approach typically involves intercepting API calls and constructing custom database schemas for production applications. However, this method often proves cumbersome, lacking scalability across projects and necessitating frequent re-implementation.</p>
+<p>To address these challenges, solutions like Weave and LangChain/LangSmith have emerged, each offering distinct approaches:</p>
+<ol class="arabic simple">
+<li><p>Function-level tracing: This method captures inputs and outputs of arbitrary Python functions. While effective for monitoring production deployments, it falls short in tracking intra-version changes that often occur during local development and prompt engineering iterations.</p></li>
+<li><p>Framework-specific versioning: This approach, exemplified by LangChain, requires prompts to be versioned within a specific framework. Prompts are typically compressed into template strings or combinations of template strings and versioned Python code. While structured, this method can be restrictive and may not suit all development workflows.</p></li>
+</ol>
+<p>ell takes the best of both worlds by serializing arbitrary Python code. This allows us to track how language model programs are used through their inputs and outputs, organizing these uses by version for later comparison. Importantly, this is achieved without requiring users to do anything more than write normal Python code to produce their prompt strings for the language model API.</p>
 <section id="constructing-a-computation-graph">
 <h3>Constructing a computation graph<a class="headerlink" href="#constructing-a-computation-graph" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#constructing-a-computation-graph'">¶</a></h3>
+<p>When using the ell store, all inputs and outputs of language model programs are stored. But what about interactions between them?</p>
+<p>To track how language model programs interact during execution and construct a computation graph of data flow (similar to deep learning frameworks like PyTorch and TensorFlow), ell wraps the outputs of all language model programs with a tracing object.</p>
+<p>Tracing objects are wrappers around immutable base types in Python. They keep track of originating language model programs and other metadata, preserving this trace of origination across arbitrary operations. One of the most important tracing objects is the _lstr object.</p>
+<p>For example, consider the following language model program:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">)</span> <span class="c1"># version: ae8f32s664200e1</span>
+</span><span id="line-4"><span class="k">def</span> <span class="nf">hi</span><span class="p">():</span>
+</span><span id="line-5">    <span class="k">return</span> <span class="s2">"say hi"</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="n">x</span> <span class="o">=</span> <span class="n">hi</span><span class="p">()</span> <span class="c1"># invocation id: 4hdfjhe8ehf (version: ae8f32s664200e1)</span>
+</span></code></pre></div>
+</div>
+<p>While x in this example is functionally a string and behaves exactly like one, it is actually an _lstr:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span><span id="line-2"><span class="go">&lt;class 'ell.types._lstr.lstr'&gt;</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+</span><span id="line-5"><span class="go">'hi'</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">__origin_trace__</span>
+</span><span id="line-8"><span class="go">{'4hdfjhe8ehf'}</span>
+</span></code></pre></div>
+</div>
+<p>Furthermore, continued manipulation of the string preserves its origin trace, as all original string operations are overridden to produce new immutable instances that contain or combine origin traces.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-2"><span class="go">'h'</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">__origin_trace__</span>
+</span><span id="line-5"><span class="go">{'4hdfjhe8ehf'}</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">+</span> <span class="s2">" there"</span>
+</span><span id="line-8"><span class="go">'hi there'</span>
+</span><span id="line-9">
+</span><span id="line-10"><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="s2">" there"</span><span class="p">)</span><span class="o">.</span><span class="n">__origin_trace__</span>
+</span><span id="line-11"><span class="go">{'4hdfjhe8ehf'}</span>
+</span></code></pre></div>
+</div>
+<p>Additionally, when two mutable objects are combined, the resulting trace is the union of the two traces.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">hi</span><span class="p">()</span> <span class="c1"># invocation id: 4hdfjhe8ehf</span>
+</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">hi</span><span class="p">()</span> <span class="c1"># invocation id: 345hef345h</span>
+</span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+</span><span id="line-4"><span class="gp">&gt;&gt;&gt; </span><span class="n">z</span><span class="o">.</span><span class="n">__origin_trace__</span>
+</span><span id="line-5"><span class="go">{'4hdfjhe8ehf', '345hef345h'}</span>
+</span></code></pre></div>
+</div>
+<p>By tracking both inputs and outputs of language model programs, we can use these origin traces to construct a computation graph. This graph illustrates how language model programs interact during execution.</p>
+<p>This capability allows you to easily track the flow of language model outputs, identify weak points in prompt chains, understand unintended mutations in inputs and outputs of prompts as they are executed, and more generally, create a path for future symbolic and discrete optimization techniques applied to language model programs.</p>
+<a class="rounded-image invertible-image reference internal image-reference" href="../_images/invocations.webp"><img alt="ell demonstration" class="rounded-image invertible-image" src="../_images/invocations.webp" style="width: 100%;"/></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-2024-08-06"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">create_personality</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-3"><span class="w">    </span><span class="sd">"""You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="sd">Name: &lt;name&gt;</span>
+</span><span id="line-6"><span class="sd">Backstory: &lt;3 sentence backstory&gt;'"""</span> <span class="c1"># System prompt</span>
+</span><span id="line-7">
+</span><span id="line-8">    <span class="k">return</span> <span class="s2">"Come up with a backstory about "</span> <span class="o">+</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">names_list</span><span class="p">)</span> <span class="c1"># User prompt</span>
+</span><span id="line-9">
+</span><span id="line-10">
+</span><span id="line-11"><span class="k">def</span> <span class="nf">format_message_history</span><span class="p">(</span><span class="n">message_history</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-12">    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">message_history</span><span class="p">])</span>
+</span><span id="line-13">
+</span><span id="line-14"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-2024-08-06"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</span><span id="line-15"><span class="k">def</span> <span class="nf">chat</span><span class="p">(</span><span class="n">message_history</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n">personality</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-16">
+</span><span id="line-17">        <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-18">            <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">"""Here is your description.</span>
+</span><span id="line-19"><span class="si">{</span><span class="n">personality</span><span class="si">}</span><span class="s2">.</span>
+</span><span id="line-20">
+</span><span id="line-21"><span class="s2">Your goal is to come up with a response to a chat. Only respond in one sentence (should be like a text message in informality.) Never use Emojis."""</span><span class="p">),</span>
+</span><span id="line-22">            <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">format_message_history</span><span class="p">(</span><span class="n">message_history</span><span class="p">)),</span>
+</span><span id="line-23">        <span class="p">]</span>
+</span></code></pre></div>
+</div>
 </section>
 </section>
 <section id="visualization">
@@ -318,7 +418,10 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <li><a :data-current="activeSection === '#constructing-a-dependency-graph'" class="reference internal" href="#constructing-a-dependency-graph">Constructing a dependency graph</a></li>
 </ul>
 </li>
-<li><a :data-current="activeSection === '#automatic-versioning'" class="reference internal" href="#automatic-versioning">Automatic Versioning</a></li>
+<li><a :data-current="activeSection === '#automatic-versioning'" class="reference internal" href="#automatic-versioning">Automatic Versioning</a><ul>
+<li><a :data-current="activeSection === '#autocommitting-subsection'" class="reference internal" href="#autocommitting-subsection">Autocommitting subsection</a></li>
+</ul>
+</li>
 <li><a :data-current="activeSection === '#tracing'" class="reference internal" href="#tracing">Tracing</a><ul>
 <li><a :data-current="activeSection === '#constructing-a-computation-graph'" class="reference internal" href="#constructing-a-computation-graph">Constructing a computation graph</a></li>
 </ul>
