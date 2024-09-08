@@ -137,7 +137,7 @@ Taking this concept further, LMPs can call other LMPs, allowing for more complex
 
 
 .. code-block:: python
-    
+
     import ell
     from typing import List
 
@@ -203,38 +203,6 @@ ell provides powerful versioning capabilities for your LMPs. To enable this feat
     ell.init(store='./logdir', autocommit=True, verbose=True)
 
 This line sets up a store in the ``./logdir`` directory and enables autocommit. ell will now store all your prompts and their versions in ``./logdir/ell.db``, along with a blob store for images.
-
-
-
-Lexical closures
-^^^^^^^^^^^^^^^^
-
-When you version a Language Model Program (LMP) like the ``hello`` function above, ell actually stores more than just the function itself. It captures what's called the "lexical closure" of the LMP. This includes all the code necessary to reproduce the LMP, including its dependencies. For example, for the ``hello`` LMP, ell would store:
-
-.. code-block:: python
-
-    import random
-
-    def get_random_adjective():
-        adjectives = ["enthusiastic", "cheerful", "warm", "friendly"]
-        return random.choice(adjectives)
-
-    @ell.simple(model="gpt-4o")
-    def hello(name: str):
-        """You are a helpful assistant."""
-        adjective = get_random_adjective()
-        return f"Say a {adjective} hello to {name}!"
-
-This lexically closured source allows you to keep track of prompts as they change over time, even if those changes happen elsewhere in your codebase. For instance, if you modify the ``get_random_adjective`` function, ell will capture that change as part of the ``hello`` LMP's version history.
-
-This approach has several benefits:
-
-1. **Completeness**: You always have the full context needed to understand and reproduce an LMP.
-2. **Flexibility**: Your LMPs can live embedded anywhere in your codebase - in any source file, Jupyter notebook, etc.
-3. **Efficiency**: When LMPs are serialized to the ell store, only the minimal set of code they depend on is extracted and stored.
-
-This feature allows for robust versioning and makes it easier to track the evolution of your prompts over time, even as your codebase grows and changes.
-
 
 
 Exploring Your Prompts with ell-studio

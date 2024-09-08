@@ -1,5 +1,5 @@
 =================================================
-Versioning & Tracing: Ell Studio
+Versioning & Visualization
 =================================================
 
 Prompt Engineering is the process of rapidly iterating on the set of system, user, and pre-packaged assistant messages sent to a language model. The goal is to maximize some explicit or implied objective function. In an ideal scientific scenario, we would have reward models or metrics that could automatically assess the quality of prompts. One would simply modify the text or formatting of the sent messages to maximize this objective.
@@ -12,7 +12,7 @@ However, the reality of this process is much messier. Often, a prompt engineer w
 
 
 Checkpointing prompts
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 A solution to this problem can be found by drawing analogies to the training process in machine learning. More specifically, prompt engineering is a form of parameter search where we are modifying a model over time with local updates, hoping that some global objective function is maximized or minimized. In machine learning, this process is often referred to as the training loop. Each instance of the model's parameters is called a checkpoint. As the training process occurs, checkpoints are occasionally saved and evaluated for quality. If a hyperparameter of the training process leads to the failure of the training process, the practitioner can quickly revert to a previous checkpoint, similar to version control in software engineering.
 
@@ -24,7 +24,7 @@ One of the key features of ell is a version control system for language model pr
 This automatic versioning is possible because in ell, prompts are discrete functional units called language model programs. By encapsulating the prompt within a function, we can use typical static and dynamic analysis tools to extract the source code of a prompt program and all its lexical dependencies at any point in time. This means we can capture the set of source code needed to directly reproduce the prompt.
 
 Serializing prompts via lexical closures
------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Consider the following function embedded in a large code base.
 
@@ -73,8 +73,8 @@ However, this approach isn't quite sufficient. If the dependency `some_other_fun
 
 Full closure can be computed through static analysis by inspecting the Abstract Syntax Tree (AST) of the function and all of its bound globals. This process recursively enumerates dependencies to compute a minimal set of source code that would enable you to reproduce the function. For brevity, we can ignore system and user libraries that were installed by package managers, as these are typically considered part of the execution environment rather than the function's specific closure.
 
-Prompt Composition and Dependencies
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Constructing a computation graph
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition, when a language model program depends on another prompt (i.e., when one language model program calls another), the dependent prompt will automatically appear within the lexical closure of the calling prompt. This allows us to construct a computation graph that illustrates how language model programs depend on one another to execute, effectively leveraging test-time compute. This graph provides a clear visualization of the relationships and dependencies between different prompts in a complex language model program.
 
@@ -120,5 +120,6 @@ In addition, when a language model program depends on another prompt (i.e., when
 
     story = write_a_really_good_story("a dog")
 
-Versioning in ell
+Versioning in Ell
 -----------------
+
