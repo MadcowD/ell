@@ -19,6 +19,10 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 html_theme = "sphinxawesome_theme"
 
+
+# Favicon configuration
+html_favicon = '_static/favicon.ico'
+
 # Configure syntax highlighting for Awesome Sphinx Theme
 pygments_style = "default"
 pygments_style_dark = "dracula"
@@ -46,6 +50,7 @@ html_theme_options = {
     
 }
 
+html_static_path = ['_static']
 
 
 
