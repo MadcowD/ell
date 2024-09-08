@@ -7,15 +7,15 @@
 <meta content="white" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="black" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Versioning, Tracing, and Visualization | ell  documentation</title>
-<meta content="Versioning, Tracing, and Visualization | ell  documentation" property="og:title"/>
-<meta content="Versioning, Tracing, and Visualization | ell  documentation" name="twitter:title"/>
+<title>Versioning &amp; Tracing | ell  documentation</title>
+<meta content="Versioning &amp; Tracing | ell  documentation" property="og:title"/>
+<meta content="Versioning &amp; Tracing | ell  documentation" name="twitter:title"/>
 <link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
 <link href="../search.html" rel="search" title="Search"/>
 <link href="../genindex.html" rel="index" title="Index"/>
-<link href="message_api.html" rel="next" title="Messages"/>
+<link href="ell_studio.html" rel="next" title="ell Studio"/>
 <link href="ell_simple.html" rel="prev" title="@ell.simple"/>
 <script>
     <!-- Prevent Flash of wrong theme -->
@@ -142,7 +142,8 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <p class="caption" role="heading"><span class="caption-text">Core Concepts:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="ell_simple.html">@ell.simple</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Versioning, Tracing, and Visualization</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Versioning &amp; Tracing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ell_studio.html">ell Studio</a></li>
 <li class="toctree-l1"><a class="reference internal" href="message_api.html">Messages</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ell_complex.html">@ell.complex</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tool_usage.html">Tool Usage</a></li>
@@ -177,11 +178,11 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <path d="M240 856h120V616h240v240h120V496L480 316 240 496v360Zm-80 80V456l320-240 320 240v480H520V696h-80v240H160Zm320-350Z"></path>
 </svg>
 </a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Versioning, Tracing, and Visualization</span>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Versioning &amp; Tracing</span>
 </nav>
 <div id="content" role="main">
-<section id="versioning-tracing-and-visualization">
-<h1>Versioning, Tracing, and Visualization<a class="headerlink" href="#versioning-tracing-and-visualization" title="Link to this heading">¶</a></h1>
+<section id="versioning-tracing">
+<h1>Versioning &amp; Tracing<a class="headerlink" href="#versioning-tracing" title="Link to this heading">¶</a></h1>
 <p>Prompt Engineering is the process of rapidly iterating on the set of system, user, and pre-packaged assistant messages sent to a language model. The goal is to maximize some explicit or implied objective function. In an ideal scientific scenario, we would have reward models or metrics that could automatically assess the quality of prompts. One would simply modify the text or formatting of the sent messages to maximize this objective.</p>
 <p>However, the reality of this process is much messier. Often, a prompt engineer will work on a few examples for the language model program they’re trying to develop, tweaking the prompt slightly over time, testing and hoping that the resulting outputs seem better in practice. This process comes with several issues:</p>
 <ol class="arabic simple">
@@ -440,10 +441,9 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <p class="admonition-title">Note</p>
 <p>Currently, origin tracing in ell works only on string primitives. We’re actively developing support for arbitrary object tracking, which will be available in a future release. This enhancement will allow for more comprehensive tracing of various data types throughout your language model programs.</p>
 </div>
+<hr class="docutils"/>
+<p>In the next chapter, we will explore how to visualize versioning and tracing data using ell studio. This powerful tool provides a comprehensive interface for analyzing and understanding the complex interactions within your language model programs.</p>
 </section>
-</section>
-<section id="visualization">
-<h2>Visualization<a class="headerlink" href="#visualization" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#visualization'">¶</a></h2>
 </section>
 </section>
 </div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
@@ -456,8 +456,8 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
       </a>
 </div>
 <div class="ml-auto">
-<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="message_api.html">
-        Messages
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="ell_studio.html">
+        ell Studio
         <svg class="ml-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 <polyline points="9 18 15 12 9 6"></polyline>
 </svg>
@@ -479,7 +479,6 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <li><a :data-current="activeSection === '#constructing-a-computation-graph'" class="reference internal" href="#constructing-a-computation-graph">Constructing a computation graph</a></li>
 </ul>
 </li>
-<li><a :data-current="activeSection === '#visualization'" class="reference internal" href="#visualization">Visualization</a></li>
 </ul>
 </div>
 </aside>

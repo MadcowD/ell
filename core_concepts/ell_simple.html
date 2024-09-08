@@ -15,7 +15,7 @@
 <link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
 <link href="../search.html" rel="search" title="Search"/>
 <link href="../genindex.html" rel="index" title="Index"/>
-<link href="versioning_and_storage.html" rel="next" title="Versioning, Tracing, and Visualization"/>
+<link href="versioning_and_storage.html" rel="next" title="Versioning &amp; Tracing"/>
 <link href="../getting_started.html" rel="prev" title="Getting Started"/>
 <script>
     <!-- Prevent Flash of wrong theme -->
@@ -142,7 +142,8 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <p class="caption" role="heading"><span class="caption-text">Core Concepts:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">@ell.simple</a></li>
-<li class="toctree-l1"><a class="reference internal" href="versioning_and_storage.html">Versioning, Tracing, and Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="versioning_and_storage.html">Versioning &amp; Tracing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ell_studio.html">ell Studio</a></li>
 <li class="toctree-l1"><a class="reference internal" href="message_api.html">Messages</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ell_complex.html">@ell.complex</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tool_usage.html">Tool Usage</a></li>
@@ -185,7 +186,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <dl class="py function">
 <dt class="sig sig-object py" id="ell.simple">
 <span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">simple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OpenAI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exempt_from_tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">api_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.simple" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.simple'">¶</a></dt>
-<dd><p>A basic language model programming decorator for text-only LLM outputs.</p>
+<dd><p>The fundamental unit of language model programming in ell.</p>
 <p>This decorator simplifies the process of creating Language Model Programs (LMPs)
 that return text-only outputs from language models, while supporting multimodal inputs.
 It wraps the more complex ‘complex’ decorator, providing a streamlined interface for common use cases.</p>
@@ -198,25 +199,7 @@ It wraps the more complex ‘complex’ decorator, providing a streamlined inter
 <li><p><strong>api_params</strong> (<em>Any</em>) – Additional keyword arguments to pass to the underlying API call.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A decorator that can be applied to a function, transforming it into an LMP.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Callable</p>
-</dd>
 </dl>
-<p>Functionality:</p>
-<ol class="arabic simple">
-<li><p>Simplifies LMP Creation:
-- Provides a straightforward way to create LMPs with text-only outputs.
-- Supports multimodal inputs (text, images, etc.) in the prompt.
-- Automatically simplifies complex model responses to text-only format.</p></li>
-<li><p>Integration with Language Models:
-- Supports various language models through the ‘model’ parameter.
-- Allows customization of API parameters for fine-tuned control.</p></li>
-<li><p>Tracking and Monitoring:
-- Integrates with ell’s tracking system for monitoring LMP versions over time, usage and performance.</p></li>
-</ol>
 <p>Usage:
 The decorated function can return either a single prompt or a list of ell.Message objects:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
@@ -314,7 +297,7 @@ Parameters passed during the function call will override those set in the decora
 </div>
 <div class="ml-auto">
 <a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="versioning_and_storage.html">
-        Versioning, Tracing, and Visualization
+        Versioning &amp; Tracing
         <svg class="ml-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 <polyline points="9 18 15 12 9 6"></polyline>
 </svg>

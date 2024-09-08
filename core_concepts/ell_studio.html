@@ -7,15 +7,16 @@
 <meta content="white" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="black" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>ell package | ell  documentation</title>
-<meta content="ell package | ell  documentation" property="og:title"/>
-<meta content="ell package | ell  documentation" name="twitter:title"/>
+<title>ell Studio | ell  documentation</title>
+<meta content="ell Studio | ell  documentation" property="og:title"/>
+<meta content="ell Studio | ell  documentation" name="twitter:title"/>
 <link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
 <link href="../search.html" rel="search" title="Search"/>
 <link href="../genindex.html" rel="index" title="Index"/>
-<link href="../best_practices/designing_effective_lmps.html" rel="prev" title="Designing Effective Language Model Programs"/>
+<link href="message_api.html" rel="next" title="Messages"/>
+<link href="versioning_and_storage.html" rel="prev" title="Versioning &amp; Tracing"/>
 <script>
     <!-- Prevent Flash of wrong theme -->
       const userPreference = localStorage.getItem('darkMode');
@@ -86,7 +87,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <img alt="Logo" class="mr-2 dark:hidden" height="24" src="../_static/ell-wide-light.png" width="120"/></a>
 <nav class="flex items-center space-x-6 text-sm font-medium">
 <a class="transition-colors hover:text-foreground/80 text-foreground/60" href="../index.html">Docs</a>
-<a class="transition-colors hover:text-foreground/80 text-foreground" href="#">API Reference</a>
+<a class="transition-colors hover:text-foreground/80 text-foreground/60" href="../reference/index.html">API Reference</a>
 <a class="transition-colors hover:text-foreground/80 text-foreground/60" href="https://jobs.ell.so" rel="noopener nofollow">AI Jobs Board</a>
 </nav></div><button @click="showSidebar = true" class="inline-flex items-center justify-center h-10 px-0 py-2 mr-2 text-base font-medium transition-colors rounded-md hover:text-accent-foreground hover:bg-transparent md:hidden" type="button">
 <svg aria-hidden="true" fill="currentColor" height="24" viewbox="0 96 960 960" width="24" xmlns="http://www.w3.org/2000/svg">
@@ -129,7 +130,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <div class="relative overflow-hidden md:overflow-auto my-4 md:my-0 h-[calc(100vh-8rem)] md:h-auto">
 <div class="overflow-y-auto h-full w-full relative pr-6"><nav class="flex md:hidden flex-col font-medium mt-4">
 <a href="../index.html">Docs</a>
-<a href="#">API Reference</a>
+<a href="../reference/index.html">API Reference</a>
 <a href="https://jobs.ell.so" rel="nofollow noopener">AI Jobs Board</a>
 </nav><nav class="table w-full min-w-full my-6 lg:my-8">
 <p class="caption" role="heading"><span class="caption-text">The Basics:</span></p>
@@ -139,25 +140,25 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Core Concepts:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/ell_simple.html">@ell.simple</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/versioning_and_storage.html">Versioning &amp; Tracing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/ell_studio.html">ell Studio</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/message_api.html">Messages</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/ell_complex.html">@ell.complex</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/tool_usage.html">Tool Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/structured_outputs.html">Structured Outputs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/multimodality.html">Multimodality</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/models_and_api_clients.html">Models &amp; API Clients</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../core_concepts/configuration.html">Configuration</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="ell_simple.html">@ell.simple</a></li>
+<li class="toctree-l1"><a class="reference internal" href="versioning_and_storage.html">Versioning &amp; Tracing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ell Studio</a></li>
+<li class="toctree-l1"><a class="reference internal" href="message_api.html">Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ell_complex.html">@ell.complex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tool_usage.html">Tool Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structured_outputs.html">Structured Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multimodality.html">Multimodality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_and_api_clients.html">Models &amp; API Clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../best_practices/designing_effective_lmps.html">Designing Effective Language Model Programs</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">ell package</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">ell package</a></li>
 </ul>
 </nav>
 </div>
@@ -177,25 +178,82 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <path d="M240 856h120V616h240v240h120V496L480 316 240 496v360Zm-80 80V456l320-240 320 240v480H520V696h-80v240H160Zm320-350Z"></path>
 </svg>
 </a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">ell package</span>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">ell Studio</span>
 </nav>
 <div id="content" role="main">
-<section id="ell-package">
-<h1>ell package<a class="headerlink" href="#ell-package" title="Link to this heading">¶</a></h1>
-<p>Automatically generated API reference for <code class="docutils literal notranslate"><span class="pre">ell</span></code>.</p>
-<p id="module-ell">ell is a Python library for language model programming (LMP). It provides a simple
-and intuitive interface for working with large language models.</p>
+<section id="ell-studio">
+<h1>ell Studio<a class="headerlink" href="#ell-studio" title="Link to this heading">¶</a></h1>
+<p>In the previous chapter, we explored ell’s powerful versioning and tracing capabilities. These features provide a solid foundation for managing and analyzing your Language Model Programs (LMPs). However, to truly leverage the full potential of this data, we need a tool that can visualize and interpret it effectively. This is where ell Studio comes in.</p>
+<a class="rounded-image reference internal image-reference" href="../_images/ell_studio_better.webp"><img alt="ell demonstration" class="rounded-image" src="../_images/ell_studio_better.webp" style="width: 100%;"/></a>
+<p>ell Studio is a powerful, open-source visualization and analysis tool that complements ell’s versioning and tracing capabilities. It runs locally on your machine, ensuring data privacy and security. ell Studio provides an intuitive interface for exploring LMPs, their versions, and interactions, transforming the abstract data collected by ell into actionable insights.</p>
+<p>With ell Studio, you can visualize the evolution of your LMPs over time, analyze the performance and behavior of your prompts, debug complex interactions between multiple LMPs, and collaborate more effectively with your team on prompt engineering tasks. In essence, ell Studio turns the wealth of data collected by ell’s versioning and tracing systems into a powerful asset for prompt engineering, all while keeping your data local and under your control.</p>
+<section id="launching-ell-studio">
+<h2>Launching ell Studio<a class="headerlink" href="#launching-ell-studio" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#launching-ell-studio'">¶</a></h2>
+<p>To start using ell Studio, run the following command in your terminal:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">ell-studio<span class="w"> </span>--storage_dir<span class="w"> </span>./logdir
+</span></code></pre></div>
+</div>
+<p>This command opens the ell Studio interface in your web browser, using the data stored in the specified directory (which should be the same directory you specified when initializing ell with <cite>ell.init(store=’./logdir’)</cite>). Since ell Studio runs locally, you can be assured that your sensitive prompt data never leaves your machine.</p>
+</section>
+<section id="key-features-of-ell-studio">
+<h2>Key Features of ell Studio<a class="headerlink" href="#key-features-of-ell-studio" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#key-features-of-ell-studio'">¶</a></h2>
+<section id="lmp-visualization">
+<h3>LMP Visualization<a class="headerlink" href="#lmp-visualization" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#lmp-visualization'">¶</a></h3>
+<p>ell Studio offers a comprehensive visual representation of your LMPs and their dependencies. This feature allows you to visualize the structure of complex, multi-LMP programs, understand the interactions and dependencies between different LMPs, and identify potential bottlenecks or areas for optimization in your LMP architecture.</p>
+<a class="rounded-image invertible-image reference internal image-reference" href="../_images/compositionality.webp"><img alt="LMP dependency visualization" class="rounded-image invertible-image" src="../_images/compositionality.webp" style="width: 100%;"/></a>
+</section>
+<section id="version-history-and-comparison">
+<h3>Version History and Comparison<a class="headerlink" href="#version-history-and-comparison" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#version-history-and-comparison'">¶</a></h3>
+<p>Leveraging ell’s automatic versioning capabilities, ell Studio provides a complete version history for each LMP. You can perform side-by-side comparisons of different LMP versions and view auto-generated commit messages explaining changes between versions. This feature is particularly useful for tracking the evolution of your LMPs over time and understanding the impact of specific changes.</p>
+<a class="rounded-image invertible-image reference internal image-reference" href="../_images/auto_commit.png"><img alt="Version history and commit messages" class="rounded-image invertible-image" src="../_images/auto_commit.png" style="width: 100%;"/></a>
+</section>
+<section id="invocation-analysis">
+<h3>Invocation Analysis<a class="headerlink" href="#invocation-analysis" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#invocation-analysis'">¶</a></h3>
+<p>ell Studio offers detailed insights into each LMP invocation, including input parameters, output results, execution time, and token usage metrics. It also provides tracing information showing data flow between LMPs. This level of detail allows for in-depth analysis of LMP performance and behavior.</p>
+<a class="rounded-image invertible-image reference internal image-reference" href="../_images/invocations.webp"><img alt="Invocation analysis" class="rounded-image invertible-image" src="../_images/invocations.webp" style="width: 100%;"/></a>
+</section>
+<section id="performance-metrics">
+<h3>Performance Metrics<a class="headerlink" href="#performance-metrics" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#performance-metrics'">¶</a></h3>
+<p>To help optimize your LMPs, ell Studio provides various performance metrics such as token usage over time, execution time trends, and frequency of invocations for each LMP. These metrics can be invaluable in identifying performance bottlenecks and areas for improvement.</p>
+</section>
+<section id="code-viewer-with-syntax-highlighting">
+<h3>Code Viewer with Syntax Highlighting<a class="headerlink" href="#code-viewer-with-syntax-highlighting" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#code-viewer-with-syntax-highlighting'">¶</a></h3>
+<p>ell Studio includes a built-in code viewer that allows you to examine the source code of your LMPs with syntax highlighting. You can compare different versions side-by-side and access the full context of each LMP quickly and easily.</p>
+</section>
+</section>
 </section>
 </div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
 <div class="mr-auto">
-<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="../best_practices/designing_effective_lmps.html">
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="versioning_and_storage.html">
 <svg class="mr-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
 <polyline points="15 18 9 12 15 6"></polyline>
 </svg>
-        Designing Effective Language Model Programs
+        Versioning &amp; Tracing
       </a>
 </div>
-</div></div>
+<div class="ml-auto">
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="message_api.html">
+        Messages
+        <svg class="ml-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<polyline points="9 18 15 12 9 6"></polyline>
+</svg>
+</a>
+</div>
+</div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
+<div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
+<ul>
+<li><a :data-current="activeSection === '#launching-ell-studio'" class="reference internal" href="#launching-ell-studio">Launching ell Studio</a></li>
+<li><a :data-current="activeSection === '#key-features-of-ell-studio'" class="reference internal" href="#key-features-of-ell-studio">Key Features of ell Studio</a><ul>
+<li><a :data-current="activeSection === '#lmp-visualization'" class="reference internal" href="#lmp-visualization">LMP Visualization</a></li>
+<li><a :data-current="activeSection === '#version-history-and-comparison'" class="reference internal" href="#version-history-and-comparison">Version History and Comparison</a></li>
+<li><a :data-current="activeSection === '#invocation-analysis'" class="reference internal" href="#invocation-analysis">Invocation Analysis</a></li>
+<li><a :data-current="activeSection === '#performance-metrics'" class="reference internal" href="#performance-metrics">Performance Metrics</a></li>
+<li><a :data-current="activeSection === '#code-viewer-with-syntax-highlighting'" class="reference internal" href="#code-viewer-with-syntax-highlighting">Code Viewer with Syntax Highlighting</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
 </main>
 </div>
 </div><footer class="py-6 border-t border-border md:py-0">
