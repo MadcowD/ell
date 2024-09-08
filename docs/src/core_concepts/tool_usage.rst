@@ -100,6 +100,7 @@ Here's an example where we want to take a natural language string for a website 
         return f"Tell me what's on {website}"
 
 .. code-block:: python
+
     >>> output = get_website_content("new york times front page")
     Message(role='assistant', content=[ContenBlock(tool_call=ToolCall(id='tool_call_id', function=Function(name='get_html_content', arguments='{"url": "nyt.com"}'))])
 
@@ -112,6 +113,7 @@ Here's an example where we want to take a natural language string for a website 
 We could also handle text based message Responses from the language model where it. may decline to call the tool. the tool or ask for clarification By looking into output text only. In this case, because the language model decided to call the tool, this should be empty. 
 
 .. code-block:: python
+
     >>> if output.text_only: print(output.text_only)
     None
 

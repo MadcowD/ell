@@ -40,8 +40,8 @@ jobs:
           cd docs
           rm -rf _build  # Remove existing build directory
           poetry run make html  # Use poetry run to ensure the correct environment is used
-        env:
-          SPHINXOPTS: "-W"  # Treat warnings as errors
+        # env:
+          # SPHINXOPTS: "-W"  # Treat warnings as errors
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

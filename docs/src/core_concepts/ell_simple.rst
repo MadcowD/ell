@@ -124,6 +124,7 @@ In the OpenAI API, for example, this is actually quite cumbersome because the AP
     
     r1 = response.choices[0].text
     r2 = response.choices[1].text
+
 In the spirit of simplicity, we've designed it to automatically coerce the return type into the correct shape, similar to NumPy and PyTorch. This means that when you call an ``ell.simple`` language model program with ``n`` greater than one, instead of returning a string, it returns a list of strings.
 
 .. code-block:: python

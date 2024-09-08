@@ -258,6 +258,7 @@ To get started with ``ell``, see the :doc:`Getting Started <getting_started>` se
    core_concepts/ell_simple
    core_concepts/versioning_and_storage
    core_concepts/ell_studio
+
    core_concepts/message_api
    core_concepts/ell_complex
    core_concepts/tool_usage
@@ -265,3 +266,12 @@ To get started with ``ell``, see the :doc:`Getting Started <getting_started>` se
    core_concepts/multimodality
    core_concepts/models_and_api_clients
    core_concepts/configuration
+
+
+   
+.. toctree::
+   :maxdepth: 1
+   :caption: API Reference
+   :hidden:
+
+   reference/index
