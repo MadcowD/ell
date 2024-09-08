@@ -7,9 +7,9 @@
 <meta content="white" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="black" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>ell Studio | ell  documentation</title>
-<meta content="ell Studio | ell  documentation" property="og:title"/>
-<meta content="ell Studio | ell  documentation" name="twitter:title"/>
+<title>Stuido | ell  documentation</title>
+<meta content="Stuido | ell  documentation" property="og:title"/>
+<meta content="Stuido | ell  documentation" name="twitter:title"/>
 <link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
@@ -143,7 +143,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="ell_simple.html">@ell.simple</a></li>
 <li class="toctree-l1"><a class="reference internal" href="versioning_and_storage.html">Versioning &amp; Tracing</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">ell Studio</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Stuido</a></li>
 <li class="toctree-l1"><a class="reference internal" href="message_api.html">Messages</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ell_complex.html">@ell.complex</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tool_usage.html">Tool Usage</a></li>
@@ -178,47 +178,47 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <path d="M240 856h120V616h240v240h120V496L480 316 240 496v360Zm-80 80V456l320-240 320 240v480H520V696h-80v240H160Zm320-350Z"></path>
 </svg>
 </a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">ell Studio</span>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Stuido</span>
 </nav>
 <div id="content" role="main">
-<section id="ell-studio">
-<h1>ell Studio<a class="headerlink" href="#ell-studio" title="Link to this heading">¶</a></h1>
-<p>In the previous chapter, we explored ell’s powerful versioning and tracing capabilities. These features provide a solid foundation for managing and analyzing your Language Model Programs (LMPs). However, to truly leverage the full potential of this data, we need a tool that can visualize and interpret it effectively. This is where ell Studio comes in.</p>
+<section id="stuido">
+<h1>Stuido<a class="headerlink" href="#stuido" title="Link to this heading">¶</a></h1>
+<p>In the previous chapter, we explored ell’s powerful versioning and tracing capabilities. These features provide a solid foundation for managing and analyzing your Language Model Programs (LMPs). However, to truly leverage the full potential of this data, we need a tool that can visualize and interpret it effectively. This is where Stuido comes in.</p>
 <a class="rounded-image reference internal image-reference" href="../_images/ell_studio_better.webp"><img alt="ell demonstration" class="rounded-image" src="../_images/ell_studio_better.webp" style="width: 100%;"/></a>
-<p>ell Studio is a powerful, open-source visualization and analysis tool that complements ell’s versioning and tracing capabilities. It runs locally on your machine, ensuring data privacy and security. ell Studio provides an intuitive interface for exploring LMPs, their versions, and interactions, transforming the abstract data collected by ell into actionable insights.</p>
-<p>With ell Studio, you can visualize the evolution of your LMPs over time, analyze the performance and behavior of your prompts, debug complex interactions between multiple LMPs, and collaborate more effectively with your team on prompt engineering tasks. In essence, ell Studio turns the wealth of data collected by ell’s versioning and tracing systems into a powerful asset for prompt engineering, all while keeping your data local and under your control.</p>
-<section id="launching-ell-studio">
-<h2>Launching ell Studio<a class="headerlink" href="#launching-ell-studio" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#launching-ell-studio'">¶</a></h2>
-<p>To start using ell Studio, run the following command in your terminal:</p>
+<p>Stuido is a powerful, open-source visualization and analysis tool that complements ell’s versioning and tracing capabilities. It runs locally on your machine, ensuring data privacy and security. Stuido provides an intuitive interface for exploring LMPs, their versions, and interactions, transforming the abstract data collected by ell into actionable insights.</p>
+<p>With Stuido, you can visualize the evolution of your LMPs over time, analyze the performance and behavior of your prompts, debug complex interactions between multiple LMPs, and collaborate more effectively with your team on prompt engineering tasks. In essence, Stuido turns the wealth of data collected by ell’s versioning and tracing systems into a powerful asset for prompt engineering, all while keeping your data local and under your control.</p>
+<section id="launching-stuido">
+<h2>Launching Stuido<a class="headerlink" href="#launching-stuido" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#launching-stuido'">¶</a></h2>
+<p>To start using Stuido, run the following command in your terminal:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">ell-studio<span class="w"> </span>--storage_dir<span class="w"> </span>./logdir
 </span></code></pre></div>
 </div>
-<p>This command opens the ell Studio interface in your web browser, using the data stored in the specified directory (which should be the same directory you specified when initializing ell with <cite>ell.init(store=’./logdir’)</cite>). Since ell Studio runs locally, you can be assured that your sensitive prompt data never leaves your machine.</p>
+<p>This command opens the Stuido interface in your web browser, using the data stored in the specified directory (which should be the same directory you specified when initializing ell with <cite>ell.init(store=’./logdir’)</cite>). Since Stuido runs locally, you can be assured that your sensitive prompt data never leaves your machine.</p>
 </section>
-<section id="key-features-of-ell-studio">
-<h2>Key Features of ell Studio<a class="headerlink" href="#key-features-of-ell-studio" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#key-features-of-ell-studio'">¶</a></h2>
+<section id="key-features-of-stuido">
+<h2>Key Features of Stuido<a class="headerlink" href="#key-features-of-stuido" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#key-features-of-stuido'">¶</a></h2>
 <section id="lmp-visualization">
 <h3>LMP Visualization<a class="headerlink" href="#lmp-visualization" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#lmp-visualization'">¶</a></h3>
-<p>ell Studio offers a comprehensive visual representation of your LMPs and their dependencies. This feature allows you to visualize the structure of complex, multi-LMP programs, understand the interactions and dependencies between different LMPs, and identify potential bottlenecks or areas for optimization in your LMP architecture.</p>
+<p>Stuido offers a comprehensive visual representation of your LMPs and their dependencies. This feature allows you to visualize the structure of complex, multi-LMP programs, understand the interactions and dependencies between different LMPs, and identify potential bottlenecks or areas for optimization in your LMP architecture.</p>
 <a class="rounded-image invertible-image reference internal image-reference" href="../_images/compositionality.webp"><img alt="LMP dependency visualization" class="rounded-image invertible-image" src="../_images/compositionality.webp" style="width: 100%;"/></a>
 </section>
 <section id="version-history-and-comparison">
 <h3>Version History and Comparison<a class="headerlink" href="#version-history-and-comparison" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#version-history-and-comparison'">¶</a></h3>
-<p>Leveraging ell’s automatic versioning capabilities, ell Studio provides a complete version history for each LMP. You can perform side-by-side comparisons of different LMP versions and view auto-generated commit messages explaining changes between versions. This feature is particularly useful for tracking the evolution of your LMPs over time and understanding the impact of specific changes.</p>
+<p>Leveraging ell’s automatic versioning capabilities, Stuido provides a complete version history for each LMP. You can perform side-by-side comparisons of different LMP versions and view auto-generated commit messages explaining changes between versions. This feature is particularly useful for tracking the evolution of your LMPs over time and understanding the impact of specific changes.</p>
 <a class="rounded-image invertible-image reference internal image-reference" href="../_images/auto_commit.png"><img alt="Version history and commit messages" class="rounded-image invertible-image" src="../_images/auto_commit.png" style="width: 100%;"/></a>
 </section>
 <section id="invocation-analysis">
 <h3>Invocation Analysis<a class="headerlink" href="#invocation-analysis" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#invocation-analysis'">¶</a></h3>
-<p>ell Studio offers detailed insights into each LMP invocation, including input parameters, output results, execution time, and token usage metrics. It also provides tracing information showing data flow between LMPs. This level of detail allows for in-depth analysis of LMP performance and behavior.</p>
+<p>Stuido offers detailed insights into each LMP invocation, including input parameters, output results, execution time, and token usage metrics. It also provides tracing information showing data flow between LMPs. This level of detail allows for in-depth analysis of LMP performance and behavior.</p>
 <a class="rounded-image invertible-image reference internal image-reference" href="../_images/invocations.webp"><img alt="Invocation analysis" class="rounded-image invertible-image" src="../_images/invocations.webp" style="width: 100%;"/></a>
 </section>
 <section id="performance-metrics">
 <h3>Performance Metrics<a class="headerlink" href="#performance-metrics" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#performance-metrics'">¶</a></h3>
-<p>To help optimize your LMPs, ell Studio provides various performance metrics such as token usage over time, execution time trends, and frequency of invocations for each LMP. These metrics can be invaluable in identifying performance bottlenecks and areas for improvement.</p>
+<p>To help optimize your LMPs, Stuido provides various performance metrics such as token usage over time, execution time trends, and frequency of invocations for each LMP. These metrics can be invaluable in identifying performance bottlenecks and areas for improvement.</p>
 </section>
-<section id="code-viewer-with-syntax-highlighting">
-<h3>Code Viewer with Syntax Highlighting<a class="headerlink" href="#code-viewer-with-syntax-highlighting" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#code-viewer-with-syntax-highlighting'">¶</a></h3>
-<p>ell Studio includes a built-in code viewer that allows you to examine the source code of your LMPs with syntax highlighting. You can compare different versions side-by-side and access the full context of each LMP quickly and easily.</p>
+<section id="code-viewer">
+<h3>Code Viewer<a class="headerlink" href="#code-viewer" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#code-viewer'">¶</a></h3>
+<p>Stuido includes a built-in code viewer that allows you to examine the source code of your LMPs. You can compare different versions side-by-side and access the full context of each LMP quickly and easily.</p>
 </section>
 </section>
 </section>
@@ -242,13 +242,13 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
-<li><a :data-current="activeSection === '#launching-ell-studio'" class="reference internal" href="#launching-ell-studio">Launching ell Studio</a></li>
-<li><a :data-current="activeSection === '#key-features-of-ell-studio'" class="reference internal" href="#key-features-of-ell-studio">Key Features of ell Studio</a><ul>
+<li><a :data-current="activeSection === '#launching-stuido'" class="reference internal" href="#launching-stuido">Launching Stuido</a></li>
+<li><a :data-current="activeSection === '#key-features-of-stuido'" class="reference internal" href="#key-features-of-stuido">Key Features of Stuido</a><ul>
 <li><a :data-current="activeSection === '#lmp-visualization'" class="reference internal" href="#lmp-visualization">LMP Visualization</a></li>
 <li><a :data-current="activeSection === '#version-history-and-comparison'" class="reference internal" href="#version-history-and-comparison">Version History and Comparison</a></li>
 <li><a :data-current="activeSection === '#invocation-analysis'" class="reference internal" href="#invocation-analysis">Invocation Analysis</a></li>
 <li><a :data-current="activeSection === '#performance-metrics'" class="reference internal" href="#performance-metrics">Performance Metrics</a></li>
-<li><a :data-current="activeSection === '#code-viewer-with-syntax-highlighting'" class="reference internal" href="#code-viewer-with-syntax-highlighting">Code Viewer with Syntax Highlighting</a></li>
+<li><a :data-current="activeSection === '#code-viewer'" class="reference internal" href="#code-viewer">Code Viewer</a></li>
 </ul>
 </li>
 </ul>
