@@ -265,17 +265,3 @@ To get started with ``ell``, see the :doc:`Getting Started <getting_started>` se
    core_concepts/multimodality
    core_concepts/models_and_api_clients
    core_concepts/configuration
-
-.. toctree::
-   :maxdepth: 3
-   :caption: User Guide:
-   :hidden:
-
-   best_practices/designing_effective_lmps
-
-.. toctree::
-   :maxdepth: 3
-   :caption: API Reference:
-   :hidden:
-
-   reference/index
