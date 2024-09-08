@@ -58,7 +58,7 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
         invocation_id = "invocation-" + secrets.token_hex(16)
 
         state_cache_key : str = None
-        if not config._store:
+        if not config.store:
             return func_to_track(*fn_args, **fn_kwargs, _invocation_origin=invocation_id)[0]
 
         parent_invocation_id = get_current_invocation()
@@ -166,7 +166,7 @@ def _serialize_lmp(func):
     name = func.__qualname__
     api_params = getattr(func, "__ell_api_params__", None)
 
-    lmps = config._store.get_versions_by_fqn(fqn=name)
+    lmps = config.store.get_versions_by_fqn(fqn=name)
     version = 0
     already_in_store = any(lmp.lmp_id == func.__ell_hash__ for lmp in lmps)
     
@@ -195,7 +195,7 @@ def _serialize_lmp(func):
             api_params=api_params if api_params else None,
             version_number=version,
         )
-        config._store.write_lmp(serialized_lmp, [f.__ell_hash__ for f in func.__ell_uses__])
+        config.store.write_lmp(serialized_lmp, [f.__ell_hash__ for f in func.__ell_uses__])
     func._has_serialized_lmp = True
 
 def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
@@ -210,11 +210,11 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         free_vars=get_immutable_vars(func.__ell_closure__[3])
     )
 
-    if invocation_contents.should_externalize and config._store.has_blob_storage:
+    if invocation_contents.should_externalize and config.store.has_blob_storage:
         invocation_contents.is_external = True
         
         # Write to the blob store
-        blob_id = config._store.blob_store.store_blob(
+        blob_id = config.store.blob_store.store_blob(
             invocation_contents.model_dump_json().encode('utf-8'),
             metadata={'invocation_id': invocation_id}
         )
@@ -235,5 +235,5 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         contents=invocation_contents
     )
 
-    config._store.write_invocation(invocation, consumes)
+    config.store.write_invocation(invocation, consumes)
 
