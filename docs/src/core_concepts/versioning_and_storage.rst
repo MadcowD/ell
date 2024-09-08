@@ -123,13 +123,147 @@ In addition, when a language model program depends on another prompt (i.e., when
 Automatic Versioning
 ---------------------
 
+With the ability to checkpoint and serialize prompts, we can now facilitate a key promise of a useful prompt engineering library: automatic versioning.
+
+Prompt versioning comes in two flavors: automatic versioning during the prompt engineering process, and archival versioning in storage during production deployments. The former is important for the reasons previously mentioned; as a prompt engineer changes and tunes the prompt over time, they may often revert to previous versions or need to compare across them. The latter is crucial for debugging and regression checks of production deployments, as well as the creation of large-scale fine-tuning and comparison datasets. ell is designed with both of these in mind.
+
+In designing ell, it was essential that this versioning system happened entirely behind the scenes and did not dictate any specific way in which the prompt engineer needs to facilitate their own process. Therefore, to enable automatic versioning, one simply passes in a storage parameter to the initialization function of ell, where various settings are configured:
+
+.. code-block:: python
+
+    ell.init(store='./logdir')
+
+The argument 'store' points to either a local path to store data or an ell.storage.Store object. An ell store is an interface for storing prompts and their invocations, i.e., the input and outputs of a language model program as well as the language model called, generated, and any other metadata. By default, when a path is specified, ell uses a local SQLite DB and an expandable file-based blob store for larger language model programs or invocations that cannot effectively fit into rows of the database.
+
+When ell is initialized with a store of any kind, anytime a language model program is invoked (actually, the first time it's invoked), the lexical closure of source of that language model program is computed and hashed to create a version hash for that language model program. In addition, the aforementioned dependency graph is computed, and this language model program is then written to the store. After the invocation occurs, all of the input and output data associated with that version of the language model program is also stored in the database for later analysis. As the prompt engineering process continues, new versions of the language model programs are only added to the store if they are invoked at least once.
+
+[show a fictitious row in the db and a code example]
+
+Autocommitting subsection
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Because prompts are just their source code and versions and diffs between versions are automatically computed in the background, we can additionally automatically create human-readable commit messages between versions:
+
+.. code-block:: python
+
+    ell.init(store='./logdir', autocommit=True)
+
+By providing the autocommit=True argument to the initialization function for ell, every time a version is created that supersedes a previous version of a prompt (as collocated by their fully qualified name), ell will use GPT-4-mini to automatically generate a human-readable commit message that can then be viewed later to show effective changes across versions. This works both for the local automatic prompt versioning during prompt engineering to quickly locate an ideal prompt or previous prompt that was developed, and for archival prompt versioning in production when seeking out regressions or previously differently performing language model programs.
+
+.. image:: ../_static/auto_commit.png
+   :alt: ell demonstration
+   :class: rounded-image invertible-image
+   :width: 100%
+
 Tracing
 -------
 
+Central to the prompt engineering process is understanding not just how prompts change, but how they are used.
+
+Traditionally, without a dedicated prompt engineering framework, developers resort to manually storing inputs and outputs from language model API providers. This approach typically involves intercepting API calls and constructing custom database schemas for production applications. However, this method often proves cumbersome, lacking scalability across projects and necessitating frequent re-implementation.
+
+To address these challenges, solutions like Weave and LangChain/LangSmith have emerged, each offering distinct approaches:
+
+1. Function-level tracing: This method captures inputs and outputs of arbitrary Python functions. While effective for monitoring production deployments, it falls short in tracking intra-version changes that often occur during local development and prompt engineering iterations.
+
+2. Framework-specific versioning: This approach, exemplified by LangChain, requires prompts to be versioned within a specific framework. Prompts are typically compressed into template strings or combinations of template strings and versioned Python code. While structured, this method can be restrictive and may not suit all development workflows.
+
+ell takes the best of both worlds by serializing arbitrary Python code. This allows us to track how language model programs are used through their inputs and outputs, organizing these uses by version for later comparison. Importantly, this is achieved without requiring users to do anything more than write normal Python code to produce their prompt strings for the language model API.
 
 Constructing a computation graph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+When using the ell store, all inputs and outputs of language model programs are stored. But what about interactions between them?
+
+To track how language model programs interact during execution and construct a computation graph of data flow (similar to deep learning frameworks like PyTorch and TensorFlow), ell wraps the outputs of all language model programs with a tracing object.
+
+Tracing objects are wrappers around immutable base types in Python. They keep track of originating language model programs and other metadata, preserving this trace of origination across arbitrary operations. One of the most important tracing objects is the _lstr object.
+
+For example, consider the following language model program:
+
+.. code-block:: python
+
+    import ell
+
+    @ell.simple(model="gpt-4o") # version: ae8f32s664200e1
+    def hi():
+        return "say hi"
+
+    x = hi() # invocation id: 4hdfjhe8ehf (version: ae8f32s664200e1)
+
+While x in this example is functionally a string and behaves exactly like one, it is actually an _lstr:
+
+.. code-block:: python
+
+    >>> type(x)
+    <class 'ell.types._lstr.lstr'>
+
+    >>> x
+    'hi'
+
+    >>> x.__origin_trace__ 
+    {'4hdfjhe8ehf'}
+
+Furthermore, continued manipulation of the string preserves its origin trace, as all original string operations are overridden to produce new immutable instances that contain or combine origin traces.
+
+.. code-block:: python
+
+    >>> x[0]
+    'h'
+
+    >>> x[0].__origin_trace__
+    {'4hdfjhe8ehf'}
+
+    >>> x + " there"
+    'hi there'
+
+    >>> (x + " there").__origin_trace__
+    {'4hdfjhe8ehf'}
+
+Additionally, when two mutable objects are combined, the resulting trace is the union of the two traces.
+
+.. code-block:: python
+
+    >>> x = hi() # invocation id: 4hdfjhe8ehf
+    >>> y = hi() # invocation id: 345hef345h
+    >>> z = x + y
+    >>> z.__origin_trace__
+    {'4hdfjhe8ehf', '345hef345h'}
+
+By tracking both inputs and outputs of language model programs, we can use these origin traces to construct a computation graph. This graph illustrates how language model programs interact during execution.
+
+This capability allows you to easily track the flow of language model outputs, identify weak points in prompt chains, understand unintended mutations in inputs and outputs of prompts as they are executed, and more generally, create a path for future symbolic and discrete optimization techniques applied to language model programs.
+
+.. image:: ../_static/invocations.webp
+   :alt: ell demonstration
+   :class: rounded-image invertible-image
+   :width: 100%
+
+.. code-block:: python
+
+    @ell.simple(model="gpt-4o-2024-08-06", temperature=1.0)
+    def create_personality() -> str:
+        """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.
+
+    Name: <name>
+    Backstory: <3 sentence backstory>'""" # System prompt
+
+        return "Come up with a backstory about " + random.choice(names_list) # User prompt
+
+
+    def format_message_history(message_history : List[Tuple[str, str]]) -> str:
+        return "\n".join([f"{name}: {message}" for name, message in message_history])
+
+    @ell.simple(model="gpt-4o-2024-08-06", temperature=0.3, max_tokens=20)
+    def chat(message_history : List[Tuple[str, str]], *, personality : str):
+
+            return [
+                ell.system(f"""Here is your description.
+    {personality}. 
+
+    Your goal is to come up with a response to a chat. Only respond in one sentence (should be like a text message in informality.) Never use Emojis."""),
+                ell.user(format_message_history(message_history)),
+            ]
 
 
 Visualization

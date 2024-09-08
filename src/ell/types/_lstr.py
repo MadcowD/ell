@@ -27,7 +27,6 @@ class _lstr(str):
     logits with generated text and track the origin of the text.
 
     The `lstr` class inherits from the built-in `str` class and adds two additional attributes: `logits` and `_origin_trace`.
-    The `logits` attribute is an optional NumPy array that represents the logits associated with the string.
     The `_origin_trace` attribute is a frozen set of strings that represents the _origin_trace(s) of the string.
 
     The class provides various methods for manipulating the string, such as concatenation, slicing, splitting, and joining.
@@ -62,7 +61,6 @@ class _lstr(str):
     print(parts)  # Output: [lstr('Hello', None, frozenset({'4e9b7ec9', '7f4d2c3a'})), lstr('World', None, frozenset({'4e9b7ec9', '7f4d2c3a'}))]
     ```
     Attributes:
-        logits (Optional[np.ndarray]): The logits associated with the string.
         _origin_trace (FrozenSet[str]): A frozen set of strings representing the _origin_trace(s) of the string.
 
     Methods:
