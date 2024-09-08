@@ -15,44 +15,19 @@ core concepts:
 - autodoc doc string
 - usage (can be doc string or )
 
-Message API .rst
 
 Tool Usage.rst
-Structured Outputs.rst
-Multimodality.rst
+
 Models & API Clients .rst
 Configuration.rst
 
-
-
-
-Prompt Versioning .rst
-- how to start using it (ell.init(store='.logdir', autocommit=True))
-- exampels of it working
-- how it works under the hood 
- * lexical closures
- * computing relationship between prompts & tools / other tracked functions
-- how it commit messages are automatically generated.
-
--explain how all invocations are save as well as the prompts
-
-
-Ell Studio .rst
-
-- how to use it locally
-- the lmp graph
-- the invocations view
-- viewing an individual lmp#
 
 @ell.complex .rst
 
 Tool Usage .rst
 
-Structured Outputs .rst
 
-Multimodality .rst
 
-Message API .rst
 
 API Clients & Models .rst
 
