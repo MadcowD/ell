@@ -121,7 +121,7 @@ In addition, when a language model program depends on another prompt (i.e., when
     story = write_a_really_good_story("a dog")
 
 Automatic Versioning
----------
+---------------------
 
 Tracing
 -------
@@ -133,4 +133,4 @@ Constructing a computation graph
 
 
 Visualization
-------------
+--------------
