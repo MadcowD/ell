@@ -33,6 +33,7 @@ jobs:
       - name: Install doc-specific dependencies
         run: |
           cd docs
+          rm -rf _build  # Remove existing build directory
           poetry run pip install -r requirements.txt
 
       - name: Build the documentation
