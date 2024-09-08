@@ -152,11 +152,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <li class="toctree-l1"><a class="reference internal" href="models_and_api_clients.html">Models &amp; API Clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../best_practices/designing_effective_lmps.html">Designing Effective Language Model Programs</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">ell package</a></li>
 </ul>
@@ -183,6 +179,118 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <div id="content" role="main">
 <section id="ell-complex">
 <h1>@ell.complex<a class="headerlink" href="#ell-complex" title="Link to this heading">¶</a></h1>
+<p>While <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> provides a straightforward way to work with language models that return text, modern language models are increasingly capable of handling and generating multimodal content, structured outputs, and complex interactions. This is where <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> comes into play.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> decorator is designed to handle sophisticated interactions with language models, including multimodal inputs/outputs, structured data, and tool usage. It extends <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code>’s capabilities to address the evolving nature of language models, which can now process images, generate structured data, make function calls, and engage in multi-turn conversations. By returning rich <code class="docutils literal notranslate"><span class="pre">Message</span></code> objects instead of simple strings, <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> enables more nuanced and powerful interactions, overcoming the limitations of traditional string-based interfaces in these advanced scenarios.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Messages in ell are not the same as the dictionary messages used in the OpenAI API. ell’s Message API provides a more intuitive and flexible way to construct and manipulate messages. You can read more about ell’s Message API and type coercion in the <a class="reference internal" href="message_api.html"><span class="doc">Messages</span></a> page.</p>
+</div>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#usage'">¶</a></h2>
+<p>The basic usage of <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> is similar to <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code>, but with enhanced capabilities:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-2"><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="k">class</span> <span class="nc">MovieReview</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="line-5">    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"The title of the movie"</span><span class="p">)</span>
+</span><span id="line-6">    <span class="n">rating</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"The rating of the movie out of 10"</span><span class="p">)</span>
+</span><span id="line-7">    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"A brief summary of the movie"</span><span class="p">)</span>
+</span><span id="line-8">
+</span><span id="line-9"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-2024-08-06"</span><span class="p">,</span> <span class="n">response_format</span><span class="o">=</span><span class="n">MovieReview</span><span class="p">)</span>
+</span><span id="line-10"><span class="k">def</span> <span class="nf">generate_movie_review</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-11"><span class="w">    </span><span class="sd">"""You are a movie review generator. Given the name of a movie, you need to return a structured review."""</span>
+</span><span id="line-12">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Generate a review for the movie </span><span class="si">{</span><span class="n">movie</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="line-13">
+</span><span id="line-14"><span class="n">review_message</span> <span class="o">=</span> <span class="n">generate_movie_review</span><span class="p">(</span><span class="s2">"The Matrix"</span><span class="p">)</span>
+</span><span id="line-15"><span class="n">review</span> <span class="o">=</span> <span class="n">review_message</span><span class="o">.</span><span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-16"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Movie: </span><span class="si">{</span><span class="n">review</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2">, Rating: </span><span class="si">{</span><span class="n">review</span><span class="o">.</span><span class="n">rating</span><span class="si">}</span><span class="s2">/10"</span><span class="p">)</span>
+</span><span id="line-17"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Summary: </span><span class="si">{</span><span class="n">review</span><span class="o">.</span><span class="n">summary</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+</section>
+<section id="key-features">
+<h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#key-features'">¶</a></h2>
+<section id="structured-outputs">
+<h3>1. Structured Outputs<a class="headerlink" href="#structured-outputs" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#structured-outputs'">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> allows for structured outputs using Pydantic models:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-2024-08-06"</span><span class="p">,</span> <span class="n">response_format</span><span class="o">=</span><span class="n">MovieReview</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">generate_movie_review</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MovieReview</span><span class="p">:</span>
+</span><span id="line-3"><span class="w">    </span><span class="sd">"""You are a movie review generator. Given the name of a movie, you need to return a structured review."""</span>
+</span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Generate a review for the movie </span><span class="si">{</span><span class="n">movie</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="line-5">
+</span><span id="line-6"><span class="n">review_message</span> <span class="o">=</span> <span class="n">generate_movie_review</span><span class="p">(</span><span class="s2">"Inception"</span><span class="p">)</span>
+</span><span id="line-7"><span class="n">review</span> <span class="o">=</span> <span class="n">review_message</span><span class="o">.</span><span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-8"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Rating: </span><span class="si">{</span><span class="n">review</span><span class="o">.</span><span class="n">rating</span><span class="si">}</span><span class="s2">/10"</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+</section>
+<section id="multimodal-interactions">
+<h3>2. Multimodal Interactions<a class="headerlink" href="#multimodal-interactions" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#multimodal-interactions'">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> can handle various types of inputs and <strong>outputs</strong>, including text and images:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-5-omni"</span><span class="p">)</span>
+</span><span id="line-4"><span class="k">def</span> <span class="nf">describe_and_generate</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-5">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-6">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You can describe images and generate new ones based on text prompts."</span><span class="p">),</span>
+</span><span id="line-7">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+</span><span id="line-8">    <span class="p">]</span>
+</span><span id="line-9">
+</span><span id="line-10"><span class="n">result</span> <span class="o">=</span> <span class="n">describe_and_generate</span><span class="p">(</span><span class="s2">"A serene lake at sunset"</span><span class="p">)</span>
+</span><span id="line-11"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># Prints the description</span>
+</span><span id="line-12"><span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">images</span><span class="p">:</span>
+</span><span id="line-13">    <span class="n">result</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>  <span class="c1"># Displays the generated image</span>
+</span></code></pre></div>
+</div>
+</section>
+<section id="chat-based-use-cases">
+<h3>3. Chat-based Use Cases<a class="headerlink" href="#chat-based-use-cases" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#chat-based-use-cases'">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> is particularly useful for chat-based applications where you need to maintain conversation history:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a friendly chatbot. Engage in casual conversation."</span><span class="p">),</span>
+</span><span id="line-5">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="n">message_history</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-8"><span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+</span><span id="line-9">    <span class="n">user_input</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">"You: "</span><span class="p">)</span>
+</span><span id="line-10">    <span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">user_input</span><span class="p">))</span>
+</span><span id="line-11">    <span class="n">response</span> <span class="o">=</span> <span class="n">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span>
+</span><span id="line-12">    <span class="nb">print</span><span class="p">(</span><span class="s2">"Bot:"</span><span class="p">,</span> <span class="n">response</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</span><span id="line-13">    <span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</span></code></pre></div>
+</div>
+</section>
+<section id="tool-usage">
+<h3>4. Tool Usage<a class="headerlink" href="#tool-usage" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#tool-usage'">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> supports tool usage, allowing language models to make function calls:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">tool</span><span class="p">()</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"The full name of a city and country, e.g. San Francisco, CA, USA"</span><span class="p">)):</span>
+</span><span id="line-3"><span class="w">    </span><span class="sd">"""Get the current weather for a given location."""</span>
+</span><span id="line-4">    <span class="c1"># Simulated weather API call</span>
+</span><span id="line-5">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"The weather in </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s2"> is sunny."</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-turbo"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_weather</span><span class="p">])</span>
+</span><span id="line-8"><span class="k">def</span> <span class="nf">travel_planner</span><span class="p">(</span><span class="n">destination</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-9"><span class="w">    </span><span class="sd">"""Plan a trip based on the destination and current weather."""</span>
+</span><span id="line-10">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-11">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a travel planner. Use the weather tool to provide relevant advice."</span><span class="p">),</span>
+</span><span id="line-12">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Plan a trip to </span><span class="si">{</span><span class="n">destination</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-13">    <span class="p">]</span>
+</span><span id="line-14">
+</span><span id="line-15"><span class="n">result</span> <span class="o">=</span> <span class="n">travel_planner</span><span class="p">(</span><span class="s2">"Paris"</span><span class="p">)</span>
+</span><span id="line-16"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># Prints travel advice</span>
+</span><span id="line-17"><span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+</span><span id="line-18">    <span class="c1"># This is done so that we can pass the tool calls to the language model</span>
+</span><span id="line-19">    <span class="n">tool_results</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">call_tools_and_collect_as_message</span><span class="p">()</span>
+</span><span id="line-20">    <span class="nb">print</span><span class="p">(</span><span class="s2">"Weather info:"</span><span class="p">,</span> <span class="n">tool_results</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+</section>
+</section>
+<section id="reference">
+<h2>Reference<a class="headerlink" href="#reference" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#reference'">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="ell.complex">
 <span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">complex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OpenAI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exempt_from_tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_callback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">api_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.complex" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.complex'">¶</a></dt>
@@ -373,17 +481,6 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 <li><p>ell.studio: For visualizing and analyzing LMP executions.</p></li>
 </ul>
 </dd></dl>
-<section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#usage'">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> decorator is used for more advanced scenarios:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">some_tool</span><span class="p">])</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">complex_task</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are an AI capable of using tools."</span><span class="p">),</span>
-</span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Perform this task: </span><span class="si">{</span><span class="nb">input</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-6">    <span class="p">]</span>
-</span></code></pre></div>
-</div>
 </section>
 </section>
 </div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
@@ -406,8 +503,18 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
-<li><a :data-current="activeSection === '#ell.complex'" class="reference internal" href="#ell.complex"><code class="docutils literal notranslate"><span class="pre">complex()</span></code></a></li>
 <li><a :data-current="activeSection === '#usage'" class="reference internal" href="#usage">Usage</a></li>
+<li><a :data-current="activeSection === '#key-features'" class="reference internal" href="#key-features">Key Features</a><ul>
+<li><a :data-current="activeSection === '#structured-outputs'" class="reference internal" href="#structured-outputs">1. Structured Outputs</a></li>
+<li><a :data-current="activeSection === '#multimodal-interactions'" class="reference internal" href="#multimodal-interactions">2. Multimodal Interactions</a></li>
+<li><a :data-current="activeSection === '#chat-based-use-cases'" class="reference internal" href="#chat-based-use-cases">3. Chat-based Use Cases</a></li>
+<li><a :data-current="activeSection === '#tool-usage'" class="reference internal" href="#tool-usage">4. Tool Usage</a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#reference'" class="reference internal" href="#reference">Reference</a><ul>
+<li><a :data-current="activeSection === '#ell.complex'" class="reference internal" href="#ell.complex"><code class="docutils literal notranslate"><span class="pre">complex()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 </aside>

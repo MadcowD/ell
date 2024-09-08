@@ -152,11 +152,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Models &amp; API Clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../best_practices/designing_effective_lmps.html">Designing Effective Language Model Programs</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">ell package</a></li>
 </ul>
@@ -183,17 +179,51 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <div id="content" role="main">
 <section id="models-api-clients">
 <h1>Models &amp; API Clients<a class="headerlink" href="#models-api-clients" title="Link to this heading">¶</a></h1>
-<p>ell supports various language models and API clients.</p>
+<p>In language model programming, the relationship between models and API clients is crucial. ell provides a robust framework for managing this relationship, offering various ways to specify clients for models, register custom models, and leverage default configurations.</p>
+<section id="model-registration-and-default-clients">
+<h2>Model Registration and Default Clients<a class="headerlink" href="#model-registration-and-default-clients" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#model-registration-and-default-clients'">¶</a></h2>
+<p>ell automatically registers numerous models from providers like OpenAI, Anthropic, Cohere, and Groq upon initialization. This allows you to use models without explicitly specifying a client.</p>
+<p>If no client is found for a model, ell falls back to a default OpenAI client. This enables the utilization of newly released models without updating ell for new model registrations. If the fallback fails because the model is not available in the OpenAI API, you can register your own client for the model using the <cite>ell.config.register_model</cite> method or specify a client when calling the language model program below</p>
+</section>
+<section id="specifying-clients-for-models">
+<h2>Specifying Clients for Models<a class="headerlink" href="#specifying-clients-for-models" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#specifying-clients-for-models'">¶</a></h2>
+<p>ell offers multiple methods to specify clients for models:</p>
+<ol class="arabic simple">
+<li><p>Decorator-level Client Specification:</p></li>
+</ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
-</span><span id="line-2"><span class="kn">from</span> <span class="nn">ell.clients</span> <span class="kn">import</span> <span class="n">OpenAIClient</span>
+</span><span id="line-2"><span class="kn">import</span> <span class="nn">openai</span>
 </span><span id="line-3">
-</span><span id="line-4"><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAIClient</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="s2">"your-api-key"</span><span class="p">)</span>
+</span><span id="line-4"><span class="n">client</span> <span class="o">=</span> <span class="n">openai</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="s2">"your-api-key"</span><span class="p">)</span>
 </span><span id="line-5">
-</span><span id="line-6"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">)</span>
-</span><span id="line-7"><span class="k">def</span> <span class="nf">custom_client_example</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="line-8">    <span class="k">return</span> <span class="n">prompt</span>
+</span><span id="line-6"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-next"</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">)</span>
+</span><span id="line-7"><span class="k">def</span> <span class="nf">my_lmp</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-8">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Respond to: </span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="s2">"</span>
 </span></code></pre></div>
 </div>
+<ol class="arabic simple" start="2">
+<li><p>Function Call-level Client Specification:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="n">result</span> <span class="o">=</span> <span class="n">my_lmp</span><span class="p">(</span><span class="s2">"Hello, world!"</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="n">another_client</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Global Client Registration:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="n">ell</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="s2">"gpt-next"</span><span class="p">,</span> <span class="n">my_custom_client</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+</section>
+<section id="custom-model-registration">
+<h2>Custom Model Registration<a class="headerlink" href="#custom-model-registration" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#custom-model-registration'">¶</a></h2>
+<p>For custom or newer models, ell provides a straightforward registration method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-2"><span class="kn">import</span> <span class="nn">my_custom_client</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="n">ell</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="s2">"my-custom-model"</span><span class="p">,</span> <span class="n">my_custom_client</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+</section>
 </section>
 </div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
 <div class="mr-auto">
@@ -212,7 +242,15 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </svg>
 </a>
 </div>
-</div></div>
+</div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
+<div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
+<ul>
+<li><a :data-current="activeSection === '#model-registration-and-default-clients'" class="reference internal" href="#model-registration-and-default-clients">Model Registration and Default Clients</a></li>
+<li><a :data-current="activeSection === '#specifying-clients-for-models'" class="reference internal" href="#specifying-clients-for-models">Specifying Clients for Models</a></li>
+<li><a :data-current="activeSection === '#custom-model-registration'" class="reference internal" href="#custom-model-registration">Custom Model Registration</a></li>
+</ul>
+</div>
+</aside>
 </main>
 </div>
 </div><footer class="py-6 border-t border-border md:py-0">

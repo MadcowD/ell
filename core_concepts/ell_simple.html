@@ -152,11 +152,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <li class="toctree-l1"><a class="reference internal" href="models_and_api_clients.html">Models &amp; API Clients</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../best_practices/designing_effective_lmps.html">Designing Effective Language Model Programs</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../reference/index.html">ell package</a></li>
 </ul>
@@ -183,6 +179,164 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <div id="content" role="main">
 <section id="ell-simple">
 <h1>@ell.simple<a class="headerlink" href="#ell-simple" title="Link to this heading">¶</a></h1>
+<p>The core unit of prompt engineering in ell is the <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> decorator. This decorator transforms a function that provides system and user prompts into a callable object. When invoked, this callable sends the provided prompts to a language model and returns the model’s response.</p>
+<p>The development of <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> is driven by several important objectives:</p>
+<ul class="simple">
+<li><p>Improve readability and usabiltiy of prompt engineering code.</p></li>
+<li><p>Force a functional decomposition of prompt systems into reusable components.</p></li>
+<li><p>Enable versioning, serialization, and tracking of prompts over time</p></li>
+</ul>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#usage'">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> decorator can be used in two main ways:</p>
+<ol class="arabic">
+<li><p>Using the docstring as the system prompt, and the return value as the user message:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-3"><span class="w">    </span><span class="sd">"""You are a helpful assistant."""</span>
+</span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Say hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span>
+</span></code></pre></div>
+</div>
+</li>
+<li><p>Explicitly defining messages:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant."</span><span class="p">),</span>
+</span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Say hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span><span class="p">)</span>
+</span><span id="line-6">    <span class="p">]</span>
+</span></code></pre></div>
+</div>
+</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Messages in ell are not the same as the dictionary messages used in the OpenAI API. ell’s Message API provides a more intuitive and flexible way to construct and manipulate messages. You can read more about ell’s Message API and type coercion in the <a class="reference internal" href="message_api.html"><span class="doc">Messages</span></a> page.</p>
+</div>
+<section id="invoking-an-ell-simple-lmp">
+<h3>Invoking an <code class="docutils literal notranslate"><span class="pre">ell.simple</span></code> LMP<a class="headerlink" href="#invoking-an-ell-simple-lmp" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#invoking-an-ell-simple-lmp'">¶</a></h3>
+<p>To use the decorated function, we can call it as a normal function. However, instead of receiving the typical return value, we will receive the result of passing the system and user prompts directly to the model specified in the decorator constructor, in this case GPT-4.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">hello</span><span class="p">(</span><span class="s2">"world"</span><span class="p">)</span>
+</span><span id="line-2"><span class="go">'Hello, world!'</span>
+</span></code></pre></div>
+</div>
+<p>As you can see from this example, the return type of an <code class="docutils literal notranslate"><span class="pre">ell.simple</span></code> LMP is a string. This is to optimize for readability and usability, as most invocations of language models revolve around passing strings around. Additional metadata is only needed occasionally.</p>
+<p>Therefore, we have two decorators within the ell framework:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code>: Returns simple strings, as shown here.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code>: Returns message objects containing all of the typical message API metadata and additional helper functions for interacting with multimodal output data. You can read more about this in the <a class="reference internal" href="ell_complex.html"><span class="doc">@ell.complex</span></a> page.</p></li>
+</ol>
+</section>
+<section id="variable-system-prompts">
+<h3>Variable system prompts<a class="headerlink" href="#variable-system-prompts" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#variable-system-prompts'">¶</a></h3>
+<p>One of the challenges with specifying the system prompt in the docstring of a language model program is that if you want to use variable system prompts, Python will no longer treat the string literal at the top of the function as a docstring. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="k">def</span> <span class="nf">my_func</span><span class="p">(</span><span class="n">var</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span id="line-2">    <span class="sa">f</span><span class="s2">"""my variable doc string for my_func. </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">"""</span>
+</span><span id="line-3">    <span class="k">pass</span>
+</span></code></pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">my_func</span><span class="o">.</span><span class="vm">__doc__</span>
+</span><span id="line-2"><span class="go">None</span>
+</span></code></pre></div>
+</div>
+<p>This behavior makes sense because a function’s docstring should not change during execution and should be extractable through static analysis.</p>
+<p>To address this issue with <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code>, you need to use the second method of defining an <code class="docutils literal notranslate"><span class="pre">ell.simple</span></code> language model program by creating a function that returns a list of messages (see <a class="reference internal" href="message_api.html"><span class="doc">Messages</span></a> for more details).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">my_func</span><span class="p">(</span><span class="n">name</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">var</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">"You are a helpful assistant. </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">"</span><span class="p">),</span>
+</span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Say hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span><span class="p">)</span>
+</span><span id="line-6">    <span class="p">]</span>
+</span></code></pre></div>
+</div>
+<p>With this approach, ell will ignore the docstring of <code class="docutils literal notranslate"><span class="pre">my_func</span></code> and instead supply the messages returned by the function to the language model API.</p>
+</section>
+<section id="passing-parameters-to-an-llm-api">
+<h3>Passing parameters to an LLM API<a class="headerlink" href="#passing-parameters-to-an-llm-api" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#passing-parameters-to-an-llm-api'">¶</a></h3>
+<p>One of the most convenient functions of the <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> decorator is that you can easily pass parameters to an LLM API, both at definition time and runtime. For example, models within the OpenAI API have parameters like <code class="docutils literal notranslate"><span class="pre">temperature</span></code>, <code class="docutils literal notranslate"><span class="pre">max_tokens</span></code>, stop tokens, and <code class="docutils literal notranslate"><span class="pre">logit_bias</span></code>. Due to how <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> works, you can simply specify these in the decorator as keyword arguments.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="p">[</span><span class="s2">"."</span><span class="p">])</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-3"><span class="w">    </span><span class="sd">"""You are a helpful assistant."""</span>
+</span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Hey there </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span>
+</span></code></pre></div>
+</div>
+<p>Likewise, if you want to modify those parameters for a particular invocation of that prompt, you simply pass them in as <code class="docutils literal notranslate"><span class="pre">lm_params</span></code> keyword arguments to the function when calling it. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">hello</span><span class="p">(</span><span class="s2">"world"</span><span class="p">,</span> <span class="n">lm_params</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">))</span>
+</span><span id="line-2"><span class="go">'Hey there world!'</span>
+</span></code></pre></div>
+</div>
+<section id="multiple-outputs-n-1">
+<h4>Multiple outputs (n&gt;1)<a class="headerlink" href="#multiple-outputs-n-1" title="Link to this heading">¶</a></h4>
+<p>As is often important in prompt engineering to leverage test-time compute, many language model APIs allow you to specify a count parameter, usually ‘n’, which will generate several outputs from the language model given a particular prompt.</p>
+<p>In the OpenAI API, for example, this is actually quite cumbersome because the API specification separates different completions into ‘choices’ objects. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="n">response</span> <span class="o">=</span> <span class="n">openai</span><span class="o">.</span><span class="n">Completion</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+</span><span id="line-2">    <span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span>
+</span><span id="line-3">    <span class="n">prompt</span><span class="o">=</span><span class="s2">"Say hello to everyone"</span><span class="p">,</span>
+</span><span id="line-4">    <span class="n">n</span><span class="o">=</span><span class="mi">2</span>
+</span><span id="line-5"><span class="p">)</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="n">r1</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+</span><span id="line-8"><span class="n">r2</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+</span></code></pre></div>
+</div>
+<p>In the spirit of simplicity, we’ve designed it to automatically coerce the return type into the correct shape, similar to NumPy and PyTorch. This means that when you call an <code class="docutils literal notranslate"><span class="pre">ell.simple</span></code> language model program with <code class="docutils literal notranslate"><span class="pre">n</span></code> greater than one, instead of returning a string, it returns a list of strings.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-3"><span class="w">    </span><span class="sd">"""You are a helpful assistant."""</span>
+</span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Say hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span>
+</span></code></pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">hello</span><span class="p">(</span><span class="s2">"world"</span><span class="p">)</span>
+</span><span id="line-2"><span class="go">['Hey there world!', 'Hi, world.']</span>
+</span></code></pre></div>
+</div>
+<p>Similarly, this behavior applies when using runtime <code class="docutils literal notranslate"><span class="pre">lm_params</span></code> to specify multiple outputs.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">hello</span><span class="p">(</span><span class="s2">"world"</span><span class="p">,</span> <span class="n">lm_params</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+</span><span id="line-2"><span class="go">['Hey there world!', 'Hi, world.', 'Hello, world!']</span>
+</span></code></pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In the future, we may modify this interface as preserving the <code class="docutils literal notranslate"><span class="pre">lm_params</span></code> keyword in its current form could potentially lead to conflicts with user-defined functions. However, during the beta phase, we are closely monitoring for feedback and will make adjustments based on user experiences and needs.</p>
+</div>
+</section>
+</section>
+<section id="multimodal-inputs">
+<h3>Multimodal inputs<a class="headerlink" href="#multimodal-inputs" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#multimodal-inputs'">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> supports multimodal inputs, allowing you to easily work with both text and images in your language model programs. This is particularly useful for models with vision capabilities, such as GPT-4 with vision.</p>
+<p>Here’s an example of how to use <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> with multimodal inputs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+</span><span id="line-2"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-vision-preview"</span><span class="p">)</span>
+</span><span id="line-5"><span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
+</span><span id="line-6">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-7">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant that describes images."</span><span class="p">),</span>
+</span><span id="line-8">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span><span class="s2">"What's in this image?"</span><span class="p">,</span> <span class="n">image</span><span class="p">])</span>
+</span><span id="line-9">    <span class="p">]</span>
+</span><span id="line-10">
+</span><span id="line-11"><span class="c1"># Usage</span>
+</span><span id="line-12"><span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"path/to/your/image.jpg"</span><span class="p">)</span>
+</span><span id="line-13"><span class="n">description</span> <span class="o">=</span> <span class="n">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</span><span id="line-14"><span class="nb">print</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>  <span class="c1"># This will print a text description of the image</span>
+</span></code></pre></div>
+</div>
+<p>In this example, the <code class="docutils literal notranslate"><span class="pre">describe_image</span></code> function takes a PIL Image object as input. The <code class="docutils literal notranslate"><span class="pre">ell.user</span></code> message combines both text and image inputs. <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> automatically handles the conversion of the PIL Image object into the appropriate format for the language model.</p>
+<p>This approach simplifies working with multimodal inputs, allowing you to focus on your application logic rather than the intricacies of API payloads.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>While <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> supports multimodal inputs, it is designed to return text-only outputs. For handling multimodal outputs (such as generated images or audio), you need to use <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code>. Please refer to the <a class="reference internal" href="ell_complex.html"><span class="doc">@ell.complex</span></a> documentation for more information on working with multimodal outputs.</p>
+</div>
+</section>
+</section>
+<section id="what-about-multiturn-conversations-tools-structured-outputs-and-other-features">
+<h2>What about multiturn conversations, tools, structured outputs, and other features?<a class="headerlink" href="#what-about-multiturn-conversations-tools-structured-outputs-and-other-features" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#what-about-multiturn-conversations-tools-structured-outputs-and-other-features'">¶</a></h2>
+<p>While <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> is great for straightforward text-based interactions with language models, there are scenarios where you might need more complex functionality. For instance, you may want to work with multiturn conversations, utilize tools, generate structured outputs, or handle multimodal content beyond just text.</p>
+<p>In such cases, you’ll need an LMP that can return rich <code class="docutils literal notranslate"><span class="pre">Message</span></code> objects instead of just strings. This is where <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> comes into play. The <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> decorator provides enhanced capabilities for more sophisticated interactions with language models.</p>
+<p>For more information on how to use <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> and its advanced features, please refer to the <a class="reference internal" href="ell_complex.html"><span class="doc">@ell.complex</span></a> documentation.</p>
+</section>
+<section id="reference">
+<h2>Reference<a class="headerlink" href="#reference" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#reference'">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="ell.simple">
 <span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">simple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OpenAI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exempt_from_tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">api_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.simple" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.simple'">¶</a></dt>
@@ -261,29 +415,6 @@ Parameters passed during the function call will override those set in the decora
 <li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">ell.studio</span></code>: For visualizing and analyzing LMP executions.</p></li>
 </ul>
 </dd></dl>
-<section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#usage'">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> decorator can be used in two main ways:</p>
-<ol class="arabic">
-<li><p>Using the docstring as the system prompt:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="line-3"><span class="w">    </span><span class="sd">"""You are a helpful assistant."""</span>
-</span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Say hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span>
-</span></code></pre></div>
-</div>
-</li>
-<li><p>Explicitly defining messages:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant."</span><span class="p">),</span>
-</span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Say hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span><span class="p">)</span>
-</span><span id="line-6">    <span class="p">]</span>
-</span></code></pre></div>
-</div>
-</li>
-</ol>
 </section>
 </section>
 </div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
@@ -306,8 +437,21 @@ Parameters passed during the function call will override those set in the decora
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
+<li><a :data-current="activeSection === '#usage'" class="reference internal" href="#usage">Usage</a><ul>
+<li><a :data-current="activeSection === '#invoking-an-ell-simple-lmp'" class="reference internal" href="#invoking-an-ell-simple-lmp">Invoking an <code class="docutils literal notranslate"><span class="pre">ell.simple</span></code> LMP</a></li>
+<li><a :data-current="activeSection === '#variable-system-prompts'" class="reference internal" href="#variable-system-prompts">Variable system prompts</a></li>
+<li><a :data-current="activeSection === '#passing-parameters-to-an-llm-api'" class="reference internal" href="#passing-parameters-to-an-llm-api">Passing parameters to an LLM API</a><ul>
+<li><a :data-current="activeSection === '#multiple-outputs-n-1'" class="reference internal" href="#multiple-outputs-n-1">Multiple outputs (n&gt;1)</a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#multimodal-inputs'" class="reference internal" href="#multimodal-inputs">Multimodal inputs</a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#what-about-multiturn-conversations-tools-structured-outputs-and-other-features'" class="reference internal" href="#what-about-multiturn-conversations-tools-structured-outputs-and-other-features">What about multiturn conversations, tools, structured outputs, and other features?</a></li>
+<li><a :data-current="activeSection === '#reference'" class="reference internal" href="#reference">Reference</a><ul>
 <li><a :data-current="activeSection === '#ell.simple'" class="reference internal" href="#ell.simple"><code class="docutils literal notranslate"><span class="pre">simple()</span></code></a></li>
-<li><a :data-current="activeSection === '#usage'" class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </aside>
