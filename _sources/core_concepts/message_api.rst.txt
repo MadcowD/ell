@@ -2,9 +2,6 @@
 Messages
 ===========
 
-.. note::
-   For a full API and usage refernece please refer to the API reference.
-
 Messages are the fundamental unit of interaction with chat-based language models. They consist of a role and some form of content. For text-only language models, the content is typically just a string. However, with multimodal language models that can process images, audio, text, and other modalities, the content object becomes more complex.
 
 In practice, the content that a language model can consume forms a markup language, where there are different content blocks for text, images, audio, tool use, and so on.

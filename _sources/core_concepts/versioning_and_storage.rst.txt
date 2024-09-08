@@ -133,7 +133,10 @@ In designing ell, it was essential that this versioning system happened entirely
 
     ell.init(store='./logdir')
 
-The argument 'store' points to either a local path to store data or an ell.storage.Store object. An ell store is an interface for storing prompts and their invocations, i.e., the input and outputs of a language model program as well as the language model called, generated, and any other metadata. By default, when a path is specified, ell uses a local SQLite DB and an expandable file-based blob store for larger language model programs or invocations that cannot effectively fit into rows of the database.
+The argument ``store`` points to either a local path to store data or an ``ell.storage.Store`` object. An ell store is an interface for storing prompts and their invocations, i.e., the input and outputs of a language model program as well as the language model called, generated, and any other metadata. By default, when a path is specified, ell uses a local SQLite DB and an expandable file-based blob store for larger language model programs or invocations that cannot effectively fit into rows of the database.
+
+.. note::
+    For production use, ell can utilize a store in any arbitrary database. In the near future, ell will be launching a service similar to Weights & Biases (wandb), where your team can store all prompts in a centralized prompt version control system. This will provide collaborative features and advanced versioning capabilities, much like what wandb offers for machine learning experiments.
 
 When ell is initialized with a store of any kind, anytime a language model program is invoked (actually, the first time it's invoked), the lexical closure of source of that language model program is computed and hashed to create a version hash for that language model program. In addition, the aforementioned dependency graph is computed, and this language model program is then written to the store. After the invocation occurs, all of the input and output data associated with that version of the language model program is also stored in the database for later analysis. As the prompt engineering process continues, new versions of the language model programs are only added to the store if they are invoked at least once.
 
@@ -142,7 +145,7 @@ When ell is initialized with a store of any kind, anytime a language model progr
     import ell
     from ell.stores.sql import SQLiteStore
 
-    ell.set_store('./logdir', autocommit=True)
+    ell.init(store='./logdir', autocommit=True)
 
     @ell.simple(model="gpt-4o-mini")
     def greet(name: str):
