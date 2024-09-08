@@ -10,20 +10,23 @@ However, the reality of this process is much messier. Often, a prompt engineer w
 2. Sometimes regressions are introduced, unknown to the prompt engineer, due to dependencies elsewhere in the codebase.
 3. The process of testing different hypotheses and then reverting those tests often involves using the undo/redo shortcuts in the editor of choice, which is not ideal for tracking changes.
 
+
+Checkpointing prompts
+~~~~~~~~~~~~~~~~~~~~~~
+
 A solution to this problem can be found by drawing analogies to the training process in machine learning. More specifically, prompt engineering is a form of parameter search where we are modifying a model over time with local updates, hoping that some global objective function is maximized or minimized. In machine learning, this process is often referred to as the training loop. Each instance of the model's parameters is called a checkpoint. As the training process occurs, checkpoints are occasionally saved and evaluated for quality. If a hyperparameter of the training process leads to the failure of the training process, the practitioner can quickly revert to a previous checkpoint, similar to version control in software engineering.
 
 With standard language model API calls or current prompt engineering frameworks, accomplishing versioning or checkpointing of prompts during the prompt engineering process is cumbersome. It either involves the prompt engineer checking in to a standard version control system like git, the code of their prompt at a given iteration, and making sure to store commit hashes alongside all of the outputs the prompt engineer wishes to compare against, or saving their prompts and outputs to text files for later comparison. This is highly cumbersome and an anti-pattern to typical version control workflows in software development. At best, current prompt engineering frameworks allow prompt engineers to version prompts by requiring them to use pre-built IDEs in which prompts need to be stored with specific names or a particular editor must be used to effectuate prompt versioning. This approach is orthogonal to the reality of using LLMs in real-world applications, i.e., these LLM calls are often scattered throughout a codebase, and we need to work in line with existing software infrastructure.
-
 
 
 One of the key features of ell is a version control system for language model programs that works automatically behind the scenes. This system enables the comparison, visualization, and storage of prompts as the codebase evolves in both production and development settings, without requiring any changes to the prompt engineer's workflow.
 
 This automatic versioning is possible because in ell, prompts are discrete functional units called language model programs. By encapsulating the prompt within a function, we can use typical static and dynamic analysis tools to extract the source code of a prompt program and all its lexical dependencies at any point in time. This means we can capture the set of source code needed to directly reproduce the prompt.
 
-Serializing language model programs: lexical closures
+Serializing prompts via lexical closures
 -----------------------------------------------------
 
-Consider the following function Embedded in a large code base.
+Consider the following function embedded in a large code base.
 
 .. code-block:: python
 

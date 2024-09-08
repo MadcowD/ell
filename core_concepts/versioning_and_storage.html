@@ -189,13 +189,15 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <li><p>Sometimes regressions are introduced, unknown to the prompt engineer, due to dependencies elsewhere in the codebase.</p></li>
 <li><p>The process of testing different hypotheses and then reverting those tests often involves using the undo/redo shortcuts in the editor of choice, which is not ideal for tracking changes.</p></li>
 </ol>
+<section id="checkpointing-prompts">
+<h2>Checkpointing prompts<a class="headerlink" href="#checkpointing-prompts" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#checkpointing-prompts'">¶</a></h2>
 <p>A solution to this problem can be found by drawing analogies to the training process in machine learning. More specifically, prompt engineering is a form of parameter search where we are modifying a model over time with local updates, hoping that some global objective function is maximized or minimized. In machine learning, this process is often referred to as the training loop. Each instance of the model’s parameters is called a checkpoint. As the training process occurs, checkpoints are occasionally saved and evaluated for quality. If a hyperparameter of the training process leads to the failure of the training process, the practitioner can quickly revert to a previous checkpoint, similar to version control in software engineering.</p>
 <p>With standard language model API calls or current prompt engineering frameworks, accomplishing versioning or checkpointing of prompts during the prompt engineering process is cumbersome. It either involves the prompt engineer checking in to a standard version control system like git, the code of their prompt at a given iteration, and making sure to store commit hashes alongside all of the outputs the prompt engineer wishes to compare against, or saving their prompts and outputs to text files for later comparison. This is highly cumbersome and an anti-pattern to typical version control workflows in software development. At best, current prompt engineering frameworks allow prompt engineers to version prompts by requiring them to use pre-built IDEs in which prompts need to be stored with specific names or a particular editor must be used to effectuate prompt versioning. This approach is orthogonal to the reality of using LLMs in real-world applications, i.e., these LLM calls are often scattered throughout a codebase, and we need to work in line with existing software infrastructure.</p>
 <p>One of the key features of ell is a version control system for language model programs that works automatically behind the scenes. This system enables the comparison, visualization, and storage of prompts as the codebase evolves in both production and development settings, without requiring any changes to the prompt engineer’s workflow.</p>
 <p>This automatic versioning is possible because in ell, prompts are discrete functional units called language model programs. By encapsulating the prompt within a function, we can use typical static and dynamic analysis tools to extract the source code of a prompt program and all its lexical dependencies at any point in time. This means we can capture the set of source code needed to directly reproduce the prompt.</p>
-<section id="serializing-language-model-programs-lexical-closures">
-<h2>Serializing language model programs: lexical closures<a class="headerlink" href="#serializing-language-model-programs-lexical-closures" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#serializing-language-model-programs-lexical-closures'">¶</a></h2>
-<p>Consider the following function Embedded in a large code base.</p>
+<section id="serializing-prompts-via-lexical-closures">
+<h3>Serializing prompts via lexical closures<a class="headerlink" href="#serializing-prompts-via-lexical-closures" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#serializing-prompts-via-lexical-closures'">¶</a></h3>
+<p>Consider the following function embedded in a large code base.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">myother_module</span> <span class="kn">import</span> <span class="n">CONSTANT</span>
 </span><span id="line-2"><span class="k">def</span> <span class="nf">other_code</span><span class="p">():</span>
 </span><span id="line-3">    <span class="nb">print</span><span class="p">(</span><span class="s2">"hello"</span><span class="p">)</span>
@@ -235,8 +237,10 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </span></code></pre></div>
 </div>
 <p>Full closure can be computed through static analysis by inspecting the Abstract Syntax Tree (AST) of the function and all of its bound globals. This process recursively enumerates dependencies to compute a minimal set of source code that would enable you to reproduce the function. For brevity, we can ignore system and user libraries that were installed by package managers, as these are typically considered part of the execution environment rather than the function’s specific closure.</p>
+</section>
+</section>
 <section id="prompt-composition-and-dependencies">
-<h3>Prompt Composition and Dependencies<a class="headerlink" href="#prompt-composition-and-dependencies" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#prompt-composition-and-dependencies'">¶</a></h3>
+<h2>Prompt Composition and Dependencies<a class="headerlink" href="#prompt-composition-and-dependencies" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#prompt-composition-and-dependencies'">¶</a></h2>
 <p>In addition, when a language model program depends on another prompt (i.e., when one language model program calls another), the dependent prompt will automatically appear within the lexical closure of the calling prompt. This allows us to construct a computation graph that illustrates how language model programs depend on one another to execute, effectively leveraging test-time compute. This graph provides a clear visualization of the relationships and dependencies between different prompts in a complex language model program.</p>
 <a class="rounded-image invertible-image reference internal image-reference" href="../_images/compositionality.webp"><img alt="ell demonstration" class="rounded-image invertible-image" src="../_images/compositionality.webp" style="width: 100%;"/></a>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
@@ -275,10 +279,9 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </span><span id="line-34"><span class="n">story</span> <span class="o">=</span> <span class="n">write_a_really_good_story</span><span class="p">(</span><span class="s2">"a dog"</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
-</section>
-</section>
 <section id="versioning-in-ell">
-<h2>Versioning in ell<a class="headerlink" href="#versioning-in-ell" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#versioning-in-ell'">¶</a></h2>
+<h3>Versioning in ell<a class="headerlink" href="#versioning-in-ell" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#versioning-in-ell'">¶</a></h3>
+</section>
 </section>
 </section>
 </div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
@@ -301,11 +304,14 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
-<li><a :data-current="activeSection === '#serializing-language-model-programs-lexical-closures'" class="reference internal" href="#serializing-language-model-programs-lexical-closures">Serializing language model programs: lexical closures</a><ul>
-<li><a :data-current="activeSection === '#prompt-composition-and-dependencies'" class="reference internal" href="#prompt-composition-and-dependencies">Prompt Composition and Dependencies</a></li>
+<li><a :data-current="activeSection === '#checkpointing-prompts'" class="reference internal" href="#checkpointing-prompts">Checkpointing prompts</a><ul>
+<li><a :data-current="activeSection === '#serializing-prompts-via-lexical-closures'" class="reference internal" href="#serializing-prompts-via-lexical-closures">Serializing prompts via lexical closures</a></li>
 </ul>
 </li>
+<li><a :data-current="activeSection === '#prompt-composition-and-dependencies'" class="reference internal" href="#prompt-composition-and-dependencies">Prompt Composition and Dependencies</a><ul>
 <li><a :data-current="activeSection === '#versioning-in-ell'" class="reference internal" href="#versioning-in-ell">Versioning in ell</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </aside>
