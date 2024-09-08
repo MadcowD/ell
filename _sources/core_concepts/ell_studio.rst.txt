@@ -66,7 +66,7 @@ Performance Metrics
 
 To help optimize your LMPs, Studio provides various performance metrics such as token usage over time, execution time trends, and frequency of invocations for each LMP. These metrics can be invaluable in identifying performance bottlenecks and areas for improvement.
 
-Code Viewer
+LMP Viewer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Studio includes a built-in code viewer that allows you to examine the source code of your LMPs. You can compare different versions side-by-side and access the full context of each LMP quickly and easily.
