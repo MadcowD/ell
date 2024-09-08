@@ -125,8 +125,6 @@ Key Features
         print("Weather info:", tool_results.text)
 
 
-
-
 Reference
 ---------
 
