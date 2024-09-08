@@ -1,5 +1,5 @@
 =================================================
-Versioning & Visualization
+Versioning, Tracing, and Visualization
 =================================================
 
 Prompt Engineering is the process of rapidly iterating on the set of system, user, and pre-packaged assistant messages sent to a language model. The goal is to maximize some explicit or implied objective function. In an ideal scientific scenario, we would have reward models or metrics that could automatically assess the quality of prompts. One would simply modify the text or formatting of the sent messages to maximize this objective.
