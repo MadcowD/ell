@@ -280,8 +280,8 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </div>
 </section>
 </section>
-<section id="automatic-versioning">
-<h2>Automatic Versioning<a class="headerlink" href="#automatic-versioning" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#automatic-versioning'">¶</a></h2>
+<section id="versioning">
+<h2>Versioning<a class="headerlink" href="#versioning" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#versioning'">¶</a></h2>
 <p>With the ability to checkpoint and serialize prompts, we can now facilitate a key promise of a useful prompt engineering library: automatic versioning.</p>
 <p>Prompt versioning comes in two flavors: automatic versioning during the prompt engineering process, and archival versioning in storage during production deployments. The former is important for the reasons previously mentioned; as a prompt engineer changes and tunes the prompt over time, they may often revert to previous versions or need to compare across them. The latter is crucial for debugging and regression checks of production deployments, as well as the creation of large-scale fine-tuning and comparison datasets. ell is designed with both of these in mind.</p>
 <p>In designing ell, it was essential that this versioning system happened entirely behind the scenes and did not dictate any specific way in which the prompt engineer needs to facilitate their own process. Therefore, to enable automatic versioning, one simply passes in a storage parameter to the initialization function of ell, where various settings are configured:</p>
@@ -290,9 +290,54 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </div>
 <p>The argument ‘store’ points to either a local path to store data or an ell.storage.Store object. An ell store is an interface for storing prompts and their invocations, i.e., the input and outputs of a language model program as well as the language model called, generated, and any other metadata. By default, when a path is specified, ell uses a local SQLite DB and an expandable file-based blob store for larger language model programs or invocations that cannot effectively fit into rows of the database.</p>
 <p>When ell is initialized with a store of any kind, anytime a language model program is invoked (actually, the first time it’s invoked), the lexical closure of source of that language model program is computed and hashed to create a version hash for that language model program. In addition, the aforementioned dependency graph is computed, and this language model program is then written to the store. After the invocation occurs, all of the input and output data associated with that version of the language model program is also stored in the database for later analysis. As the prompt engineering process continues, new versions of the language model programs are only added to the store if they are invoked at least once.</p>
-<p>[show a fictitious row in the db and a code example]</p>
-<section id="autocommitting-subsection">
-<h3>Autocommitting subsection<a class="headerlink" href="#autocommitting-subsection" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#autocommitting-subsection'">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-2"><span class="kn">from</span> <span class="nn">ell.stores.sql</span> <span class="kn">import</span> <span class="n">SQLiteStore</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="n">ell</span><span class="o">.</span><span class="n">set_store</span><span class="p">(</span><span class="s1">'./logdir'</span><span class="p">,</span> <span class="n">autocommit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-5">
+</span><span id="line-6"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-mini"</span><span class="p">)</span>
+</span><span id="line-7"><span class="k">def</span> <span class="nf">greet</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-8"><span class="w">    </span><span class="sd">"""You are a friendly greeter."""</span>
+</span><span id="line-9">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Generate a greeting for </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">."</span>
+</span><span id="line-10">
+</span><span id="line-11"><span class="n">result</span> <span class="o">=</span> <span class="n">greet</span><span class="p">(</span><span class="s2">"Alice"</span><span class="p">)</span>
+</span><span id="line-12"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>  <span class="c1"># Output: "Hello, Alice! It's wonderful to meet you."</span>
+</span></code></pre></div>
+</div>
+<p>After this execution, a row might be added to the <cite>SerializedLMP</cite> table:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">lmp_id: "1a2b3c4d5e6f7g8h"
+</span><span id="line-2">name: "greet"
+</span><span id="line-3">source: "@ell.simple(model=\"gpt-4o-mini\")\ndef greet(name: str):\n    \"\"\"You are a friendly greeter.\"\"\"\n    return f\"Generate a greeting for {name}.\""
+</span><span id="line-4">dependencies: ""
+</span><span id="line-5">created_at: "2023-07-15T10:30:00Z"
+</span><span id="line-6">lmp_type: "LM"
+</span><span id="line-7">api_params: {"model": "gpt-4o-mini"}
+</span><span id="line-8">initial_free_vars: {}
+</span><span id="line-9">initial_global_vars: {}
+</span><span id="line-10">num_invocations: 1
+</span><span id="line-11">commit_message: "Initial version of greet function"
+</span><span id="line-12">version_number: 1
+</span></code></pre></div>
+</div>
+<p>And a corresponding row in the <cite>Invocation</cite> table:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">id: "9i8u7y6t5r4e3w2q"
+</span><span id="line-2">lmp_id: "1a2b3c4d5e6f7g8h"
+</span><span id="line-3">latency_ms: 250.5
+</span><span id="line-4">prompt_tokens: 15
+</span><span id="line-5">completion_tokens: 10
+</span><span id="line-6">created_at: "2023-07-15T10:30:01Z"
+</span></code></pre></div>
+</div>
+<p>With its associated <cite>InvocationContents</cite>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">invocation_id: "9i8u7y6t5r4e3w2q"
+</span><span id="line-2">params: {"name": "Alice"}
+</span><span id="line-3">results: ["Hello, Alice! It's wonderful to meet you."]
+</span><span id="line-4">invocation_api_params: {"temperature": 1.0, "max_tokens": 50}
+</span></code></pre></div>
+</div>
+<p>This structure allows for efficient tracking and analysis of LMP usage and performance over time.</p>
+<section id="autocommitting">
+<h3>Autocommitting<a class="headerlink" href="#autocommitting" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#autocommitting'">¶</a></h3>
 <p>Because prompts are just their source code and versions and diffs between versions are automatically computed in the background, we can additionally automatically create human-readable commit messages between versions:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="n">ell</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="s1">'./logdir'</span><span class="p">,</span> <span class="n">autocommit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span></code></pre></div>
@@ -387,6 +432,10 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </span><span id="line-23">        <span class="p">]</span>
 </span></code></pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently, origin tracing in ell works only on string primitives. We’re actively developing support for arbitrary object tracking, which will be available in a future release. This enhancement will allow for more comprehensive tracing of various data types throughout your language model programs.</p>
+</div>
 </section>
 </section>
 <section id="visualization">
@@ -418,8 +467,8 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <li><a :data-current="activeSection === '#constructing-a-dependency-graph'" class="reference internal" href="#constructing-a-dependency-graph">Constructing a dependency graph</a></li>
 </ul>
 </li>
-<li><a :data-current="activeSection === '#automatic-versioning'" class="reference internal" href="#automatic-versioning">Automatic Versioning</a><ul>
-<li><a :data-current="activeSection === '#autocommitting-subsection'" class="reference internal" href="#autocommitting-subsection">Autocommitting subsection</a></li>
+<li><a :data-current="activeSection === '#versioning'" class="reference internal" href="#versioning">Versioning</a><ul>
+<li><a :data-current="activeSection === '#autocommitting'" class="reference internal" href="#autocommitting">Autocommitting</a></li>
 </ul>
 </li>
 <li><a :data-current="activeSection === '#tracing'" class="reference internal" href="#tracing">Tracing</a><ul>

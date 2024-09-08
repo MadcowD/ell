@@ -120,8 +120,8 @@ In addition, when a language model program depends on another prompt (i.e., when
 
     story = write_a_really_good_story("a dog")
 
-Automatic Versioning
----------------------
+Versioning
+----------
 
 With the ability to checkpoint and serialize prompts, we can now facilitate a key promise of a useful prompt engineering library: automatic versioning.
 
@@ -137,10 +137,62 @@ The argument 'store' points to either a local path to store data or an ell.stora
 
 When ell is initialized with a store of any kind, anytime a language model program is invoked (actually, the first time it's invoked), the lexical closure of source of that language model program is computed and hashed to create a version hash for that language model program. In addition, the aforementioned dependency graph is computed, and this language model program is then written to the store. After the invocation occurs, all of the input and output data associated with that version of the language model program is also stored in the database for later analysis. As the prompt engineering process continues, new versions of the language model programs are only added to the store if they are invoked at least once.
 
-[show a fictitious row in the db and a code example]
+.. code-block:: python
 
-Autocommitting subsection
-~~~~~~~~~~~~~~~~~~~~~~~~~
+    import ell
+    from ell.stores.sql import SQLiteStore
+
+    ell.set_store('./logdir', autocommit=True)
+
+    @ell.simple(model="gpt-4o-mini")
+    def greet(name: str):
+        """You are a friendly greeter."""
+        return f"Generate a greeting for {name}."
+
+    result = greet("Alice")
+    print(result)  # Output: "Hello, Alice! It's wonderful to meet you."
+
+After this execution, a row might be added to the `SerializedLMP` table:
+
+.. code-block:: text
+
+    lmp_id: "1a2b3c4d5e6f7g8h"
+    name: "greet"
+    source: "@ell.simple(model=\"gpt-4o-mini\")\ndef greet(name: str):\n    \"\"\"You are a friendly greeter.\"\"\"\n    return f\"Generate a greeting for {name}.\""
+    dependencies: ""
+    created_at: "2023-07-15T10:30:00Z"
+    lmp_type: "LM"
+    api_params: {"model": "gpt-4o-mini"}
+    initial_free_vars: {}
+    initial_global_vars: {}
+    num_invocations: 1
+    commit_message: "Initial version of greet function"
+    version_number: 1
+
+And a corresponding row in the `Invocation` table:
+
+.. code-block:: text
+
+    id: "9i8u7y6t5r4e3w2q"
+    lmp_id: "1a2b3c4d5e6f7g8h"
+    latency_ms: 250.5
+    prompt_tokens: 15
+    completion_tokens: 10
+    created_at: "2023-07-15T10:30:01Z"
+
+With its associated `InvocationContents`:
+
+.. code-block:: text
+
+    invocation_id: "9i8u7y6t5r4e3w2q"
+    params: {"name": "Alice"}
+    results: ["Hello, Alice! It's wonderful to meet you."]
+    invocation_api_params: {"temperature": 1.0, "max_tokens": 50}
+
+This structure allows for efficient tracking and analysis of LMP usage and performance over time.
+
+Autocommitting
+~~~~~~~~~~~~~~
 
 Because prompts are just their source code and versions and diffs between versions are automatically computed in the background, we can additionally automatically create human-readable commit messages between versions:
 
@@ -264,6 +316,11 @@ This capability allows you to easily track the flow of language model outputs, i
     Your goal is to come up with a response to a chat. Only respond in one sentence (should be like a text message in informality.) Never use Emojis."""),
                 ell.user(format_message_history(message_history)),
             ]
+
+
+.. note::
+   Currently, origin tracing in ell works only on string primitives. We're actively developing support for arbitrary object tracking, which will be available in a future release. This enhancement will allow for more comprehensive tracing of various data types throughout your language model programs.
+
 
 
 Visualization
