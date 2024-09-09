@@ -124,7 +124,7 @@ class Config(BaseModel):
         :param client: The default OpenAI client to set.
         :type client: openai.Client
         """
-        self.default_client = client
+        self.default_openai_client = client
 
     def set_ell_client(self, client: EllClient) -> None:
         self._client = client
