@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "ell"
 version = "0.0.1"
-description = "ell - a functional language model programming framework"
+description = "ell - the language model programming library"
 authors = ["William Guss <will@lrsys.xyz>"]
 license = "MIT"
 readme = "README.md"
@@ -53,6 +53,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 ell-studio = "ell.studio.__main__:main"
+
 
 # [tool.poetry.build]
 # # script = "build.py"

@@ -24,7 +24,7 @@ To start using Studio, run the following command in your terminal:
 
 .. code-block:: bash
 
-    ell-studio --storage_dir ./logdir
+    ell-studio --storage ./logdir
 
 This command opens the Studio interface in your web browser, using the data stored in the specified directory (which should be the same directory you specified when initializing ell with `ell.init(store='./logdir')`). Since Studio runs locally, you can be assured that your sensitive prompt data never leaves your machine.
 
