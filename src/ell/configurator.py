@@ -22,7 +22,7 @@ class Config(BaseModel):
     default_system_prompt: str = Field(default="You are a helpful AI assistant.", description="The default system prompt used for AI interactions.")
     _client: Optional[EllClient] = None
     store_blobs: bool = True
-    _default_openai_client: Optional[openai.Client] = Field(default=None, description="The default OpenAI client used when a specific model client is not found.")
+    default_openai_client: Optional[openai.Client] = Field(default=None, description="The default OpenAI client used when a specific model client is not found.")
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -86,7 +86,7 @@ class Config(BaseModel):
                 _config_logger.warning(f"{Fore.LIGHTYELLOW_EX}{warning_message}{Style.RESET_ALL}")
             else:
                 _config_logger.debug(warning_message)
-            client = self._default_openai_client
+            client = self.default_openai_client
             fallback = True
         return client, fallback
 
@@ -151,8 +151,9 @@ def init(
 
     :param verbose: Set verbosity of ELL operations.
     :type verbose: bool
-    :param store: Set the store for ELL. Can be a Store instance or a string path for SQLiteStore.
-    :type store: Union[Store, str], optional
+    :param storage_dir: Set the storage directory.
+    :type storage_dir: str
+
     :param autocommit: Set autocommit for the store operations.
     :type autocommit: bool
     :param lazy_versioning: Enable or disable lazy versioning.
