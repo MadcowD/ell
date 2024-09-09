@@ -39,7 +39,9 @@ jobs:
         run: |
           cd docs
           rm -rf _build  # Remove existing build directory
+          poetry run python -c "import ell; print(ell.__version__)" > src/_static/ell_version.txt
           poetry run make html  # Use poetry run to ensure the correct environment is used
+
         # env:
           # SPHINXOPTS: "-W"  # Treat warnings as errors
 
