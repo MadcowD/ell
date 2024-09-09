@@ -20,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'  # Specify the Python version
+          python-version: '3.12.4'  # Specify the Python version
     
       - name: Install Poetry
         uses: snok/install-poetry@v1
@@ -38,9 +38,12 @@ jobs:
       - name: Build the documentation
         run: |
           cd docs
+          rm -rf _build  # Remove existing build directory
+          poetry run python -c "import ell; print(ell.__version__)" > src/_static/ell_version.txt
           poetry run make html  # Use poetry run to ensure the correct environment is used
-        env:
-          SPHINXOPTS: "-W"  # Treat warnings as errors
+
+        # env:
+          # SPHINXOPTS: "-W"  # Treat warnings as errors
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

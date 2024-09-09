@@ -35,7 +35,7 @@ def _warnings(model, fn, default_client_from_decorator):
             # Check to see if the model is registered and warn the user we're gonna defualt to OpenAI.
 
             if model not in config.registry:
-                logger.warning(f"""{Fore.LIGHTYELLOW_EX}WARNING: Model `{model}` is used by LMP `{fn.__name__}` but no client could be found that supports `{model}`. Defaulting to use the OpenAI client `{config._default_openai_client}` for `{model}`. This is likely because you've spelled the model name incorrectly or are using a newer model from a provider added after this ell version was released. 
+                logger.warning(f"""{Fore.LIGHTYELLOW_EX}WARNING: Model `{model}` is used by LMP `{fn.__name__}` but no client could be found that supports `{model}`. Defaulting to use the OpenAI client `{config.default_client}` for `{model}`. This is likely because you've spelled the model name incorrectly or are using a newer model from a provider added after this ell version was released. 
                             
 * If this is a mistake either specify a client explicitly in the decorator:
 ```python

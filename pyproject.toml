@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "ell"
 version = "0.0.1"
-description = "ell - a functional language model programming framework"
+description = "ell - the language model programming library"
 authors = ["William Guss <will@lrsys.xyz>"]
 license = "MIT"
 readme = "README.md"
@@ -50,23 +50,14 @@ pytest-mock = "^3.14.0"
 sphinx = "<8.0.0"
 sphinx-rtd-theme = "^2.0.0"
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.plugins.build]
-backend = "build:CustomBuildBackend"
 
 
 [tool.poetry.scripts]
 ell-studio = "ell.studio.__main__:main"
-build-hook = "build_hook:main"
-
-[tool.poetry.extras]
-npm_install = ["invoke"]
-npm_build = ["invoke"]
 
 
-[tool.poetry-dynamic-versioning]
-enable = true
-metadata = true
-format = "{base}"
+# [tool.poetry.build]
+# # script = "build.py"

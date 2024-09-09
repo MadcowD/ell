@@ -7,7 +7,7 @@ from ell.lmp.complex import complex
 
 def simple(model: str, client: Optional[openai.Client] = None,  exempt_from_tracking=False, **api_params):
     """
-    A basic language model programming decorator for text-only LLM outputs.
+    The fundamental unit of language model programming in ell.
 
     This decorator simplifies the process of creating Language Model Programs (LMPs) 
     that return text-only outputs from language models, while supporting multimodal inputs.
@@ -21,23 +21,6 @@ def simple(model: str, client: Optional[openai.Client] = None,  exempt_from_trac
     :type exempt_from_tracking: bool
     :param api_params: Additional keyword arguments to pass to the underlying API call.
     :type api_params: Any
-
-    :return: A decorator that can be applied to a function, transforming it into an LMP.
-    :rtype: Callable
-
-    Functionality:
-
-    1. Simplifies LMP Creation:
-       - Provides a straightforward way to create LMPs with text-only outputs.
-       - Supports multimodal inputs (text, images, etc.) in the prompt.
-       - Automatically simplifies complex model responses to text-only format.
-
-    2. Integration with Language Models:
-       - Supports various language models through the 'model' parameter.
-       - Allows customization of API parameters for fine-tuned control.
-
-    3. Tracking and Monitoring:
-       - Integrates with ell's tracking system for monitoring LMP versions over time, usage and performance.
 
     Usage:
     The decorated function can return either a single prompt or a list of ell.Message objects:
@@ -57,7 +40,7 @@ def simple(model: str, client: Optional[openai.Client] = None,  exempt_from_trac
                # helper function for ell.Message(text="...", role="system")
                ell.system("You are an AI trained to describe images."),
                # helper function for ell.Message(content="...", role="user")
-               ell.user([ContentBlock(text="Describe this image in detail."), ContentBlock(image=image)]),
+               ell.user(["Describe this image in detail.", image]),
            ]
 
 

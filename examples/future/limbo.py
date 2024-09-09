@@ -8,17 +8,17 @@ ell.set_store('./logdir', autocommit=True)
 ell.config.verbose = True
 
 
-@ell.tool()
-def order_t_shirt(size: str, color: str,  address : str):
-    """Places an order for a limbo t-shirt"""
-    # Orders tge t-shirt
-    return "order_id-123234"
+@ell.tool(autogenerate=True)
+def order_t_shirt(size, color, address):
+    
+    # ....\
+    pass
 
 
 @ell.tool()
 def get_order_arrival_date(order_id: str):
     """Gets the arrival date of a t-shirt order"""
-    return "2024-01-01"
+    # ...
 
 
 

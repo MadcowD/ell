@@ -76,6 +76,58 @@ class ContentBlock(BaseModel):
 
     @classmethod
     def coerce(cls, content: Union[str, ToolCall, ToolResult, BaseModel, "ContentBlock", PILImage.Image, np.ndarray]) -> "ContentBlock":
+        """
+        Coerce various types of content into a ContentBlock.
+
+        This method provides a flexible way to create ContentBlock instances from different types of input.
+
+        The content to be coerced into a ContentBlock. Can be one of the following types:
+        - str: Will be converted to a text ContentBlock.
+        - ToolCall: Will be converted to a tool_call ContentBlock.
+        - ToolResult: Will be converted to a tool_result ContentBlock.
+        - BaseModel: Will be converted to a parsed ContentBlock.
+        - ContentBlock: Will be returned as-is.
+        - PILImage.Image: Will be converted to an image ContentBlock.
+        - np.ndarray: Will be converted to an image ContentBlock if it represents an image.
+
+        Examples:
+        ---------
+        >>> ContentBlock.coerce("Hello, world!")
+        ContentBlock(text="Hello, world!")
+
+        >>> tool_call = ToolCall(...)
+        >>> ContentBlock.coerce(tool_call)
+        ContentBlock(tool_call=tool_call)
+
+        >>> tool_result = ToolResult(...)
+        >>> ContentBlock.coerce(tool_result)
+        ContentBlock(tool_result=tool_result)
+
+        >>> class MyModel(BaseModel):
+        ...     field: str
+        >>> model_instance = MyModel(field="value")
+        >>> ContentBlock.coerce(model_instance)
+        ContentBlock(parsed=model_instance)
+
+        >>> from PIL import Image
+        >>> img = Image.new('RGB', (100, 100))
+        >>> ContentBlock.coerce(img)
+        ContentBlock(image=img)
+
+        >>> import numpy as np
+        >>> arr = np.random.rand(100, 100, 3)
+        >>> ContentBlock.coerce(arr)
+        ContentBlock(image=<PIL.Image.Image>)
+
+        Notes:
+        ------
+        - This method is particularly useful when working with heterogeneous content types
+          and you want to ensure they are all properly encapsulated in ContentBlock instances.
+        - The method performs type checking and appropriate conversions to ensure the resulting
+          ContentBlock is valid according to the model's constraints.
+        - For image content, both PIL Image objects and numpy arrays are supported, with
+          automatic conversion to the appropriate format.
+        """
         if isinstance(content, ContentBlock):
             return content
         if isinstance(content, str):
@@ -163,27 +215,91 @@ class Message(BaseModel):
         content = coerce_content_list(content, **content_block_kwargs)
         
         super().__init__(content=content, role=role)
-
     @cached_property
     def text(self) -> str:
+        """Returns all text content, replacing non-text content with type indicators.
+
+        Example:
+            >>> message = Message(role="user", content=["Hello", PILImage.new('RGB', (100, 100)), "World"])
+            >>> message.text
+            'Hello\\n<image>\\nWorld'
+        """
         return "\n".join(c.text or f"<{c.type}>" for c in self.content)
+    
+    @cached_property
+    def images(self) -> List[PILImage.Image]:
+        """Returns a list of all image content.
+
+        Example:
+            >>> image1 = PILImage.new('RGB', (100, 100))
+            >>> image2 = PILImage.new('RGB', (200, 200))
+            >>> message = Message(role="user", content=["Text", image1, "More text", image2])
+            >>> len(message.images)
+            2
+        """
+        return [c.image for c in self.content if c.image]
+    
+    @cached_property
+    def audios(self) -> List[np.ndarray]:
+        """Returns a list of all audio content.
+
+        Example:
+            >>> audio1 = np.array([0.1, 0.2, 0.3])
+            >>> audio2 = np.array([0.4, 0.5, 0.6])
+            >>> message = Message(role="user", content=["Text", audio1, "More text", audio2])
+            >>> len(message.audios)
+            2
+        """
+        return [c.audio for c in self.content if c.audio]
 
     @cached_property
     def text_only(self) -> str:
+        """Returns only the text content, ignoring non-text content.
+
+        Example:
+            >>> message = Message(role="user", content=["Hello", PILImage.new('RGB', (100, 100)), "World"])
+            >>> message.text_only
+            'Hello\\nWorld'
+        """
         return "\n".join(c.text for c in self.content if c.text)
 
     @cached_property
     def tool_calls(self) -> List[ToolCall]:
+        """Returns a list of all tool calls.
+
+        Example:
+            >>> tool_call = ToolCall(tool=lambda x: x, params=BaseModel())
+            >>> message = Message(role="user", content=["Text", tool_call])
+            >>> len(message.tool_calls)
+            1
+        """
         return [c.tool_call for c in self.content if c.tool_call is not None]
     
     @cached_property
     def tool_results(self) -> List[ToolResult]:
+        """Returns a list of all tool results.
+
+        Example:
+            >>> tool_result = ToolResult(tool_call_id="123", result=[ContentBlock(text="Result")])
+            >>> message = Message(role="user", content=["Text", tool_result])
+            >>> len(message.tool_results)
+            1
+        """
         return [c.tool_result for c in self.content if c.tool_result is not None]
 
     @cached_property
-    def parsed_content(self) -> List[BaseModel]:
+    def parsed(self) -> List[BaseModel]:
+        """Returns a list of all parsed content.
+
+        Example:
+            >>> class CustomModel(BaseModel):
+            ...     value: int
+            >>> parsed_content = CustomModel(value=42)
+            >>> message = Message(role="user", content=["Text", ContentBlock(parsed=parsed_content)])
+            >>> len(message.parsed)
+            1
+        """
         return [c.parsed for c in self.content if c.parsed is not None]
-    
     def call_tools_and_collect_as_message(self, parallel=False, max_workers=None):
         if parallel:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -201,7 +317,6 @@ class Message(BaseModel):
                 c.to_openai_content_block() for c in self.content
             ]))
         }
-        print(message, self.content)
         if self.tool_calls:
             message["tool_calls"] = [
                 {

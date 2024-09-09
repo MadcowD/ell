@@ -1,0 +1,56 @@
+
+docs todo:
+
+github icon
+
+core concepts:
+
+
+@ell.simple.rst
+
+- autodoc doc string
+- usage (can be doc string or )
+
+@ell.complex.rst
+
+- autodoc doc string
+- usage (can be doc string or )
+
+
+Tool Usage.rst
+
+Models & API Clients .rst
+Configuration.rst
+
+
+@ell.complex .rst
+
+Tool Usage .rst
+
+
+
+
+API Clients & Models .rst
+
+Configuration .rst
+
+Designing Effective Language Model Programs .rst
+
+Related Work .rst
+
+* why this is better than langchain
+* why this is better than langsmith
+* why this is better than weave 
+* instructor
+* why not use the openai api directly? 
+    - u can definitely use numpy to do deep learning, but it's not advisable for large apps
+
+
+
+
+Whole tutorials seciton:
+
+RAG
+Vector DBs
+Agents
+Chatbots

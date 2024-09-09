@@ -85,4 +85,4 @@ except openai.OpenAIError as e:
     pass
 
 register(default_client)
-config._default_openai_client = default_client
+config.default_client = default_client
