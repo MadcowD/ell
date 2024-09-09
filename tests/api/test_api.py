@@ -165,9 +165,13 @@ def test_write_invocation(sql_store: SQLStore):
     }
     response = client.post(
         "/lmp",
-        json={'lmp': lmp_data, 'uses': {}}
+        json={'lmp': lmp_data, 'uses': []}
     )
-    assert response.status_code == 200
+    try:
+        assert response.status_code == 200
+    except Exception as e:
+        print(response.json())
+        raise e
 
     invocation_data = {
         "id": uuid4().hex,
@@ -178,9 +182,7 @@ def test_write_invocation(sql_store: SQLStore):
         "free_vars": {"free_var1": "value2"},
         "latency_ms": 100.0,
         "invocation_kwargs": {"model": "gpt-4o", "messages": [{"role": "system", "content": "You are a JSON parser. You respond only in JSON. Do not format using markdown."}, {"role": "user", "content": "You are given the following task: \"What is two plus two?\"\n            Parse the task into the following type:\n            {'$defs': {'Add': {'properties': {'op': {'const': '+', 'enum': ['+'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Add', 'type': 'object'}, 'Div': {'properties': {'op': {'const': '/', 'enum': ['/'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Div', 'type': 'object'}, 'Mul': {'properties': {'op': {'const': '*', 'enum': ['*'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Mul', 'type': 'object'}, 'Sub': {'properties': {'op': {'const': '-', 'enum': ['-'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Sub', 'type': 'object'}}, 'anyOf': [{'$ref': '#/$defs/Add'}, {'$ref': '#/$defs/Sub'}, {'$ref': '#/$defs/Mul'}, {'$ref': '#/$defs/Div'}]}\n            "}], "lm_kwargs": {"temperature": 0.1}, "client": None},
-        "contents": {
-
-        }
+        "contents": { }
     }
     consumes_data = []
 
