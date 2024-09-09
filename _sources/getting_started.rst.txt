@@ -212,7 +212,7 @@ After running your script with versioning enabled, you can explore your prompts 
 
 .. code-block:: bash
 
-    ell-studio --storage_dir ./logdir
+    ell-studio --storage ./logdir
 
 This command opens the ell-studio interface in your web browser. Here, you can visualize your LMPs, see their dependencies, and track changes over time.
 
