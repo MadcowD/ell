@@ -11,7 +11,7 @@
 
 ```bash
 
-pip install -U ell-py
+pip install -U ell-so
 ```
 
 `ell` is a lightweight, functional prompt engineering framework built on a few core principles:
@@ -84,10 +84,10 @@ Read more in the [docs](https://docs.ell.so/)!
 To install `ell` and `ell studio`, you can use pip. Follow these steps:
 
 1. Open your terminal or command prompt.
-2. Run the following command to install the `ell-py` package from PyPI:
+2. Run the following command to install the `ell-ai` package from PyPI:
 
    ```bash
-   pip install ell-py
+   pip install ell-ai
    ```
 
 3. Verify the installation by checking the version of `ell`:
