@@ -11,7 +11,7 @@
 
 ```bash
 
-pip install -U ell-so
+pip install -U ell-ai
 ```
 
 `ell` is a lightweight, functional prompt engineering framework built on a few core principles:
