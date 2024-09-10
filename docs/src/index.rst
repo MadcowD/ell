@@ -55,7 +55,7 @@ LMPs are fully encapsulated functions that produce either a string prompt or a l
 Prompt engineering is an optimization process
 ------------------------------------------------
 
-The process of prompt engineering involves many iterations, similar to the optimization processes in machine learning. Because LMPs are just functions, ``ell`` procides rich tooling for this process.
+The process of prompt engineering involves many iterations, similar to the optimization processes in machine learning. Because LMPs are just functions, ``ell`` provides rich tooling for this process.
 
 .. image:: _static/versions_small.webp
    :alt: ell demonstration
@@ -93,7 +93,7 @@ Tools for monitoring, versioning, and visualization
 
    ell-studio --storage ./logdir 
 
-Prompt engineering goes from  a dark art to a science with the right tools. **Ell Studio is a local, open source tool for prompt version control, monitoring, visualization**. With Ell Studio you can empiricize your prompt optimziation process over time and catch regressions before its too late. 
+Prompt engineering goes from a dark art to a science with the right tools. **Ell Studio is a local, open source tool for prompt version control, monitoring, visualization**. With Ell Studio you can empiricize your prompt optimziation process over time and catch regressions before its too late. 
 
 
 
