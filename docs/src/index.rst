@@ -15,6 +15,12 @@ ell: The Language Model Programming Library
    <a href="https://discord.gg/vWntgU52Xb" target="_blank">
        <img src="https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat" alt="Discord">
    </a>
+   <a href="https://twitter.com/wgussml" target="_blank">
+       <img alt="X (formerly Twitter) Follow" src="https://img.shields.io/twitter/follow/wgussml">
+   </a>
+   <a href="https://jobs.ell.so" target="_blank">
+       <img src="https://img.shields.io/badge/jobs-board-green" alt="Jobs Board">
+   </a>
    </div>
 
 .. title:: Introduction

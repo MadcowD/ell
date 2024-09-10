@@ -6,7 +6,8 @@
 
 --------------------------------------------------------------------------------
 
-[![Documentation Status](https://img.shields.io/badge/documentation-go)](https://docs.ell.so/) [![Install](https://img.shields.io/badge/get_started-blue)](https://docs.ell.so/installation) [![Discord](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)
+[![Documentation Status](https://img.shields.io/badge/documentation-go)](https://docs.ell.so/) [![Install](https://img.shields.io/badge/get_started-blue)](https://docs.ell.so/installation) [![Discord](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb)  ![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/wgussml)
+
 
 `ell` is a lightweight, functional prompt engineering framework built on a few core principles:
 
