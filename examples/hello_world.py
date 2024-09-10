@@ -1,7 +1,7 @@
 import ell
 import random
 
-ell.init(store='./logdir', autocommit=True)
+ell.init(store='./logdir', autocommit=True, verbose=True)
 
 def get_random_adjective():
     adjectives = ["enthusiastic", "cheerful", "warm", "friendly", "heartfelt", "sincere"]

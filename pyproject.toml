@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ell"
+name = "ell-py"
 version = "0.0.1"
 description = "ell - the language model programming library"
 authors = ["William Guss <will@lrsys.xyz>"]

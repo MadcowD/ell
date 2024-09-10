@@ -40,8 +40,8 @@ const Sidebar = () => {
       <nav className="flex-grow space-y-1 px-2">
         <SidebarLink to="/" icon={BiCube} label="Models" />
         <SidebarLink to="/invocations" icon={FiZap} label="Invocations" />
-        <SidebarLink to="/code" icon={FiCode} label="Code" />
-        <SidebarLink to="/data" icon={FiDatabase} label="Data" />
+        {/* <SidebarLink to="/code" icon={FiCode} label="Code" />
+        <SidebarLink to="/data" icon={FiDatabase} label="Data" /> */}
       </nav>
       
       <div className="mt-auto px-2">
