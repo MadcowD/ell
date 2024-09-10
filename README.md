@@ -23,7 +23,7 @@ Prompts aren't just strings; they are all the code that leads to strings being s
 ```python
 import ell
 
-@ell.lm(model="gpt-4o")
+@ell.simple(model="gpt-4o")
 def hello(world : str):
     """You are a helpful assistant that writes in lower case.""" # System Message
     return f"Say hello to {world[::-1]} with a poem."    # User Message
