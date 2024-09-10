@@ -26,7 +26,7 @@ def hello(world : str):
 hello("sama")
 ```
 
-![alt text](image.png)
+![alt text](docs/src/_static/gif1.webp)
 
 ### 2. Prompts are actually parameters of a machine learning model.
 
@@ -48,7 +48,7 @@ ell-studio --storage ./logdir
 ```
 
 
-### Multimodality should be first class
+### 4. Multimodality should be first class
 
 LLMs can process and generate various types of content, including text, images, audio, and video. Prompt engineering with these data types should be as easy as it is with text.
 
@@ -76,8 +76,25 @@ describe_activity(capture_webcam_image()) # "they are holding a book"
 Read more in the [docs](https://docs.ell.so/)!
 
 ## Installation
+To install `ell` and `ell studio`, you can use pip. Follow these steps:
 
-```bash
-pip install ell-py
-```
+1. Open your terminal or command prompt.
+2. Run the following command to install the `ell-py` package from PyPI:
 
+   ```bash
+   pip install ell-py
+   ```
+
+3. Verify the installation by checking the version of `ell`:
+
+   ```bash
+   python -c "import ell; print(ell.__version__)"
+   ```
+
+This will install both `ell` and `ell studio` on your system, allowing you to start using the tools for prompt engineering and visualization.
+
+
+
+## Next Steps
+
+Explore the [documentation](https://docs.ell.so/) to learn more about `ell` and its features. Follow the [Getting Started guide](https://docs.ell.so/getting_started.html) to create your first Language Model Program. Join our [Discord community](https://discord.gg/vWntgU52Xb) to connect with other users and get support.
