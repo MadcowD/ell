@@ -3,4 +3,4 @@ try:
 except ImportError:
     from importlib_metadata import version
 
-__version__ = version("ell")
+__version__ = version("ell-py")
