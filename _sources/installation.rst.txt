@@ -1,7 +1,7 @@
 Installation
 ============
 
-``ell`` and ``ell studio`` are both contianed within the ``ell-py`` python package available on PyPI. You simply need to install the package and set up your API keys.
+``ell`` and ``ell studio`` are both contianed within the ``ell-ai`` python package available on PyPI. You simply need to install the package and set up your API keys.
 
 Installing ell
 --------------
@@ -10,7 +10,7 @@ Installing ell
 
    .. code-block:: bash
 
-      pip install -U ell-py
+      pip install -U ell-ai
 
 2. Verify installation:
 
