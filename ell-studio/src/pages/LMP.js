@@ -222,28 +222,6 @@ function LMP() {
             <div className="mt-4">
               {activeTab === "runs" && (
                 <>
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex space-x-2">
-                      <button className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80 transition-colors flex items-center">
-                        <FiFilter className="mr-1" /> 1 filter
-                      </button>
-                      <button className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80 transition-colors">
-                        Last 7 days
-                      </button>
-                      <button className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80 transition-colors">
-                        Root Runs
-                      </button>
-                      <button className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80 transition-colors">
-                        LLM Calls
-                      </button>
-                      <button className="px-3 py-1 bg-secondary text-secondary-foreground rounded text-xs hover:bg-secondary/80 transition-colors">
-                        All Runs
-                      </button>
-                    </div>
-                    <button className="p-1 rounded bg-secondary hover:bg-secondary/80 transition-colors">
-                      <FiColumns className="w-4 h-4" />
-                    </button>
-                  </div>
                   <InvocationsTable
                     invocations={invocations}
                     currentPage={currentPage}
