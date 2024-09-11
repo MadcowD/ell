@@ -12,6 +12,8 @@ from ell.util.serialization import serialize_image
 try: 
     import openai
     class OpenAIProvider(Provider):
+
+        # XXX: This content block conversion etc might need to happen on a per model basis for providers like groq etc. We will think about this at a future date.
         @staticmethod
         def content_block_to_openai_format(content_block: ContentBlock) -> Dict[str, Any]:
             if content_block.image:
@@ -229,10 +231,6 @@ try:
         def get_client_type(cls) -> Type:
             return openai.Client
 
-        @classmethod
-        def __init_subclass__(cls, **kwargs):
-            super().__init_subclass__(**kwargs)
-            cls.register()
 
     register_provider(OpenAIProvider)
 except ImportError:

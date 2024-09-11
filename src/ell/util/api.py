@@ -52,7 +52,6 @@ def call(
         model_usage_logger_post_start(_logging_color, call_result.actual_n)
 
     with model_usage_logger_post_intermediate(_logging_color, call_result.actual_n) as _logger:
-
         tracked_results, metadata = provider_class.process_response(call_result, _invocation_origin, _logger if config.verbose and not _exempt_from_tracking else None, tools)
         
         

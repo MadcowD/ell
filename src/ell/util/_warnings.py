@@ -8,23 +8,25 @@ logger = logging.getLogger(__name__)
 def _no_api_key_warning(model, name, client_to_use, long=False, error=False):
     color = Fore.RED if error else Fore.LIGHTYELLOW_EX
     prefix = "ERROR" if error else "WARNING"
-    return f"""{color}{prefix}: No API key found for model `{model}` used by LMP `{name}` using client `{client_to_use}`""" + (""".
+    client_to_use_name = client_to_use.__class__.__name__
+    client_to_use_module = client_to_use.__class__.__module__
+    return f"""{color}{prefix}: No API key found for model `{model}` used by LMP `{name}` using client `{client_to_use}`""" + (f""".
 
 To fix this:
-* Or, set your API key in the environment variable `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`,  etc.
+* Set your API key in the appropriate environment variable for your chosen provider
 * Or, specify a client explicitly in the decorator:
     ```
     import ell
-    import openai
+    from {client_to_use_module} import {client_to_use_name}
                                 
-    ell.simple(model, client=openai.Client(api_key=my_key))
+    @ell.simple(model="{model}", client={client_to_use_name}(api_key=your_api_key))
     def {name}(...):
         ...
     ```
-* Or explicitly specify the client when the calling the LMP:
+* Or explicitly specify the client when calling the LMP:
 
     ```
-    ell.simple(model, client=openai.Client(api_key=my_key))(...)
+    {name}(..., client={client_to_use_name}(api_key=your_api_key))
     ```
 """ if long else " at time of definition. Can be okay if custom client specified later! https://docs.ell.so/core_concepts/models_and_api_clients.html ") + f"{Style.RESET_ALL}"
 
