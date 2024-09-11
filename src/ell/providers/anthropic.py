@@ -51,7 +51,8 @@ try:
                 ]
 
             # Streaming unsupported.
-            stream = final_call_params.pop("stream", False)
+            # XXX: Support soon.
+            stream = final_call_params.pop("stream", False) and False
             if stream:
                 response = client.messages.stream(**final_call_params)
             else:
@@ -68,7 +69,7 @@ try:
         def process_response(
             cls, call_result: APICallResult, _invocation_origin: str, logger: Optional[Any] = None, tools: Optional[List[LMP]] = None,
         ) -> Tuple[List[Message], Dict[str, Any]]:
-            metadata = {}
+            usage = {}
             tracked_results = []
 
             if call_result.actual_streaming:
@@ -111,7 +112,7 @@ try:
                     elif chunk.type == "message_delta":
                         message_metadata.update(chunk.delta.dict())
                         if chunk.usage:
-                            metadata.update(chunk.usage.dict())
+                            usage.update(chunk.usage.dict())
 
                     elif chunk.type == "message_stop":
                         tracked_results.append(Message(role="assistant", content=content, **message_metadata))
@@ -137,8 +138,17 @@ try:
                 if logger:
                     logger(tracked_results[0].text)
                 
-                metadata = call_result.response.usage.dict() if call_result.response.usage else {}
-
+                
+                usage = call_result.response.usage.dict() if call_result.response.usage else {}
+            
+            # process metadata for ell
+            # XXX: Unify an ell metadata format for ell studio.
+            usage["prompt_tokens"] = usage.get("input_tokens", 0)
+            usage["completion_tokens"] = usage.get("output_tokens", 0)
+            usage["total_tokens"] = usage['prompt_tokens'] + usage['completion_tokens']
+            metadata = call_result.response.model_dump()
+            del metadata["content"]
+            metadata["usage"] = usage
             return tracked_results, metadata
 
         @classmethod

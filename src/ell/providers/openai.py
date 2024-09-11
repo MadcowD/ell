@@ -220,7 +220,7 @@ try:
                         content=content,
                     )
                 )
-
+            print(metadata)
             return tracked_results, metadata
 
         @classmethod
