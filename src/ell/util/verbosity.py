@@ -43,10 +43,9 @@ def check_version_and_log():
                 import ell
 
                 try:
-                    response = requests.get("https://docs.ell.so/_static/ell_version.txt", timeout=1)
+                    response = requests.get("https://docs.ell.so/_static/ell_version.txt", timeout=0.5)
                     if response.status_code == 200:
                         latest_version = response.text.strip()
-                        print(f"latest_version: {latest_version}. ell.__version__: {ell.__version__}")
                         if latest_version != ell.__version__:
                             print(f"{Fore.YELLOW}╔═════════════════════════════════════════════════════════════════╗")
                             print(f"{Fore.YELLOW}║ {Fore.GREEN}A new version of ELL is available: {Fore.CYAN}{latest_version:<29}{Fore.YELLOW}║")
