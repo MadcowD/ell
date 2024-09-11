@@ -31,11 +31,9 @@ try:
             if anthropic_messages and anthropic_messages[0]["role"] == "system":
                 system_message = anthropic_messages.pop(0)
             
-
             if system_message:
                 final_call_params["system"] = system_message["content"][0]["text"]
             
-
             actual_n = api_params.get("n", 1)
             final_call_params["model"] = model
             final_call_params["messages"] = anthropic_messages
@@ -52,7 +50,7 @@ try:
 
             # Streaming unsupported.
             # XXX: Support soon.
-            stream = final_call_params.pop("stream", False) and False
+            stream = True
             if stream:
                 response = client.messages.stream(**final_call_params)
             else:
@@ -71,55 +69,60 @@ try:
         ) -> Tuple[List[Message], Dict[str, Any]]:
             usage = {}
             tracked_results = []
+            metadata = {}
 
             if call_result.actual_streaming:
                 content = []
-                current_block = None
+                current_block: Optional[Dict[str, Any]] = None
                 message_metadata = {}
 
-                for chunk in call_result.response:
-                    if chunk.type == "message_start":
-                        message_metadata = chunk.message.dict()
-                        message_metadata.pop("content", None)  # Remove content as we'll build it separately
+                with call_result.response as stream:
+                    for chunk in stream:
+                        if chunk.type == "message_start":
+                            message_metadata = chunk.message.dict()
+                            message_metadata.pop("content", None)  # Remove content as we'll build it separately
 
-                    elif chunk.type == "content_block_start":
-                        current_block = {"type": chunk.content_block.type, "content": ""}
+                        elif chunk.type == "content_block_start":
+                            current_block = {"type": chunk.content_block.type, "content": ""}
 
-                    elif chunk.type == "content_block_delta":
-                        if current_block["type"] == "text":
-                            current_block["content"] += chunk.delta.text
-                        elif current_block["type"] == "tool_use":
-                            current_block.setdefault("input", "")
-                            current_block["input"] += chunk.delta.partial_json
+                        elif chunk.type == "content_block_delta":
+                            if current_block is not None:
+                                if current_block["type"] == "text":
+                                    current_block["content"] += chunk.delta.text
+                                elif current_block["type"] == "tool_use":
+                                    current_block.setdefault("input", "")
+                                    current_block["input"] += chunk.delta.partial_json
 
-                    elif chunk.type == "content_block_stop":
-                        if current_block["type"] == "text":
-                            content.append(ContentBlock(text=_lstr(current_block["content"], _origin_trace=_invocation_origin)))
-                        elif current_block["type"] == "tool_use":
-                            try:
-                                tool_input = json.loads(current_block["input"])
-                                tool_call = ToolCall(
-                                    tool=next((t for t in tools if t.__name__ == current_block["name"]), None),
-                                    tool_call_id=current_block.get("id"),
-                                    params=tool_input
-                                )
-                                content.append(ContentBlock(tool_call=tool_call))
-                            except json.JSONDecodeError:
-                                # Handle partial JSON if necessary
-                                pass
-                        current_block = None
+                        elif chunk.type == "content_block_stop":
+                            if current_block is not None:
+                                if current_block["type"] == "text":
+                                    content.append(ContentBlock(text=_lstr(current_block["content"], _origin_trace=_invocation_origin)))
+                                elif current_block["type"] == "tool_use":
+                                    try:
+                                        tool_input = json.loads(current_block["input"])
+                                        tool_call = ToolCall(
+                                            tool=next((t for t in tools if t.__name__ == current_block["name"]) if tools else None),
+                                            tool_call_id=current_block.get("id"),
+                                            params=tool_input
+                                        )
+                                        content.append(ContentBlock(tool_call=tool_call))
+                                    except json.JSONDecodeError:
+                                        # Handle partial JSON if necessary
+                                        pass
+                            current_block = None
 
-                    elif chunk.type == "message_delta":
-                        message_metadata.update(chunk.delta.dict())
-                        if chunk.usage:
-                            usage.update(chunk.usage.dict())
+                        elif chunk.type == "message_delta":
+                            message_metadata.update(chunk.delta.dict())
+                            if chunk.usage:
+                                usage.update(chunk.usage.dict())
 
-                    elif chunk.type == "message_stop":
-                        tracked_results.append(Message(role="assistant", content=content, **message_metadata))
+                        elif chunk.type == "message_stop":
+                            tracked_results.append(Message(role="assistant", content=content))
 
-                    if logger and current_block and current_block["type"] == "text":
-                        logger(chunk.delta.text)
-
+                        if logger and current_block and current_block["type"] == "text":
+                            if chunk.type == "text":
+                                logger(chunk.text)
+                metadata = message_metadata
             else:
                 # Non-streaming response processing (unchanged)
                 cbs = []
@@ -140,14 +143,15 @@ try:
                 
                 
                 usage = call_result.response.usage.dict() if call_result.response.usage else {}
+                metadata = call_result.response.model_dump()
+                del metadata["content"]
             
             # process metadata for ell
             # XXX: Unify an ell metadata format for ell studio.
             usage["prompt_tokens"] = usage.get("input_tokens", 0)
             usage["completion_tokens"] = usage.get("output_tokens", 0)
             usage["total_tokens"] = usage['prompt_tokens'] + usage['completion_tokens']
-            metadata = call_result.response.model_dump()
-            del metadata["content"]
+
             metadata["usage"] = usage
             return tracked_results, metadata
 
@@ -169,9 +173,7 @@ try:
 except ImportError:
     pass
 
-"""
-HELPERS
-"""
+
 def content_block_to_anthropic_format(content_block: ContentBlock) -> Dict[str, Any]:
     if content_block.image:
         base64_image = AnthropicProvider.serialize_image_for_anthropic(content_block.image)
