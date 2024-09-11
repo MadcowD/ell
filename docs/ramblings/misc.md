@@ -27,7 +27,7 @@ An example of how to utilize the serializer to save and load invocations from th
 import ell
 
 
-@ell.lm(model="gpt-4-turbo", provider=None, temperature=0.1, max_tokens=5)
+@ell.simple(model="gpt-4-turbo", provider=None, temperature=0.1, max_tokens=5)
 def some_lmp(*args, **kwargs):
     """Just a normal doc stirng"""
     return [

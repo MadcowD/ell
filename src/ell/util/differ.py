@@ -10,10 +10,10 @@ def write_commit_message_for_diff(old : str, new : str) -> str:
 You will be given two version of source code. 
 You will be expected to write a commit message that describes the changes between the two versions. Your commit message should be at most one sentence and highly specific to the changes made. Don't just discuss the functions changed but how they were specifically changed.
 Your commit message cannot be more than 10 words so use sentence fragments and be concise.
-The @ell.lm decorator turns a function into a call to a language model: 
+The @ell.simple decorator turns a function into a call to a language model: 
     the docstring is the system prompt and the string returned in the user prompt. 
 It is extremely important that if these are change: your commit message must say what specifically changed in the user or system prompt rather than saying they were updated or changed geneircally.
-It is extremely important that you never refer to a @ell.lm docstring as a docstring; it is a system prompt. 
+It is extremely important that you never refer to a @ell.simple docstring as a docstring; it is a system prompt. 
 Don't say why a change was done but what specifically changed.
 Consider all changes ot the program including the globals and free variables
 Respond in the following format:
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     test_version_1 = '''import ell
 import numpy as np
 
-@ell.lm(model="gpt-4o-mini")
+@ell.simple(model="gpt-4o-mini")
 def come_up_with_a_premise_for_a_joke_about(topic : str):
     """You are an incredibly funny comedian. Come up with a premise for a joke about topic"""
     return f"come up with a premise for a joke about {topic}"
@@ -56,7 +56,7 @@ def come_up_with_a_premise_for_a_joke_about(topic : str):
 def get_random_length():
     return int(np.random.beta(2, 5) * 300)
 
-@ell.lm(model="gpt-4o-mini")
+@ell.simple(model="gpt-4o-mini")
 def joke(topic : str):
     """You are a funny comedian. You respond in scripts for a standup comedy skit."""
     return f"Act out a full joke. Make your script {get_random_length()} words long. Here's the premise: {come_up_with_a_premise_for_a_joke_about(topic)}"'''
@@ -64,7 +64,7 @@ def joke(topic : str):
     test_version_2 = '''import ell
 import numpy as np
 
-@ell.lm(model="gpt-4o-mini")
+@ell.simple(model="gpt-4o-mini")
 def come_up_with_a_premise_for_a_joke_about(topic : str):
     """You are an incredibly funny comedian. Come up with a premise for a joke about topic"""
     return f"come up with a premise for a joke about {topic}"
@@ -72,7 +72,7 @@ def come_up_with_a_premise_for_a_joke_about(topic : str):
 def get_random_length():
     return int(np.random.beta(2, 5) * 300)
 
-@ell.lm(model="gpt-4o-mini")
+@ell.simple(model="gpt-4o-mini")
 def joke(topic : str):
     """You are a funny comedian. You respond in scripts for skits."""
     return f"Act out a full joke. Make your script {get_random_length()} words long. Here's the premise: {come_up_with_a_premise_for_a_joke_about(topic)}"'''
