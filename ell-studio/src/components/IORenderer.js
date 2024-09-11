@@ -1,4 +1,5 @@
 import React from 'react';
+import * as base64 from 'base64-js';
 
 const typeMatchers = {
   ToolResult: (data) => data && typeof data === 'object' && 'tool_call_id' in data && 'result' in data,
@@ -103,13 +104,15 @@ const renderInline = (data, customRenderers) => {
   }
   if (typeof data === 'object' && data !== null) {
     const isImage = data.__limage;
-
+    const isNdarray = data.__lndarray;
 
     if (isImage) {
       return (
          <img src={data.content} alt="PIL.Image" style={{display: 'inline-block', verticalAlign: 'middle', maxHeight: '1.5em'}} />
         
       );
+    } else if (isNdarray) {
+      return renderNdarray(data);
     }
 
     return (
@@ -131,6 +134,41 @@ const renderInline = (data, customRenderers) => {
   }
   
   return <span className="text-yellow-300">{JSON.stringify(data)}</span>;
+};
+
+const renderNdarray = (data) => {
+  const { content, dtype, shape } = data;
+  const decodedData = base64.toByteArray(content);
+  const numElements = shape.reduce((a, b) => a * b, 1);
+  
+  let arrayData;
+  if (dtype === 'float32') {
+    arrayData = new Float32Array(decodedData.buffer);
+  } else if (dtype === 'int32') {
+    arrayData = new Int32Array(decodedData.buffer);
+  } else {
+    // Add more types as needed
+    arrayData = Array.from(decodedData);
+  }
+  console.log(arrayData)
+
+  let displayData;
+  if (numElements > 3) {
+    displayData = arrayData.slice(0, 3);
+    displayData = [...displayData, '...']
+  } else {
+    displayData = arrayData;
+  }
+  console.log(displayData[0])
+  return (
+    <span className="text-indigo-400">
+      np.array(
+        <span className="text-yellow-300">[{displayData.join(', ')}]</span>,{' '}
+        <span className="text-green-300">shape=[{shape.join(', ')}]</span>,{' '}
+        <span className="text-pink-300">dtype={dtype}</span>
+      )
+    </span>
+  );
 };
 
 const renderNonInline = (data, customRenderers, level = 0, isArrayItem = false, postfix = '') => {
@@ -193,6 +231,7 @@ const renderNonInline = (data, customRenderers, level = 0, isArrayItem = false, 
   
   if (typeof data === 'object' && data !== null) {
     const isImage = data.__limage;
+    const isNdarray = data.__lndarray;
 
     if (isImage) 
       return (
@@ -200,7 +239,14 @@ const renderNonInline = (data, customRenderers, level = 0, isArrayItem = false, 
           <img src={data.content} alt="Embedded Image" />
         </Indent>
       );
-
+      else if (isNdarray) {
+        return (
+          <Indent level={level}>
+            {renderNdarray(data)}
+            {postfix}
+          </Indent>
+        );
+      } 
     else 
       return (
         <>

@@ -218,20 +218,11 @@ class SQLiteStore(SQLStore):
         blob_store = SQLBlobStore(db_dir)
         super().__init__(f'sqlite:///{db_path}', blob_store=blob_store)
 
-    def write_external_blob(self, id: str, json_dump: str, depth: int = 2):
-        assert self.blob_store is not None, "Blob store is not initialized"
-        self.blob_store.store_blob(json_dump.encode('utf-8'), metadata={'id': id, 'depth': depth})
-
-    def read_external_blob(self, id: str, depth: int = 2) -> str:
-        assert self.blob_store is not None, "Blob store is not initialized"
-        return self.blob_store.retrieve_blob(id).decode('utf-8')
-
 class SQLBlobStore(ell.store.BlobStore):
     def __init__(self, db_dir: str):
         self.db_dir = db_dir
 
-    def store_blob(self, blob: bytes, metadata: Optional[Dict[str, Any]] = None) -> str:
-        blob_id = f"blob-{utc_now().isoformat()}"
+    def store_blob(self, blob: bytes, blob_id  : str) -> str:
         file_path = self._get_blob_path(blob_id)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with gzip.open(file_path, "wb") as f:
@@ -249,7 +240,7 @@ class SQLBlobStore(ell.store.BlobStore):
         increment = 2
         dirs = [_type] + [_id[i:i+increment] for i in range(0, depth*increment, increment)]
         file_name = _id[depth*increment:]
-        return os.path.join(self.db_dir, "blob", *dirs, file_name)
+        return os.path.join(self.db_dir, *dirs, file_name)
 
 class PostgresStore(SQLStore):
     def __init__(self, db_uri: str):

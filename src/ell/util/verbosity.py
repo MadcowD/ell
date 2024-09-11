@@ -71,7 +71,7 @@ def print_wrapped_messages(messages: List[Message], max_role_length: int, color:
 
     for i, message in enumerate(messages):
         role = message.role
-        text = message.content[0].text or "" # TODO: message repr
+        text = message.text or "" # TODO: message repr
         role_color = SYSTEM_COLOR if role == "system" else USER_COLOR if role == "user" else ASSISTANT_COLOR
         
         role_line = f"{prefix}{role_color}{role.rjust(max_role_length)}: {RESET}"

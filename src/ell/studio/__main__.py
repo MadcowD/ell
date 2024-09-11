@@ -28,11 +28,15 @@ def main():
     if not args.dev:
         # In production mode, serve the built React app
         static_dir = os.path.join(os.path.dirname(__file__), "static")
-        app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+        # app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
         @app.get("/{full_path:path}")
         async def serve_react_app(full_path: str):
-            return FileResponse(os.path.join(static_dir, "index.html"))
+            file_path = os.path.join(static_dir, full_path)
+            if os.path.exists(file_path) and os.path.isfile(file_path):
+                return FileResponse(file_path)
+            else:
+                return FileResponse(os.path.join(static_dir, "index.html"))
 
     db_path = os.path.join(args.storage_dir)
 
