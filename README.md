@@ -47,7 +47,10 @@ The process of prompt engineering involves many iterations, similar to the optim
 
 Prompt engineering goes from a dark art to a science with the right tools. **Ell Studio is a local, open source tool for prompt version control, monitoring, visualization**. With Ell Studio you can empiricize your prompt optimization process over time and catch regressions before it's too late.
 
-![ell demonstration](https://docs.ell.so/_static/ell_studio_better.webp)
+<picture>
+  <source srcset="https://docs.ell.so/_static/ell_studio_better.webp" type="image/webp">
+  <img src="docs/src/_static/ell_studio_better.webp" alt="ell studio demonstration">
+</picture>
 ```bash
 ell-studio --storage ./logdir 
 ```
