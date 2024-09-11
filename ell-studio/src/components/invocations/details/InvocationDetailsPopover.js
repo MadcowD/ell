@@ -106,7 +106,7 @@ const InvocationDetailsPopover = ({ invocation, onClose, onResize }) => {
                 <InvocationDataPane invocation={invocation} />
               </div>
             )}
-            {(activeTab === "Info" || isNarrowForInfo) && (
+            {(activeTab === "Info" || !isNarrowForInfo) && (
               <div className="h-full">
                 <InvocationInfoPane invocation={invocation} isFullWidth={true} />
               </div>

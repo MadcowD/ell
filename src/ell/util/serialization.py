@@ -13,10 +13,26 @@ from ell.types._lstr import _lstr
 
 pydantic_ltype_aware_cattr = cattrs.Converter()
 
+def serialize_image(img):
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+
+
 # Register hooks for complex types
 pydantic_ltype_aware_cattr.register_unstructure_hook(
     np.ndarray,
-    lambda arr: arr.tolist()
+    lambda arr: {
+        "content": serialize_image(PIL.Image.fromarray(arr)),
+        "__limage": True
+    } if arr.ndim == 3 else (
+        {
+            "content": base64.b64encode(arr.tobytes()).decode(),
+            "dtype": str(arr.dtype),
+            "shape": arr.shape,
+            "__lndarray": True
+        }
+    )
 )
 pydantic_ltype_aware_cattr.register_unstructure_hook(
     set,
@@ -27,11 +43,6 @@ pydantic_ltype_aware_cattr.register_unstructure_hook(
     lambda s: list(sorted(s))
 )
 
-
-def serialize_image(img):
-    buffer = BytesIO()
-    img.save(buffer, format="PNG")
-    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
 
 pydantic_ltype_aware_cattr.register_unstructure_hook(
     PIL.Image.Image,

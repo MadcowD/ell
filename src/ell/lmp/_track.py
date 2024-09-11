@@ -1,3 +1,4 @@
+import json
 import logging
 import threading
 from ell.types import SerializedLMP, Invocation, InvocationTrace, InvocationContents
@@ -213,10 +214,11 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
     if invocation_contents.should_externalize and config.store.has_blob_storage:
         invocation_contents.is_external = True
         
-        # Write to the blob store
+        # Write to the blob store 
         blob_id = config.store.blob_store.store_blob(
-            invocation_contents.model_dump_json().encode('utf-8'),
-            metadata={'invocation_id': invocation_id}
+            json.dumps(invocation_contents.model_dump(
+            ), default=str).encode('utf-8'),
+            invocation_id
         )
         invocation_contents = InvocationContents(
             invocation_id=invocation_id,

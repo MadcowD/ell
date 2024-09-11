@@ -17,6 +17,7 @@ def create_test(text: str):
     return "do it!" 
 
 
+ell.init(verbose=True, store='./logdir')
 import json
 if __name__ == "__main__":
     result = create_test("ads")
