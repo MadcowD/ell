@@ -9,12 +9,10 @@ from ell.util.api import  call
 from ell.util.verbosity import compute_color, model_usage_logger_pre
 
 
-import openai
-
 from functools import wraps
 from typing import Any, Dict, Optional, List, Callable, Union
 
-def complex(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=False, tools: Optional[List[Callable]] = None, post_callback: Optional[Callable] = None, **api_params):
+def complex(model: str, client: Optional[Any] = None, exempt_from_tracking=False, tools: Optional[List[Callable]] = None, post_callback: Optional[Callable] = None, **api_params):
     """
     A sophisticated language model programming decorator for complex LLM interactions.
 
@@ -228,7 +226,7 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
         def model_call(
             *fn_args,
             _invocation_origin : str = None,
-            client: Optional[openai.Client] = None,
+            client: Optional[Any] = None,
             lm_params: Optional[LMPParams] = {},
             invocation_api_params=False,
             **fn_kwargs,

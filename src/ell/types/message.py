@@ -48,7 +48,7 @@ class ContentBlock(BaseModel):
     image: Optional[Union[PILImage.Image, str, np.ndarray]] = Field(default=None)
     audio: Optional[Union[np.ndarray, List[float]]] = Field(default=None)
     tool_call: Optional[ToolCall] = Field(default=None)
-    parsed: Optional[Union[Type[BaseModel], BaseModel]] = Field(default=None)
+    parsed: Optional[BaseModel] = Field(default=None)
     tool_result: Optional[ToolResult] = Field(default=None)
 
     @model_validator(mode='after')
@@ -174,29 +174,6 @@ class ContentBlock(BaseModel):
         return serialize_image(image)
     
 
-    def to_openai_content_block(self):
-        if self.image:
-            base64_image = self.serialize_image(self.image, None)
-            return {
-                "type": "image_url",
-                "image_url": {
-                    "url": base64_image
-                }
-            }
-        elif self.text:
-            return {
-                "type": "text",
-                "text": self.text
-            }
-        elif self.parsed:
-            return {
-                "type": "text",
-                "json": self.parsed.model_dump_json()
-            }
-        else:
-            return None 
-        
-
 def coerce_content_list(content: Union[str, List[ContentBlock], List[Union[str, ContentBlock, ToolCall, ToolResult, BaseModel]]] = None, **content_block_kwargs) -> List[ContentBlock]:
     if not content:
         content = [ContentBlock(**content_block_kwargs)]
@@ -308,36 +285,6 @@ class Message(BaseModel):
         else:
             content = [c.tool_call.call_and_collect_as_message_block() for c in self.content if c.tool_call]
         return Message(role="user", content=content)
-
-    def to_openai_message(self) -> Dict[str, Any]:
-
-        message = {
-            "role": "tool" if self.tool_results else self.role,
-            "content": list(filter(None, [
-                c.to_openai_content_block() for c in self.content
-            ]))
-        }
-        if self.tool_calls:
-            message["tool_calls"] = [
-                {
-                    "id": tool_call.tool_call_id,
-                    "type": "function",
-                    "function": {
-                        "name": tool_call.tool.__name__,
-                        "arguments": json.dumps(tool_call.params.model_dump())
-                    }
-                } for tool_call in self.tool_calls
-            ]
-            message["content"] = None  # Set content to null when there are tool calls
-
-        if self.tool_results:
-            message["tool_call_id"] = self.tool_results[0].tool_call_id
-            # message["name"] = self.tool_results[0].tool_call_id.split('-')[0]  # Assuming the tool name is the first part of the tool_call_id
-            message["content"] = self.tool_results[0].result[0].text
-            # Let';s assert no other type of content block in the tool result
-            assert len(self.tool_results[0].result) == 1, "Tool result should only have one content block"
-            assert self.tool_results[0].result[0].type == "text", "Tool result should only have one text content block"
-        return message
 
 # HELPERS 
 def system(content: Union[str, List[ContentBlock]]) -> Message:

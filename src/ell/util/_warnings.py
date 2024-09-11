@@ -17,16 +17,16 @@ To fix this:
     import ell
     import openai
                                 
-    ell.lm(model, client=openai.Client(api_key=my_key))
+    ell.simple(model, client=openai.Client(api_key=my_key))
     def {name}(...):
         ...
     ```
 * Or explicitly specify the client when the calling the LMP:
 
     ```
-    ell.lm(model, client=openai.Client(api_key=my_key))(...)
+    ell.simple(model, client=openai.Client(api_key=my_key))(...)
     ```
-""" if long else " at time of definition. Can be okay if custom client specified later! <TODO: add link to docs> ") + f"{Style.RESET_ALL}"
+""" if long else " at time of definition. Can be okay if custom client specified later! https://docs.ell.so/core_concepts/models_and_api_clients.html ") + f"{Style.RESET_ALL}"
 
 
 def _warnings(model, fn, default_client_from_decorator):
@@ -40,14 +40,14 @@ def _warnings(model, fn, default_client_from_decorator):
 * If this is a mistake either specify a client explicitly in the decorator:
 ```python
 import ell
-ell.lm(model, client=my_client)
+ell.simple(model, client=my_client)
 def {fn.__name__}(...):
     ...
 ```
 or explicitly specify the client when the calling the LMP:
 
 ```python
-ell.lm(model, client=my_client)(...)
+ell.simple(model, client=my_client)(...)
 ```
 {Style.RESET_ALL}""")
             elif (client_to_use := config.registry[model]) is None or not client_to_use.api_key:
