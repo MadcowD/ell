@@ -100,7 +100,7 @@ for _ in range(1000):
 
 
 
-    action = (control_game(prev_renders=prev_render_buffer, current_state=observation)).parsed[0].action
+    action = (control_game(prev_renders=prev_render_buffer, current_state=observation)).parsed.action
 
 
     observation, reward, terminated, truncated, info = env.step(action)

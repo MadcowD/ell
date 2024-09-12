@@ -75,7 +75,7 @@ def generate_graph(input: List[str]) -> KnowledgeGraph:
     cur_state = KnowledgeGraph()  
     num_iterations = len(input)
     for i, inp in enumerate(input):
-        new_updates = update_knowledge_graph(cur_state, inp, i, num_iterations).parsed[0]
+        new_updates = update_knowledge_graph(cur_state, inp, i, num_iterations).parsed
         cur_state = cur_state.update(new_updates)  
         cur_state.draw(prefix=f"iteration_{i}")
     return cur_state
@@ -147,7 +147,7 @@ if __name__ == "__main__":
 #     num_iterations = len(input)
 #     for i, inp in enumerate(input):
 #         new_updates = update_knowledge_graph_with_chat_history(cur_state, inp, i, num_iterations, chat_history)
-#         cur_state = cur_state.update(new_updates.parsed[0])  
+#         cur_state = cur_state.update(new_updates.parsed)  
 #         chat_history.append(new_updates)
 #         cur_state.draw(prefix=f"iteration_{i}")
 #     return cur_state

@@ -31,7 +31,7 @@ The basic usage of ``@ell.complex`` is similar to ``@ell.simple``, but with enha
         return f"Generate a review for the movie {movie}"
 
     review_message = generate_movie_review("The Matrix")
-    review = review_message.parsed[0]
+    review = review_message.parsed
     print(f"Movie: {review.title}, Rating: {review.rating}/10")
     print(f"Summary: {review.summary}")
 
@@ -51,7 +51,7 @@ Key Features
         return f"Generate a review for the movie {movie}"
 
     review_message = generate_movie_review("Inception")
-    review = review_message.parsed[0]
+    review = review_message.parsed
     print(f"Rating: {review.rating}/10")
 
 2. Multimodal Interactions

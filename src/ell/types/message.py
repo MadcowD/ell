@@ -21,12 +21,14 @@ InvocableTool = Callable[..., Union["ToolResult", _lstr_generic, List["ContentBl
 
 class ToolResult(BaseModel):
     tool_call_id: _lstr_generic
+    #XXX: Add a validator to check that the result is a list of ContentBlocks.
     result: List["ContentBlock"]
 
 class ToolCall(BaseModel):
     tool : InvocableTool
     tool_call_id : Optional[_lstr_generic] = Field(default=None)
-    params : Union[Type[BaseModel], BaseModel]
+    params : BaseModel
+
     def __call__(self, **kwargs):
         assert not kwargs, "Unexpected arguments provided. Calling a tool uses the params provided in the ToolCall."
 
@@ -265,7 +267,7 @@ class Message(BaseModel):
         return [c.tool_result for c in self.content if c.tool_result is not None]
 
     @cached_property
-    def parsed(self) -> List[BaseModel]:
+    def parsed(self) -> Union[BaseModel, List[BaseModel]]:
         """Returns a list of all parsed content.
 
         Example:
@@ -276,7 +278,8 @@ class Message(BaseModel):
             >>> len(message.parsed)
             1
         """
-        return [c.parsed for c in self.content if c.parsed is not None]
+        parsed_content = [c.parsed for c in self.content if c.parsed is not None]
+        return parsed_content[0] if len(parsed_content) == 1 else parsed_content
     def call_tools_and_collect_as_message(self, parallel=False, max_workers=None):
         if parallel:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:

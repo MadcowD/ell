@@ -83,15 +83,14 @@ try:
                             message_metadata.pop("content", None)  # Remove content as we'll build it separately
 
                         elif chunk.type == "content_block_start":
-                            current_block = {"type": chunk.content_block.type, "content": ""}
+                            current_block = chunk.content_block.dict()
+                            current_block["content"] = ""
 
                         elif chunk.type == "content_block_delta":
                             if current_block is not None:
                                 if current_block["type"] == "text":
                                     current_block["content"] += chunk.delta.text
-                                elif current_block["type"] == "tool_use":
-                                    current_block.setdefault("input", "")
-                                    current_block["input"] += chunk.delta.partial_json
+        
 
                         elif chunk.type == "content_block_stop":
                             if current_block is not None:
@@ -99,13 +98,34 @@ try:
                                     content.append(ContentBlock(text=_lstr(current_block["content"], _origin_trace=_invocation_origin)))
                                 elif current_block["type"] == "tool_use":
                                     try:
-                                        tool_input = json.loads(current_block["input"])
-                                        tool_call = ToolCall(
-                                            tool=next((t for t in tools if t.__name__ == current_block["name"]) if tools else None),
-                                            tool_call_id=current_block.get("id"),
-                                            params=tool_input
+                                        final_cb = chunk.content_block
+                                        matching_tool = next(
+                                            (
+                                                tool
+                                                for tool in tools
+                                                if tool.__name__ == final_cb.name
+                                            ),
+                                            None,
                                         )
-                                        content.append(ContentBlock(tool_call=tool_call))
+                                        if matching_tool:
+                                            params = matching_tool.__ell_params_model__(
+                                                **final_cb.input
+                                            )
+                                            content.append(
+                                                ContentBlock(
+                                                    tool_call=ToolCall(
+                                                        tool=matching_tool,
+                                                        tool_call_id=_lstr(
+                                                            final_cb.id, _origin_trace=_invocation_origin
+                                                        ),
+                                                        params=params,
+                                                    )
+                                                )
+                                            )
+                                        if logger:
+                                            logger(f" <tool_use: {current_block['name']}(")
+                                            logger(f"{final_cb.input}")
+                                            logger(f")>")
                                     except json.JSONDecodeError:
                                         # Handle partial JSON if necessary
                                         pass
@@ -119,9 +139,12 @@ try:
                         elif chunk.type == "message_stop":
                             tracked_results.append(Message(role="assistant", content=content))
 
-                        if logger and current_block and current_block["type"] == "text":
-                            if chunk.type == "text":
+                        if logger and current_block:
+                            if chunk.type == "text" and current_block["type"] == "text":
                                 logger(chunk.text)
+                        # print(chunk)
+
+                                
                 metadata = message_metadata
             else:
                 # Non-streaming response processing (unchanged)
@@ -132,7 +155,7 @@ try:
                     elif content_block.type == "tool_use":
                         assert tools is not None, "Tools were not provided to the model when calling it and yet anthropic returned a tool use."
                         tool_call = ToolCall(
-                            tool=next((t for t in tools if t.__name__ == content_block.name), None),
+                            tool=next((t for t in tools if t.__name__ == content_block.name), None) ,
                             tool_call_id=content_block.id,
                             params=content_block.input
                         )
@@ -195,8 +218,23 @@ def content_block_to_anthropic_format(content_block: ContentBlock) -> Dict[str, 
             "type": "text",
             "text": json.dumps(content_block.parsed.model_dump())
         }
+    elif content_block.tool_call:
+        
+        return {
+            "type": "tool_use",
+            "id": content_block.tool_call.tool_call_id,
+            "name": content_block.tool_call.tool.__name__,
+            "input": content_block.tool_call.params.model_dump()
+        }
+    elif content_block.tool_result:
+        return {
+            "type": "tool_result",
+            "tool_use_id": content_block.tool_result.tool_call_id,
+            "content": [content_block_to_anthropic_format(c) for c in content_block.tool_result.result]
+        }
     else:
-        return None
+        raise ValueError("Content block is not supported by anthropic")
+
 
 
 def message_to_anthropic_format(message: Message) -> Dict[str, Any]:

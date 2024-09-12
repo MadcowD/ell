@@ -1,4 +1,4 @@
-import ell
+import ell  # type: ignore
 
 @ell.simple(model="claude-3-5-sonnet-20240620", max_tokens=12)
 def hello_from_claude():
@@ -10,4 +10,3 @@ if __name__ == "__main__":
     ell.init(verbose=True, store="./logdir", autocommit=True)
     hello_from_claude()
 
-    

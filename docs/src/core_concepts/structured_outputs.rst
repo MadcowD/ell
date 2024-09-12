@@ -29,7 +29,7 @@ Once we have defined and generated structured outputs, we can easily access and 
 
    # Generate a movie review
    message = generate_movie_review("The Matrix")
-   review = message.parsed[0]
+   review = message.parsed
 
    # Access individual fields
    print(f"Movie Title: {review.title}")
