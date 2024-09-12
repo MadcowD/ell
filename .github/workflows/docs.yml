@@ -39,7 +39,7 @@ jobs:
         run: |
           cd docs
           rm -rf _build  # Remove existing build directory
-          poetry run python -c "import ell; version = ell.__version__; print(version); with open('src/_static/ell_version.txt', 'w') as f: f.write(version)"
+          poetry run python -c "import ell; version = ell.__version__; print(version); open('src/_static/ell_version.txt', 'w').write(version)"
           poetry run make html  # Use poetry run to ensure the correct environment is used
 
         # env:
