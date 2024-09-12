@@ -25,7 +25,13 @@ OpenAI API Key
 ~~~~~~~~~~~~~~
 
 1. Get API key from https://platform.openai.com/account/api-keys
-2. Set environment variable:
+2. Install the OpenAI Python package:
+
+   .. code-block:: bash
+
+      pip install openai
+
+3. Set environment variable:
 
    - Windows:
 
@@ -44,7 +50,13 @@ Anthropic API Key
 ~~~~~~~~~~~~~~~~~
 
 1. Get API key from https://www.anthropic.com/
-2. Set environment variable:
+2. Install the Anthropic Python package:
+
+   .. code-block:: bash
+
+      pip install anthropic
+
+3. Set environment variable:
 
    - Windows:
 
