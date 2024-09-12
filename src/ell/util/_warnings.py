@@ -1,3 +1,4 @@
+from typing import Any, Optional
 from colorama import Fore, Style
 
 from ell.configurator import config
@@ -5,12 +6,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def _no_api_key_warning(model, name, client_to_use, long=False, error=False):
+def _no_api_key_warning(model, name, client_to_use : Optional[Any], long=False, error=False):
     color = Fore.RED if error else Fore.LIGHTYELLOW_EX
     prefix = "ERROR" if error else "WARNING"
-    client_to_use_name = client_to_use.__class__.__name__
-    client_to_use_module = client_to_use.__class__.__module__
-    return f"""{color}{prefix}: No API key found for model `{model}` used by LMP `{name}` using client `{client_to_use}`""" + (f""".
+    # openai default
+    client_to_use_name = client_to_use.__class__.__name__ if (client_to_use) else "OpenAI"
+    client_to_use_module = client_to_use.__class__.__module__ if (client_to_use) else "openai"
+    return f"""{color}{prefix}: No API key found for model `{model}` used by LMP `{name}` using client `{client_to_use_name}`""" + (f""".
 
 To fix this:
 * Set your API key in the appropriate environment variable for your chosen provider
@@ -53,7 +55,7 @@ ell.simple(model, client=my_client)(...)
 ```
 {Style.RESET_ALL}""")
             elif (client_to_use := config.registry[model]) is None or not client_to_use.api_key:
-                logger.warning(_no_api_key_warning(model, fn.__name__, client_to_use or '', long=False))
+                logger.warning(_no_api_key_warning(model, fn.__name__, client_to_use, long=False))
 
 
 def _autocommit_warning():
