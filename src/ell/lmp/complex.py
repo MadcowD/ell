@@ -266,9 +266,10 @@ def _get_messages(prompt_ret: Union[str, list[MessageOrDict]], prompt: LMP) -> l
     Helper function to convert the output of an LMP into a list of Messages.
     """
     if isinstance(prompt_ret, str):
-        return [
-            Message(role="system", content=[ContentBlock(text=_lstr(prompt.__doc__) or config.default_system_prompt)]),
-            Message(role="user", content=[ContentBlock(text=prompt_ret)]),
+        has_system_prompt = prompt.__doc__ is not None and prompt.__doc__.strip() != ""
+        messages =     [Message(role="system", content=[ContentBlock(text=_lstr(prompt.__doc__) )])] if has_system_prompt else []
+        return messages + [
+            Message(role="user", content=[ContentBlock(text=prompt_ret)])
         ]
     else:
         assert isinstance(

@@ -19,7 +19,6 @@ class Config(BaseModel):
     autocommit: bool = Field(default=False, description="If True, enables automatic committing of changes to the store.")
     lazy_versioning: bool = Field(default=True, description="If True, enables lazy versioning for improved performance.")
     default_lm_params: Dict[str, Any] = Field(default_factory=dict, description="Default parameters for language models.")
-    default_system_prompt: str = Field(default="You are a helpful AI assistant.", description="The default system prompt used for AI interactions.")
     default_client: Optional[openai.Client] = Field(default=None, description="The default OpenAI client used when a specific model client is not found.")
     providers: Dict[Type, Type[Provider]] = Field(default_factory=dict, description="A dictionary mapping client types to provider classes.")
 
@@ -138,14 +137,7 @@ class Config(BaseModel):
         """
         self.default_lm_params = params
     
-    def set_default_system_prompt(self, prompt: str) -> None:
-        """
-        Set the default system prompt.
 
-        :param prompt: The default system prompt to set.
-        :type prompt: str
-        """
-        self.default_system_prompt = prompt
 
     def set_default_client(self, client: openai.Client) -> None:
         """
@@ -186,7 +178,6 @@ def init(
     autocommit: bool = True,
     lazy_versioning: bool = True,
     default_lm_params: Optional[Dict[str, Any]] = None,
-    default_system_prompt: Optional[str] = None,
     default_openai_client: Optional[openai.Client] = None
 ) -> None:
     """
@@ -202,8 +193,6 @@ def init(
     :type lazy_versioning: bool
     :param default_lm_params: Set default parameters for language models.
     :type default_lm_params: Dict[str, Any], optional
-    :param default_system_prompt: Set the default system prompt.
-    :type default_system_prompt: str, optional
     :param default_openai_client: Set the default OpenAI client.
     :type default_openai_client: openai.Client, optional
     """
@@ -216,8 +205,7 @@ def init(
     if default_lm_params is not None:
         config.set_default_lm_params(**default_lm_params)
 
-    if default_system_prompt is not None:
-        config.set_default_system_prompt(default_system_prompt)
+
 
     if default_openai_client is not None:
         config.set_default_client(default_openai_client)
@@ -234,10 +222,6 @@ def set_store(*args, **kwargs) -> None:
 @wraps(config.set_default_lm_params)
 def set_default_lm_params(*args, **kwargs) -> None:
     return config.set_default_lm_params(*args, **kwargs)
-
-@wraps(config.set_default_system_prompt)
-def set_default_system_prompt(*args, **kwargs) -> None:
-    return config.set_default_system_prompt(*args, **kwargs)
 
 # You can add more helper functions here if needed
 @wraps(config.register_provider)

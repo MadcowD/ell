@@ -87,7 +87,16 @@ try:
             final_call_params["model"] = model
             final_call_params["messages"] = openai_messages
 
-            if final_call_params.get("response_format"):
+            if model == "o1-preview" or model == "o1-mini":
+                # Ensure no system messages are present
+                assert all(msg['role'] != 'system' for msg in final_call_params['messages']), "System messages are not allowed for o1-preview or o1-mini models"
+                
+                response = client.chat.completions.create(**final_call_params)
+                final_call_params.pop("stream", None)
+                final_call_params.pop("stream_options", None)
+
+
+            elif final_call_params.get("response_format"):
                 final_call_params.pop("stream", None)
                 final_call_params.pop("stream_options", None)
                 response = client.beta.chat.completions.parse(**final_call_params)
