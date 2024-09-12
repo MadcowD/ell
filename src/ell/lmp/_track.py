@@ -172,6 +172,7 @@ def _serialize_lmp(func):
     already_in_store = any(lmp.lmp_id == func.__ell_hash__ for lmp in lmps)
     
     if not already_in_store:
+        commit = None
         if lmps:
             latest_lmp = max(lmps, key=lambda x: x.created_at)
             version = latest_lmp.version_number + 1
@@ -180,8 +181,6 @@ def _serialize_lmp(func):
                 commit = str(write_commit_message_for_diff(
                     f"{latest_lmp.dependencies}\n\n{latest_lmp.source}", 
                     f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
-        else:
-            commit = None
 
         serialized_lmp = SerializedLMP(
             lmp_id=func.__ell_hash__,
