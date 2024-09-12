@@ -253,7 +253,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <p>Once we have defined and generated structured outputs, we can easily access and manipulate the data within them. Let’s continue with our movie review example to demonstrate how to work with structured outputs:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="c1"># Generate a movie review</span>
 </span><span id="line-2"><span class="n">message</span> <span class="o">=</span> <span class="n">generate_movie_review</span><span class="p">(</span><span class="s2">"The Matrix"</span><span class="p">)</span>
-</span><span id="line-3"><span class="n">review</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-3"><span class="n">review</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">parsed</span>
 </span><span id="line-4">
 </span><span id="line-5"><span class="c1"># Access individual fields</span>
 </span><span id="line-6"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Movie Title: </span><span class="si">{</span><span class="n">review</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>

@@ -284,6 +284,11 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <dd><p>If set, overrides the default width for wrapped logging.</p>
 </dd></dl>
 <dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Config.providers">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">providers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Type</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">Provider</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Optional]</span></em><a class="headerlink" href="#ell.Config.providers" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.providers'">¶</a></dt>
+<dd><p>A dictionary mapping client types to provider classes.</p>
+</dd></dl>
+<dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="ell.Config.verbose">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">verbose</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#ell.Config.verbose" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.verbose'">¶</a></dt>
 <dd><p>If True, enables verbose logging.</p>
@@ -295,7 +300,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="ell.Config.get_client_for">
-<span class="sig-name descname"><span class="pre">get_client_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">OpenAI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#ell.Config.get_client_for" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.get_client_for'">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_client_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ell.Config.get_client_for" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.get_client_for'">¶</a></dt>
 <dd><p>Get the OpenAI client for a specific model name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -306,6 +311,22 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[openai.Client]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ell.Config.get_provider_for">
+<span class="sig-name descname"><span class="pre">get_provider_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">Provider</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#ell.Config.get_provider_for" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.get_provider_for'">¶</a></dt>
+<dd><p>Get the provider class for a specific client instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client</strong> (<em>Any</em>) – The client instance to get the provider for.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The provider class for the specified client, or None if not found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Type[AbstractProvider]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -324,7 +345,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="ell.Config.model_registry_override">
-<span class="sig-name descname"><span class="pre">model_registry_override</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">overrides</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">OpenAI</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.Config.model_registry_override" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.model_registry_override'">¶</a></dt>
+<span class="sig-name descname"><span class="pre">model_registry_override</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">overrides</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.Config.model_registry_override" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.model_registry_override'">¶</a></dt>
 <dd><p>Temporarily override the model registry with new client mappings.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -334,7 +355,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="ell.Config.register_model">
-<span class="sig-name descname"><span class="pre">register_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OpenAI</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ell.Config.register_model" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.register_model'">¶</a></dt>
+<span class="sig-name descname"><span class="pre">register_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ell.Config.register_model" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.register_model'">¶</a></dt>
 <dd><p>Register an OpenAI client for a specific model name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -342,6 +363,16 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <li><p><strong>model_name</strong> (<em>str</em>) – The name of the model to register.</p></li>
 <li><p><strong>client</strong> (<em>openai.Client</em>) – The OpenAI client to associate with the model.</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ell.Config.register_provider">
+<span class="sig-name descname"><span class="pre">register_provider</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider_class</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">Provider</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ell.Config.register_provider" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.register_provider'">¶</a></dt>
+<dd><p>Register a provider class for a specific client type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>provider_class</strong> (<em>Type</em><em>[</em><em>AbstractProvider</em><em>]</em>) – The provider class to register.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -422,12 +453,15 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <li><a :data-current="activeSection === '#ell.Config.default_system_prompt'" class="reference internal" href="#ell.Config.default_system_prompt"><code class="docutils literal notranslate"><span class="pre">Config.default_system_prompt</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.Config.lazy_versioning'" class="reference internal" href="#ell.Config.lazy_versioning"><code class="docutils literal notranslate"><span class="pre">Config.lazy_versioning</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.Config.override_wrapped_logging_width'" class="reference internal" href="#ell.Config.override_wrapped_logging_width"><code class="docutils literal notranslate"><span class="pre">Config.override_wrapped_logging_width</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.providers'" class="reference internal" href="#ell.Config.providers"><code class="docutils literal notranslate"><span class="pre">Config.providers</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.Config.verbose'" class="reference internal" href="#ell.Config.verbose"><code class="docutils literal notranslate"><span class="pre">Config.verbose</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.Config.wrapped_logging'" class="reference internal" href="#ell.Config.wrapped_logging"><code class="docutils literal notranslate"><span class="pre">Config.wrapped_logging</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.Config.get_client_for'" class="reference internal" href="#ell.Config.get_client_for"><code class="docutils literal notranslate"><span class="pre">Config.get_client_for()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.get_provider_for'" class="reference internal" href="#ell.Config.get_provider_for"><code class="docutils literal notranslate"><span class="pre">Config.get_provider_for()</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.Config.get_store'" class="reference internal" href="#ell.Config.get_store"><code class="docutils literal notranslate"><span class="pre">Config.get_store()</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.Config.model_registry_override'" class="reference internal" href="#ell.Config.model_registry_override"><code class="docutils literal notranslate"><span class="pre">Config.model_registry_override()</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.Config.register_model'" class="reference internal" href="#ell.Config.register_model"><code class="docutils literal notranslate"><span class="pre">Config.register_model()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.register_provider'" class="reference internal" href="#ell.Config.register_provider"><code class="docutils literal notranslate"><span class="pre">Config.register_provider()</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.Config.reset'" class="reference internal" href="#ell.Config.reset"><code class="docutils literal notranslate"><span class="pre">Config.reset()</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.Config.set_default_client'" class="reference internal" href="#ell.Config.set_default_client"><code class="docutils literal notranslate"><span class="pre">Config.set_default_client()</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.Config.set_default_lm_params'" class="reference internal" href="#ell.Config.set_default_lm_params"><code class="docutils literal notranslate"><span class="pre">Config.set_default_lm_params()</span></code></a></li>
