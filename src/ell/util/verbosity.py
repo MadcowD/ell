@@ -43,7 +43,7 @@ def check_version_and_log():
                 import ell
 
                 try:
-                    response = requests.get("https://docs.ell.so/_static/ell_version.txt", timeout=0.5)
+                    response = requests.get("https://docs.ell.so/_static/ell_version.txt", timeout=0.1)
                     if response.status_code == 200:
                         latest_version = response.text.strip()
                         if latest_version != ell.__version__:

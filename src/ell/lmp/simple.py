@@ -1,11 +1,10 @@
 from functools import wraps
-from typing import Optional
+from typing import Any, Optional
 
-import openai
 from ell.lmp.complex import complex
 
 
-def simple(model: str, client: Optional[openai.Client] = None,  exempt_from_tracking=False, **api_params):
+def simple(model: str, client: Optional[Any] = None,  exempt_from_tracking=False, **api_params):
     """
     The fundamental unit of language model programming in ell.
 

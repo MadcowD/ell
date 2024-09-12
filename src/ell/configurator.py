@@ -1,11 +1,12 @@
 from functools import wraps
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional, Tuple, Union, Type
 import openai
 import logging
 from contextlib import contextmanager
 import threading
 from pydantic import BaseModel, ConfigDict, Field
 from ell.store import Store
+from ell.provider import Provider
 
 _config_logger = logging.getLogger(__name__)
 class Config(BaseModel):
@@ -20,13 +21,14 @@ class Config(BaseModel):
     default_lm_params: Dict[str, Any] = Field(default_factory=dict, description="Default parameters for language models.")
     default_system_prompt: str = Field(default="You are a helpful AI assistant.", description="The default system prompt used for AI interactions.")
     default_client: Optional[openai.Client] = Field(default=None, description="The default OpenAI client used when a specific model client is not found.")
+    providers: Dict[Type, Type[Provider]] = Field(default_factory=dict, description="A dictionary mapping client types to provider classes.")
 
     def __init__(self, **data):
         super().__init__(**data)
         self._lock = threading.Lock()
         self._local = threading.local()
 
-    def register_model(self, model_name: str, client: openai.Client) -> None:
+    def register_model(self, model_name: str, client: Any) -> None:
         """
         Register an OpenAI client for a specific model name.
 
@@ -49,7 +51,7 @@ class Config(BaseModel):
         return self.store is not None
 
     @contextmanager
-    def model_registry_override(self, overrides: Dict[str, openai.Client]):
+    def model_registry_override(self, overrides: Dict[str, Any]):
         """
         Temporarily override the model registry with new client mappings.
 
@@ -70,7 +72,7 @@ class Config(BaseModel):
         finally:
             self._local.stack.pop()
 
-    def get_client_for(self, model_name: str) -> Optional[openai.Client]:
+    def get_client_for(self, model_name: str) -> Tuple[Optional[Any], bool]:
         """
         Get the OpenAI client for a specific model name.
 
@@ -154,6 +156,26 @@ class Config(BaseModel):
         """
         self.default_client = client
 
+    def register_provider(self, provider_class: Type[Provider]) -> None:
+        """
+        Register a provider class for a specific client type.
+
+        :param provider_class: The provider class to register.
+        :type provider_class: Type[AbstractProvider]
+        """
+        with self._lock:
+            self.providers[provider_class.get_client_type()] = provider_class
+
+    def get_provider_for(self, client: Any) -> Optional[Type[Provider]]:
+        """
+        Get the provider class for a specific client instance.
+
+        :param client: The client instance to get the provider for.
+        :type client: Any
+        :return: The provider class for the specified client, or None if not found.
+        :rtype: Optional[Type[AbstractProvider]]
+        """
+        return next((provider for client_type, provider in self.providers.items() if isinstance(client, client_type)), None)
 
 # Singleton instance
 config = Config()
@@ -218,3 +240,6 @@ def set_default_system_prompt(*args, **kwargs) -> None:
     return config.set_default_system_prompt(*args, **kwargs)
 
 # You can add more helper functions here if needed
+@wraps(config.register_provider)
+def register_provider(*args, **kwargs) -> None:
+    return config.register_provider(*args, **kwargs)
