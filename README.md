@@ -51,6 +51,7 @@ Prompt engineering goes from a dark art to a science with the right tools. **Ell
   <source srcset="https://docs.ell.so/_static/ell_studio_better.webp" type="image/webp">
   <img src="docs/src/_static/ell_studio_better.webp" alt="ell studio demonstration">
 </picture>
+
 ```bash
 ell-studio --storage ./logdir 
 ```
