@@ -48,6 +48,7 @@ class ContentBlock(BaseModel):
     
     text: Optional[_lstr_generic] = Field(default=None)
     image: Optional[Union[PILImage.Image, str, np.ndarray]] = Field(default=None)
+    image_detail: Optional[str] = Field(default=None)
     audio: Optional[Union[np.ndarray, List[float]]] = Field(default=None)
     tool_call: Optional[ToolCall] = Field(default=None)
     parsed: Optional[BaseModel] = Field(default=None)
@@ -56,8 +57,9 @@ class ContentBlock(BaseModel):
     @model_validator(mode='after')
     def check_single_non_null(self):
         non_null_fields = [field for field, value in self.__dict__.items() if value is not None]
-        if len(non_null_fields) > 1:
-            raise ValueError(f"Only one field can be non-null. Found: {', '.join(non_null_fields)}")
+        # need to allow for image_detail to be set with an image
+        if len(non_null_fields) > 1 and set(non_null_fields) != {'image', 'image_detail'}:
+            raise ValueError(f"Only one field can be non-null (except for image with image_detail). Found: {', '.join(non_null_fields)}")
         return self
 
     @property
