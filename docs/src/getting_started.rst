@@ -98,7 +98,7 @@ While the previous example used the docstring for the system message and the ret
     greeting = hello("Sam Altman")
     print(greeting)
 
-This approach allows you to construct more complex conversations within your LMP. Importantly, you'll want to use this approach when you have a variable system prompt because python only allows you to have a static system prompt.
+This approach allows you to construct more complex conversations within your LMP. Importantly, you'll want to use this approach when you have a variable system prompt because python only allows you to have a static docstring.
 
 Prompting as Language Model Programming
 ----------------------------------------
