@@ -294,6 +294,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <dd class="field-odd"><ul class="simple">
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">audio</span> <span class="pre">(numpy.ndarray</span> <span class="pre">|</span> <span class="pre">List[float]</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">image</span> <span class="pre">(PIL.Image.Image</span> <span class="pre">|</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">numpy.ndarray</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">image_detail</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parsed</span> <span class="pre">(pydantic.main.BaseModel</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">text</span> <span class="pre">(ell.types._lstr._lstr</span> <span class="pre">|</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tool_call</span> <span class="pre">(ell.types.message.ToolCall</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
@@ -301,6 +302,17 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </ul>
 </dd>
 </dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.ContentBlock.image_detail">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">image_detail</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#ell.ContentBlock.image_detail" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.image_detail'">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_single_non_null</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 </dd></dl>
 <section id="solving-the-construction-problem">
 <h3>Solving the construction problem<a class="headerlink" href="#solving-the-construction-problem" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#solving-the-construction-problem'">¶</a></h3>
@@ -542,7 +554,10 @@ Message: A Message object with role set to ‘assistant’ and the provided cont
 <li><a :data-current="activeSection === '#challenges-with-llm-apis'" class="reference internal" href="#challenges-with-llm-apis">Challenges with LLM APIs</a></li>
 <li><a :data-current="activeSection === '#the-ell-message-api'" class="reference internal" href="#the-ell-message-api">The ell Message API</a><ul>
 <li><a :data-current="activeSection === '#ell.Message'" class="reference internal" href="#ell.Message"><code class="docutils literal notranslate"><span class="pre">Message</span></code></a></li>
-<li><a :data-current="activeSection === '#ell.ContentBlock'" class="reference internal" href="#ell.ContentBlock"><code class="docutils literal notranslate"><span class="pre">ContentBlock</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.ContentBlock'" class="reference internal" href="#ell.ContentBlock"><code class="docutils literal notranslate"><span class="pre">ContentBlock</span></code></a><ul>
+<li><a :data-current="activeSection === '#ell.ContentBlock.image_detail'" class="reference internal" href="#ell.ContentBlock.image_detail"><code class="docutils literal notranslate"><span class="pre">ContentBlock.image_detail</span></code></a></li>
+</ul>
+</li>
 <li><a :data-current="activeSection === '#solving-the-construction-problem'" class="reference internal" href="#solving-the-construction-problem">Solving the construction problem</a><ul>
 <li><a :data-current="activeSection === '#common-roles'" class="reference internal" href="#common-roles">Common roles</a><ul>
 <li><a :data-current="activeSection === '#ell.system'" class="reference internal" href="#ell.system"><code class="docutils literal notranslate"><span class="pre">system()</span></code></a></li>
