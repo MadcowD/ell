@@ -1,16 +1,15 @@
 {
-    "name": "ell",
-    "version": "0.0.1",
-    "main": "dist/index.js",
-    "scripts": {
-        "build": "tsc"
-    },
-    "dependencies": {
-        "source-map": "^0.7.4"
-    },
-    "devDependencies": {
-        "@types/node": "^22.5.4",
-        "ts-node": "^10.9.2",
-        "typescript": "^5.6.2"
-    }
+  "name": "ell",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "typescript": "^5.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.4",
+    "ts-node": "^10.9.2"
+  }
 }
