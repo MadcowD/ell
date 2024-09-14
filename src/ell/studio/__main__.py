@@ -78,7 +78,7 @@ def main():
     # Start the database watcher
     loop = asyncio.new_event_loop()
 
-    config = uvicorn.Config(app=app, port=args.port, loop=loop)
+    config = uvicorn.Config(app=app, host=args.host, port=args.port, loop=loop)
     server = uvicorn.Server(config)
     loop.create_task(server.serve())
     loop.create_task(db_watcher(db_path, app))
