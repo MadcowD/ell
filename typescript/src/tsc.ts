@@ -53,7 +53,7 @@ export interface EllTSC {
 }
 
 type LMPType = "simple" | "complex";
-type LMP = {
+export type LMP = {
   lmpType: LMPType;
   lmpName: string;
   config: string;
@@ -128,25 +128,17 @@ export class EllTSC implements EllTSC {
     column: number
   ): Promise<LMP | null> {
     let lmp: LMP | null = null;
-    if (this.lmpCache.has(filePath)) {
-      const lmps = this.lmpCache.get(filePath) as LMP[];
-      // for now, match on line only
-      // @ts-ignore
-      lmp = lmps.find((lmp) => lmp.line === line);
-      if (!lmp && lmps.length > 0) {
-        // fall back to using our line start and endings
-
-      }
-    }
+    const lmps = await this.getLMPsInFile(filePath);
+    lmp = lmps.find((lmp) => lmp.line === line) || null;
     if (!lmp) {
-      const lmps = await this.getLMPsInFile(filePath);
-      lmp = lmps.find((lmp) => lmp.line === line) || null;
-    }
-    if (!lmp) {
-      console.error(`LMP not found for ${filePath}:${line}:${column}`);
-      const lmpsInFile = this.lmpCache.get(filePath);
-      if (lmpsInFile && lmpsInFile.length > 0) {
-        console.log("LMPs in file", lmpsInFile);
+      const maybe = lmps.find((lmp) => {
+        const { line: startLine, endLine } = lmp;
+        return line >= startLine && line <= endLine ;
+      });
+      if (maybe) {
+        lmp = maybe;
+      } else {
+        console.error(`LMP not found for ${filePath}:${line}:${column}`);
       }
     }
     return lmp;

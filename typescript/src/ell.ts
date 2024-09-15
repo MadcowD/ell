@@ -2,9 +2,14 @@ import * as sourceMapSupport from "source-map-support";
 sourceMapSupport.install();
 
 import { callsites } from "./callsites";
-import { EllTSC } from "./tsc";
+import { EllTSC, LMP } from "./tsc";
+import { generateFunctionHash } from "./hash";
 
-type Kwargs = { name: string; model: string; [key: string]: any };
+type Kwargs = { 
+  // name?: string; 
+  model: string; 
+  [key: string]: any 
+};
 type F = (...args: any[]) => Promise<any>;
 
 type StackEntry = {
@@ -23,13 +28,13 @@ type Invocation = {
   input: any;
   output: any;
 };
-type LMP = {
-  name: string | null;
-  filepath: string | null;
-  line: number | null;
-  column: number | null;
-  sourceCode: string | null;
-};
+// type LMP = {
+//   name: string | null;
+//   filepath: string | null;
+//   line: number | null;
+//   column: number | null;
+//   sourceCode: string | null;
+// };
 
 let tsc = new EllTSC();
 export let invocations: Invocation[] = [];
@@ -81,31 +86,32 @@ function getCallerFileLocation() {
   let line = callerSite.getLineNumber();
   let column = callerSite.getColumnNumber();
   if (file && line && column) {
-      const mappedPosition = sourceMapSupport.mapSourcePosition({
-        source: file,
-        line: line,
-        column: column,
-      });
-      file = mappedPosition.source;
-      line = mappedPosition.line;
-      column = mappedPosition.column;
+    const mappedPosition = sourceMapSupport.mapSourcePosition({
+      source: file,
+      line: line,
+      column: column,
+    });
+    file = mappedPosition.source;
+    line = mappedPosition.line;
+    column = mappedPosition.column;
   }
   return { filepath: file, line, column };
 }
 
 const serializeLMP = async (args: {
+  lmpId: string;
   name: string;
   filepath: string | null;
   line: number | null;
   column: number | null;
 }) => {
-  const sourceCode = "";
   return await writeLMP({
+    lmpId: args.lmpId,
     name: args.name,
     filepath: args.filepath,
     line: args.line,
     column: args.column,
-    sourceCode: sourceCode,
+    // sourceCode: sourceCode,
   });
 };
 
@@ -126,7 +132,7 @@ const getLMPName = async (args: {
 export const simple = (a: Kwargs, f: F) => {
   const { filepath, line, column } = getCallerFileLocation();
 
-  console.log("line", { filepath, line, column });
+  // console.log("line", { filepath, line, column });
 
   if (!filepath || !line || !column) {
     console.error(
@@ -134,20 +140,32 @@ export const simple = (a: Kwargs, f: F) => {
     );
     return f;
   }
+  let lmp: LMP | null = null;
 
   const wrapper = async (...args: any[]) => {
-    const lmp = await tsc.getLMP(filepath!, line!, column!);
+    lmp = await tsc.getLMP(filepath!, line!, column!);
     if (!lmp) {
       console.error(
         `No LMP found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`
       );
       return f;
     }
-    console.log("lmp at runtime", lmp);
+
+    const lmpId = generateFunctionHash(lmp.source, "", lmp.lmpName);
+    lmp.lmpId = lmpId;
+    // console.log("lmp at runtime", lmp);
+
     const name = lmp.lmpName;
     enter({ name, filepath, line, column });
     // const lmp = await getLMP(filename,name)
-    await serializeLMP({ name, filepath, line, column });
+    await serializeLMP({
+      lmpId,
+      name,
+      filepath,
+      line,
+      column,
+      ...lmp,
+    });
     const result = await f(...args);
     await writeInvocation({
       lmpType: "simple",
@@ -159,6 +177,15 @@ export const simple = (a: Kwargs, f: F) => {
     exit();
     return result;
   };
+
+  wrapper.__ell_type__ = "simple";
+  Object.defineProperty(wrapper, "__ell_lmp_id__", {
+    get: () => lmp?.lmpId,
+  });
+  Object.defineProperty(wrapper, "__ell_lmp_name__", {
+    get: () => lmp?.lmpName,
+  });
+
   return wrapper;
 };
 
