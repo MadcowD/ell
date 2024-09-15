@@ -9,12 +9,10 @@ from ell.util.api import  call
 from ell.util.verbosity import compute_color, model_usage_logger_pre
 
 
-import openai
-
 from functools import wraps
 from typing import Any, Dict, Optional, List, Callable, Union
 
-def complex(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=False, tools: Optional[List[Callable]] = None, post_callback: Optional[Callable] = None, **api_params):
+def complex(model: str, client: Optional[Any] = None, exempt_from_tracking=False, tools: Optional[List[Callable]] = None, post_callback: Optional[Callable] = None, **api_params):
     """
     A sophisticated language model programming decorator for complex LLM interactions.
 
@@ -228,7 +226,7 @@ def complex(model: str, client: Optional[openai.Client] = None, exempt_from_trac
         def model_call(
             *fn_args,
             _invocation_origin : str = None,
-            client: Optional[openai.Client] = None,
+            client: Optional[Any] = None,
             lm_params: Optional[LMPParams] = {},
             invocation_api_params=False,
             **fn_kwargs,
@@ -268,9 +266,10 @@ def _get_messages(prompt_ret: Union[str, list[MessageOrDict]], prompt: LMP) -> l
     Helper function to convert the output of an LMP into a list of Messages.
     """
     if isinstance(prompt_ret, str):
-        return [
-            Message(role="system", content=[ContentBlock(text=_lstr(prompt.__doc__) or config.default_system_prompt)]),
-            Message(role="user", content=[ContentBlock(text=prompt_ret)]),
+        has_system_prompt = prompt.__doc__ is not None and prompt.__doc__.strip() != ""
+        messages =     [Message(role="system", content=[ContentBlock(text=_lstr(prompt.__doc__) )])] if has_system_prompt else []
+        return messages + [
+            Message(role="user", content=[ContentBlock(text=prompt_ret)])
         ]
     else:
         assert isinstance(

@@ -8,8 +8,9 @@ from ell.types import Message
 from ell.configurator import config
 import logging
 from functools import lru_cache
-
+import threading
 from ell.types.message import LMP
+import requests
 
 # Initialize colorama
 init(autoreset=True)
@@ -27,6 +28,36 @@ PIPE_COLOR = Fore.BLUE
 # Set up logging
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+has_logged_version_statement = False
+
+_version_check_lock = threading.Lock()
+_has_logged_version_statement = False
+
+def check_version_and_log():
+    global _has_logged_version_statement
+    if _version_check_lock.acquire(blocking=False):
+        try:
+            if not _has_logged_version_statement:
+
+                import ell
+
+                try:
+                    response = requests.get("https://docs.ell.so/_static/ell_version.txt", timeout=0.1)
+                    if response.status_code == 200:
+                        latest_version = response.text.strip()
+                        if latest_version != ell.__version__:
+                            print(f"{Fore.YELLOW}╔═════════════════════════════════════════════════════════════════╗")
+                            print(f"{Fore.YELLOW}║ {Fore.GREEN}A new version of ELL is available: {Fore.CYAN}{latest_version:<29}{Fore.YELLOW}║")
+                            print(f"{Fore.YELLOW}║ {Fore.GREEN}You can update by running:{Fore.YELLOW}                                      ║")
+                            print(f"{Fore.YELLOW}║ {Fore.CYAN}pip install --upgrade ell-ai{Fore.YELLOW}                                    ║")
+                            print(f"{Fore.YELLOW}╚═════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}")
+                except requests.RequestException:
+                    pass  # Silently handle any network-related errors
+                _has_logged_version_statement = True
+        finally:
+            _version_check_lock.release()
+
 
 @lru_cache(maxsize=128)
 def compute_color(invoking_lmp: LMP) -> str:
@@ -98,7 +129,9 @@ def model_usage_logger_pre(
     formatted_args = [format_arg(arg, arg_max_length) for arg in lmp_args]
     formatted_kwargs = [format_kwarg(key, lmp_kwargs[key], arg_max_length) for key in lmp_kwargs]
     formatted_params = ', '.join(formatted_args + formatted_kwargs)
-    
+
+    check_version_and_log()
+
     terminal_width = get_terminal_width()
     
     logger.info(f"Invoking LMP: {invoking_lmp.__name__} (hash: {lmp_hash[:8]})")
