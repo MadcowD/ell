@@ -54,6 +54,7 @@ export interface EllTSC {
 
 type LMPType = "simple" | "complex";
 export type LMP = {
+  lmpId: string;
   lmpType: LMPType;
   lmpName: string;
   config: string;

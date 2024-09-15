@@ -1,77 +1,73 @@
 import * as sourceMapSupport from "source-map-support";
 sourceMapSupport.install();
 
+import { AsyncLocalStorage } from "async_hooks";
 import { callsites } from "./callsites";
 import { EllTSC, LMP } from "./tsc";
-import { generateFunctionHash } from "./hash";
+import { generateFunctionHash, generateInvocationId } from "./hash";
 
-type Kwargs = { 
-  // name?: string; 
-  model: string; 
-  [key: string]: any 
+type Kwargs = {
+  // The name or identifier of the language model to use.
+  model: string;
+  // An optional OpenAI client instance.
+  client?: any; //OpenAI
+  // A list of tool functions that can be used by the LLM.
+  tools?: any[];
+  // If True, the LMP usage won't be tracked.
+  exempt_from_tracking?: boolean;
+  // Additional API parameters
+  [key: string]: any;
 };
+
 type F = (...args: any[]) => Promise<any>;
 
-type StackEntry = {
-  name?: string | null;
-  filepath?: string | null;
-  line?: number | null;
-  column?: number | null;
+type InvocationContents = {
+  invocation_id: any;
+  params: any;
+  results: any;
+  invocation_api_params: any;
 };
-
-let stack: StackEntry[] = [];
 
 type Invocation = {
-  lmpType: "simple" | "complex";
-  args: any[];
-  kwargs: Kwargs;
-  input: any;
-  output: any;
+  id: string;
+  lmp_id: string;
+  latency_ms: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  invocation_contents: InvocationContents;
+  used_by_id?: string;
 };
-// type LMP = {
-//   name: string | null;
-//   filepath: string | null;
-//   line: number | null;
-//   column: number | null;
-//   sourceCode: string | null;
-// };
 
 let tsc = new EllTSC();
+
+// todo. storage
 export let invocations: Invocation[] = [];
 export let lmps: LMP[] = [];
 
-let lmpsCache: Record<string, LMP> = {};
+class InvocationContext {
+  private storage: AsyncLocalStorage<Invocation[]>;
 
-const cacheKey = (filename: string, name: string) => `${filename}-${name}`;
-const getLMP = async (filename: string, name: string) => {
-  const key = cacheKey(filename, name);
-  if (lmpsCache[key]) return lmpsCache[key];
-  const lmps = await tsc.getLMPsInFile(filename);
-  for (const lmp of lmps) {
-    // FIXME. we need to pick the name in the config or the var name which could be different
-    // const lmpName = JSON.parse(lmp.config).name
-    // const k = cacheKey(filename,lmpName)
-    // @ts-ignore
-    // lmpsCache[k] = lmp;
+  constructor() {
+    this.storage = new AsyncLocalStorage<Invocation[]>();
   }
-  const lmp = lmpsCache[key];
-  // todo
-  if (!lmp) {
-    throw new Error(`LMP ${name} not found in file ${filename}`);
+
+  async run(invocation: Invocation, callback: () => Promise<void>) {
+    let stack = this.storage.getStore() || [];
+    stack = [...stack, invocation];
+    return this.storage.run(stack, callback);
   }
-  return lmp;
-};
 
-const enter = (args: StackEntry) =>
-  stack.push({
-    name: args.name,
-    filepath: args.filepath,
-    line: args.line,
-    column: args.column,
-  });
+  getCurrentInvocation(): Invocation | undefined {
+    const stack = this.storage.getStore();
+    return stack ? stack[stack.length - 1] : undefined;
+  }
+  getParentInvocation(): Invocation | undefined {
+    const stack = this.storage.getStore();
+    return stack && stack.length > 1 ? stack[stack.length - 2] : undefined;
+  }
+}
 
-const exit = () => stack.pop();
-
+const invocationContext = new InvocationContext();
 const writeInvocation = async (invocation: Invocation) => {
   invocations.push(invocation);
 };
@@ -98,41 +94,21 @@ function getCallerFileLocation() {
   return { filepath: file, line, column };
 }
 
-const serializeLMP = async (args: {
-  lmpId: string;
-  name: string;
-  filepath: string | null;
-  line: number | null;
-  column: number | null;
-}) => {
-  return await writeLMP({
-    lmpId: args.lmpId,
-    name: args.name,
-    filepath: args.filepath,
-    line: args.line,
-    column: args.column,
-    // sourceCode: sourceCode,
-  });
+const serializeLMP = async (args: LMP) => {
+  // todo. commit message if not exists
+  return await writeLMP(args);
 };
 
-const getLMPName = async (args: {
-  filepath: string | null;
-  line: number | null;
-  column: number | null;
-}) => {
-  return "";
-  // todo
-  // const sourceCode = tsc.getFunctionSource(
-  //   args.filepath,
-  //   args.line,
-  //   args.column
-  // )
+type Wrapper = {
+  (...args: any[]): Promise<any>;
+  __ell_type__?: string;
+  __ell_lmp_name__?: string;
+  __ell_lmp_id__?: string | null;
+  __ell_invocation_id__?: string | null;
 };
 
-export const simple = (a: Kwargs, f: F) => {
+export const simple = (a: Kwargs, f: F):Wrapper => {
   const { filepath, line, column } = getCallerFileLocation();
-
-  // console.log("line", { filepath, line, column });
 
   if (!filepath || !line || !column) {
     console.error(
@@ -140,42 +116,59 @@ export const simple = (a: Kwargs, f: F) => {
     );
     return f;
   }
-  let lmp: LMP | null = null;
 
-  const wrapper = async (...args: any[]) => {
-    lmp = await tsc.getLMP(filepath!, line!, column!);
-    if (!lmp) {
-      console.error(
-        `No LMP found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`
-      );
-      return f;
+  let maybeLMP: LMP | null = null;
+  let trackAttempted = false;
+  let lmp: LMP = undefined as unknown as LMP;
+
+  const wrapper: Wrapper = async (...args: any[]) => {
+    if (!wrapper.__ell_lmp_id__) {
+      if (trackAttempted) {
+        return f;
+      }
+      trackAttempted = true;
+      maybeLMP = await tsc.getLMP(filepath!, line!, column!);
+      if (!maybeLMP) {
+        console.error(
+          `No LMP found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`
+        );
+        return f;
+      }
+      lmp = maybeLMP;
+      const lmpId = generateFunctionHash(maybeLMP.source, "", maybeLMP.lmpName);
+      lmp.lmpId = lmpId;
+      lmp.apiParams = a;
     }
+    let invocationId = generateInvocationId();
+    return invocationContext.run(
+      {
+        id: invocationId,
+        lmp_id: lmp.lmpId,
+      },
+      async () => {
+        // const lmp = await getLMP(filename,name)
+        await serializeLMP(lmp);
+        const lmpfnoutput = await f(...args);
+        const invokeModel = async (input: any) => {
+          return input;
+        };
 
-    const lmpId = generateFunctionHash(lmp.source, "", lmp.lmpName);
-    lmp.lmpId = lmpId;
-    // console.log("lmp at runtime", lmp);
-
-    const name = lmp.lmpName;
-    enter({ name, filepath, line, column });
-    // const lmp = await getLMP(filename,name)
-    await serializeLMP({
-      lmpId,
-      name,
-      filepath,
-      line,
-      column,
-      ...lmp,
-    });
-    const result = await f(...args);
-    await writeInvocation({
-      lmpType: "simple",
-      args,
-      kwargs: a,
-      input: args,
-      output: result,
-    });
-    exit();
-    return result;
+        const modelResult = await invokeModel(lmpfnoutput);
+        const result = modelResult;
+        await writeInvocation({
+          id: invocationId,
+          lmp_id: lmp.lmpId,
+          latency_ms: 0,
+          prompt_tokens: 0,
+          completion_tokens: 0,
+          input: args,
+          output: modelResult,
+          invocation_api_params: a,
+          used_by_id: invocationContext.getParentInvocation()?.id,
+        });
+        return result;
+      }
+    );
   };
 
   wrapper.__ell_type__ = "simple";
