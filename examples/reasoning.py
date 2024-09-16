@@ -21,7 +21,7 @@ MODEL = "llama3.1:latest"
 ell.config.verbose = True
 ell.models.ollama.register("http://127.0.0.1:11434/v1")
 
-system_prompt = """
+SYSTEM = """
 You are an expert AI assistant that explains your reasoning step by step.
 For each step, provide a title that describes what you're doing in that step, along with the content.
 Decide if you need another step or if you're ready to give the final answer.
@@ -52,7 +52,7 @@ An example of a valid xml response:
 
 @ell.simple(model=MODEL, temperature=0.0)
 def reasoning_agent(history: List[Message]) -> List[Message]:
-    return history
+    return [SYSTEM] + history
 
 class ReasoningStep(BaseModel):
     title: str
@@ -82,7 +82,7 @@ def main():
     #     break
 
     assistant_prompt = "Thank you! I will now think step by step following my instructions, starting at the beginning after decomposing the problem"
-    history = [ell.system(system_prompt), ell.user(user_prompt), ell.assistant(assistant_prompt) ]
+    history = [ell.user(user_prompt), ell.assistant(assistant_prompt) ]
     # some models don't like the assistant_prompt
     # history = [ell.system(system_prompt), ell.user(user_prompt) ]
 
