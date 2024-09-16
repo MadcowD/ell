@@ -1,10 +1,16 @@
 import * as sourceMapSupport from "source-map-support";
 sourceMapSupport.install();
 
+import "./providers/openai";
+import "./models/openai";
+
 import { AsyncLocalStorage } from "async_hooks";
 import { callsites } from "./callsites";
 import { EllTSC, LMP } from "./tsc";
 import { generateFunctionHash, generateInvocationId } from "./hash";
+import { config } from "./configurator";
+import { Message } from "./types";
+import { APICallResult } from "./provider";
 
 type Kwargs = {
   // The name or identifier of the language model to use.
@@ -19,7 +25,7 @@ type Kwargs = {
   [key: string]: any;
 };
 
-type F = (...args: any[]) => Promise<any>;
+type F = (...args: any[]) => Promise<string | Array<Message>>;
 
 type InvocationContents = {
   invocation_id: any;
@@ -107,7 +113,25 @@ type Wrapper = {
   __ell_invocation_id__?: string | null;
 };
 
-export const simple = (a: Kwargs, f: F):Wrapper => {
+const convertMultimodalResponseToLstr = (response: Message[]) => {
+  if (
+    response.length === 1 &&
+    response[0].content.length === 1 &&
+    response[0].content[0].text
+  ) {
+    return response[0].content[0].text;
+  }
+  return response;
+};
+function convertMultimodalResponseToString(
+  response: APICallResult["response"]
+): string | string[] {
+  return Array.isArray(response)
+    ? response.map((x) => x.content[0].text)
+    : response.content[0].text;
+}
+
+export const simple = (a: Kwargs, f: F): Wrapper => {
   const { filepath, line, column } = getCallerFileLocation();
 
   if (!filepath || !line || !column) {
@@ -149,12 +173,41 @@ export const simple = (a: Kwargs, f: F):Wrapper => {
         // const lmp = await getLMP(filename,name)
         await serializeLMP(lmp);
         const lmpfnoutput = await f(...args);
-        const invokeModel = async (input: any) => {
-          return input;
+        const getModelClient = async (args: Kwargs) => {
+          if (args.client) {
+            return args.client;
+          }
+          const [client, _fallback] = config.getClientFor(args.model);
+          return client;
         };
-
-        const modelResult = await invokeModel(lmpfnoutput);
-        const result = modelResult;
+        const modelClient = await getModelClient(a);
+        const provider = config.getProviderFor(modelClient);
+        if (!provider) {
+          throw new Error(
+            `No provider found for model ${a.model} ${modelClient}`
+          );
+        }
+        const messages =
+          typeof lmpfnoutput === "string"
+            ? [new Message("user", lmpfnoutput)]
+            : lmpfnoutput;
+        const apiParams = {
+          // everything from a except tools
+          ...a,
+          tools: undefined,
+        };
+        const callResult = await provider.callModel(
+          modelClient,
+          a.model,
+          messages,
+          apiParams,
+          a.tools
+        );
+        const [trackedResults, metadata] = await provider.processResponse(
+          callResult,
+          "todo"
+        );
+        const result = convertMultimodalResponseToString(trackedResults[0]);
         await writeInvocation({
           id: invocationId,
           lmp_id: lmp.lmpId,
@@ -162,7 +215,7 @@ export const simple = (a: Kwargs, f: F):Wrapper => {
           prompt_tokens: 0,
           completion_tokens: 0,
           input: args,
-          output: modelResult,
+          output: result,
           invocation_api_params: a,
           used_by_id: invocationContext.getParentInvocation()?.id,
         });

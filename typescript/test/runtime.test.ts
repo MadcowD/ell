@@ -1,7 +1,30 @@
-import { test, expect } from "vitest";
+import { test, expect, beforeAll } from "vitest";
 import { simple } from "../src/ell";
 import {lmps,invocations}  from '../src/ell'
+import { config } from "../src/configurator";
+import OpenAI from "openai";
 
+beforeAll(() => {
+  // @ts-expect-error
+  config.defaultClient.chat.completions.create = async (...args) => {
+    console.log('chat.completions.create called with', args)
+    return {
+      choices: [
+        <OpenAI.Chat.Completions.ChatCompletion.Choice>{
+          index: 0,
+          finish_reason: 'stop',
+          logprobs: null,
+          message: {
+            // @ts-expect-error
+            content: args[0].messages[0].content[0].text,
+            role: 'assistant',
+            refusal: null,
+          },
+        },
+      ],
+    }
+  }
+})
 test("runtime", async () => {
   const child = simple({ model: "gpt-4o-mini" }, async (a: string) => {
     return "child";
