@@ -1,14 +1,14 @@
 from functools import wraps
+import random
 import pytest
 import math
 from typing import Set, Any
 import numpy as np
 from ell.util.closure import (
     lexical_closure,
-    should_import,
-    get_referenced_names,
 )
 import ell
+from ell.util.closure_util import get_referenced_names, should_import
 from ell.util.serialization import is_immutable_variable
 
 
@@ -179,6 +179,64 @@ def test_lexical_closure_with_class_methods():
     closure_static_method, (_, _), uses_static_method = lexical_closure(MyClass.static_method)
     assert "def static_method(z):" in closure_static_method
     assert "z * 2" in closure_static_method
+# tests/test_closure.py
+
+import pytest
+from ell.util.closure import lexically_closured_source
+
+def test_lexical_closure_eliminates_redundant_dependencies():
+    # Define a shared dependency function
+    def dependency_func():
+        return "I am a shared dependency"
+    
+    # Define two functions that both depend on dependency_func
+    def func_a():
+        return dependency_func()
+    
+    def func_b():
+        return dependency_func()
+    
+    # Define a top-level function that depends on func_a and func_b
+    def func_c():
+        return func_a() + func_b()
+    
+    # Generate the lexically closured source for func_c
+    closure_source, (formatted_source, cleaned_source), uses = lexically_closured_source(func_c)
+    
+    # Debugging output (optional)
+    print("Closure Source:\n", closure_source)
+    
+    # Assertions to ensure each function definition appears only once
+    assert "def func_c():" in closure_source, "func_c definition should be in the closure source"
+    assert "def func_a():" in closure_source, "func_a definition should be in the closure source"
+    assert "def func_b():" in closure_source, "func_b definition should be in the closure source"
+    assert "def dependency_func():" in closure_source, "dependency_func definition should be in the closure source"
+    
+    # Count the number of times each function is defined in the closure source
+    func_c_definitions = closure_source.count("def func_c():")
+    func_a_definitions = closure_source.count("def func_a():")
+    func_b_definitions = closure_source.count("def func_b():")
+    dependency_func_definitions = closure_source.count("def dependency_func():")
+    
+    # Assert that each function is defined only once
+    assert func_c_definitions == 1, "func_c should be defined exactly once in the closure source"
+    assert func_a_definitions == 1, "func_a should be defined exactly once in the closure source"
+    assert func_b_definitions == 1, "func_b should be defined exactly once in the closure source"
+    assert dependency_func_definitions == 1, "dependency_func should be defined exactly once in the closure source"
+    
+    # Additionally, ensure that there are no duplicate imports or dependencies
+    # (Assuming no imports are needed in this simple example)
+    # If imports exist, similar counts can be performed
+
+    # Optionally, verify that the closure source contains no duplicate lines
+    lines = closure_source.split("\n")
+    unique_lines = set()
+    for line in lines:
+        stripped_line = line.strip()
+        if stripped_line:  # Ignore empty lines
+            assert stripped_line not in unique_lines, f"Duplicate line found in closure source: {stripped_line}"
+            unique_lines.add(stripped_line)
+
 
 # def test_lexical_closure_with_recursive_function():
 #     def factorial(n):
@@ -321,6 +379,81 @@ def test_lexical_closure_with_async_function():
 #     assert "def func_b():" in closure
 #     assert "return func_a()" in closure
 #     assert isinstance(uses, Set)
+
+def test_ell_uses_only_include_ell_decorated_functions():
+    # Define an ell-decorated function
+    @ell.simple(model="gpt-4o-mini")
+    def do_nothing():
+        pass
+
+    # Define non-ell functions
+    def get_random_adjective():
+        adjectives = ["enthusiastic", "cheerful", "warm", "friendly", "heartfelt", "sincere"]
+        do_nothing()  # This is an ell-decorated function
+        return random.choice(adjectives)
+
+    def get_random_punctuation():
+        return random.choice(["!", "!!", "!!!"])
+
+    # Define an ell-decorated function that uses both ell and non-ell functions
+    @ell.simple(model="gpt-4o-mini")
+    def hello(name: str):
+        adjective = get_random_adjective()
+        punctuation = get_random_punctuation()
+        return f"Say a {adjective} hello to {name}{punctuation}"
+
+    # Generate the lexically closured source for hello
+    closure_source, (formatted_source, cleaned_source), uses = lexically_closured_source(hello)
+
+    # Debugging output (optional)
+    print("Closure Source:\n", closure_source)
+
+    # Assertions to ensure each function definition appears only once
+    assert "def hello(name: str):" in closure_source, "hello definition should be in the closure source"
+    assert "def get_random_adjective():" in closure_source, "get_random_adjective definition should be in the closure source"
+    assert "def get_random_punctuation():" in closure_source, "get_random_punctuation definition should be in the closure source"
+    assert "def do_nothing():" in closure_source, "do_nothing definition should be in the closure source"
+
+    # Count the number of times each function is defined in the closure source
+    hello_definitions = closure_source.count("def hello(name: str):")
+    get_random_adjective_definitions = closure_source.count("def get_random_adjective():")
+    get_random_punctuation_definitions = closure_source.count("def get_random_punctuation():")
+    do_nothing_definitions = closure_source.count("def do_nothing():")
+
+    # Assert that each function is defined only once
+    assert hello_definitions == 1, "hello should be defined exactly once in the closure source"
+    assert get_random_adjective_definitions == 1, "get_random_adjective should be defined exactly once in the closure source"
+    assert get_random_punctuation_definitions == 1, "get_random_punctuation should be defined exactly once in the closure source"
+    assert do_nothing_definitions == 1, "do_nothing should be defined exactly once in the closure source"
+
+    # Ensure that __ell_uses__ contains only ell-decorated functions
+    # Retrieve the closure attributes from the original function
+    closure_attributes = hello.__ell_closure__
+    uses_set = hello.__ell_uses__
+
+    # Assert that uses_set contains only do_nothing
+    assert len(uses_set) == 1, "__ell_uses__ should contain exactly one function"
+    assert do_nothing in uses_set, "__ell_uses__ should contain only do_nothing"
+
+    # Additionally, ensure that non-ell functions are not in __ell_uses__
+    assert get_random_adjective not in uses_set, "get_random_adjective should not be in __ell_uses__"
+    assert get_random_punctuation not in uses_set, "get_random_punctuation should not be in __ell_uses__"
+
+    # Ensure that dependencies include non-ell functions
+    # For simplicity, we'll check that get_random_punctuation is present as a dependency
+    assert "def get_random_punctuation():" in closure_source, "get_random_punctuation should be included as a dependency"
+
+    # Ensure that imports are correctly handled (e.g., random)
+    assert "import random" in closure_source, "random should be imported in the closure source"
+
+    # Ensure no duplicate lines exist
+    lines = closure_source.split("\n")
+    unique_lines = set()
+    for line in lines:
+        stripped_line = line.strip()
+        if stripped_line:  # Ignore empty lines
+            assert stripped_line not in unique_lines, f"Duplicate line found in closure source: {stripped_line}"
+            unique_lines.add(stripped_line)
 
 if __name__ == "__main__":
     test_lexical_closure_uses()
