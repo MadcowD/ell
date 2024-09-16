@@ -247,3 +247,238 @@ chain_of_thought =====  W^T (process_into_vector(x))
 but like W^T is like a bunch of format strings and arbitrary instructions so then what the fuck is optimizing CoT cause in Ell we've basically merged data parsing and instruction formattging into one big ass thring
 
 nah this is bad.
+
+
+## Meta Prompting
+
+Okay so if prompting is manually setting the W^T of a matrix then we can think of meta prompting as creating programs that generate W (This is what DSPy is doing.) Maybe DSPy (with some modifications) is the right way to go cause it is basically doing. 
+
+Let's consider CoT
+
+```python
+
+# Goal: Add "Let's think step by step in order to" to the beginning of the prompt
+
+
+@ell.simple(model="gpt-4o")
+def w_0(my_input : str, my_second_input : str) -> str:
+    """You are a helpful assistant"""
+
+    return "Please make a poem about " + my_input + " and " + my_second_input
+
+# How do we go from w_0 to a CoT prompt? That's not really the point of DSPy. It's that we should meta prompt this.
+
+def cot(goal : str, n_steps : int, step_prefix : str) -> str:
+    return [
+        ell.user(f"""Reasoning: Let's think step by step in order to {goal}.""")
+    ]
+
+@ell.simple(model="gpt-4o")
+def w_0_my_input_modifier(x : str) -> str:
+    """You are a good assistant"""
+
+    return cot(
+        goal="Make a poem about " + x,
+        n_steps=3,
+        step_prefix="Reasoning: "
+    )
+
+#  why is this bad? this makes sense to me....
+
+# It's bad because if you want to do multistep stuff like:
+# Reasoning Step: <title>
+# Rationale: <rationale>
+# Next Action: <next action>
+# We haven't made it easier to do so. Like obviously you can template and build helper functions but multistep CoT or recursive sutff is difficult.
+
+# you could do something like
+
+@ell.simple()
+def agent_step(x : str, previous_steps : str) -> str:
+    return cot_prompt(
+        goal="Make a poem about " + x,
+        n_steps=3,
+        step_prefix="Reasoning: "
+    ) + previous_steps
+
+run_agent(agent_step, x="roses are red")
+
+# but that is still really bad. Idk fuck this.
+# Actually i dont htink DSPy is even set up for multistep CoT
+# Ah it is
+
+# ... PoT.py
+    def forward(self, **kwargs):
+        input_kwargs = {
+            field_name: kwargs[field_name] for field_name in self.input_fields
+        }
+        code_data = self.code_generate(**input_kwargs)
+        parsed_code, error = self.parse_code(code_data)
+        # FIXME: Don't try to execute the code if it didn't parse
+        code, output, error = self.execute_code(parsed_code)
+        hop = 0
+        while hop < self.max_iters and error:
+            print("Error in code execution")
+            input_kwargs.update({"previous_code": code, "error": error})
+            code_data = self.code_regenerate(**input_kwargs)
+            parsed_code, error = self.parse_code(code_data)
+            # FIXME: Don't try to execute the code if it didn't parse
+            code, output, error = self.execute_code(parsed_code)
+            hop += 1
+            if hop == self.max_iters:
+                print("Max hops reached. Error persists.")
+                return None
+        input_kwargs.update({"final_generated_code": code, "code_output": output})
+        answer_gen_result = self.generate_answer(**input_kwargs)
+        return answer_gen_result
+
+    def _generate_instruction(self, mode):
+        mode_inputs = ", ".join(
+            [
+                f"`{field_name}`"
+                for field_name in self._generate_signature(mode).input_fields
+            ],
+        )
+        mode_outputs = f"`{self.output_field_name}`"
+        if mode == "generate":
+            instr = [
+                f"You will be given {mode_inputs} and you will respond with {mode_outputs}.",
+                f"Generating executable Python code that programmatically computes the correct {mode_outputs}.",
+                f"After you're done with the computation, make sure the last line in your code evaluates to the correct value for {mode_outputs}.",
+            ]
+        elif mode == "regenerate":
+            instr = [
+                f"You are given {mode_inputs} due to an error in previous code.",
+                "Your task is to correct the error and provide the new `generated_code`.",
+            ]
+        else:  # mode == 'answer'
+            instr = [
+                f"Given the final code {mode_inputs}, provide the final {mode_outputs}.",
+            ]
+
+        return "\n".join(instr)
+    def _generate_signature(self, mode):
+        signature_dict = dict(self.input_fields)
+        fields_for_mode = {
+            "generate": {
+                "generated_code": dspy.OutputField(
+                    prefix="Code:",
+                    desc="python code that answers the question",
+                    format=str,
+                ),
+            },
+            "regenerate": {
+                "previous_code": dspy.InputField(
+                    prefix="Previous Code:",
+                    desc="previously-generated python code that errored",
+                    format=str,
+                ),
+                "error": dspy.InputField(
+                    prefix="Error:",
+                    desc="error message from previously-generated python code",
+                ),
+                "generated_code": dspy.OutputField(
+                    prefix="Code:",
+                    desc="python code that answers the question",
+                    format=str,
+                ),
+            },
+            "answer": {
+                "final_generated_code": dspy.InputField(
+                    prefix="Code:",
+                    desc="python code that answers the question",
+                    format=str,
+                ),
+                "code_output": dspy.InputField(
+                    prefix="Code Output:",
+                    desc="output of previously-generated python code",
+                ),
+                self.output_field_name: self.signature.fields[self.output_field_name],
+            },
+        }
+        signature_dict.update(fields_for_mode[mode])
+        return dspy.Signature(signature_dict    
+
+        self.code_generate = dspy.ChainOfThought(
+            dspy.Signature(
+                self._generate_signature("generate").fields,
+                self._generate_instruction("generate"),
+            ),
+        )
+        self.code_regenerate = dspy.ChainOfThought(
+            dspy.Signature(
+                self._generate_signature("regenerate").fields,
+                self._generate_instruction("regenerate"),
+            ),
+        )
+        self.generate_answer = dspy.ChainOfThought(
+            dspy.Signature(
+                self._generate_signature("answer").fields,
+                self._generate_instruction("answer"),
+# In Ell this would be:
+
+# It's still meta programmign lol i can't get ath "updating the inpout fields like it's fucked.
+@ell.simple(model="gpt-4o")
+def code_generate(question :str ) -> str:
+    return cot(
+        goal="python code that answer the quesiton {question}",
+        n_steps=3,
+        format=str
+    )
+
+@ell.simple(model="gpt-4o")
+def code_regenerate(previous_code : str, error : str) -> str:
+    return cot(
+        goal="regenerate the code {previous_code} to fix the error {error}",
+        n_steps=3,
+        format=str
+    )
+
+@ell.simple(model="gpt-4o")
+def code_answer(final_generated_code : str, code_output : str) -> str:
+    return cot(
+        goal="given the final code {final_generated_code} and the output {code_output}, provide the answer",
+        n_steps=3,
+        format=str
+    )
+
+@ell.function()
+def program_of_though(question : str) -> str:
+    input_kwargs = {"question": question}
+    code_data = code_generate(**input_kwargs)
+    parsed_code, error = parse_code(code_data)
+    code, output, error = execute_code(parsed_code)
+    hop = 0
+    max_iters = 3  # You can adjust this value as needed
+    while hop < max_iters and error:
+        print("Error in code execution")
+        input_kwargs.update({"previous_code": code, "error": error})
+        code_data = code_regenerate(**input_kwargs)
+        parsed_code, error = parse_code(code_data)
+        code, output, error = execute_code(parsed_code)
+        hop += 1
+        if hop == max_iters:
+            print("Max hops reached. Error persists.")
+            return None
+    input_kwargs.update({"final_generated_code": code, "code_output": output})
+    answer_gen_result = code_answer(**input_kwargs)
+    return answer_gen_result
+    
+
+
+program_of_though("roses are red")
+
+# So I don't think we really are getting the 
+``` 
+
+Well its clear that ell.function is a useful abstraciton so long as the return type is a trackable or serializable type. Perhaps that's not even necessary, but for reconstructing computation graphs it would be
+
+
+```python
+
+# meta prompting thoughts again. what the fuck is cot. lol this is so stupid.
+
+
+
+
+```
