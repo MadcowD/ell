@@ -476,9 +476,374 @@ Well its clear that ell.function is a useful abstraciton so long as the return t
 
 ```python
 
-# meta prompting thoughts again. what the fuck is cot. lol this is so stupid.
+# This is what is really going on, but there can be many adapters in dspy
+cot = ChainOfThought(signature, activated=True)
+
+# 
+adapter = ChatAdapter()
+messages = adapter.format(signature, demos, inputs)
 
 
-
+# Define the messages (from the Deactivated CoT example)
+[
+    {
+        "role": "system",
+        "content": (
+            "Your input fields are:\n"
+            "1. `question` (str): \n"
+            "Your output fields are:\n"
+            "1. `rationale` (str): \n"
+            "2. `answer` (str): \n\n"
+            "All interactions will be structured in the following way, with the appropriate values filled in.\n"
+            "[[[[ #### question #### ]]]]\n{question}\n\n"
+            "[[[[ #### rationale #### ]]]]\n{rationale}\n\n"
+            "[[[[ #### answer #### ]]]]\n{answer}\n\n"
+            "[[[[ #### completed #### ]]]]\n\n"
+            "You will receive some input fields in each interaction. Respond only with the corresponding output fields, starting with the field `rationale`, then `answer`, and then ending with the marker for `completed`.\n\n"
+            "In adhering to this structure, your objective is: \n"
+            "Your objective is to provide detailed reasoning (rationale) followed by the final answer."
+        )
+    },
+    {
+        "role": "user",
+        "content": (
+            "[[[[ #### question #### ]]]]\n"
+            "What is the capital of France?"
+        )
+    },
+    {
+        "role": "assistant",
+        "content": (
+            "[[[[ #### rationale #### ]]]]\n"
+            "To determine the capital of France, we recall that France is a country in Europe, and its most populous city is Paris, which serves as the capital.\n\n"
+            "[[[[ #### answer #### ]]]]\n"
+            "Paris.\n\n"
+            "[[[[ #### completed #### ]]]]\n"
+        )
+    },
+    {
+        "role": "user",
+        "content": (
+            "[[[[ #### question #### ]]]]\n"
+            "Who wrote '1984'?"
+        )
+    },
+    {
+        "role": "assistant",
+        "content": (
+            "[[[[ #### rationale #### ]]]]\n"
+            "To identify the author of '1984', we consider famous dystopian novelists and recognize that George Orwell is renowned for this work.\n\n"
+            "[[[[ #### answer #### ]]]]\n"
+            "George Orwell.\n\n"
+            "[[[[ #### completed #### ]]]]\n"
+        )
+    },
+    {
+        "role": "user",
+        "content": (
+            "[[[[ #### question #### ]]]]\n"
+            "What is the largest planet in our solar system?"
+        )
+    }
+]
 
 ```
+
+
+Okay so let's now revisit meta prompting for a bit:
+
+
+In ell we build a good framework for engineering specific `W = [0, 1, 2, ...]`. In DSPy we have a framework for doing things like `W = th.zeros((a,b))` `y= W^Tx`.
+
+So its like dynamic, but oppinionated prompt construction. How might this look. lets consider the idea that we start at `W = [0, 1, 2, ...]` and then we write `y =W^Tx`; that is we provide starting points for this optimization.
+This is less descirptive than DSPy.
+
+```python
+@ell.simple(model="gpt-4o")
+def my_arbitrary_prompt(question :str, context : List[str]) -> str:
+    return f"""
+    You are a helpful assistant answer the following question about a given context. Do not use any other information.
+    Question: {question}
+    Context: {context}
+    """
+```
+
+How do we dynamically optimzie this? 
+
+```python
+>>> my_arbitrary_prompt(question="What is the capital of France?", context=["France is a country in Europe.", "Paris is the capital of France."])
+ [ell.user("""You are a helpful assistant.
+    Question: What is the capital of France?
+    Context: France is a country in Europe. Paris is the capital of France.
+    Do the following:
+    <..your response>""")]
+
+
+>>> optimizer = ell.BootstrapFewShotOptimizer(top_k=10)
+>>> x = [
+    dict(
+        question="What is the largest planet in our solar system?",
+        context=["Jupiter is the largest planet in our solar system.", "Saturn is the second-largest planet."],
+    ),
+    dict(
+        question="Who painted the Mona Lisa?",
+        context=["Leonardo da Vinci was an Italian Renaissance polymath.", "The Mona Lisa is a famous Renaissance painting."],
+    ),
+    dict(
+        question="What is the chemical symbol for gold?",
+        context=["Gold is a precious metal.", "The periodic table lists elements and their symbols."],
+    ),
+]
+>>> y = [
+    "Jupiter",
+    "Leonardo da Vinci",
+    "Au"
+]
+
+>>> better_arbitrary_prompt = optimizer.fit(my_arbitrary_prompt, x=x, y=y)
+
+>>> better_arbitrary_prompt(question="What is the capital of France?", context=["France is a country in Europe.", "Paris is the capital of France."])
+[
+    # EXAMPLES: 
+    ell.user(
+    """
+    You are a helpful assistant.
+    Question: What is the largest planet in our solar system?
+    Context: Jupiter is the largest planet in our solar system. Saturn is the second-largest planet.
+    Do the following:
+    <..your response>
+    """
+    ),
+    ell.assistant(
+        """
+        Jupiter
+        """
+    ),
+    ell.user(
+    """You are a helpful assistant.
+    Question: Who painted the Mona Lisa?
+    Context: Leonardo da Vinci was an Italian Renaissance polymath. The Mona Lisa is a famous Renaissance painting.
+    Do the following:
+    <..your response>
+    """
+    ),
+    ell.assistant(
+        """
+        Leonardo da Vinci
+        """
+    ),
+    ell.user(
+    """You are a helpful assistant.
+    Question: What is the chemical symbol for gold?
+    Context: Gold is a precious metal. The periodic table lists elements and their symbols.
+    Do the following:
+    <..your response>
+    """
+    ),
+    ell.assistant(
+        """
+        Au
+        """
+    ),
+    # Final user prompt.
+    ell.user(
+        """
+        You are a helpful assistant.
+        Question: What is the capital of France?
+        Context: France is a country in Europe. Paris is the capital of France.
+        Do the following:
+        <..your response>
+        """
+    )
+]
+```
+The problem with this mechanism is that it will duplicate bad prompting in the examples rather than being a generic metaprompt that can be reused.
+
+
+This leads us to an idea 
+
+> Prompt optimizers are independent of meta prompts. 
+
+DSPy is a DSL for prompting basically lol you define shit in maybe a "BAML" type way and then you can do optimizations much more easily be for you realize a prompt.
+
+
+You could sovle the problem of going from a specific `W` to a generic `th.randn(W.shape)` and then you could do DSPy on that shit. You would be inferring signatures. Also no problem just copying the DSPy functional API...
+
+Consider:
+```python
+import dspy
+
+context = ["Roses are red.", "Violets are blue"]
+question = "What color are roses?"
+
+@dspy.cot
+def generate_answer(self, context: list[str], question) -> str:
+    """Answer questions with short factoid answers."""
+    pass
+```
+
+So they are able to specify a signature and then mutate it from here.  Another example:
+```python
+@dspy.predictor
+def generate_answer(self, context: list[str], question) -> str:
+    """Answer questions with short factoid answers."""
+    pass
+```
+
+The output key is the name of the function...
+```
+    sig = inspect.signature(func)
+    annotations = typing.get_type_hints(func, include_extras=True)
+    output_key = func.__name__
+    instructions = func.__doc__
+    fields = {}
+```
+
+Inherently this isn't as expressive as their module class though. I am also unsure about oppinionating pro,pt consturciton, though I suppose you can optimize adapters in a way you wouldn't be able to do with ell
+
+```python
+# This is pytorch:
+# W = th.randn(10, 10)
+meta = ell.meta(
+    instructions="do this",
+    inputs={
+        x : str,
+        y : str
+    },
+    outputs={
+        z : str
+    }
+)
+
+final = meta.compile()
+# But then we have to go to the dsp shit because we want prompts to call other prompts and interact hierarchically like dsp.
+# But this creates such an obfuscated view of prompt construction you don't know how the fuck this is happenign udner the hood.
+# It's much heasier to udnerstand th.randn(10,10) 
+# than meta.compile(myadapte)
+```
+
+
+```python
+# I am an ML researcher I don't understand how prompting works lol I know how mdoels works and I want to make a model that solves my problem
+# In ML we have inptus and outputs hur dur
+
+
+@ell.simple(model="gpt-4o")
+def please_solve_my_problem(x : str) -> str:
+    return f"Please solve my problem: {x}"
+
+(ell.metaprompt(
+    instructions="do this",
+    inputs={
+        x : str,
+        y : str
+    },
+    outputs={
+        z : str
+    }
+))
+```
+This SHIT FEELS LIKE LANGCHAIN what the FUCK.
+
+
+There are no rules we don't need parity, but waht about CoT and shit. i mean CoT is a meta prompt. the a variety of inptus and outputs, but i dont see why you can't just do it in ell with a cot function
+
+```python
+
+
+@ell.simple(model="gpt-4o")
+def write_me_a_blog_post(topic : str) -> str:
+    return cot_prompt(
+        goal="write a blog post about " + topic,
+        step_prefix="Reasoning: "
+    )
+
+# this doesnt do the parsing which is hte big problem and htats what cot is..
+```python
+
+
+# ell/primitives/cot.py
+class CoT(BaseModel):
+    reasoning : List[str]
+    answer : str
+
+with ell.context():
+    pass
+
+# this forces the user to wrap their call of this in an @ell.function or ell.simple, or ell.complex etc.
+# Or we can ommit this and just let them call it directly in which case we dont need the extra context. You can't just use CoT alone?
+@ell.function(require_ell_context=True)
+def cot(instructions : str,  model : str,  **params) -> CoT:
+    output = ell.simple(
+        messages=[
+            ell.system(f"""
+            You are a helpful assistant.
+            You must solve a problem using reasoning.
+            Your output format should be:
+            '''Rationale: Let's think step by step. <reasoning>
+            Answer: <answer>'''
+            """),
+            ell.user(instructions),
+        ]
+        model=model, 
+        **params
+    )
+    assert "Rationale:" in output and "Answer:" in output, "Output does not contain Rationale: or Answer:"
+    return CoT(
+        reasoning=output.split("Answer:")[0].split("Rationale:")[1],
+        answer=output.split("Answer:")[1]
+    )
+
+# some user shit
+
+@ell.function()
+def write_a_blog_post(problem : str) -> str:
+    result = ell.cot(
+        model="gpt-4o",
+        instructions="solve the following math problem: " + solve_math_problem,
+        step_prefix="Reasoning: "
+    )
+    return result.answer # str
+
+```
+
+So now that we have a CoT implementation, we can imagine a meta prompting framework that constructs an ell.function automatically; this is a generic one-shot prompt that can be reused and it's format strings itself can be optimized a la MiPRo etc. 
+
+```python
+@ell.function()
+def cot(instructions : str,  model : str,  **params) -> CoT:
+    output = ell.simple(
+        messages=parameterized_prompt(
+            input(
+                instructions = Field(str, description="The instructions for the prompt")
+            ),
+            output(
+                rationale= Field(str, description="The rationale for the answer"),
+                answer= Field(str, description="The answer to the prompt")
+            ),
+            task="Think step by step and provide the answer",
+        )
+        model=model, 
+        **params
+    )
+    assert "Rationale:" in output and "Answer:" in output, "Output does not contain Rationale: or Answer:"
+    return CoT(
+        reasoning=output.split("Answer:")[0].split("Rationale:")[1],
+        answer=output.split("Answer:")[1]
+    )
+```
+
+
+
+
+This is back to that bullshit soft prompt idea god damnit which is just signatures. mother fucker
+and why do i even need your dogshit function shit anyway.
+ Fuck me.
+ I hate this.
+ Ew
+ Ew
+  EEWWW
+
+
+The whole reason for prameterizing the prompt is also getting structured outputs, but this is really overfit to the no structured output case.
+Also output doesnt need to be parsed in this case.
