@@ -123,8 +123,8 @@ It's not a perfect solution but it does version your api calls.
 
 We can also do shit liek serialziign the code of an `ell.chat` context manager!!!!! Just fyi.
 
-```python
 
+```python
 
 with ell.chat(model="gpt-4o") as chat:
 
@@ -132,3 +132,26 @@ with ell.chat(model="gpt-4o") as chat:
 
 ```
 See context_versioning.py for more details.
+
+
+
+Finalyl waht aobut if we do agents wit hconv hsitory do we sitll get the same anto pattern?
+
+
+
+We could have a function to adopt the context. (So that act becomes a send function. but no)
+```python
+class MyAgent():
+
+    def __init__(self):
+        self.history = []
+        pass
+
+    @ell.function()
+    def act(self, history : List[Message]):
+        # This si is broken.
+
+        pass
+
+
+```

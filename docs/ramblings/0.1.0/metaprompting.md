@@ -846,4 +846,51 @@ and why do i even need your dogshit function shit anyway.
 
 
 The whole reason for prameterizing the prompt is also getting structured outputs, but this is really overfit to the no structured output case.
-Also output doesnt need to be parsed in this case.
+Also output doesnt need to be parsed in this case So it would have to look like
+
+```python
+class Input(BaseModel):
+    instructions : str
+
+class Output():
+    rationale : str
+    answer : str
+
+output = parameterized_lmp(
+    input={
+        "instructions" : int = Field(..., description="The instructions for the prompt")
+    }
+    output={
+        "rationale" : str,
+        "answer" : str
+    },
+    task="Think step by step and provide the answer",
+)
+```
+
+
+Should we not be able to infer all of this from the actual LMP itself. But I guess in DSPy, you dont have to start with your prompt.
+
+Can't we use the AST to determine all of the variables going into a call to then infer the signature of the prompt?
+
+So like
+
+ell.simple(model="gpt-4o", messages=[...])
+
+Track messages back in the AST for this call then find all the format vars. Well what if it's a prompt, then there's nothign we can do. With aprameterized promtps you can not prompt at all.
+
+
+Don't want to prompt? Try meta prompting.
+
+Specify your inputs and outputs and what you want the model to do. Ell will figure out the prompt for you.
+There's no real problem with DSPy to this extent except its so obfuscated as to what's going on if you don't understand it you're fucked.
+
+
+If we can disambiguate reposne formats and all this then maybe this is fine.
+
+I guess if our library looks cleaner than DSPy ultimately with the same functionaltiy internally we are okay.
+
+Meta prompting = 
+construction of @ell.simple call + parsing dynamically from input outputs and instructions.
+
+
