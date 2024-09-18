@@ -5,7 +5,7 @@
 
 For example, let's consider the following language model program.
 ```python
-@ell.lm(model="gpt-4o")
+@ell.simple(model="gpt-4o")
 def my_language_model_program():
     """
     You are a good language model. You will respond nicely
@@ -40,7 +40,7 @@ def some_unused_function_in_parent_scope():
     # do something unrelated
     pass
 
-@ell.lm(model="gpt-4o")
+@ell.simple(model="gpt-4o")
 def prompt_dependent_on_a_constant(another_val : int):
     """You are an expert arithmatician."""
     return f"Compute {SOMEVAR} + {another_val}"
@@ -51,7 +51,7 @@ Our ideal serializer would just result in `serialize(prompt_dependent_on_a_const
 ```python
 SOMEVAR = 3
 
-@ell.lm(model="gpt-4o")
+@ell.simple(model="gpt-4o")
 def prompt_dependent_on_a_constant(another_val : int):
     """You are an expert arithmatician."""
     return f"Compute {SOMEVAR} + {another_val}"

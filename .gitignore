@@ -3,8 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-
 # Sqlite
+blob/
+blob*/
+blob/**/*
+blob/*
+
 *.db 
 
 

@@ -73,7 +73,9 @@ def register(client: openai.Client):
         ('gpt-3.5-turbo-instruct', 'system'),
         ('gpt-4-0613', 'openai'),
         ('gpt-4', 'openai'),
-        ('gpt-4-0314', 'openai')
+        ('gpt-4-0314', 'openai'),
+        ('o1-preview', 'system'),
+        ('o1-mini', 'system'),
     ]
     for model_id, owned_by in model_data:
         config.register_model(model_id, client)

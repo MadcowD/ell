@@ -26,7 +26,7 @@ def register(base_url):
     client = openai.Client(base_url=base_url)
     
     try:
-        response = requests.get(f"{base_url}/api/tags")
+        response = requests.get(f"{base_url}/../api/tags")
         response.raise_for_status()
         models = response.json().get("models", [])
         

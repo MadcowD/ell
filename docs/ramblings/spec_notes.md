@@ -17,7 +17,7 @@ Because prompts are model parameterizations of GPT, and the training process is 
 import ell
 
 
-@ell.lm(model="gpt-4-turbo", temperature=0.1)
+@ell.simple(model="gpt-4-turbo", temperature=0.1)
 def write_a_story(about: str) -> str:
     """You are an expert story writer who sounds like a human. Write a story about the given topic."""
 
@@ -56,7 +56,7 @@ with chat_with_user(
 
 
 # You can define two lmps
-@ell.lm(model="gpt-4-turbo", stop=["A", "B"], temperature=0.0)
+@ell.simple(model="gpt-4-turbo", stop=["A", "B"], temperature=0.0)
 def compare_stories(a: str, b: str):
     """You are an expert writing critic [...]"""  # <-- System prompt if using a chat type model.
 
@@ -67,7 +67,7 @@ def compare_stories(a: str, b: str):
 # Alternatively we can be granular about message specificaiton
 
 
-@ell.lm(model="gpt-4-turbo", stop=["A", "B"], temperature=0.0)
+@ell.simple(model="gpt-4-turbo", stop=["A", "B"], temperature=0.0)
 def compare_stories(a: str, b: str):
     return [
         ell.Message(

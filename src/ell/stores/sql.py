@@ -273,8 +273,7 @@ class SQLBlobStore(ell.store.BlobStore):
     def __init__(self, db_dir: str):
         self.db_dir = db_dir
 
-    def store_blob(self, blob: bytes, metadata: Optional[Dict[str, Any]] = None) -> str:
-        blob_id = f"blob-{utc_now().isoformat()}"
+    def store_blob(self, blob: bytes, blob_id  : str) -> str:
         file_path = self._get_blob_path(blob_id)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with gzip.open(file_path, "wb") as f:
@@ -292,7 +291,7 @@ class SQLBlobStore(ell.store.BlobStore):
         increment = 2
         dirs = [_type] + [_id[i:i+increment] for i in range(0, depth*increment, increment)]
         file_name = _id[depth*increment:]
-        return os.path.join(self.db_dir, "blob", *dirs, file_name)
+        return os.path.join(self.db_dir, *dirs, file_name)
 
 # i think we should consider for multimedia inputs
 # having the image available at a url ahead of time (ie don't call the llm with base64)

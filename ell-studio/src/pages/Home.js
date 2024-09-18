@@ -43,10 +43,50 @@ function Home() {
   const memoizedTraces = useMemo(() => firstTraces, [firstTraces]);
   const memoizedLMPs = useMemo(() => firstLMPs, [firstLMPs]);
 
-  if (!memoizedLMPs || !memoizedTraces) {
-    return <div className={`bg-background min-h-screen flex items-center justify-center`}>
-      <p className={`text-foreground`}>Loading...</p>
-    </div>;
+  if (isLoadingLMPs || isLoadingTraces) {
+    return (
+      <div className={`bg-background min-h-screen flex items-center justify-center`}>
+        <p className={`text-foreground`}>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!memoizedLMPs || memoizedLMPs.length === 0) {
+    return (
+      <div className={`bg-background min-h-screen flex items-center justify-center`}>
+        <Card className="w-3/4 max-w-2xl">
+          <CardHeader>
+            <h2 className="text-2xl font-semibold text-foreground">No LMPs Found</h2>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              It looks like you don't have any Language Model Programs (LMPs) in your storage directory yet.
+            </p>
+            <p className="text-muted-foreground mb-4">
+              To get started with versioning your LMPs, try the following example:
+            </p>
+            <pre className="bg-muted p-4 rounded-md overflow-x-auto">
+              <code className="text-sm">
+{`import ell
+
+ell.init(store='./logdir', autocommit=True)
+
+@ell.simple(model="gpt-4o")
+def hello(name: str):
+    """You are a helpful assistant."""
+    return f"Say hello to {name}!"
+
+greeting = hello("Sam Altman")
+print(greeting)`}
+              </code>
+            </pre>
+            <p className="text-muted-foreground mt-4">
+              Run this script, then refresh this page to see your first versioned LMP.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (

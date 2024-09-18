@@ -237,12 +237,7 @@ const Invocations = () => {
           </div>
         )}
         
-        <div className="flex items-center space-x-2 mb-6">
-          <button className="flex items-center px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded hover:bg-secondary/80">
-            <FiColumns className="mr-1" />
-            Columns
-          </button>
-        </div>
+     
         <InvocationsTable 
           invocations={filteredInvocations} 
           currentPage={currentPage}

@@ -4,13 +4,13 @@
 # e.g.
 
 
-@ell.lm(model="gpt-4-turbo", temperature=0.1)
+@ell.simple(model="gpt-4-turbo", temperature=0.1)
 def blah():
     pass
 
 
 # Even then Azure is bullshit and doesn't use the same model names as oai so we cant really even have a registry. I guess we could do best effort and occasionally updat ehte lbirary when new models come out?
-@ell.lm(model="gpt-4-turbo", provider=AzureProvider, temperature=0.1)
+@ell.simple(model="gpt-4-turbo", provider=AzureProvider, temperature=0.1)
 def blah():
     pass
 

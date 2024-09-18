@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "ell"
-version = "0.0.1"
+name = "ell-ai"
+version = "0.0.5"
 description = "ell - the language model programming library"
 authors = ["William Guss <will@lrsys.xyz>"]
 license = "MIT"
@@ -9,6 +9,7 @@ repository = "https://github.com/MadcowD/ell"
 packages = [
     { include = "ell", from = "src" }
 ]
+homepage = "https://docs.ell.so"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",

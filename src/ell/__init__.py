@@ -11,7 +11,9 @@ from ell.types.message import system, user, assistant, Message, ContentBlock
 from ell.__version__ import __version__
 
 # Import all models
+import ell.providers
 import ell.models
+
 
 # Import everything from configurator
 from ell.configurator import *

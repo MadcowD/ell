@@ -6,8 +6,6 @@ import numpy as np
 
 from ell.stores.sql import SQLiteStore
 
-import openai
-
 @ell.simple(model="gpt-4o-mini")
 def come_up_with_a_premise_for_a_joke_about(topic : str):
     """You are an incredibly funny comedian. Come up with a premise for a joke about topic"""

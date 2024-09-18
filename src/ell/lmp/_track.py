@@ -1,9 +1,11 @@
 import asyncio
+import json
 import logging
 import threading
 
 from ell.api.types import WriteInvocationInput, WriteLMPInput, Invocation, InvocationContents
 from ell.types.studio import LMPType, utc_now
+from ell.util._warnings import _autocommit_warning
 import ell.util.closure
 from ell.configurator import config
 
@@ -191,16 +193,17 @@ async def _serialize_lmp(func):
     commit = None
 
     if not already_in_store:
+        commit = None
         if lmps:
             latest_lmp = max(lmps, key=lambda x: x.created_at)
             version = latest_lmp.version_number + 1
             if config.autocommit:
-                from ell.util.differ import write_commit_message_for_diff
-                commit = str(write_commit_message_for_diff(
+                # XXX: Move this out to autocommit itself.
+                if not _autocommit_warning():
+                    from ell.util.differ import write_commit_message_for_diff
+                    commit = str(write_commit_message_for_diff(
                     f"{latest_lmp.dependencies}\n\n{latest_lmp.source}",
-                    f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
-        else:
-            commit = None
+                        f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
 
         input = WriteLMPInput(
             lmp_id=func.__ell_hash__,
@@ -240,10 +243,12 @@ async def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, comp
     if invocation_contents.should_externalize:
         invocation_contents.is_external = True
 
+
         # Write to the blob store
         blob_id = await config._client.store_blob(
-            invocation_contents.model_dump_json().encode('utf-8'),
-            metadata={'invocation_id': invocation_id}
+            json.dumps(invocation_contents.model_dump(
+            ), default=str).encode('utf-8'),
+            invocation_id
         )
         invocation_contents = InvocationContents(
             invocation_id=invocation_id,

@@ -1,7 +1,7 @@
 import ell
 import random
 
-ell.init(store='./logdir', autocommit=True)
+ell.init(store='./logdir', autocommit=True, verbose=True)
 
 def get_random_adjective():
     adjectives = ["enthusiastic", "cheerful", "warm", "friendly", "heartfelt", "sincere"]
@@ -10,9 +10,9 @@ def get_random_adjective():
 def get_random_punctuation():
     return random.choice(["!", "!!", "!!!"])
 
-@ell.simple(model="gpt-3.5-turbo")
+@ell.simple(model="o1-preview")
 def hello(name: str):
-    """You are a helpful and expressive assistant."""
+    # """You are a helpful and expressive assistant."""
     adjective = get_random_adjective()
     punctuation = get_random_punctuation()
     return f"Say a {adjective} hello to {name}{punctuation}"

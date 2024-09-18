@@ -1,0 +1,51 @@
+🚀 I'm excited to announce the future of prompt engineering: 𝚎𝚕𝚕.
+
+developed from ideas during my time at OpenAI, 𝚎𝚕𝚕 is light, functional lm programming library:
+
+- automatic versioning & tracing
+- rich local oss visualization tools
+- multimodality native
+
+Read on ⬇️
+
+𝚎𝚕𝚕 was built out of frustration for frameworks like @LangChainAI  on three principles
+
+- prompts are programs not strings
+- prompts are parameters of machine learning models
+- every call to a language model is worth its weight in credits
+
+prompting should be readable, scientific, and optimizable
+
+prompt engineering is an optimization process
+
+because you write your prompts as normal python functions, 𝚎𝚕𝚕  automatically versions and serializes them via dynamic analysis of "lexical closures" - no custom IDE or editor required
+
+𝚎𝚕𝚕.𝚒𝚗𝚒𝚝(𝚜𝚝𝚘𝚛𝚎='./𝚕𝚘𝚐𝚍𝚒𝚛')
+
+local tools for monitoring & visualization
+
+prompt engineering goes from a dark art to a science with the right tools. Ell Studio is a local, open source tool for prompt version control, monitoring, visualization.
+
+𝚎𝚕𝚕-𝚜𝚝𝚞𝚍𝚒𝚘 --𝚜𝚝𝚘𝚛𝚊𝚐𝚎 ./𝚕𝚘𝚐𝚍𝚒𝚛
+
+
+Multimodality should be first class
+
+in anticipation of the upcoming gpt-4o + 🍓 api, 𝚎𝚕𝚕 is built with multimodality first.
+
+with a rich numpy style message api with multimodal type coercion, using images, video, and audio is intuitive
+
+
+🎉 𝚎𝚕𝚕 is available on PyPI today w/
+
+𝚙𝚒𝚙 𝚒𝚗𝚜𝚝𝚊𝚕𝚕 𝚎𝚕𝚕-𝚊𝚒
+
+check out the source https://github.com/MadcowD/ell
+and read the docs https://docs.ell.so/
+
+⏰ new features soon, including SGD & RL on prompts and so much more!
+
+
+🙏 huge shout out to everyone who's helped with this project
+@jakeottiger @a_dixon @shelwin_ zraig, frank hu, & my discord
+so many other good convos w @goodside @aidan_mclau  and others 

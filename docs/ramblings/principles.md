@@ -7,7 +7,7 @@
     ```
     import ell
 
-    @ell.lm
+    @ell.simple
     def fn(): return "prompt"
 
     with ell.cache(fn):
@@ -23,7 +23,7 @@
     store = ell.stores.SQLiteStore("mystore")
     ell.use_store(store)
     
-    @ell.lm
+    @ell.simple
     def fn(): return "prompt"
 
     with ell.store.cache(lmp):

@@ -9,7 +9,7 @@ from typing import Any, Optional, Dict, List, Set
 
 class BlobStore(ABC):
     @abstractmethod
-    def store_blob(self, blob: bytes, metadata: Optional[Dict[str, Any]] = None) -> str:
+    def store_blob(self, blob: bytes, blob_id  : str) -> str:
         """Store a blob and return its identifier."""
         pass
 

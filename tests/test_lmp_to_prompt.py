@@ -10,10 +10,6 @@
 
 
 
-# @lm(model="gpt-4-turbo", temperature=0.1, max_tokens=5)
-# def lmp_with_default_system_prompt(*args, **kwargs):
-#     return "Test user prompt"
-
 
 # @lm(model="gpt-4-turbo", temperature=0.1, max_tokens=5)
 # def lmp_with_docstring_system_prompt(*args, **kwargs):

@@ -21,12 +21,14 @@ InvocableTool = Callable[..., Union["ToolResult", _lstr_generic, List["ContentBl
 
 class ToolResult(BaseModel):
     tool_call_id: _lstr_generic
+    #XXX: Add a validator to check that the result is a list of ContentBlocks.
     result: List["ContentBlock"]
 
 class ToolCall(BaseModel):
     tool : InvocableTool
     tool_call_id : Optional[_lstr_generic] = Field(default=None)
-    params : Union[Type[BaseModel], BaseModel]
+    params : BaseModel
+
     def __call__(self, **kwargs):
         assert not kwargs, "Unexpected arguments provided. Calling a tool uses the params provided in the ToolCall."
 
@@ -46,16 +48,18 @@ class ContentBlock(BaseModel):
     
     text: Optional[_lstr_generic] = Field(default=None)
     image: Optional[Union[PILImage.Image, str, np.ndarray]] = Field(default=None)
+    image_detail: Optional[str] = Field(default=None)
     audio: Optional[Union[np.ndarray, List[float]]] = Field(default=None)
     tool_call: Optional[ToolCall] = Field(default=None)
-    parsed: Optional[Union[Type[BaseModel], BaseModel]] = Field(default=None)
+    parsed: Optional[BaseModel] = Field(default=None)
     tool_result: Optional[ToolResult] = Field(default=None)
 
     @model_validator(mode='after')
     def check_single_non_null(self):
         non_null_fields = [field for field, value in self.__dict__.items() if value is not None]
-        if len(non_null_fields) > 1:
-            raise ValueError(f"Only one field can be non-null. Found: {', '.join(non_null_fields)}")
+        # need to allow for image_detail to be set with an image
+        if len(non_null_fields) > 1 and set(non_null_fields) != {'image', 'image_detail'}:
+            raise ValueError(f"Only one field can be non-null (except for image with image_detail). Found: {', '.join(non_null_fields)}")
         return self
 
     @property
@@ -174,29 +178,6 @@ class ContentBlock(BaseModel):
         return serialize_image(image)
     
 
-    def to_openai_content_block(self):
-        if self.image:
-            base64_image = self.serialize_image(self.image, None)
-            return {
-                "type": "image_url",
-                "image_url": {
-                    "url": base64_image
-                }
-            }
-        elif self.text:
-            return {
-                "type": "text",
-                "text": self.text
-            }
-        elif self.parsed:
-            return {
-                "type": "text",
-                "json": self.parsed.model_dump_json()
-            }
-        else:
-            return None 
-        
-
 def coerce_content_list(content: Union[str, List[ContentBlock], List[Union[str, ContentBlock, ToolCall, ToolResult, BaseModel]]] = None, **content_block_kwargs) -> List[ContentBlock]:
     if not content:
         content = [ContentBlock(**content_block_kwargs)]
@@ -288,7 +269,7 @@ class Message(BaseModel):
         return [c.tool_result for c in self.content if c.tool_result is not None]
 
     @cached_property
-    def parsed(self) -> List[BaseModel]:
+    def parsed(self) -> Union[BaseModel, List[BaseModel]]:
         """Returns a list of all parsed content.
 
         Example:
@@ -299,7 +280,8 @@ class Message(BaseModel):
             >>> len(message.parsed)
             1
         """
-        return [c.parsed for c in self.content if c.parsed is not None]
+        parsed_content = [c.parsed for c in self.content if c.parsed is not None]
+        return parsed_content[0] if len(parsed_content) == 1 else parsed_content
     def call_tools_and_collect_as_message(self, parallel=False, max_workers=None):
         if parallel:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -308,36 +290,6 @@ class Message(BaseModel):
         else:
             content = [c.tool_call.call_and_collect_as_message_block() for c in self.content if c.tool_call]
         return Message(role="user", content=content)
-
-    def to_openai_message(self) -> Dict[str, Any]:
-
-        message = {
-            "role": "tool" if self.tool_results else self.role,
-            "content": list(filter(None, [
-                c.to_openai_content_block() for c in self.content
-            ]))
-        }
-        if self.tool_calls:
-            message["tool_calls"] = [
-                {
-                    "id": tool_call.tool_call_id,
-                    "type": "function",
-                    "function": {
-                        "name": tool_call.tool.__name__,
-                        "arguments": json.dumps(tool_call.params.model_dump())
-                    }
-                } for tool_call in self.tool_calls
-            ]
-            message["content"] = None  # Set content to null when there are tool calls
-
-        if self.tool_results:
-            message["tool_call_id"] = self.tool_results[0].tool_call_id
-            # message["name"] = self.tool_results[0].tool_call_id.split('-')[0]  # Assuming the tool name is the first part of the tool_call_id
-            message["content"] = self.tool_results[0].result[0].text
-            # Let';s assert no other type of content block in the tool result
-            assert len(self.tool_results[0].result) == 1, "Tool result should only have one content block"
-            assert self.tool_results[0].result[0].type == "text", "Tool result should only have one text content block"
-        return message
 
 # HELPERS 
 def system(content: Union[str, List[ContentBlock]]) -> Message:
