@@ -14,3 +14,5 @@ x = th.randn(10)
 
 print(forward(x))
 print(weights)
+
+# OOOH WAHT IF WE DID MANY TYPES OF LEARNABLES in
