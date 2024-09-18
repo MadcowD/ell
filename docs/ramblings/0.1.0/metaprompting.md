@@ -894,3 +894,188 @@ Meta prompting =
 construction of @ell.simple call + parsing dynamically from input outputs and instructions.
 
 
+I think this is the conclusion.
+
+Take the best of DSPy and clean it up.
+```python
+class Input(BaseModel):
+    instructions : Field(str, description="The instructions for the prompt")
+
+class Output(BaseModel):
+    answer : Field(str, description="The answer to the prompt")
+
+meta_prompt = ell.meta(
+    name="blog_post",
+    input={
+        "instructions" : Field(str, description="The instructions for the prompt")
+    },
+    output={
+        "answer" : Field(str, description="The answer to the prompt")
+    },
+    instructions="write a blog post about the following topic",
+) -> str
+
+```
+ Meta prompts are signatures.
+
+Why DSPy requires compilation is that we can have mta promtps call one another but we shouldnt have  to compile before calling because the computatio ngraph is not known until runtime.
+
+I think the prolem with all this is that when i do th.randn(10,10) i can immediately use it i can imemdiately use the layer it might be garbage but i can. SO if I were to take this in ell I can imagine.
+
+```python
+meta_prompt = ell.lmp(
+    name = "blog_post",
+    input={
+        "instructions" : Field(str, description="The instructions for the prompt")
+    },
+    output={
+        "answer" : Field(str, description="The answer to the prompt")
+    },
+    instructions="write a blog post about the following topic",
+)
+```
+then I can just call meta_prompt() # and it will give me the prompt. the signature is the parameter but we can have different "initializations" instead of jsut LMP 
+compiling is uneccessary because we can access the parameterixaiton at runtime to optimize. This also allows the user to see what hhe fuck the thing is doing.
+```python
+
+ell.meta.io_lmp(
+    ell.signature(
+        Input(instructions : str),
+        Output(answer : str),
+    instructions="write a blog post about the following topic",
+    ),
+    model="gpt-4o",
+)
+
+cot_blog = ell.meta.cot_lmp(
+    ell.signature(
+        Input(instructions : str),
+        Output(title : str, content : str),
+        instructions="write a blog post about the following topic",
+    ),
+    model="gpt-4o",
+)
+
+
+@ell.function()
+def write_blog_post(instructions : str) -> str:
+    blog = cot_blog(instructions)
+    return f"# {blog.title}\n\n{blog.content}"
+```
+
+Now let's say we want to optimize write_blog_post.
+
+```python
+x = [
+    "AI",
+]
+y = [
+    BlogPost(title="AI", content="AI is the future."),
+]
+
+
+optimized_blog_post = ell.FewShotOptimizer().fit(write_blog_post, x=x, y=y)
+```
+so because this is functional is cot_blog now changed? this the reason for modules in dspy because if i want to see the updated params is it cot_blog? 
+ NO so we need to specify it as learnable:
+
+
+```python
+filters = ell.parameterized(ell.cot(
+    model="gpt-4o",
+    instructions="write a blog post about the following topic",
+    signature=ell.signature(
+        Input(instructions : str),
+        Output(title : str, content : str),
+    ),
+ ))
+```
+
+ so we are going full functional now?
+
+ we could do shit like this
+
+```python
+ @ell.simple(model="gpt-4o")
+ def my_intial_prompt(instructions : str) -> str:
+    return f"write a blog post about the following topic: {instructions}"
+
+
+ >>> ell.FewShotOptimizer().fit(my_intial_prompt, x=x, y=y)
+ exception: NotLearnableError("my_intial_prompt is not learnable")
+
+ learnable = ell.learnable(my_intial_prompt)
+ final_prompt =ell.FewShotOptimizer().fit(learnable, x=x, y=y)
+ >>> final_prompt("AI")
+ "write a blog post about the following topic: AI"
+
+ learnable.data # This is the final prompt
+
+ ```
+
+
+ ```python
+
+
+import torch as th
+
+
+weights = th.nn.Parameter(th.randn(10))
+
+
+def forward(x):
+    return x * weights
+
+
+x = th.randn(10)
+
+print(forward(x))
+print(weights)
+
+# OOOH WAHT IF WE DID MANY TYPES OF LEARNABLES in
+```
+
+like:
+
+```python
+@ell.simple(model="gpt-4o")
+def my_initial_prompt(instructions : str) -> str:
+    return f"{ell.learnable("You must write a blog post about the following topic:")} {instructions}"
+
+```
+
+Then we can optimize the strings!
+I dont think "few shot" is an optimizer though. I guess you could say if you want to do few shot, y9ou would make the whole prompt learnable
+
+```python
+learnable_prompt = th.learnable(my_initial_prompt)
+
+
+ell.FewShotOptimizer().fit(learnable_prompt, x=x, y=y)
+
+--> 
+
+def final_prompt(instructions : str) -> str:
+    return [
+        ell.system("You are a helpful assistant."),
+        ell.user(x[0]),
+        ell.assistant(x[1]),
+        ...
+        ell.user("You must write a blog post about the following topic:")
+        ell.user(instructions)
+    ]
+```
+but how do we serialize this? do we mutate the code?  no. we just have it serialized like this 
+
+```python
+def my_initial_prompt(instructions : str) -> str:
+    return f"{ell.learnable("You must write a blog post about the following topic:")} {instructions}"
+
+my_intial_prompt_optimized=  fewhsot(my_intial_prompt, x=x, y=y)
+
+
+ell.simple(model="gpt-4o", messages=learnable_prompt.data)
+
+```
+
+ew no. I guess I thought it was cool to have strings be parameters. in arbitrary ways.
