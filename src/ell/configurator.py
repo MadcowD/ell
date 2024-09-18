@@ -25,6 +25,7 @@ class Config(BaseModel):
     providers: Dict[Type, Type[Provider]] = Field(default_factory=dict, description="A dictionary mapping client types to provider classes.")
     default_openai_client: Optional[openai.Client] = Field(default=None, description="The default OpenAI client used when a specific model client is not found.")
     _client: Optional[EllClient] = None
+    store_blobs: bool = Field(default=True, description="If True, enables storing blobs in the store.")
 
 
 

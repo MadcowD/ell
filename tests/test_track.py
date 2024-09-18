@@ -15,6 +15,7 @@ from ell.api.types import LMP, GetLMPResponse, WriteInvocationInput, WriteLMPInp
 
 from ell.stores.sql import SQLStore, SQLiteStore
 
+import ell.providers.openai
 
 # T = TypeVar('T')
 
@@ -77,7 +78,7 @@ def mock_openai_chatcompletion(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(openai.ChatCompletion, "create", mock_acreate)
 
     def mock_create(*args, **kwargs):
-        return [ChatCompletion(
+        return ChatCompletion(
             id="chatcmpl-123",
             object="chat.completion",
             created=1677652288,
@@ -88,7 +89,7 @@ def mock_openai_chatcompletion(monkeypatch: pytest.MonkeyPatch):
                 message=ChatCompletionMessage(role="assistant", content="Hello!"))],
             usage=CompletionUsage(
                 prompt_tokens=10, completion_tokens=20, total_tokens=30),
-        )]
+        )
 
     class MockCompletions:
         def create(*args, **kwargs):
@@ -110,6 +111,9 @@ def mock_openai_chatcompletion(monkeypatch: pytest.MonkeyPatch):
 def test_track_decorator_sqlite(mock_openai_chatcompletion: openai.Client):
     ell.config.register_model(model_name="test-model",
                               client=mock_openai_chatcompletion)
+    ell.providers.openai.OpenAIProvider.get_client_type = lambda: mock_openai_chatcompletion.__class__
+    ell.config.register_provider(ell.providers.openai.OpenAIProvider)
+
     ell.init(client=EllSqliteClient(storage_dir=':memory:'))
 
     @ell.simple(model="test-model")
@@ -134,6 +138,9 @@ def test_track_decorator_api(
 
     ell.config.register_model(model_name='gpt-4o-mini',
                               client=mock_openai_chatcompletion)
+    
+    ell.providers.openai.OpenAIProvider.get_client_type = lambda: mock_openai_chatcompletion.__class__
+    ell.config.register_provider(ell.providers.openai.OpenAIProvider)
 
     class TestAPIClient(EllClient):
         def __init__(self, base_url: str):
