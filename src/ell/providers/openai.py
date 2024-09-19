@@ -149,16 +149,16 @@ try:
                 response = [call_result.response]
             else:
                 response = call_result.response
+            
 
             for chunk in response:
                 if hasattr(chunk, "usage") and chunk.usage:
                     metadata = chunk.to_dict()
-                    if call_result.actual_streaming:
-                        continue
                     
 
                 for choice in chunk.choices:
                     choices_progress[choice.index].append(choice)
+                    
                     if  choice.index == 0 and logger:
                         # print(choice, streaming)
                         logger(choice.delta.content if call_result.actual_streaming else 
