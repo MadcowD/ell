@@ -12,7 +12,7 @@ from ell.util.verbosity import compute_color, model_usage_logger_pre
 from functools import wraps
 from typing import Any, Dict, Optional, List, Callable, Union
 
-def complex(model: str, client: Optional[Any] = None, exempt_from_tracking=False, tools: Optional[List[Callable]] = None, post_callback: Optional[Callable] = None, **api_params):
+def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Callable]] = None, exempt_from_tracking=False, post_callback: Optional[Callable] = None, **api_params):
     """
     A sophisticated language model programming decorator for complex LLM interactions.
 
@@ -213,47 +213,62 @@ def complex(model: str, client: Optional[Any] = None, exempt_from_tracking=False
     - ell.studio: For visualizing and analyzing LMP executions.
     """
     default_client_from_decorator = client
+    default_model_from_decorator = model
 
 
     def parameterized_lm_decorator(
         prompt: LMP,
     ) -> Callable[..., Union[List[Message], Message]]:
-        color = compute_color(prompt)
         _warnings(model, prompt, default_client_from_decorator)
 
-            
         @wraps(prompt)
         def model_call(
-            *fn_args,
+            *prompt_args,
             _invocation_origin : str = None,
             client: Optional[Any] = None,
             lm_params: Optional[LMPParams] = {},
-            invocation_api_params=False,
-            **fn_kwargs,
+            **prompt_kwargs,
         ) -> _lstr_generic:
-            res = prompt(*fn_args, **fn_kwargs)
-
-            assert exempt_from_tracking or _invocation_origin is not None, "Invocation origin is required when using a tracked LMP"
+            # promt -> str
+            res = prompt(*prompt_args, **prompt_kwargs)
+            # Convert prompt into ell messages
             messages = _get_messages(res, prompt)
+            # done.
 
-            if config.verbose and not exempt_from_tracking: model_usage_logger_pre(prompt, fn_args, fn_kwargs, "notimplemented", messages, color)
+            # Cute verbose logging.
+            if config.verbose and not exempt_from_tracking: model_usage_logger_pre(prompt, prompt_args, prompt_kwargs, model_call.__ell_hash__, messages)
 
-            (result, _api_params, metadata) = call(model=model, messages=messages, api_params={**config.default_lm_params, **api_params, **lm_params}, client=client or default_client_from_decorator, _invocation_origin=_invocation_origin, _exempt_from_tracking=exempt_from_tracking, _logging_color=color, _name=prompt.__name__, tools=tools)
-        
+            # Call the model. We use this data class because we have so many params!
+            merged_call_params = {**config.default_lm_params, **api_params, **lm_params}
+            ell_call = EllCall(
+                model=merged_call_params.get("model", default_model_from_decorator),
+                messages=messages,
+                client = client or default_client_from_decorator,
+                api_params=merged_call_params,
+                tools=tools,
+                invocation_id=_invocation_origin,
+            )
+            # Get the provider for the model
+            provider = config.get_provider_for(ell_call)
+            (result, _api_params, metadata) = provider.call_model(ell_call)
+
+            (result, _api_params, metadata) = call(client=client or default_client_from_decorator, _invocation_origin=_invocation_origin, should_log=config.verbose and not exempt_from_tracking, _name=prompt.__name__, tools=tools)
+
+            # Finish
             result = post_callback(result) if post_callback else result
-            
 
-            return result, api_params, metadata
+            # omg bug spotted!
+            # These get sent to track.
+            # This is wack.           
+            return result, _api_params, metadata
 
 
   
-        # TODO: # we'll deal with type safety here later
         model_call.__ell_api_params__ = api_params
         model_call.__ell_func__ = prompt
         model_call.__ell_type__ = LMPType.LM
         model_call.__ell_exempt_from_tracking = exempt_from_tracking
-        # model_call.__ell_uses__ = prompt.__ell_uses__
-        # model_call.__ell_hash__ = prompt.__ell_hash__
+ 
 
         if exempt_from_tracking:
             return model_call

@@ -24,8 +24,7 @@ def call(
     tools: Optional[list[LMP]] = None,
     client: Optional[Any] = None,
     _invocation_origin: str,
-    _exempt_from_tracking: bool,
-    _logging_color: Optional[str] = None,
+    should_log: bool,
     _name: Optional[str] = None,
 ) -> Tuple[Union[Message, List[Message]], Dict[str, Any], Dict[str, Any]]:
     """
@@ -48,14 +47,14 @@ def call(
     # XXX: Could actually delete htis
     call_result = provider_class.call_model(client, model, messages, api_params, tools)
     
-    if config.verbose and not _exempt_from_tracking:
-        model_usage_logger_post_start(_logging_color, call_result.actual_n)
+    if  should_log:
+        model_usage_logger_post_start(call_result.actual_n)
 
-    with model_usage_logger_post_intermediate(_logging_color, call_result.actual_n) as _logger:
-        tracked_results, metadata = provider_class.process_response(call_result, _invocation_origin, _logger if config.verbose and not _exempt_from_tracking else None, tools)
+    with model_usage_logger_post_intermediate(call_result.actual_n) as _logger:
+        tracked_results, metadata = provider_class.process_response(call_result, _invocation_origin, _logger if  should_log else None, tools)
         
         
-    if config.verbose and not _exempt_from_tracking:
+    if config.verbose and not should_log:
         model_usage_logger_post_end()
 
     
