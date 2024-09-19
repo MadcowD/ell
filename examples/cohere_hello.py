@@ -1,0 +1,26 @@
+import os
+import ell
+import random
+import cohere
+from ell.providers.cohere import CohereProvider
+
+client = cohere.Client(api_key=os.environ['CO_API_KEY'])
+
+ell.init(store='./logdir', autocommit=True, verbose=True)
+
+def get_random_adjective():
+    adjectives = ["enthusiastic", "cheerful", "warm", "friendly", "heartfelt", "sincere"]
+    return random.choice(adjectives)
+
+def get_random_punctuation():
+    return random.choice(["!", "!!", "!!!"])
+
+@ell.simple(model='command-r-plus-08-2024', client=client, provider=CohereProvider)
+def hello(name: str):
+    """You are a helpful and expressive assistant."""
+    adjective = get_random_adjective()
+    punctuation = get_random_punctuation()
+    return f"Say a {adjective} hello to {name}{punctuation}"
+
+greeting = hello("Sam Altman")
+print(greeting)
