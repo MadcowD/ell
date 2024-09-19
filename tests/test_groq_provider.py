@@ -116,7 +116,7 @@ try:
             if any(block.parsed for block in message.content):
                 # Handle parsed content blocks
                 parsed_contents = [
-                    json.dumps(block.parsed.model_dump()) if block.parsed else block.text
+                    json.dumps(block.parsed.model_dump(), separators=(',', ':')) if block.parsed else block.text
                     for block in message.content
                 ]
                 # Concatenate all content blocks with a newline
