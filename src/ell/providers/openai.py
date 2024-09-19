@@ -149,16 +149,16 @@ try:
                 response = [call_result.response]
             else:
                 response = call_result.response
+            
 
             for chunk in response:
                 if hasattr(chunk, "usage") and chunk.usage:
                     metadata = chunk.to_dict()
-                    if call_result.actual_streaming:
-                        continue
                     
 
                 for choice in chunk.choices:
                     choices_progress[choice.index].append(choice)
+                    
                     if  choice.index == 0 and logger:
                         # print(choice, streaming)
                         logger(choice.delta.content if call_result.actual_streaming else 
@@ -182,6 +182,9 @@ try:
                                 )
                             )
                         )
+
+                    # Determine the role for streaming responses, defaulting to 'assistant' if not provided
+                    streamed_role = next((choice.delta.role for choice in choice_deltas if choice.delta.role), 'assistant')
                 else:
                     choice = choice_deltas[0].message
                     if choice.refusal:
@@ -229,7 +232,7 @@ try:
                         role=(
                             choice.role
                             if not call_result.actual_streaming
-                            else choice_deltas[0].delta.role
+                            else streamed_role
                         ),
                         content=content,
                     )
