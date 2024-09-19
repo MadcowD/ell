@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Sidebar from './components/Sidebar';
@@ -39,6 +39,45 @@ const WebSocketConnectionProvider = ({children}) => {
 const queryClient = new QueryClient();
 
 function App() {
+  useEffect(() => {
+    const checkVersion = async () => {
+      try {
+        const response = await fetch('https://version.ell.so/ell-ai/studio');
+        const latestVersion = await response.text();
+
+        const currentVersion = process.env.REACT_APP_ELL_VERSION; // Assuming you have the current version in an environment variable
+        console.log('Current version:', currentVersion);
+        console.log('Latest version:', latestVersion);
+        if (currentVersion !== latestVersion) {
+          toast(
+            <div className="flex flex-col space-y-2">
+              <span className="font-semibold">New version available: {latestVersion}</span>
+              <span>To update, run:</span>
+              <code className="bg-gray-700 p-1 rounded-md">pip install --upgrade ell-ai</code>
+            </div>,
+            {
+            icon: '🚀',
+            duration: 15000,
+            position: 'top-right',
+            style: {
+              borderRadius: '12px',
+              padding: '16px',
+              background: '#333',
+              color: '#fff',
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Failed to check version', error);
+        toast.error('Failed to check version', {
+          duration: 3000,
+        });
+      }
+    };
+
+    checkVersion();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
