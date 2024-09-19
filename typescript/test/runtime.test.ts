@@ -27,14 +27,14 @@ beforeAll(() => {
 })
 test("runtime", async () => {
   const child = simple({ model: "gpt-4o-mini" }, async (a: string) => {
-    return "child";
+    return "child"
   });
-  const hello = simple({ model: "gpt-4o" }, async (a: string) => {
-    const ok = await child(a);
-    return a + ok;
+  const hello = simple({ model: "gpt-4o" }, async (a: {a: string}) => {
+    const ok = await child(a.a);
+    return a.a + ok;
   });
 
-  const result = await hello("world");
+  const result = await hello({a: "world"});
 
   expect(result).toBe("worldchild");
   expect(hello.__ell_lmp_id__).toBeDefined();
@@ -49,30 +49,36 @@ test("runtime", async () => {
       {
         "completion_tokens": expect.any(Number),
         "id": expect.stringContaining("invocation-"),
-        "input": [
-          "world",
-        ],
-        "invocation_api_params": {
-          "model": "gpt-4o-mini",
+        "invocation_contents": {
+          "invocation_api_params": {
+            "model": "gpt-4o-mini",
+          },
+          "invocation_id": expect.stringContaining("invocation-"),
+          "params": [
+             "world",
+          ],
+          "results": "child",
         },
         "latency_ms": expect.any(Number),
         "lmp_id": expect.stringContaining("lmp-"),
-        "output": "child",
         "prompt_tokens": expect.any(Number),
         "used_by_id": expect.stringContaining("invocation-")
       },
       {
         "completion_tokens": expect.any(Number),
         "id": expect.stringContaining("invocation-"),
-        "input": [
-          "world",
-        ],
-        "invocation_api_params": {
-          "model": "gpt-4o",
+        "invocation_contents": {
+          "invocation_api_params": {
+            "model": "gpt-4o",
+          },
+          "invocation_id": expect.stringContaining("invocation-"),
+          "params": [
+            {a:'world'}
+          ],
+          "results": "worldchild",
         },
         "latency_ms": expect.any(Number),
         "lmp_id": expect.stringContaining("lmp-"),
-        "output": "worldchild",
         "prompt_tokens": expect.any(Number),
         "used_by_id": undefined
       },

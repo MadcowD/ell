@@ -52,6 +52,13 @@ export interface EllTSC {
   ): Promise<string | null>;
 }
 
+const LMPType= {
+  LM: "LM",
+  TOOL: "TOOL",
+  MULTIMODAL: "MULTIMODAL",
+  OTHER: "OTHER",
+}
+
 type LMPType = "simple" | "complex";
 export type LMP = {
   lmpId: string;

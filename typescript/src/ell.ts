@@ -57,7 +57,10 @@ class InvocationContext {
     this.storage = new AsyncLocalStorage<Invocation[]>();
   }
 
-  async run(invocation: Invocation, callback: () => Promise<void>) {
+  async run<F extends (...args: any[]) => Promise<any>>(
+    invocation: Invocation,
+    callback: F
+  ) {
     let stack = this.storage.getStore() || [];
     stack = [...stack, invocation];
     return this.storage.run(stack, callback);
@@ -105,8 +108,7 @@ const serializeLMP = async (args: LMP) => {
   return await writeLMP(args);
 };
 
-type Wrapper = {
-  (...args: any[]): Promise<any>;
+type Wrapper<F extends (...args: any[]) => Promise<any>> = F & {
   __ell_type__?: string;
   __ell_lmp_name__?: string;
   __ell_lmp_id__?: string | null;
@@ -131,21 +133,40 @@ function convertMultimodalResponseToString(
     : response.content[0].text;
 }
 
-export const simple = (a: Kwargs, f: F): Wrapper => {
+/**
+ *
+ */
+type SimpleLMPInner = (...args: any[]) => Promise<string | Array<Message>>;
+type SimpleLMP<A extends SimpleLMPInner> = ((
+  ...args: Parameters<A>
+) => Promise<string>) & {
+  __ell_type__?: string;
+  __ell_lmp_name__?: string;
+  __ell_lmp_id__?: string | null;
+  __ell_invocation_id__?: string | null;
+};
+
+const f: SimpleLMPInner = async (s: string) => {
+  return "hello";
+};
+
+export const simple = <F extends SimpleLMPInner>(
+  a: Kwargs,
+  f: F
+): SimpleLMP<F> => {
   const { filepath, line, column } = getCallerFileLocation();
 
   if (!filepath || !line || !column) {
     console.error(
       `LMP cannot be tracked. Your source maps may be incorrect or unavailable.`
     );
-    return f;
   }
 
   let maybeLMP: LMP | null = null;
   let trackAttempted = false;
   let lmp: LMP = undefined as unknown as LMP;
 
-  const wrapper: Wrapper = async (...args: any[]) => {
+  const wrapper: SimpleLMP<F> = async (...args: any[]) => {
     if (!wrapper.__ell_lmp_id__) {
       if (trackAttempted) {
         return f;
@@ -156,7 +177,7 @@ export const simple = (a: Kwargs, f: F): Wrapper => {
         console.error(
           `No LMP found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`
         );
-        return f;
+        return f as unknown as Wrapper<F>;
       }
       lmp = maybeLMP;
       const lmpId = generateFunctionHash(maybeLMP.source, "", maybeLMP.lmpName);
@@ -165,6 +186,8 @@ export const simple = (a: Kwargs, f: F): Wrapper => {
     }
     let invocationId = generateInvocationId();
     return invocationContext.run(
+      // todo. check tracing
+      // @ts-ignore 
       {
         id: invocationId,
         lmp_id: lmp.lmpId,
@@ -214,9 +237,12 @@ export const simple = (a: Kwargs, f: F): Wrapper => {
           latency_ms: 0,
           prompt_tokens: 0,
           completion_tokens: 0,
-          input: args,
-          output: result,
-          invocation_api_params: a,
+          invocation_contents: {
+            invocation_id: invocationId,
+            params: args,
+            results: result,
+            invocation_api_params: a,
+          },
           used_by_id: invocationContext.getParentInvocation()?.id,
         });
         return result;
@@ -240,15 +266,19 @@ export const complex = (a: Kwargs, f: F) => {
 
   const wrapper = async (...args: any[]) => {
     const { filepath, line, column } = getCallerFileLocation();
-    enter({ name, filepath, line, column });
     await serializeLMP({ name, filepath, line, column });
     const result = await f(...args);
     await writeInvocation({
-      lmpType: "complex",
-      args,
-      kwargs: a,
-      input: args,
-      output: result,
+      id: generateInvocationId(),
+      lmp_id: generateFunctionHash(filepath!, line!, column!),
+      latency_ms: 0,
+      prompt_tokens: 0,
+      completion_tokens: 0,
+      invocation_contents: {
+        invocation_id: generateInvocationId(),
+        params: args,
+        results: result,
+      },
     });
     exit();
     return result;
