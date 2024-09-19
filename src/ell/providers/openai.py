@@ -182,6 +182,9 @@ try:
                                 )
                             )
                         )
+
+                    # Determine the role for streaming responses, defaulting to 'assistant' if not provided
+                    streamed_role = next((choice.delta.role for choice in choice_deltas if choice.delta.role), 'assistant')
                 else:
                     choice = choice_deltas[0].message
                     if choice.refusal:
@@ -229,7 +232,7 @@ try:
                         role=(
                             choice.role
                             if not call_result.actual_streaming
-                            else choice_deltas[0].delta.role
+                            else streamed_role
                         ),
                         content=content,
                     )
