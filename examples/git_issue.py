@@ -3,7 +3,7 @@ import os
 
 from ell.stores.sql import SQLiteStore
 
-ell.config.verbose = True
+
 
 @ell.simple(model="gpt-4o-mini", temperature=0.1)
 def generate_description(about : str):

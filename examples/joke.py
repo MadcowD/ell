@@ -22,7 +22,6 @@ def joke(topic : str):
 
 
 if __name__ == "__main__":
-    ell.config.verbose = True
-    ell.set_store('./logdir', autocommit=False)
+    ell.init(verbose=True, store='./logdir', autocommit=False)
     # Todo: Figure configuration for automcommititng.
     joke("minecraft") # <The joke>

@@ -3,7 +3,7 @@ import ell
 
 from ell.stores.sql import SQLiteStore
 
-ell.config.verbose = True
+
 
 @ell.simple(model="gpt-4o-mini", temperature=1.0)
 def generate_story_ideas(about : str):
@@ -33,7 +33,7 @@ def write_a_really_good_story(about : str):
 
 if __name__ == "__main__":
     from ell.stores.sql import SQLiteStore
-    ell.set_store('./logdir', autocommit=True)
+    ell.init(store='./logdir', autocommit=True, verbose=True)
 
     # with ell.cache(write_a_really_good_story):
     story = write_a_really_good_story("a dog")

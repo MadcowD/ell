@@ -1,7 +1,7 @@
 import random
 from typing import List, Tuple
 import ell
-ell.config.verbose = True
+
 
 
 names_list = [
@@ -49,7 +49,7 @@ Your goal is to come up with a response to a chat. Only respond in one sentence 
 
 if __name__ == "__main__":
     from ell.stores.sql import SQLiteStore
-    ell.set_store('./logdir', autocommit=True)
+    ell.init(store='./logdir', autocommit=True, verbose=True)
 
     for __ in range(100):
         messages : List[Tuple[str, str]]= []

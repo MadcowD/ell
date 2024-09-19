@@ -5,7 +5,7 @@ import pydantic
 
 from ell.stores.sql import SQLiteStore
 
-ell.config.verbose = True
+
 
 
 @dataclasses.dataclass
@@ -69,5 +69,5 @@ def calc_structured(task: str) -> float:
 
 
 if __name__ == "__main__":
-    ell.set_store('./logdir', autocommit=True)
+    ell.init(store='./logdir', autocommit=True, verbose=True)
     print(calc_structured("What is two plus two?"))

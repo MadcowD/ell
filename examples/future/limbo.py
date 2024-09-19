@@ -4,8 +4,7 @@ from ell.types.message import Message
 
 
 
-ell.set_store('./logdir', autocommit=True)
-ell.config.verbose = True
+ell.init(verbose=True, store='./logdir', autocommit=True)
 
 
 @ell.tool(autogenerate=True)
