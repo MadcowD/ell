@@ -222,7 +222,6 @@ So you could. Require the implementer to say if there were A tool call or not in
 It's not possible to prevent people from writing **** code. Like we can't know if they're stupid provider has a type of a response that's not a tool call. 
 Unless we really explicitly add them mark what was in the response. 
 
-
 # Models (maybe models should live close to providers)
 
 # This prevents us from doing routing but that's actualyl openrouters purpose
