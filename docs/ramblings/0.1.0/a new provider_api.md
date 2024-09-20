@@ -218,10 +218,33 @@ class Provider(ABC):
 # How would you guarantee that a provider? Respond with a tool call if a tool call occurs within the provider. 
 # Without actually knowing the details of the provider, there's no way To guarantee this. It almost has to be like A required argument of the response construction 
 
-So you could. Require the implementer to say if there were A tool call or not in the response. 
-It's not possible to prevent people from writing **** code. Like we can't know if they're stupid provider has a type of a response that's not a tool call. 
-Unless we really explicitly add them mark what was in the response. 
+# So you could. Require the implementer to say if there were A tool call or not in the response. 
+# It's not possible to prevent people from writing **** code. Like we can't know if they're stupid provider has a type of a response that's not a tool call. 
+# Unless we really explicitly add them mark what was in the response. 
 
 # Models (maybe models should live close to providers)
 
 # This prevents us from doing routing but that's actualyl openrouters purpose
+
+
+
+
+
+# right now we stream by default
+# but this a problemn for models dont support it we'd ahve to make two requests which imo is a nono.
+
+# Future todo stream=False is default. We don't log steaming completions with verbose mode.
+# Set verbose_stream=False to stop background streaming, or pass stream=False
+
+
+register_model(
+    name="",
+    default_client=client,
+    disallowed_params={"stream", "stream_options"},
+    default_params={"stream": False, "stream_options": {}},
+)
+
+
+# if you set stream=False we dont log streaming completions
+
+

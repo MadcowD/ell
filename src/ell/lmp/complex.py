@@ -1,17 +1,20 @@
 from ell.configurator import config
 from ell.lmp._track import _track
+from ell.provider import EllCallParams
 from ell.types._lstr import _lstr
 from ell.types import Message, ContentBlock
 from ell.types.message import LMP, InvocableLM, LMPParams, MessageOrDict, _lstr_generic
 from ell.types.studio import LMPType
-from ell.util._warnings import _warnings
+from ell.util._warnings import _no_api_key_warning, _warnings
 from ell.util.api import  call
 from ell.util.verbosity import compute_color, model_usage_logger_pre
 
+from ell.util.verbosity import model_usage_logger_post_end, model_usage_logger_post_intermediate, model_usage_logger_post_start
 
 from functools import wraps
-from typing import Any, Dict, Optional, List, Callable, Union
+from typing import Any, Dict, Optional, List, Callable, Tuple, Union
 
+#XXX: Remove the docstirng here.
 def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Callable]] = None, exempt_from_tracking=False, post_callback: Optional[Callable] = None, **api_params):
     """
     A sophisticated language model programming decorator for complex LLM interactions.
@@ -152,7 +155,7 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
 
        text = "John Doe is a 30-year-old software engineer."
        result : ell.Message = extract_person_info(text)
-       person_info = result.structured[0]
+       person_info = result.parsed
        print(f"Name: {person_info.name}, Age: {person_info.age}")
 
     5. Multimodal Input:
@@ -214,6 +217,7 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
     """
     default_client_from_decorator = client
     default_model_from_decorator = model
+    default_api_params_from_decorator = api_params
 
 
     def parameterized_lm_decorator(
@@ -224,50 +228,55 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
         @wraps(prompt)
         def model_call(
             *prompt_args,
-            _invocation_origin : str = None,
+            _invocation_origin : Optional[str] = None,
             client: Optional[Any] = None,
-            lm_params: Optional[LMPParams] = {},
+            api_params: Optional[Dict[str, Any]] = None,
             **prompt_kwargs,
-        ) -> _lstr_generic:
+        ) -> Tuple[Any, Any, Any]:
             # promt -> str
             res = prompt(*prompt_args, **prompt_kwargs)
             # Convert prompt into ell messages
             messages = _get_messages(res, prompt)
-            # done.
-
+            
+            # XXX: move should log to a logger.
+            should_log = not exempt_from_tracking and config.verbose
             # Cute verbose logging.
-            if config.verbose and not exempt_from_tracking: model_usage_logger_pre(prompt, prompt_args, prompt_kwargs, model_call.__ell_hash__, messages)
+            if should_log: model_usage_logger_pre(prompt, prompt_args, prompt_kwargs, model_call.__ell_hash__, messages) #type: ignore
 
-            # Call the model. We use this data class because we have so many params!
-            merged_call_params = {**config.default_lm_params, **api_params, **lm_params}
-            ell_call = EllCall(
-                model=merged_call_params.get("model", default_model_from_decorator),
+            # Call the model.
+            # Merge API params
+            merged_api_params = {**config.default_lm_params, **default_api_params_from_decorator, **(api_params or {})}
+            n = merged_api_params.get("n", 1)
+            # Merge client overrides & client registry
+            merged_client = _client_for_model(model, client or default_client_from_decorator)
+            ell_call = EllCallParams(
+                model=merged_api_params.get("model", default_model_from_decorator),
                 messages=messages,
                 client = client or default_client_from_decorator,
-                api_params=merged_call_params,
+                api_params=merged_api_params,
+                origin_id=_invocation_origin,
                 tools=tools,
-                invocation_id=_invocation_origin,
             )
             # Get the provider for the model
             provider = config.get_provider_for(ell_call)
-            (result, _api_params, metadata) = provider.call_model(ell_call)
 
-            (result, _api_params, metadata) = call(client=client or default_client_from_decorator, _invocation_origin=_invocation_origin, should_log=config.verbose and not exempt_from_tracking, _name=prompt.__name__, tools=tools)
+            if should_log: model_usage_logger_post_start(n)
+            with model_usage_logger_post_intermediate(n) as _logger:
+                (result, final_api_params, metadata) = provider.call_model(ell_call, _logger)
 
-            # Finish
             result = post_callback(result) if post_callback else result
-
-            # omg bug spotted!
-            # These get sent to track.
-            # This is wack.           
-            return result, _api_params, metadata
+            if should_log:
+                model_usage_logger_post_end()
+            #
+            #  These get sent to track. This is wack.           
+            return result, final_api_params, metadata
 
 
   
-        model_call.__ell_api_params__ = api_params
-        model_call.__ell_func__ = prompt
-        model_call.__ell_type__ = LMPType.LM
-        model_call.__ell_exempt_from_tracking = exempt_from_tracking
+        model_call.__ell_api_params__ = default_api_params_from_decorator #type: ignore
+        model_call.__ell_func__ = prompt #type: ignore
+        model_call.__ell_type__ = LMPType.LM #type: ignore
+        model_call.__ell_exempt_from_tracking = exempt_from_tracking #type: ignore
  
 
         if exempt_from_tracking:
@@ -276,13 +285,15 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
             return _track(model_call, forced_dependencies=dict(tools=tools))
     return parameterized_lm_decorator
 
+
+
 def _get_messages(prompt_ret: Union[str, list[MessageOrDict]], prompt: LMP) -> list[Message]:
     """
     Helper function to convert the output of an LMP into a list of Messages.
     """
     if isinstance(prompt_ret, str):
         has_system_prompt = prompt.__doc__ is not None and prompt.__doc__.strip() != ""
-        messages =     [Message(role="system", content=[ContentBlock(text=_lstr(prompt.__doc__) )])] if has_system_prompt else []
+        messages =     [Message(role="system", content=[ContentBlock(text=_lstr(prompt.__doc__ ) )])] if has_system_prompt else []
         return messages + [
             Message(role="user", content=[ContentBlock(text=prompt_ret)])
         ]
@@ -291,3 +302,25 @@ def _get_messages(prompt_ret: Union[str, list[MessageOrDict]], prompt: LMP) -> l
             prompt_ret, list
         ), "Need to pass a list of Messages to the language model"
         return prompt_ret
+
+
+def _client_for_model(
+    model: str,
+    client: Optional[Any] = None,
+    _name: Optional[str] = None,
+) -> Any:
+    # XXX: Move to config to centralize api keys etc.
+    if not client:
+        client, was_fallback = config.get_client_for(model)
+        # XXX: Wrong.
+        if not client and not was_fallback:
+            raise RuntimeError(_no_api_key_warning(model, _name, '', long=True, error=True))
+    
+    if client is None:
+        raise ValueError(f"No client found for model '{model}'. Ensure the model is registered using 'register_model' in 'config.py' or specify a client directly using the 'client' argument in the decorator or function call.")
+
+    # compatibility with local models necessetates no api key.   
+    # if not client.api_key:
+    #     raise RuntimeError(_no_api_key_warning(model, _name, client, long=True, error=True))
+    
+    return client

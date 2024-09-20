@@ -1,33 +1,29 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple, Type, TypedDict, Union
+from typing import Any, Callable, Dict, FrozenSet, List, Optional, Set, Tuple, Type, TypedDict, Union
+
+from pydantic import BaseModel, ConfigDict, Field
 from ell.types import Message, ContentBlock, ToolCall
 from ell.types._lstr import _lstr
 import json
 from dataclasses import dataclass
 from ell.types.message import LMP
 
-@dataclass
-class APICallResult:
-    response: Any
-    actual_streaming: bool
-    actual_n: int
-    final_call_params: Dict[str, Any]
 
-class EllCall(TypedDict):
-     model : str
-     messages : List[Message]
-     client : Any
-     tools : Optional[List[LMP]]
-     response_format : Optional[Dict[str, Any]]
-
-e = EllCall(messages=[], client=None, tools=None, response_format=None)
+class EllCallParams(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model: str = Field(..., description="Model identifier")
+    messages: List[Message] = Field(..., description="Conversation context")
+    client: Any = Field(..., description="API client")
+    tools: Optional[List[LMP]] = Field(None, description="Available tools")
+    api_params: Dict[str, Any] = Field(default_factory=dict, description="API parameters")
+    origin_id: Optional[str] = Field(None, description="Tracking ID")
 
 
 class Metadata(TypedDict):
     """First class metadata so that ell studio can work, you can add more stuff here if you want"""
     
-
+#XXX: Needs a better name.
 class Provider(ABC):
     """
     Abstract base class for all providers. Providers are API interfaces to language models, not necessarily API providers.
@@ -40,7 +36,7 @@ class Provider(ABC):
     ### API PARAMETERS #############
     ################################
     @abstractmethod
-    def provider_call_function(self) -> Dict[str, Any]:
+    def provider_call_function(self, api_call_params : Dict[str, Any]) -> Callable[..., Any]:
         """
         Implement this method to return the function that makes the API call to the language model.
         For example, if you're implementing the OpenAI provider, you would return the function that makes the API call to OpenAI's API.
@@ -55,105 +51,70 @@ class Provider(ABC):
         """
         Returns a list of disallowed call params that ell will override.
         """
-        return frozenset({"system", "tools", "tool_choice", "stream", "functions", "function_call", "response_format"})
+        pass
 
-    def available_params(self) -> Partial[APICallParams]:
-        return frozenset(get_params_of_call_function(provider_call_params.keys())) + EllCall.__required_keys__ - disallowed_params
+    def available_params(self) -> APICallParams:
+        return frozenset(get_params_of_call_function(provider_call_params.keys())) + EllCallParams.__required_keys__ - disallowed_params
 
 
     ################################
     ### TRANSLATION ###############
     ################################
     @abstractmethod
-    def translate_to_provider(self, ) -> APICallParams:
+    def translate_to_provider(self, ell_call : EllCallParams) -> Dict[str, Any]:
         """Converts an ell call to provider call params!"""
         return NotImplemented
     
     @abstractmethod
-    def translate_from_provider(self, provider_response : Any, ell_call : EllCall) -> Tuple[List[Message], Metadata]:
+    def translate_from_provider(self, provider_response : Any, ell_call : EllCallParams, logger : Optional[Callable[[str], None]] = None) -> Tuple[List[Message], Metadata]:
         """Converts provider responses to universal format."""
         return NotImplemented
 
     ################################
     ### CALL MODEL ################
     ################################
-    def call_model(self, model : Optional[str] = None, client : Optional[Any] = None, messages : Optional[List[Message]] = None, tools : Optional[List[LMP]] = None, **api_params) -> Any:
+    # Be careful to override this method in your provider.
+    def call_model(self, ell_call : EllCallParams, logger : Optional[Any] = None) -> Tuple[List[Message], Dict[str, Any], Metadata]:
         # Automatic validation of params
 
-        assert api_params.keys() not in self.disallowed_provider_params(), f"Disallowed parameters: {api_params}"
-        assert api_params.keys() in self.available_params(), f"Invalid parameters: {api_params}"
+        assert ell_call.api_params.keys() not in self.disallowed_provider_params(), f"Disallowed parameters: {ell_call.api_params}"
+        assert ell_call.api_params.keys() in self.available_params(), f"Invalid parameters: {ell_call.api_params}"
 
         # Call
-        call_params = self.translate_to_provider(ell_call)
-        provider_resp = self.provider_call_function(client, model)(**call_params)
-        return self.translate_from_provider(provider_resp, ell_call)
-
-    def default_models(self) -> List[str]:
-        """Returns a list of default models for this provider."""
-        return [
-        ]
-    
-    def register_all_models(self, client : Any):
-        """Registers all default models for this provider."""
-        for model in self.default_models():
-            self.register_model(model, client)
-
-    def validate_call(self, call : EllCall):
-         if model == "o1-preview" or model == "o1-mini":
-                # Ensure no system messages are present
-                assert all(msg['role'] != 'system' for msg in final_call_params['messages']), "System messages are not allowed for o1-preview or o1-mini models"
-                                      
-        if self.model_is_available(call.model):
-            return
-        else:
-            raise ValueError(f"Model {call.model} not available for provider {self.name}")
+        api_call_params = self.translate_to_provider(ell_call)
+        provider_resp = self.provider_call_function(api_call_params)(**api_call_params)
+        messages, metadata = self.translate_from_provider(provider_resp, ell_call, logger)
         
+        return messages, api_call_params, metadata
 
-class OpenAIClientProvider(Provider):
-     """Use this for providers that are a wrapper around an OpenAI client e.g. mistral, groq, azure, etc."""
 
-     ...
-
-class OpenAIProvider(OpenAIClientProvider):
-    def default_models(self) -> List[str]:
-        return [
-            "gpt-4o",
-            "gpt-4o-mini",
-            "gpt-4o-2024-08-06",
-            "gpt-4o-2024-05-13",
-            "gpt-4o-2024-07-18",
-            "gpt-4o-2024-06-20",
-            "gpt-4o-2024-04-09",
-            "gpt-4o-2024-03-13",
-            "gpt-4o-2024-02-29",
-        ]
-    
-    def validate_call(self, call : EllCall):
-         super().validate_call(call)
-         if model == "o1-preview" or model == "o1-mini":
-                # Ensure no system messages are present
-                assert all(msg['role'] != 'system' for msg in final_call_params['messages']), "System messages are not allowed for o1-preview or o1-mini models"
-    
-    def provider_call_function(self, EllCall) -> Dict[str, Any]: 
-        if EllCall['response_format']:
-            return EllCall['client'].beta.chat.completions.parse(**EllCall)
-        else:
-            return EllCall['client'].chat.completions.create(**EllCall)
-        
-    def available_params(self, ell_call : EllCall) -> Partial[APICallParams]:
-        defualt_params = get_params_of_call_function(self.provider_call_function(ell_call))
-
-        if ell_call['response_format']: 
-             # no streaming currently
-             eturn defualt_params - {'stream'}
-        else:
-            return defualt_params
-
-class OllamaProvider(OpenAIClientProvider):
-    def default_models(self) -> List[str]:
         
 
 
+
+# # 
+# def validate_provider_call_params(self, ell_call: EllCall, client: Any):
+#     provider_call_func = self.provider_call_function(client)
+#     provider_call_params = inspect.signature(provider_call_func).parameters
+    
+#     converted_params = self.ell_call_to_provider_call(ell_call)
+    
+#     required_params = {
+#         name: param for name, param in provider_call_params.items()
+#         if param.default == param.empty and param.kind != param.VAR_KEYWORD
+#     }
+    
+#     for param_name in required_params:
+#         assert param_name in converted_params, f"Required parameter '{param_name}' is missing in the converted call parameters."
+    
+#     for param_name, param_value in converted_params.items():
+#         assert param_name in provider_call_params, f"Unexpected parameter '{param_name}' in the converted call parameters."
+        
+#         param_type = provider_call_params[param_name].annotation
+#         if param_type != inspect.Parameter.empty:
+#             assert isinstance(param_value, param_type), f"Parameter '{param_name}' should be of type {param_type}."
+    
+#     print("All parameters validated successfully.")
 
 
 
