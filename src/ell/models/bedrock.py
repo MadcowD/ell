@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 try:
     import boto3
 
-    def register(client: boto3.Client):
+    def register(client: boto3.client):
         """
         Register Bedrock models with the provided client.
 
@@ -16,7 +16,7 @@ try:
         for different AI tasks.
 
         Args:
-            client (boto3.Client): An instance of the bedrock client to be used
+            client (boto3.client): An instance of the bedrock client to be used
                                           for model registration.
 
         Note:

@@ -12,11 +12,11 @@ import json
 try:
     import boto3
 
-    class AwsBedrockProvider(Provider):
+    class BedrockProvider(Provider):
         @classmethod
         def call_model(
             cls,
-            client: boto3.Client,
+            client: boto3.client,
             model: str,
             messages: List[Message],
             api_params: Dict[str, Any],
@@ -183,7 +183,7 @@ try:
 
         @classmethod
         def get_client_type(cls) -> Type:
-            return boto3.Client
+            return boto3.client
 
         @staticmethod
         def serialize_image_for_bedrock(img):
@@ -191,7 +191,7 @@ try:
             img.save(buffer, format="PNG")
             return base64.b64encode(buffer.getvalue()).decode()
 
-    register_provider(AwsBedrockProvider)
+    register_provider(BedrockProvider)
 except ImportError:
     pass
 
