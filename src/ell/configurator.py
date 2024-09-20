@@ -38,7 +38,7 @@ class Config(BaseModel):
     lazy_versioning: bool = Field(default=True, description="If True, enables lazy versioning for improved performance.")
     default_lm_params: Dict[str, Any] = Field(default_factory=dict, description="Default parameters for language models.")
     default_client: Optional[openai.Client] = Field(default=None, description="The default OpenAI client used when a specific model client is not found.")
-    providers: Dict[Type, Type[Provider]] = Field(default_factory=dict, description="A dictionary mapping client types to provider classes.")
+    providers: Dict[Type, Provider] = Field(default_factory=dict, description="A dictionary mapping client types to provider classes.")
     def __init__(self, **data):
         super().__init__(**data)
         self._lock = threading.Lock()
@@ -111,26 +111,28 @@ class Config(BaseModel):
             client = model_config.default_client
         return client, fallback
 
-    def register_provider(self, provider_class: Type[Provider]) -> None:
+    def register_provider(self, provider: Provider, client_type: Type[Any]) -> None:
         """
         Register a provider class for a specific client type.
 
         :param provider_class: The provider class to register.
         :type provider_class: Type[Provider]
         """
+        assert isinstance(client_type, type), "client_type must be a type (e.g. openai.Client), not an an instance (myclient := openai.Client()))"
         with self._lock:
-            self.providers[provider_class.get_client_type()] = provider_class
+            self.providers[client_type] = provider
 
-    def get_provider_for(self, client: Any) -> Optional[Type[Provider]]:
+    def get_provider_for(self, client: Union[Type[Any], Any]) -> Optional[Provider]:
         """
-        Get the provider class for a specific client instance.
+        Get the provider instance for a specific client instance.
 
         :param client: The client instance to get the provider for.
         :type client: Any
-        :return: The provider class for the specified client, or None if not found.
-        :rtype: Optional[Type[Provider]]
+        :return: The provider instance for the specified client, or None if not found.
+        :rtype: Optional[Provider]
         """
-        return next((provider for client_type, provider in self.providers.items() if isinstance(client, client_type)), None)
+        client_type = type(client) if not isinstance(client, type) else client
+        return self.providers.get(client_type)
 
 # Single* instance
 # XXX: Make a singleton

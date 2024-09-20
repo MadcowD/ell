@@ -94,7 +94,7 @@ def test_call_model(mock_openai_client):
     @ell.tool()
     def dummy_tool(param1: str, param2: int): pass
         
-    result = OpenAIProvider.call_model(mock_openai_client, "gpt-3.5-turbo", messages, api_params, tools=[dummy_tool])
+    result = OpenAIProvider.call(mock_openai_client, "gpt-3.5-turbo", messages, api_params, tools=[dummy_tool])
 
     assert isinstance(result, APICallResult)
     assert not "stream" in result.final_call_params

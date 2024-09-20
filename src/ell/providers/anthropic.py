@@ -15,7 +15,7 @@ try:
 
     class AnthropicProvider(Provider):
         @classmethod
-        def call_model(
+        def call(
             cls,
             client: Anthropic,
             model: str,
@@ -95,7 +95,7 @@ try:
                         elif chunk.type == "content_block_stop":
                             if current_block is not None:
                                 if current_block["type"] == "text":
-                                    content.append(ContentBlock(text=_lstr(current_block["content"], _origin_trace=_invocation_origin)))
+                                    content.append(ContentBlock(text=_lstr(current_block["content"],origin_trace=_invocation_origin)))
                                 elif current_block["type"] == "tool_use":
                                     try:
                                         final_cb = chunk.content_block
@@ -116,7 +116,7 @@ try:
                                                     tool_call=ToolCall(
                                                         tool=matching_tool,
                                                         tool_call_id=_lstr(
-                                                            final_cb.id, _origin_trace=_invocation_origin
+                                                            final_cb.id,origin_trace=_invocation_origin
                                                         ),
                                                         params=params,
                                                     )
@@ -151,7 +151,7 @@ try:
                 cbs = []
                 for content_block in call_result.response.content:
                     if content_block.type == "text":
-                        cbs.append(ContentBlock(text=_lstr(content_block.text, _origin_trace=_invocation_origin)))
+                        cbs.append(ContentBlock(text=_lstr(content_block.text,origin_trace=_invocation_origin)))
                     elif content_block.type == "tool_use":
                         assert tools is not None, "Tools were not provided to the model when calling it and yet anthropic returned a tool use."
                         tool_call = ToolCall(

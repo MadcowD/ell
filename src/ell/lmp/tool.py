@@ -160,7 +160,7 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
             # Similar to how it's done in the lm decorator # Use _invocation_origin
 
             if isinstance(result, str) and _invocation_origin:
-                result = _lstr(result, _origin_trace=_invocation_origin)
+                result = _lstr(result,origin_trace=_invocation_origin)
 
             #XXX: This _tool_call_id thing is a hack. Tracking should happen via params in the api
             if _tool_call_id:
@@ -168,7 +168,7 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
                     content_results = coerce_content_list(result)
                 except ValueError as e:
                     # XXX: TODO: MOVE TRACKING CODE TO _TRACK AND OUT OF HERE AND API.
-                    content_results = [ContentBlock(text=_lstr(json.dumps(result), _origin_trace=_invocation_origin))]
+                    content_results = [ContentBlock(text=_lstr(json.dumps(result),origin_trace=_invocation_origin))]
                 
                 # TODO: poolymorphic validation here is important (cant have tool_call or formatted_response in the result)
                 # XXX: Should we put this coercion here or in the tool call/result area.
@@ -179,7 +179,7 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
                         # Warning: Formatted response in tool result will be converted to text
                         # TODO: Logging needs to produce not print.
                         print(f"Warning: Formatted response in tool result will be converted to text. Original: {c.parsed}")
-                        c.text = _lstr(c.parsed.model_dump_json(), _origin_trace=_invocation_origin)
+                        c.text = _lstr(c.parsed.model_dump_json(),origin_trace=_invocation_origin)
                         c.parsed = None
                     assert not c.audio, "Audio in tool result"
                 return ToolResult(tool_call_id=_tool_call_id, result=content_results), _invocation_api_params, {}

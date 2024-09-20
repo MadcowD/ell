@@ -77,7 +77,7 @@ try:
             return openai_message
 
         @classmethod
-        def call_model(
+        def call(
             cls,
             client: Any,
             model: str,
@@ -178,7 +178,7 @@ try:
                         content.append(
                             ContentBlock(
                                 text=_lstr(
-                                    content=text_content, _origin_trace=_invocation_origin
+                                    content=text_content,origin_trace=_invocation_origin
                                 )
                             )
                         )
@@ -192,7 +192,7 @@ try:
                         content.append(
                             ContentBlock(
                                 text=_lstr(
-                                    content=choice.content, _origin_trace=_invocation_origin
+                                    content=choice.content,origin_trace=_invocation_origin
                                 )
                             )
                         )
@@ -217,7 +217,7 @@ try:
                                     tool_call=ToolCall(
                                         tool=matching_tool,
                                         tool_call_id=_lstr(
-                                            tool_call.id, _origin_trace=_invocation_origin
+                                            tool_call.id,origin_trace=_invocation_origin
                                         ),
                                         params=params,
                                     )
