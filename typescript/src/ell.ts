@@ -11,6 +11,7 @@ import { generateFunctionHash, generateInvocationId } from "./hash";
 import { config } from "./configurator";
 import { Message } from "./types";
 import { APICallResult } from "./provider";
+import { modelUsageLoggerPostEnd, modelUsageLoggerPostIntermediate, modelUsageLoggerPostStart, modelUsageLoggerPre } from "./verbosity";
 
 type Kwargs = {
   // The name or identifier of the language model to use.
@@ -108,12 +109,6 @@ const serializeLMP = async (args: LMP) => {
   return await writeLMP(args);
 };
 
-type Wrapper<F extends (...args: any[]) => Promise<any>> = F & {
-  __ell_type__?: string;
-  __ell_lmp_name__?: string;
-  __ell_lmp_id__?: string | null;
-  __ell_invocation_id__?: string | null;
-};
 
 const convertMultimodalResponseToLstr = (response: Message[]) => {
   if (
@@ -133,9 +128,6 @@ function convertMultimodalResponseToString(
     : response.content[0].text;
 }
 
-/**
- *
- */
 type SimpleLMPInner = (...args: any[]) => Promise<string | Array<Message>>;
 type SimpleLMP<A extends SimpleLMPInner> = ((
   ...args: Parameters<A>
@@ -146,9 +138,6 @@ type SimpleLMP<A extends SimpleLMPInner> = ((
   __ell_invocation_id__?: string | null;
 };
 
-const f: SimpleLMPInner = async (s: string) => {
-  return "hello";
-};
 
 export const simple = <F extends SimpleLMPInner>(
   a: Kwargs,
@@ -184,7 +173,7 @@ export const simple = <F extends SimpleLMPInner>(
       lmp = maybeLMP;
       const lmpId = generateFunctionHash(maybeLMP.source, "", maybeLMP.lmpName);
       lmp.lmpId = lmpId;
-      lmp.apiParams = a;
+      // lmp.apiParams = a;
     }
     let invocationId = generateInvocationId();
     return invocationContext.run(
@@ -221,6 +210,9 @@ export const simple = <F extends SimpleLMPInner>(
           ...a,
           tools: undefined,
         };
+        if (config.verbose) {
+          modelUsageLoggerPre(lmp, args, apiParams, lmp.lmpId, messages, "todo");
+        }
         const callResult = await provider.callModel(
           modelClient,
           a.model,
@@ -228,10 +220,19 @@ export const simple = <F extends SimpleLMPInner>(
           apiParams,
           a.tools
         );
+        if (config.verbose) {
+          modelUsageLoggerPostStart(lmp.lmpId, callResult.actualN);
+        }
+        modelUsageLoggerPostIntermediate(lmp.lmpId, callResult.actualN);
+        if (config.verbose) {
+          modelUsageLoggerPostEnd();
+        }
+
         const [trackedResults, metadata] = await provider.processResponse(
           callResult,
           "todo"
         );
+
         const result = convertMultimodalResponseToString(trackedResults[0]);
         await writeInvocation({
           id: invocationId,
@@ -279,6 +280,7 @@ export const complex = (a: Kwargs, f: F) => {
       invocation_contents: {
         invocation_id: generateInvocationId(),
         params: args,
+        invocation_api_params: a,
         results: result,
       },
     });
