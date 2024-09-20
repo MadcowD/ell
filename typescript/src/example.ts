@@ -1,17 +1,15 @@
 import * as ell from "./ell";
-import { simple,complex } from "./ell";
 import { child } from "./example-child";
 
-export const hello = simple({ name: "hello", model: "gpt-4o" }, 
+export const hello = ell.simple({ model: "gpt-4o" }, 
   async (a: string) => {
-    await child(a);
-  console.log(a);
+    return await child(a);
 });
 
-hello("world").then((a) => {
-  console.log(a);
+// ell.init()
+hello("world").then((result) => {
+  console.log(result);
   console.log(ell.invocations);
-console.log(ell.lmps);
-
+  console.log(ell.lmps);
 });
 

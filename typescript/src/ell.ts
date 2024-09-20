@@ -177,7 +177,9 @@ export const simple = <F extends SimpleLMPInner>(
         console.error(
           `No LMP found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`
         );
-        return f as unknown as Wrapper<F>;
+
+        // still make the model call?
+        return f as unknown as SimpleLMP<F>;
       }
       lmp = maybeLMP;
       const lmpId = generateFunctionHash(maybeLMP.source, "", maybeLMP.lmpName);

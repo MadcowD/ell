@@ -11,13 +11,13 @@ import { LMP } from "../types/message";
 // import { serializeImage } from "../util/serialization";
 import { config, registerProvider } from "../configurator";
 import OpenAI from "openai";
-import { Response } from "openai/_shims/registry.mjs";
 // TODO>
 const serializeImage = (image: any) => {
     return image
     // return `data:image/jpeg;base64,${image.data}`;
 }
 
+import { Stream as OpenAIStream } from "openai/streaming";
 
 class _lstr {
     constructor(public value: string, public _originTrace: string) {}
@@ -116,10 +116,10 @@ class _OpenAIProvider implements Provider {
 
       response = await client.chat.completions.create(finalCallParams);
       delete finalCallParams.stream;
-      delete finalCallParams.streamOptions;
+      delete finalCallParams.stream_options;
     } else if (finalCallParams.responseFormat) {
       delete finalCallParams.stream;
-      delete finalCallParams.streamOptions;
+      delete finalCallParams.stream_options;
       response = await client.beta.chat.completions.parse(finalCallParams);
     } else {
       if (tools) {
@@ -133,9 +133,9 @@ class _OpenAIProvider implements Provider {
           },
         }));
         delete finalCallParams.stream;
-        delete finalCallParams.streamOptions;
+        delete finalCallParams.stream_options;
       } else {
-        finalCallParams.streamOptions = { includeUsage: true };
+        finalCallParams.stream_options = { include_usage: true };
         finalCallParams.stream = true;
       }
 
@@ -145,7 +145,7 @@ class _OpenAIProvider implements Provider {
     return {
       response,
       // todo.
-      actualStreaming: response instanceof Response,
+      actualStreaming: response instanceof OpenAIStream,
       actualN,
       finalCallParams,
     };
@@ -163,9 +163,9 @@ class _OpenAIProvider implements Provider {
 
     const response = callResult.actualStreaming ? callResult.response : [callResult.response];
 
-    for (const chunk of response) {
+    for await (const chunk of response) {
       if (chunk.usage) {
-        metadata = chunk.toJSON();
+        metadata = chunk.usage
         if (callResult.actualStreaming) continue;
       }
 
