@@ -30,20 +30,18 @@ def test_message_to_bedrock_message_format():
             )
         ]
     )
-    expected_user = [
-        {
+    expected_user = {
             'role':'user',
             'content':[
                 {
-                    'type':'text',
                     'text':'Hello, world!'
                 }
             ]
         }
-    ]
-    message_to_bedrock_message_format(message_user) == expected_user
 
-    message_user = Message(
+    assert(message_to_bedrock_message_format(message_user) == expected_user)
+
+    message_assistant = Message(
         role="assistant",
         content=[
             ContentBlock(
@@ -52,15 +50,12 @@ def test_message_to_bedrock_message_format():
             )
         ]
     )
-    expected_user = [
-        {
+    expected_assistant = {
             'role':'assistant',
             'content':[
                 {
-                    'type':'text',
                     'text':'Hello, world!'
                 }
             ]
         }
-    ]
-    message_to_bedrock_message_format(message_user) == expected_user
+    assert(message_to_bedrock_message_format(message_assistant) == expected_assistant)

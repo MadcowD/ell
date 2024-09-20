@@ -57,22 +57,18 @@ try:
             ('meta.llama2-70b-chat-v1', 'bedrock'),
             ('meta.llama2-13b-v1', 'bedrock'),
 
-
-
-
-
-
         ]
         for model_id, owned_by in model_data:
             config.register_model(model_id, client)
 
+    default_client = None
     try:
         default_client = boto3.client('bedrock-runtime')
         register(default_client)
+        config.default_client = default_client
     except Exception as e:
         # logger.warning(f"Failed to create default bedrock client: {e}")
         pass
-
 
 except ImportError:
     pass

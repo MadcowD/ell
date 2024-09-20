@@ -16,7 +16,7 @@ try:
         @classmethod
         def call_model(
             cls,
-            client: boto3.client,
+            client: Any,
             model: str,
             messages: List[Message],
             api_params: Dict[str, Any],
@@ -24,13 +24,16 @@ try:
         ) -> APICallResult:
             final_call_params = api_params.copy()
 
+            final_call_params.pop('provider')
+
             bedrock_converse_messages = [message_to_bedrock_message_format(message) for message in messages]
+
             system_message = None
             if bedrock_converse_messages and bedrock_converse_messages[0]["role"] == "system":
                 system_message = bedrock_converse_messages.pop(0)
 
             if system_message:
-                final_call_params["system"] = system_message["content"][0]["text"]
+                final_call_params["system"] = [{'text':system_message["content"][0]["text"]}]
 
             actual_n = api_params.get("n", 1)
 
@@ -56,10 +59,10 @@ try:
                 response = bedrock_response
             else:
                 bedrock_response = client.converse(**final_call_params)
-                if 'output' not in response:
+                if 'output' not in bedrock_response:
                     raise ValueError("No output received from Bedrock model")
                 else:
-                    response = bedrock_response['output']['message']['content'][0]['text']
+                    response = bedrock_response['output']
 
             return APICallResult(
                 response=response,
@@ -154,13 +157,13 @@ try:
             else:
                 # Non-streaming response processing (unchanged)
                 cbs = []
-                for content_block in call_result.response.content:
-                    if content_block.type == "text":
-                        cbs.append(ContentBlock(text=_lstr(content_block.text, _origin_trace=_invocation_origin)))
-                    elif content_block.type == "tool_use":
+                for content_block in call_result.response.get('message', {}).get('content', []):
+                    if 'text' in content_block:
+                        cbs.append(ContentBlock(text=_lstr(content_block.get('text'), _origin_trace=_invocation_origin)))
+                    elif 'toolUse' in content_block:
                         assert tools is not None, "Tools were not provided to the model when calling it and yet bedrock returned a tool use."
                         tool_call = ToolCall(
-                            tool=next((t for t in tools if t.__name__ == content_block.name), None) ,
+                            tool=next((t for t in tools if t.__name__ == content_block.get('name')), None) ,
                             tool_call_id=content_block.id,
                             params=content_block.input
                         )
@@ -170,9 +173,9 @@ try:
                     logger(tracked_results[0].text)
 
 
-                usage = call_result.response.usage.dict() if call_result.response.usage else {}
-                metadata = call_result.response.model_dump()
-                del metadata["content"]
+                usage = call_result.response.usage.dict() if call_result.response.get('usage') else {}
+                # metadata = call_result.response.model_dump()
+                # del metadata["content"]
 
             # process metadata for ell
             # XXX: Unify an ell metadata format for ell studio.
@@ -189,7 +192,7 @@ try:
 
         @classmethod
         def get_client_type(cls) -> Type:
-            return boto3.client
+            return boto3.client('bedrock-runtime')
 
         @staticmethod
         def serialize_image_for_bedrock(img):
@@ -216,7 +219,6 @@ def content_block_to_bedrock_format(content_block: ContentBlock) -> Dict[str, An
         }
     elif content_block.text:
         return {
-            "type": "text",
             "text": content_block.text
         }
     elif content_block.parsed:
