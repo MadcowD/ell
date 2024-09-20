@@ -17,7 +17,7 @@ def main():
         # Initialize ell with verbose logging (optional)
         # ell.init(verbose=True)
         
-        @ell.simple(model="gemma2-9b-it")
+        @ell.simple(model="llama-3.1-8b-instant")
         def hello(name: str) -> str:
             """You are a friendly AI assistant."""
             return f"Generate a warm greeting for {name}"
