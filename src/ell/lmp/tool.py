@@ -18,7 +18,6 @@ from ell.types.message import ContentBlock, InvocableTool, ToolResult, coerce_co
 
 def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
     def tool_decorator(fn: Callable[..., Any]) -> InvocableTool:
-        # color = compute_color(fn)
         _under_fn = fn
 
         @wraps(fn)
@@ -28,11 +27,9 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
             _tool_call_id: str = None,
             **fn_kwargs
         ):
-            
             #XXX: Post release, we need to wrap all tool arguments in type primitives for tracking I guess or change that tool makes the tool function inoperable.
             #XXX: Most people are not going to manually try and call the tool without a type primitive and if they do it will most likely be wrapped with l strs.
-            
-
+    
             if config.verbose and not exempt_from_tracking:
                 pass
                 # tool_usage_logger_pre(fn, fn_args, fn_kwargs, name, color)

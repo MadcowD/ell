@@ -29,6 +29,11 @@ class ToolCall(BaseModel):
     tool_call_id : Optional[_lstr_generic] = Field(default=None)
     params : BaseModel
 
+    def __init__(self, tool, tool_call_id, params : Union[BaseModel, Dict[str, Any]]):
+        if not isinstance(params, BaseModel):
+            params = tool.__ell_params_model__(**params) #convenience.
+        super().__init__(tool=tool, tool_call_id=tool_call_id, params=params)
+
     def __call__(self, **kwargs):
         assert not kwargs, "Unexpected arguments provided. Calling a tool uses the params provided in the ToolCall."
 
@@ -41,6 +46,8 @@ class ToolCall(BaseModel):
 
     def call_and_collect_as_message(self):
         return Message(role="user", content=[self.call_and_collect_as_message_block()])
+    
+
 
 
 class ContentBlock(BaseModel):    

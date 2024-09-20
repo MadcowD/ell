@@ -116,11 +116,6 @@ def _client_for_model(
     
     if client is None:
         raise ValueError(f"No client found for model '{model}'. Ensure the model is registered using 'register_model' in 'config.py' or specify a client directly using the 'client' argument in the decorator or function call.")
-
-    # compatibility with local models necessetates no api key.   
-    # if not client.api_key:
-    #     raise RuntimeError(_no_api_key_warning(model, _name, client, long=True, error=True))
-    
     return client
 
 
