@@ -37,7 +37,6 @@ try:
             config.register_model(model_id, client)
 
     try:
-        print('BEDROCKKKKKKK')
         default_client = boto3.client('bedrock-runtime')
         register(default_client)
     except Exception as e:
