@@ -41,6 +41,7 @@ typing-extensions = "^4.12.2"
 black = "^24.8.0"
 json-fix = "^1.0.0"
 pillow = "^10.4.0"
+boto3 = "^1.35.23"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
 
