@@ -8,7 +8,17 @@ beforeAll(() => {
   // @ts-expect-error
   config.defaultClient.chat.completions.create = async (...args) => {
     console.log('chat.completions.create called with', args)
-    return {
+    return <OpenAI.Chat.Completions.ChatCompletion>{
+      usage: {
+        prompt_tokens: 10,
+        completion_tokens: 10,
+        latency_ms: 10,
+        total_tokens: 20,
+      },
+      id: 'chatcmpl-123',
+      created: 1677652288,
+      model: 'gpt-3.5-turbo-0125',
+      object: 'chat.completion',
       choices: [
         <OpenAI.Chat.Completions.ChatCompletion.Choice>{
           index: 0,

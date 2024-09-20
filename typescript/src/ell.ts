@@ -236,9 +236,9 @@ export const simple = <F extends SimpleLMPInner>(
         await writeInvocation({
           id: invocationId,
           lmp_id: lmp.lmpId,
-          latency_ms: 0,
-          prompt_tokens: 0,
-          completion_tokens: 0,
+          latency_ms: metadata.latency_ms,
+          prompt_tokens: metadata.prompt_tokens,
+          completion_tokens: metadata.completion_tokens,
           invocation_contents: {
             invocation_id: invocationId,
             params: args,
