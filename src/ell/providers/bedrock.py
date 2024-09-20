@@ -23,9 +23,8 @@ try:
             tools: Optional[list[LMP]] = None,
         ) -> APICallResult:
             final_call_params = api_params.copy()
-            assert final_call_params.get("max_tokens") is not None, f"max_tokens is required for anthropic calls, pass it to the @ell.simple/complex decorator, e.g. @ell.simple(..., max_tokens=your_max_tokens) or pass it to the model directly as a parameter when calling your LMP: your_lmp(..., lm_params=({{'max_tokens': your_max_tokens}}))."
 
-            bedrock_converse_messages = [message_to_bedrock_converse_format(message) for message in messages]
+            bedrock_converse_messages = [message_to_bedrock_message_format(message) for message in messages]
             system_message = None
             if bedrock_converse_messages and bedrock_converse_messages[0]["role"] == "system":
                 system_message = bedrock_converse_messages.pop(0)
@@ -34,8 +33,10 @@ try:
                 final_call_params["system"] = system_message["content"][0]["text"]
 
             actual_n = api_params.get("n", 1)
-            final_call_params["model"] = model
+
+            final_call_params["modelId"] = model
             final_call_params["messages"] = bedrock_converse_messages
+
 
             if tools:
                 final_call_params["tools"] = [
@@ -49,11 +50,16 @@ try:
 
             # Streaming unsupported.
             # XXX: Support soon.
-            stream = True
+            stream = False
             if stream:
-                response = client.converse_stream(**final_call_params)
+                bedrock_response = client.converse_stream(**final_call_params)
+                response = bedrock_response
             else:
-                response = client.converse(**final_call_params)
+                bedrock_response = client.converse(**final_call_params)
+                if 'output' not in response:
+                    raise ValueError("No output received from Bedrock model")
+                else:
+                    response = bedrock_response['output']['message']['content'][0]['text']
 
             return APICallResult(
                 response=response,
@@ -170,8 +176,8 @@ try:
 
             # process metadata for ell
             # XXX: Unify an ell metadata format for ell studio.
-            usage["prompt_tokens"] = usage.get("input_tokens", 0)
-            usage["completion_tokens"] = usage.get("output_tokens", 0)
+            usage["prompt_tokens"] = usage.get("inputTokens", 0)
+            usage["completion_tokens"] = usage.get("outputTokens", 0)
             usage["total_tokens"] = usage['prompt_tokens'] + usage['completion_tokens']
 
             metadata["usage"] = usage
@@ -190,6 +196,7 @@ try:
             buffer = BytesIO()
             img.save(buffer, format="PNG")
             return base64.b64encode(buffer.getvalue()).decode()
+
 
     register_provider(BedrockProvider)
 except ImportError:
@@ -236,7 +243,7 @@ def content_block_to_bedrock_format(content_block: ContentBlock) -> Dict[str, An
 
 
 
-def message_to_bedrock_converse_format(message: Message) -> Dict[str, Any]:
+def message_to_bedrock_message_format(message: Message) -> Dict[str, Any]:
 
     converse_message = {
         "role": message.role,
