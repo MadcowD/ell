@@ -53,7 +53,7 @@ try:
 
             # Streaming unsupported.
             # XXX: Support soon.
-            stream = False
+            stream = True
             if stream:
                 bedrock_response = client.converse_stream(**final_call_params)
                 response = bedrock_response
@@ -81,76 +81,41 @@ try:
 
             if call_result.actual_streaming:
                 content = []
-                current_block: Optional[Dict[str, Any]] = None
+                current_block: Optional[Dict[str, Any]] = {}
                 message_metadata = {}
 
-                with call_result.response as stream:
-                    for chunk in stream:
-                        if chunk.type == "message_start":
-                            message_metadata = chunk.message.dict()
-                            message_metadata.pop("content", None)  # Remove content as we'll build it separately
+                for chunk in call_result.response.get('stream'):
 
-                        elif chunk.type == "content_block_start":
-                            current_block = chunk.content_block.dict()
-                            current_block["content"] = ""
+                    if "messageStart" in chunk:
+                        current_block['content'] = ''
+                        pass
+                    elif "contentBlockStart" in chunk:
+                        pass
+                    elif "contentBlockDelta" in chunk:
+                        delta = chunk.get("contentBlockDelta", {}).get("delta", {})
+                        if "text" in delta:
+                            current_block['type'] = 'text'
+                            current_block['content'] += delta.get("text")
+                            if logger:
+                                logger(delta.get("text"))
+                        else:
+                            pass
+                    elif "contentBlockStop" in chunk:
+                        if current_block is not None:
+                            if current_block["type"] == "text":
+                                content.append(ContentBlock(text=_lstr(current_block["content"], _origin_trace=_invocation_origin)))
 
-                        elif chunk.type == "content_block_delta":
-                            if current_block is not None:
-                                if current_block["type"] == "text":
-                                    current_block["content"] += chunk.delta.text
+                    elif "messageStop" in chunk:
+                        tracked_results.append(Message(role="assistant", content=content))
 
-
-                        elif chunk.type == "content_block_stop":
-                            if current_block is not None:
-                                if current_block["type"] == "text":
-                                    content.append(ContentBlock(text=_lstr(current_block["content"], _origin_trace=_invocation_origin)))
-                                elif current_block["type"] == "tool_use":
-                                    try:
-                                        final_cb = chunk.content_block
-                                        matching_tool = next(
-                                            (
-                                                tool
-                                                for tool in tools
-                                                if tool.__name__ == final_cb.name
-                                            ),
-                                            None,
-                                        )
-                                        if matching_tool:
-                                            params = matching_tool.__ell_params_model__(
-                                                **final_cb.input
-                                            )
-                                            content.append(
-                                                ContentBlock(
-                                                    tool_call=ToolCall(
-                                                        tool=matching_tool,
-                                                        tool_call_id=_lstr(
-                                                            final_cb.id, _origin_trace=_invocation_origin
-                                                        ),
-                                                        params=params,
-                                                    )
-                                                )
-                                            )
-                                        if logger:
-                                            logger(f" <tool_use: {current_block['name']}(")
-                                            logger(f"{final_cb.input}")
-                                            logger(f")>")
-                                    except json.JSONDecodeError:
-                                        # Handle partial JSON if necessary
-                                        pass
-                            current_block = None
-
-                        elif chunk.type == "message_delta":
-                            message_metadata.update(chunk.delta.dict())
-                            if chunk.usage:
-                                usage.update(chunk.usage.dict())
-
-                        elif chunk.type == "message_stop":
-                            tracked_results.append(Message(role="assistant", content=content))
-
-                        if logger and current_block:
-                            if chunk.type == "text" and current_block["type"] == "text":
-                                logger(chunk.text)
-                        # print(chunk)
+                    elif "metadata" in chunk:
+                        if "usage" in chunk["metadata"]:
+                            usage["prompt_tokens"] = chunk["metadata"].get('usage').get("inputTokens", 0)
+                            usage["completion_tokens"] = chunk["metadata"].get('usage').get("outputTokens", 0)
+                            usage["total_tokens"] = usage['prompt_tokens'] + usage['completion_tokens']
+                            message_metadata["usage"] = usage
+                    else:
+                        pass
 
 
                 metadata = message_metadata
