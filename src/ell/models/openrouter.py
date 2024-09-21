@@ -1,4 +1,5 @@
 # src/ell/models/openrouter.py
+import asyncio
 import json
 import logging
 import os
@@ -24,14 +25,16 @@ client = None  # Global: OpenRouter client
 class OpenRouter:
 
     MODEL_CACHE_EXPIRY = 300  # 5 minutes
+    REQUEST_TIMEOUT = 600
 
     def __init__(
             self,
             api_key: Optional[str] = None,
             base_url: str = OPENROUTER_BASE_URL,
-            timeout: float = 600,
+            timeout: float = REQUEST_TIMEOUT,
             max_retries: int = 2,
     ) -> None:
+
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ValueError("OPENROUTER_API_KEY must be provided or set as an environment variable")
@@ -39,7 +42,9 @@ class OpenRouter:
         self.base_url = base_url
         self.timeout = timeout
         self.max_retries = max_retries
+
         self.session = httpx.Client(base_url=self.base_url, timeout=self.timeout)
+        self.async_session = None
 
         self._provider_preferences = None
 
@@ -62,20 +67,78 @@ class OpenRouter:
             "X-Title": f"{os.environ.get('X_TITLE', 'OpenRouter Python Client')}"
         }
 
-    def _make_request(self, method: str, path: str, **kwargs) -> Dict[str, Any]:
+    def _make_request(self, method: str, path: str, delay: float = 1.0, max_attempts: int = 2, timeout: float = None, **kwargs) -> Dict[str, Any]:
+        """
+        Make a synchronous HTTP request with retries and exponential backoff.
+        Supports configurable timeouts and handles both HTTP errors and timeouts.
+        """
         url = f"{self.base_url}/{path}"
         headers = {**self.default_headers, **kwargs.get('headers', {})}
-        # response = self.session.request(method, url, headers=headers, **kwargs)
-        for attempt in range(self.max_retries):
+        request_timeout = timeout or self.timeout
+
+        for attempt in range(max_attempts):
             try:
-                response = self.session.request(method, url, headers=headers, **kwargs)
+                response = self.session.request(method, url, headers=headers, timeout=request_timeout, **kwargs)
                 response.raise_for_status()
                 return response.json()
-            except httpx.HTTPStatusError as e:
-                if attempt == self.max_retries - 1:
+
+            except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
+                logger.warning(f"Request failed (attempt {attempt + 1}/{max_attempts}): {e}")
+                if attempt == max_attempts - 1:
                     raise
-                logger.warning(f"Request failed (attempt {attempt + 1}/{self.max_retries}): {e}")
-                time.sleep(2 ** attempt)  # Exponential backoff
+                time.sleep(delay * (2 ** attempt))
+
+    async def _make_request_async(self, method: str, path: str, delay: float = 1.0, max_attempts: int = 2, timeout: float = None, **kwargs) -> Dict[str, Any]:
+        """
+        Make an asynchronous HTTP request with retries and exponential backoff.
+        Supports configurable timeouts and handles both HTTP errors and timeouts.
+        """
+        url = f"{self.base_url}/{path}"
+        headers = {**self.default_headers, **kwargs.get('headers', {})}
+
+        if not self._initiate_async_session_if_enabled():
+            logger.error("Failed to initialize the async session, cannot proceed with the request.")
+            return {"error": "Async session not initialized."}
+
+        request_timeout = timeout or self.timeout
+
+        async with self.async_session as async_session:
+            for attempt in range(max_attempts):
+                try:
+                    response = await async_session.request(method, url, headers=headers, timeout=request_timeout, **kwargs)
+                    response.raise_for_status()
+                    return response.json()
+
+                except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
+                    logger.warning(f"Async request failed (attempt {attempt + 1}/{max_attempts}): {e}")
+                    if attempt == max_attempts - 1:
+                        raise
+                    await asyncio.sleep(delay * (2 ** attempt))
+
+    def _initiate_async_session_if_enabled(self, raise_on_error=True) -> bool:
+        """Initialize an asynchronous HTTP client session if not already set up.
+
+        Parameters:
+            raise_on_error (bool): Whether to raise an error if the session cannot be initialized.
+
+        Returns:
+            bool: True if the session was successfully initialized or False if it was not due to absence of an async loop.
+        """
+        try:
+            # Attempt to get the current running event loop
+            loop = asyncio.get_running_loop()
+            if self.async_session is None:
+                self.async_session = httpx.AsyncClient(base_url=self.base_url, timeout=self.timeout)
+            return True
+        except RuntimeError:
+            # No asynchronous running loop available in the current context
+            # This typically occurs if the function is called outside of an async context
+            return False
+        except Exception as e:
+            logger.error(f"An error occurred while initializing the async session: {e}")
+            if raise_on_error:
+                raise RuntimeError("Asynchronous session is not initialized. Ensure that it is set up correctly.")
+            return False
 
     def chat_completions(
             self,
@@ -128,11 +191,11 @@ class OpenRouter:
         response = self._make_request("POST", "chat/completions", json=json_data, **kwargs)
         return response
 
-    def get_generation(self, generation_id: str):
-        url = f"{self.base_url}/generation?id={generation_id}"
-        response = self.session.get(url, headers=self.default_headers)
-        response.raise_for_status()
-        return response.json()
+    def get_generation_data(self, generation_id: str, delay: float = 1.0, max_attempts: int = 2) -> Dict[str, Any]:
+        return self._make_request("GET", f"generation?id={generation_id}", delay=delay, max_attempts=max_attempts)
+
+    async def get_generation_data_async(self, generation_id: str, delay: float = 1.0, max_attempts: int = 2) -> Dict[str, Any]:
+        return await self._make_request_async("GET", f"generation?id={generation_id}", delay=delay, max_attempts=max_attempts)
 
     def get_parameters(self, model_id: str) -> Dict[str, Any]:
         return self._make_request("GET", f"parameters/{model_id}")

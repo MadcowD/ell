@@ -1,4 +1,6 @@
+import asyncio
 import json
+import time
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple, Type
 
@@ -64,6 +66,56 @@ try:
             return openrouter_message
 
         @classmethod
+        def update_stats(cls, client: 'OpenRouter', response: Dict[str, Any]):
+            response["client"] = client
+
+            model_name = response.get("model")
+            if model_name:
+                if model_name not in client._used_models:
+                    client._used_models[model_name] = {
+                        "total_cost": 0,
+                        "total_tokens": 0,
+                        "usage_count": 0,
+                    }
+
+                usage = response.get("usage", {})
+                tokens = usage.get("total_tokens", 0)
+                client._used_models[model_name].update({
+                    "last_used": response["created"],
+                    "usage": usage,
+                    "total_tokens": client._used_models[model_name]["total_tokens"] + tokens,
+                    "usage_count": client._used_models[model_name]["usage_count"] + 1,
+                })
+                client.global_stats['total_tokens'] += tokens
+
+            generation_info = response.get("generation_info", {}).get("data")
+            if generation_info and isinstance(generation_info, dict):
+                model_name = generation_info.get("model")
+                if model_name:
+                    cost = generation_info.get("total_cost", 0)
+                    tokens_prompt = generation_info.get("tokens_prompt", 0)
+                    tokens_completion = generation_info.get("tokens_completion", 0)
+                    provider = generation_info.get("provider_name")
+
+                    client._used_models[model_name].update({
+                        "provider_name": provider,
+                        "quantization": generation_info.get("quantization", "unspecified"),
+                        "last_used": generation_info.get("created_at"),
+                        "total_cost": client._used_models[model_name]["total_cost"] + cost,
+                        "tokens_prompt": tokens_prompt,
+                        "tokens_completion": tokens_completion,
+                        "native_tokens_prompt": generation_info.get("native_tokens_prompt"),
+                        "native_tokens_completion": generation_info.get("native_tokens_completion"),
+                    })
+
+                    client.global_stats['total_cost'] += cost
+                    if provider:
+                        client.global_stats['used_providers'].add(provider)
+
+                # Update last_generation_info in global_stats
+                client.global_stats['last_generation_info'] = generation_info
+
+        @classmethod
         def call_model(
                 cls,
                 client: 'OpenRouter',
@@ -94,56 +146,11 @@ try:
 
             response = client.chat_completions(**final_call_params)
 
-            # Fetch additional information from the generation endpoint
-            generation_id = response.get('id')
-            if generation_id:
-                generation_info = client.get_generation(generation_id)
-                response['generation_info'] = generation_info
+            # Schedule the asynchronous update without blocking
+            cls.schedule_generation_data_update(client, response)
 
-            # Update _used_models and global stats based on the chat completion response
-            if response.get("model"):
-                model_name = response["model"]
-                if model_name not in client._used_models:
-                    client._used_models[model_name] = {
-                        "total_cost": 0,
-                        "total_tokens": 0,
-                        "usage_count": 0,
-                    }
-
-                usage = response.get("usage", {})
-                tokens = usage.get("total_tokens", 0)
-                client._used_models[model_name].update({
-                    "last_used": response["created"],
-                    "usage": usage,
-                    "total_tokens": client._used_models[model_name]["total_tokens"] + tokens,
-                    "usage_count": client._used_models[model_name]["usage_count"] + 1,
-                })
-                client.global_stats['total_tokens'] += tokens
-
-            # Update _used_models and global stats based on the generation info
-            generation_info = response.get("generation_info", {}).get("data")
-            if generation_info and isinstance(generation_info, dict):
-                model_name = generation_info.get("model")
-                if model_name:
-                    cost = generation_info.get("total_cost", 0)
-                    tokens_prompt = generation_info.get("tokens_prompt", 0)
-                    tokens_completion = generation_info.get("tokens_completion", 0)
-                    provider = generation_info.get("provider_name")
-
-                    client._used_models[model_name].update({
-                        "provider_name": provider,
-                        "quantization": generation_info.get("quantization", "unspecified"),
-                        "last_used": generation_info.get("created_at"),
-                        "total_cost": client._used_models[model_name]["total_cost"] + cost,
-                        "tokens_prompt": tokens_prompt,
-                        "tokens_completion": tokens_completion,
-                        "native_tokens_prompt": generation_info.get("native_tokens_prompt"),
-                        "native_tokens_completion": generation_info.get("native_tokens_completion"),
-                    })
-
-                    client.global_stats['total_cost'] += cost
-                    if provider:
-                        client.global_stats['used_providers'].add(provider)
+            # Update stats with initial data
+            cls.update_stats(client, response)
 
             return APICallResult(
                 response=response,
@@ -153,6 +160,46 @@ try:
             )
 
         @classmethod
+        def schedule_generation_data_update(cls, client: 'OpenRouter', response: Dict[str, Any], delay: float = 1.0, max_attempts: int = 5):
+            """Schedule the generation info update, choosing between sync and async methods."""
+            generation_id = response.get('id')
+            if not generation_id:
+                return
+
+            try:
+                loop = asyncio.get_running_loop()
+                asyncio.create_task(cls._update_generation_info_async(client, response, generation_id, delay, max_attempts))
+            except RuntimeError:
+                # No running event loop, use synchronous update
+                cls._update_generation_info_sync(client, response, generation_id, delay, max_attempts)
+
+        @classmethod
+        def _update_generation_info_sync(cls, client: 'OpenRouter', response: Dict[str, Any], generation_id: str, delay: float, max_attempts: int):
+            """Synchronously update generation info."""
+            # This is a chained API request relying on the first API request propagating on OpenRouter servers.
+            time.sleep(0.1)  # Use a small sleep to allow the generation ID to propagate
+            try:
+                generation_info = client.get_generation_data(generation_id, delay=delay, max_attempts=max_attempts)
+                if generation_info:
+                    response['generation_info'] = generation_info
+                    cls.update_stats(client, response)
+            except Exception as e:
+                print(f"Failed to update generation info synchronously: {e}")
+
+        @classmethod
+        async def _update_generation_info_async(cls, client: 'OpenRouter', response: Dict[str, Any], generation_id: str, delay: float, max_attempts: int):
+            """Asynchronously update generation info."""
+            # This is a chained API request relying on the first API request propagating on OpenRouter servers.
+            await asyncio.sleep(0.1)  # Use a small asyncio.sleep to allow the generation ID to propagate
+            try:
+                generation_info = await client.get_generation_data_async(generation_id, delay=delay, max_attempts=max_attempts)
+                if generation_info:
+                    response['generation_info'] = generation_info
+                    cls.update_stats(client, response)
+            except Exception as e:
+                print(f"Failed to update generation info asynchronously: {e}")
+
+        @classmethod
         def process_response(
                 cls,
                 call_result: APICallResult,
@@ -160,7 +207,10 @@ try:
                 logger: Optional[Any] = None,
                 tools: Optional[List[LMP]] = None,
         ) -> Tuple[List[Message], Dict[str, Any]]:
+
             response = call_result.response
+            client = response.get('client')
+
             metadata = {
                 "id": response.get("id"),
                 "created": response.get("created"),
@@ -168,6 +218,8 @@ try:
                 "object": response.get("object"),
                 "system_fingerprint": response.get("system_fingerprint"),
                 "usage": response.get("usage", {}),
+                "global_stats": client.global_stats if client else {},
+                # Note: generation_info might be empty here, because OpenRouter requires a second API call to fetch it
                 "generation_info": response.get("generation_info", {}).get("data", {})
             }
 
