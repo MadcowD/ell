@@ -33,6 +33,7 @@ class OpenRouter:
             base_url: str = OPENROUTER_BASE_URL,
             timeout: float = REQUEST_TIMEOUT,
             max_retries: int = 2,
+            fetch_generation_data: bool = False,
     ) -> None:
 
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
@@ -47,6 +48,7 @@ class OpenRouter:
         self.async_session = None
 
         self._provider_preferences = None
+        self.fetch_generation_data = fetch_generation_data
 
         self._models: Optional[Dict[str, Any]] = None
         self._models_last_fetched: float = 0
@@ -199,6 +201,10 @@ class OpenRouter:
 
     def get_parameters(self, model_id: str) -> Dict[str, Any]:
         return self._make_request("GET", f"parameters/{model_id}")
+
+    def set_generation_data_preference(self, fetch: bool) -> None:
+        """Set the preference for fetching generation data."""
+        self.fetch_generation_data = fetch
 
     def set_provider_preferences(
             self,

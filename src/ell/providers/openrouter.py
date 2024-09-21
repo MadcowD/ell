@@ -124,6 +124,7 @@ try:
                 api_params: Dict[str, Any],
                 tools: Optional[list[LMP]] = None,
         ) -> APICallResult:
+
             final_call_params = api_params.copy()
             openrouter_messages = [cls.message_to_openrouter_format(message) for message in messages]
 
@@ -144,10 +145,14 @@ try:
                 ]
                 final_call_params["tool_choice"] = "auto"
 
+            # Determine whether to fetch generation data, falling back to client if api_params value is not present
+            fetch_generation_data = final_call_params.pop("generation_data", client.fetch_generation_data)
+
             response = client.chat_completions(**final_call_params)
 
-            # Schedule the asynchronous update without blocking
-            cls.schedule_generation_data_update(client, response)
+            # Only schedule generation data update if the preference is set
+            if fetch_generation_data:
+                cls.schedule_generation_data_update(client, response)
 
             # Update stats with initial data
             cls.update_stats(client, response)

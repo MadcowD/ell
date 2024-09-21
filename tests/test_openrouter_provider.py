@@ -19,6 +19,7 @@ class DummyParams(BaseModel):
 @pytest.fixture
 def mock_openrouter_client():
     client = Mock(spec=OpenRouter, auto_spec=True)
+    client.fetch_generation_data = False
     client._used_models = {}
     client.global_stats = {
         'total_cost': 0,
