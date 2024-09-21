@@ -18,11 +18,11 @@ try:
     class OpenAIProvider(Provider):
         dangerous_disable_validation = True
         
-        def provider_call_function(self, api_call_params : Optional[Dict[str, Any]] = None) -> Callable[..., Any]:
+        def provider_call_function(self, client : openai.Client, api_call_params : Optional[Dict[str, Any]] = None) -> Callable[..., Any]:
             if api_call_params and api_call_params.get("response_format"):
-                return openai.beta.chat.completions.parse
+                return client.beta.chat.completions.parse
             else:
-                return openai.chat.completions.create
+                return client.chat.completions.create
             
         def translate_to_provider(self, ell_call : EllCallParams) -> Dict[str, Any]: 
             final_call_params = ell_call.api_params.copy()

@@ -61,7 +61,7 @@ class Provider(ABC):
     ################################
     @abstractmethod
     def provider_call_function(
-        self, api_call_params: Optional[Dict[str, Any]] = None
+        self, client: Any, api_call_params: Optional[Dict[str, Any]] = None
     ) -> Callable[..., Any]:
         """
         Implement this method to return the function that makes the API call to the language model.
@@ -75,8 +75,8 @@ class Provider(ABC):
         """
         return frozenset({"messages", "tools", "model", "stream", "stream_options"})
 
-    def available_api_params(self, api_params: Optional[Dict[str, Any]] = None):
-        params = _call_params(self.provider_call_function(api_params))
+    def available_api_params(self, client: Any, api_params: Optional[Dict[str, Any]] = None):
+        params = _call_params(self.provider_call_function(client, api_params))
         return frozenset(params.keys()) - self.disallowed_api_params()
 
     ################################
@@ -116,7 +116,7 @@ class Provider(ABC):
 
         final_api_call_params = self.translate_to_provider(ell_call)
 
-        call = self.provider_call_function(final_api_call_params)
+        call = self.provider_call_function(ell_call.client, final_api_call_params)
         assert self.dangerous_disable_validation or _validate_provider_call_params(final_api_call_params, call)
         
         
