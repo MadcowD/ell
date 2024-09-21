@@ -1,305 +1,208 @@
 # src/ell/models/openrouter.py
-from __future__ import annotations
-
-from os import makedirs
-
 from ell.configurator import config
+
+import json
 import logging
 import os
-import json
 import time
-import requests
-from typing import List, Dict, Optional
-
-import os
-from typing import Any, Union, Mapping
-from typing_extensions import Self, override
+from pathlib import Path
+from tempfile import gettempdir
+from typing import Dict, Any, Optional, Union, Literal, List
 
 import httpx
-
-from openai import resources
-from openai._qs import Querystring
-from openai._types import (
-    NOT_GIVEN,
-    Omit,
-    Timeout,
-    NotGiven,
-    Transport,
-    ProxiesTypes,
-    RequestOptions,
-)
-from openai._utils import (
-    is_given,
-    is_mapping,
-    get_async_library,
-)
-from openai._version import __version__
-from openai._streaming import Stream as Stream, AsyncStream as AsyncStream
-from openai._exceptions import OpenAIError, APIStatusError
-from openai._base_client import (
-    DEFAULT_MAX_RETRIES,
-    SyncAPIClient,
-    AsyncAPIClient,
-)
 
 logger = logging.getLogger(__name__)
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-CACHE_FILE = ".pycache/openrouter_models_cache.json"
-CACHE_EXPIRY = 3600  # 1 hour
+MODEL_CACHE_DIR = Path(gettempdir()) / "ell_openrouter_cache"
+MODEL_CACHE_FILE = MODEL_CACHE_DIR / "openrouter_models_cache.json"
+MODEL_FILE_CACHE_EXPIRY = 3600  # 1 hour
 
+client = None
 
-class OpenRouter(SyncAPIClient):
-    completions: resources.Completions
-    chat: resources.Chat
-    embeddings: resources.Embeddings
-    models: resources.Models
-    with_raw_response: OpenRouterWithRawResponse
-    with_streaming_response: OpenRouterWithStreamedResponse
+class OpenRouter:
 
-    # client options
-    api_key: str
+    MODEL_CACHE_EXPIRY = 300
 
     def __init__(
-        self,
-        *,
-        api_key: str | None = None,
-        base_url: str | httpx.URL | None = None,
-        timeout: Union[float, Timeout, None, NotGiven] = NOT_GIVEN,
-        max_retries: int = DEFAULT_MAX_RETRIES,
-        default_headers: Mapping[str, str] | None = None,
-        default_query: Mapping[str, object] | None = None,
-        http_client: httpx.Client | None = None,
-        _strict_response_validation: bool = False,
+            self,
+            api_key: Optional[str] = None,
+            base_url: str = OPENROUTER_BASE_URL,
+            timeout: float = 600,
+            max_retries: int = 2,
     ) -> None:
-        if api_key is None:
-            api_key = os.environ.get("OPENROUTER_API_KEY")
-        if api_key is None:
-            raise OpenAIError(
-                "The api_key client option must be set either by passing api_key to the client or by setting the OPENROUTER_API_KEY environment variable"
-            )
-        self.api_key = api_key
+        self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
+        if not self.api_key:
+            raise ValueError("OPENROUTER_API_KEY must be provided or set as an environment variable")
 
-        if base_url is None:
-            base_url = os.environ.get("OPENROUTER_BASE_URL")
-        if base_url is None:
-            base_url = "https://openrouter.ai/api/v1"
-
-        super().__init__(
-            version=__version__,
-            base_url=base_url,
-            max_retries=max_retries,
-            timeout=timeout,
-            http_client=http_client,
-            custom_headers=default_headers,
-            custom_query=default_query,
-            _strict_response_validation=_strict_response_validation,
-        )
-
-        self._default_stream_cls = Stream
-
-        self.completions = resources.Completions(self)
-        self.chat = resources.Chat(self)
-        self.embeddings = resources.Embeddings(self)
-        self.models = resources.Models(self)
-        self.with_raw_response = OpenRouterWithRawResponse(self)
-        self.with_streaming_response = OpenRouterWithStreamedResponse(self)
+        self.base_url = base_url
+        self.timeout = timeout
+        self.max_retries = max_retries
+        self.session = httpx.Client(base_url=self.base_url, timeout=self.timeout)
 
     @property
-    @override
-    def qs(self) -> Querystring:
-        return Querystring(array_format="brackets")
-
-    @property
-    @override
-    def auth_headers(self) -> dict[str, str]:
-        return {"Authorization": f"Bearer {self.api_key}"}
-
-    @property
-    @override
-    def default_headers(self) -> dict[str, str | Omit]:
+    def default_headers(self) -> Dict[str, str]:
         return {
-            **super().default_headers,
-            "HTTP-Referer": os.environ.get("OPENROUTER_REFERRER", ""),
-            "X-Title": os.environ.get("OPENROUTER_TITLE", ""),
-            **self._custom_headers,
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+            "HTTP-Referer": f"{os.environ.get('HTTP_REFERER', 'http://localhost')}",
+            "X-Title": f"{os.environ.get('X_TITLE', 'OpenRouter Python Client')}"
         }
 
-    def copy(
-        self,
-        *,
-        api_key: str | None = None,
-        base_url: str | httpx.URL | None = None,
-        timeout: float | Timeout | None | NotGiven = NOT_GIVEN,
-        http_client: httpx.Client | None = None,
-        max_retries: int | NotGiven = NOT_GIVEN,
-        default_headers: Mapping[str, str] | None = None,
-        set_default_headers: Mapping[str, str] | None = None,
-        default_query: Mapping[str, object] | None = None,
-        set_default_query: Mapping[str, object] | None = None,
-        _extra_kwargs: Mapping[str, Any] = {},
-    ) -> Self:
-        """
-        Create a new client instance re-using the same options given to the current client with optional overriding.
-        """
-        if default_headers is not None and set_default_headers is not None:
-            raise ValueError("The `default_headers` and `set_default_headers` arguments are mutually exclusive")
+    def _make_request(self, method: str, path: str, **kwargs) -> Dict[str, Any]:
+        url = f"{self.base_url}/{path}"
+        headers = {**self.default_headers, **kwargs.get('headers', {})}
 
-        if default_query is not None and set_default_query is not None:
-            raise ValueError("The `default_query` and `set_default_query` arguments are mutually exclusive")
+        for attempt in range(self.max_retries):
+            try:
+                response = self.session.request(method, url, headers=headers, **kwargs)
+                response.raise_for_status()
+                return response.json()
+            except httpx.HTTPStatusError as e:
+                if attempt == self.max_retries - 1:
+                    raise
+                logger.warning(f"Request failed (attempt {attempt + 1}/{self.max_retries}): {e}")
+                time.sleep(2 ** attempt)  # Exponential backoff
 
-        headers = self._custom_headers
-        if default_headers is not None:
-            headers = {**headers, **default_headers}
-        elif set_default_headers is not None:
-            headers = set_default_headers
+    def chat_completions(
+            self,
+            model: str,
+            messages: List[Dict[str, str]],
+            temperature: float = 1.0,
+            top_p: float = 1.0,
+            top_k: int = 0,
+            frequency_penalty: float = 0.0,
+            presence_penalty: float = 0.0,
+            repetition_penalty: float = 1.0,
+            min_p: float = 0.0,
+            top_a: float = 0.0,
+            seed: Optional[int] = None,
+            max_tokens: Optional[int] = None,
+            logit_bias: Optional[Dict[int, float]] = None,
+            logprobs: Optional[bool] = None,
+            top_logprobs: Optional[int] = None,
+            response_format: Optional[Dict[str, str]] = None,
+            stop: Optional[List[str]] = None,
+            tools: Optional[List[Dict[str, Any]]] = None,
+            tool_choice: Optional[Union[str, Dict[str, Any]]] = None,
+            stream: bool = False,
+            **kwargs: Any
+    ) -> Dict[str, Any]:
+        json_data = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "top_p": top_p,
+            "top_k": top_k,
+            "frequency_penalty": frequency_penalty,
+            "presence_penalty": presence_penalty,
+            "repetition_penalty": repetition_penalty,
+            "min_p": min_p,
+            "top_a": top_a,
+            "seed": seed,
+            "max_tokens": max_tokens,
+            "logit_bias": logit_bias,
+            "logprobs": logprobs,
+            "top_logprobs": top_logprobs,
+            "response_format": response_format,
+            "stop": stop,
+            "tools": tools,
+            "tool_choice": tool_choice,
+            "stream": stream,
+        }
 
-        params = self._custom_query
-        if default_query is not None:
-            params = {**params, **default_query}
-        elif set_default_query is not None:
-            params = set_default_query
+        json_data = {k: v for k, v in json_data.items() if v is not None}
+        return self._make_request("POST", "chat/completions", json=json_data, **kwargs)
 
-        http_client = http_client or self._client
-        return self.__class__(
-            api_key=api_key or self.api_key,
-            base_url=base_url or self.base_url,
-            timeout=self.timeout if isinstance(timeout, NotGiven) else timeout,
-            http_client=http_client,
-            max_retries=max_retries if is_given(max_retries) else self.max_retries,
-            default_headers=headers,
-            default_query=params,
-            **_extra_kwargs,
-        )
+    def get_parameters(self, model_id: str) -> Dict[str, Any]:
+        return self._make_request("GET", f"parameters/{model_id}")
 
-    # Alias for `copy` for nicer inline usage, e.g.
-    # client.with_options(timeout=10).foo.create(...)
-    with_options = copy
+    def set_provider_preferences(
+            self,
+            allow_fallbacks: Optional[bool] = None,
+            require_parameters: Optional[bool] = None,
+            data_collection: Optional[Literal["deny", "allow"]] = None,
+            order: Optional[List[str]] = None,
+            ignore: Optional[List[str]] = None,
+            quantizations: Optional[List[Literal["int4", "int8", "fp8", "fp16", "bf16", "unknown"]]] = None
+    ) -> None:
+        self._provider_preferences = {
+            "allow_fallbacks": allow_fallbacks,
+            "require_parameters": require_parameters,
+            "data_collection": data_collection,
+            "order": order,
+            "ignore": ignore,
+            "quantizations": quantizations
+        }
+        self._provider_preferences = {k: v for k, v in self._provider_preferences.items() if v is not None}
 
-    @override
-    def _make_status_error(
-        self,
-        err_msg: str,
-        *,
-        body: object,
-        response: httpx.Response,
-    ) -> APIStatusError:
-        # Implement OpenRouter-specific error handling here
-        # For now, we'll use the OpenAI error handling as a placeholder
-        return super()._make_status_error(err_msg, body=body, response=response)
+    def models(self) -> Dict[str, Any]:
+        return self._make_request("GET", "models")
 
-class OpenRouterWithRawResponse:
-    def __init__(self, client: OpenRouter) -> None:
-        self.completions = resources.CompletionsWithRawResponse(client.completions)
-        self.chat = resources.ChatWithRawResponse(client.chat)
-        self.embeddings = resources.EmbeddingsWithRawResponse(client.embeddings)
-        self.models = resources.ModelsWithRawResponse(client.models)
+class OpenRouterModel:
+    def __init__(self, model_data: Dict):
+        self.id = model_data["id"]
+        self.name = model_data["name"]
+        self.created = model_data["created"]
+        self.description = model_data["description"]
+        self.context_length = model_data["context_length"]
+        self.architecture = model_data["architecture"]
+        self.pricing = model_data["pricing"]
+        self.top_provider = model_data["top_provider"]
+        self.per_request_limits = model_data["per_request_limits"]
 
-class OpenRouterWithStreamedResponse:
-    def __init__(self, client: OpenRouter) -> None:
-        self.completions = resources.CompletionsWithStreamingResponse(client.completions)
-        self.chat = resources.ChatWithStreamingResponse(client.chat)
-        self.embeddings = resources.EmbeddingsWithStreamingResponse(client.embeddings)
-        self.models = resources.ModelsWithStreamingResponse(client.models)
+    def __str__(self):
+        return f"OpenRouterModel(id={self.id}, name={self.name})"
+
+
+def get_cached_models() -> Optional[List[Dict]]:
+    if MODEL_CACHE_FILE.exists():
+        with MODEL_CACHE_FILE.open("r") as f:
+            cache_data = json.load(f)
+        if time.time() - cache_data["timestamp"] < MODEL_FILE_CACHE_EXPIRY:
+            return cache_data["models"]
+    return None
+
+def save_models_to_cache(models: List[Dict]):
+    cache_data = {
+        "timestamp": time.time(),
+        "models": models
+    }
+    MODEL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    with MODEL_CACHE_FILE.open("w") as f:
+        json.dump(cache_data, f)
+
+def fetch_openrouter_models() -> List[OpenRouterModel]:
+    cached_models = get_cached_models()
+    if cached_models:
+        return [OpenRouterModel(model_data) for model_data in cached_models]
+
+    models_data = client.models()["data"]
+    save_models_to_cache(models_data)
+
+    return [OpenRouterModel(model_data) for model_data in models_data]
+
+def get_openrouter_client() -> OpenRouter:
+    api_key = os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        raise ValueError("OPENROUTER_API_KEY environment variable is not set")
+    return OpenRouter(api_key=api_key)
+
+def register_openrouter_models():
+    try:
+        global client
+        if client is None:
+            client = get_openrouter_client()
+        models = fetch_openrouter_models()
+        for model in models:
+            config.register_model(model.id, "openrouter")
+        logger.info(f"Registered {len(models)} OpenRouter models successfully.")
+    except Exception as e:
+        logger.error(f"Failed to fetch and register OpenRouter models: {e}")
 
 try:
-
-    _openrouter_client = None  # Global variable to store the OpenRouter client
-
-
-    class OpenRouterModel:
-        def __init__(self, model_data: Dict):
-            self._id = model_data["id"]
-            self.id = f'openrouter/{self._id}'
-
-            self.name = model_data["name"]
-            self.created = model_data["created"]
-            self.description = model_data["description"]
-            self.context_length = model_data["context_length"]
-            self.architecture = model_data["architecture"]
-            self.pricing = model_data["pricing"]
-            self.top_provider = model_data["top_provider"]
-            self.per_request_limits = model_data["per_request_limits"]
-
-        def __str__(self):
-            return f"OpenRouterModel((id={self._id}, name={self.name})"
-
-
-    def get_cached_models() -> Optional[List[Dict]]:
-        if os.path.exists(CACHE_FILE):
-            with open(CACHE_FILE, "r") as f:
-                cache_data = json.load(f)
-            if time.time() - cache_data["timestamp"] < CACHE_EXPIRY:
-                return cache_data["models"]
-        return None
-
-
-    def save_models_to_cache(models: List[Dict]):
-        cache_data = {
-            "timestamp": time.time(),
-            "models": models
-        }
-        makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
-        with open(CACHE_FILE, "w") as f:
-            json.dump(cache_data, f)
-
-
-    def fetch_openrouter_models(api_key: str) -> List[OpenRouterModel]:
-        cached_models = get_cached_models()
-        if cached_models:
-            return [OpenRouterModel(model_data) for model_data in cached_models]
-
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
-
-        response = requests.get(f"{OPENROUTER_BASE_URL}/models", headers=headers)
-        response.raise_for_status()
-
-        models_data = response.json()["data"]
-        save_models_to_cache(models_data)
-
-        return [OpenRouterModel(model_data) for model_data in models_data]
-
-
-    def register(client: OpenRouter):
-        api_key = os.environ.get("OPENROUTER_API_KEY")
-        if not api_key:
-            raise ValueError("OPENROUTER_API_KEY environment variable is not set")
-
-        try:
-            models = fetch_openrouter_models(api_key)
-            for model in models:
-                config.register_model(model.id, "openrouter")
-            logger.info(f"Registered {len(models)} OpenRouter models successfully.")
-        except Exception as e:
-            logger.error(f"Failed to fetch and register OpenRouter models: {e}")
-
-
-    def get_openrouter_client() -> OpenRouter:
-        global _openrouter_client
-        if _openrouter_client is not None:
-            return _openrouter_client
-
-        api_key = os.environ.get("OPENROUTER_API_KEY")
-        if not api_key:
-            raise ValueError("OPENROUTER_API_KEY environment variable is not set")
-
-        _openrouter_client = OpenRouter(api_key=api_key)
-        register(_openrouter_client)
-        return _openrouter_client
-
-
-    try:
-        default_client = get_openrouter_client()
-        logger.info("Default OpenRouter client created and models registered successfully.")
-    except Exception as e:
-        logger.warning(f"Failed to create default OpenRouter client: {e}")
-
-except ImportError:
-    logger.warning("OpenRouter package not found. OpenRouter models will not be available.")
-
-
-    def get_openrouter_client():
-        raise ImportError("OpenRouter package is not installed. Unable to create OpenRouter client.")
+    client = get_openrouter_client()
+    register_openrouter_models()
+    logger.info("Default OpenRouter client created and models registered successfully.")
+except Exception as e:
+    logger.warning(f"Failed to create default OpenRouter client or register models: {e}")
