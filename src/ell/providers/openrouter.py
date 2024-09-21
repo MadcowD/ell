@@ -64,22 +64,20 @@ try:
 
         @classmethod
         def call_model(
-            cls,
-            client: OpenRouter,
-            model: str,
-            messages: List[Message],
-            api_params: Dict[str, Any],
-            tools: Optional[list[LMP]] = None,
+                cls,
+                client: 'OpenRouter',
+                model: str,
+                messages: List[Message],
+                api_params: Dict[str, Any],
+                tools: Optional[list[LMP]] = None,
         ) -> APICallResult:
             final_call_params = api_params.copy()
             openrouter_messages = [cls.message_to_openrouter_format(message) for message in messages]
 
-            actual_n = api_params.get("n", 1)
             final_call_params["model"] = model
             final_call_params["messages"] = openrouter_messages
 
             if tools:
-                final_call_params["tool_choice"] = "auto"
                 final_call_params["tools"] = [
                     {
                         "type": "function",
@@ -91,107 +89,168 @@ try:
                     }
                     for tool in tools
                 ]
+                final_call_params["tool_choice"] = "auto"
 
             response = client.chat_completions(**final_call_params)
 
+            # Fetch additional information from the generation endpoint
             generation_id = response.get('id')
             if generation_id:
                 generation_info = client.get_generation(generation_id)
                 response['generation_info'] = generation_info
 
+            # Update _used_models and global stats based on the chat completion response
+            if response.get("model"):
+                model_name = response["model"]
+                if model_name not in client._used_models:
+                    client._used_models[model_name] = {
+                        "total_cost": 0,
+                        "total_tokens": 0,
+                        "usage_count": 0,
+                    }
+
+                usage = response.get("usage", {})
+                tokens = usage.get("total_tokens", 0)
+                client._used_models[model_name].update({
+                    "last_used": response["created"],
+                    "usage": usage,
+                    "total_tokens": client._used_models[model_name]["total_tokens"] + tokens,
+                    "usage_count": client._used_models[model_name]["usage_count"] + 1,
+                })
+                client.global_stats['total_tokens'] += tokens
+
+            # Update _used_models and global stats based on the generation info
+            generation_info = response.get("generation_info", {}).get("data", {})
+            if generation_info:
+                model_name = generation_info.get("model")
+                if model_name:
+                    cost = generation_info.get("total_cost", 0)
+                    tokens_prompt = generation_info.get("tokens_prompt", 0)
+                    tokens_completion = generation_info.get("tokens_completion", 0)
+                    provider = generation_info.get("provider_name")
+
+                    client._used_models[model_name].update({
+                        "provider_name": provider,
+                        "quantization": generation_info.get("quantization", "unspecified"),
+                        "last_used": generation_info.get("created_at"),
+                        "total_cost": client._used_models[model_name]["total_cost"] + cost,
+                        "tokens_prompt": tokens_prompt,
+                        "tokens_completion": tokens_completion,
+                        "native_tokens_prompt": generation_info.get("native_tokens_prompt"),
+                        "native_tokens_completion": generation_info.get("native_tokens_completion"),
+                    })
+
+                    client.global_stats['total_cost'] += cost
+                    if provider:
+                        client.global_stats['used_providers'].add(provider)
+
             return APICallResult(
                 response=response,
                 actual_streaming=final_call_params.get("stream", False),
-                actual_n=actual_n,
+                actual_n=final_call_params.get("n", 1),
                 final_call_params=final_call_params,
             )
 
         @classmethod
         def process_response(
-            cls, call_result: APICallResult, _invocation_origin: str, logger: Optional[Any] = None, tools: Optional[List[LMP]] = None,
+                cls,
+                call_result: APICallResult,
+                _invocation_origin: str,
+                logger: Optional[Any] = None,
+                tools: Optional[List[LMP]] = None,
         ) -> Tuple[List[Message], Dict[str, Any]]:
+            response = call_result.response
+            metadata = {
+                "id": response.get("id"),
+                "created": response.get("created"),
+                "model": response.get("model"),
+                "object": response.get("object"),
+                "system_fingerprint": response.get("system_fingerprint"),
+                "usage": response.get("usage", {}),
+                "generation_info": response.get("generation_info", {}).get("data", {})
+            }
+
             choices_progress = defaultdict(list)
-            api_params = call_result.final_call_params
-            metadata = {}
+            is_streaming = call_result.actual_streaming
 
-            if not call_result.actual_streaming:
-                response = [call_result.response]
+            if is_streaming:
+                for chunk in response:
+                    for choice in chunk.get("choices", []):
+                        choices_progress[choice["index"]].append(choice)
+                        if choice["index"] == 0 and logger:
+                            logger(choice.get("delta", {}).get("content", ""))
             else:
-                response = call_result.response
-
-            for chunk in response:
-                if "usage" in chunk:
-                    metadata["usage"] = chunk["usage"]
-
-                for choice in chunk.get("choices", []):
+                for choice in response.get("choices", []):
                     choices_progress[choice["index"]].append(choice)
-
                     if choice["index"] == 0 and logger:
-                        logger(choice.get("delta", {}).get("content", "") if call_result.actual_streaming else
-                               choice.get("message", {}).get("content", ""))
+                        logger(choice.get("message", {}).get("content", ""))
 
             tracked_results = []
-            for _, choice_deltas in sorted(choices_progress.items(), key=lambda x: x[0]):
+            for _, choice_data in sorted(choices_progress.items(), key=lambda x: x[0]):
                 content = []
+                role = "assistant"
+                finish_reason = None
 
-                if call_result.actual_streaming:
-                    text_content = "".join(
-                        (choice.get("delta", {}).get("content", "") or "" for choice in choice_deltas)
-                    )
+                if is_streaming:
+                    text_content = ""
+                    for chunk in choice_data:
+                        delta = chunk.get("delta", {})
+                        text_content += delta.get("content", "") or ""
+                        if "role" in delta:
+                            role = delta["role"]
+                        finish_reason = chunk.get("finish_reason")
+
+                        if "tool_calls" in delta:
+                            cls._process_tool_calls(delta["tool_calls"], content, tools, _invocation_origin)
+
                     if text_content:
-                        content.append(
-                            ContentBlock(
-                                text=_lstr(
-                                    content=text_content, _origin_trace=_invocation_origin
-                                )
-                            )
-                        )
-                    streamed_role = next((choice.get("delta", {}).get("role") for choice in choice_deltas if choice.get("delta", {}).get("role")), 'assistant')
+                        content.append(ContentBlock(text=_lstr(content=text_content, _origin_trace=_invocation_origin)))
                 else:
-                    choice = choice_deltas[0].get("message", {})
-                    if choice.get("content"):
-                        content.append(
-                            ContentBlock(
-                                text=_lstr(
-                                    content=choice["content"], _origin_trace=_invocation_origin
-                                )
-                            )
-                        )
+                    choice = choice_data[0]
+                    message = choice.get("message", {})
+                    role = message.get("role", "assistant")
+                    finish_reason = choice.get("finish_reason")
 
-                if not call_result.actual_streaming and "tool_calls" in choice:
-                    assert tools is not None, "Tools not provided, yet tool calls in response."
-                    for tool_call in choice["tool_calls"]:
-                        matching_tool = next(
-                            (tool for tool in tools if tool.__name__ == tool_call["function"]["name"]),
-                            None,
-                        )
-                        if matching_tool:
-                            params = matching_tool.__ell_params_model__(
-                                **json.loads(tool_call["function"]["arguments"])
-                            )
-                            content.append(
-                                ContentBlock(
-                                    tool_call=ToolCall(
-                                        tool=matching_tool,
-                                        tool_call_id=_lstr(
-                                            tool_call["id"], _origin_trace=_invocation_origin
-                                        ),
-                                        params=params,
-                                    )
-                                )
-                            )
+                    if message.get("content"):
+                        content.append(
+                            ContentBlock(text=_lstr(content=message["content"], _origin_trace=_invocation_origin)))
+
+                    if "tool_calls" in message:
+                        cls._process_tool_calls(message["tool_calls"], content, tools, _invocation_origin)
 
                 tracked_results.append(
                     Message(
-                        role=(
-                            choice.get("message", {}).get("role")
-                            if not call_result.actual_streaming
-                            else streamed_role
-                        ),
+                        role=role,
                         content=content,
+                        metadata={"finish_reason": finish_reason}
                     )
                 )
+
             return tracked_results, metadata
+
+        @staticmethod
+        def _process_tool_calls(tool_calls, content, tools, _invocation_origin):
+            assert tools is not None, "Tools not provided, yet tool calls in response."
+            for tool_call in tool_calls:
+                matching_tool = next(
+                    (tool for tool in tools if tool.__name__ == tool_call["function"]["name"]),
+                    None,
+                )
+                if matching_tool:
+                    params = matching_tool.__ell_params_model__(
+                        **json.loads(tool_call["function"]["arguments"])
+                    )
+                    content.append(
+                        ContentBlock(
+                            tool_call=ToolCall(
+                                tool=matching_tool,
+                                tool_call_id=_lstr(
+                                    tool_call["id"], _origin_trace=_invocation_origin
+                                ),
+                                params=params,
+                            )
+                        )
+                    )
 
         @classmethod
         def supports_streaming(cls) -> bool:

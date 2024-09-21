@@ -41,11 +41,17 @@ class OpenRouter:
         self.max_retries = max_retries
         self.session = httpx.Client(base_url=self.base_url, timeout=self.timeout)
 
+        self._provider_preferences = None
+
         self._models: Optional[Dict[str, Any]] = None
         self._models_last_fetched: float = 0
         self._used_models: Dict[str, Dict[str, Any]] = {}
 
-        self._provider_preferences = None
+        self.global_stats = {
+            'total_cost': 0,
+            'total_tokens': 0,
+            'used_providers': set()
+        }
 
     @property
     def default_headers(self) -> Dict[str, str]:
@@ -120,18 +126,13 @@ class OpenRouter:
 
         json_data = {k: v for k, v in json_data.items() if v is not None}
         response = self._make_request("POST", "chat/completions", json=json_data, **kwargs)
-
-        # Update used_models
-        if 'model' in response:
-            model_info = response['model']
-            model_id = f"{model_info['name']}/{model_info['provider']}/{model_info.get('quantization', 'full')}"
-            self._used_models[model_id] = {
-                "supported_parameters": model_info.get('supported_parameters', []),
-                "provider": model_info['provider'],
-                "quantization": model_info.get('quantization', 'full')
-            }
-
         return response
+
+    def get_generation(self, generation_id: str):
+        url = f"{self.base_url}/generation?id={generation_id}"
+        response = self.session.get(url, headers=self.default_headers)
+        response.raise_for_status()
+        return response.json()
 
     def get_parameters(self, model_id: str) -> Dict[str, Any]:
         return self._make_request("GET", f"parameters/{model_id}")
@@ -203,6 +204,10 @@ class OpenRouter:
     @property
     def used_models(self) -> Dict[str, Dict[str, Any]]:
         return self._used_models
+
+    @property
+    def provider_preferences(self) -> Optional[List[Literal["int4", "int8", "fp8", "fp16", "bf16", "unknown"]]]:
+        return self._provider_preferences
 
     def clear_model_cache(self):
         self._models = None
