@@ -1,6 +1,6 @@
 import logging
 import ell
-from ell.models.openrouter import get_openrouter_client
+from ell.models.openrouter import get_client
 
 # Configure logging to display WARNING and above messages
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -8,13 +8,13 @@ logger = logging.getLogger(__name__)
 
 def main():
     try:
-        client = get_openrouter_client()
+        client = get_client()
         logger.info(f"Successfully obtained OpenRouter client: {type(client).__name__}")
 
         # Initialize ell with verbose logging (optional)
         # ell.init(verbose=True)
 
-        @ell.simple(model="openai/gpt-3.5-turbo")  # Using an OpenRouter-supported model
+        @ell.simple(model="meta-llama/llama-3.1-8b-instruct")  # Using an OpenRouter-supported model
         def hello(name: str) -> str:
             """You are a friendly AI assistant."""
             return f"Generate a warm greeting for {name}"
@@ -24,6 +24,7 @@ def main():
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
+        raise e
 
 if __name__ == "__main__":
     main()

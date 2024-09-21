@@ -16,13 +16,14 @@ logger = logging.getLogger(__name__)
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 MODEL_CACHE_DIR = Path(gettempdir()) / "ell_openrouter_cache"
 MODEL_CACHE_FILE = MODEL_CACHE_DIR / "openrouter_models_cache.json"
-MODEL_FILE_CACHE_EXPIRY = 3600  # 1 hour
+MODEL_FILE_CACHE_EXPIRY = 3600  # 60 minutes
 
-client = None
+client = None  # Global: OpenRouter client
+
 
 class OpenRouter:
 
-    MODEL_CACHE_EXPIRY = 300
+    MODEL_CACHE_EXPIRY = 300  # 5 minutes
 
     def __init__(
             self,
@@ -40,6 +41,12 @@ class OpenRouter:
         self.max_retries = max_retries
         self.session = httpx.Client(base_url=self.base_url, timeout=self.timeout)
 
+        self._models: Optional[Dict[str, Any]] = None
+        self._models_last_fetched: float = 0
+        self._used_models: Dict[str, Dict[str, Any]] = {}
+
+        self._provider_preferences = None
+
     @property
     def default_headers(self) -> Dict[str, str]:
         return {
@@ -52,7 +59,7 @@ class OpenRouter:
     def _make_request(self, method: str, path: str, **kwargs) -> Dict[str, Any]:
         url = f"{self.base_url}/{path}"
         headers = {**self.default_headers, **kwargs.get('headers', {})}
-
+        # response = self.session.request(method, url, headers=headers, **kwargs)
         for attempt in range(self.max_retries):
             try:
                 response = self.session.request(method, url, headers=headers, **kwargs)
@@ -112,7 +119,19 @@ class OpenRouter:
         }
 
         json_data = {k: v for k, v in json_data.items() if v is not None}
-        return self._make_request("POST", "chat/completions", json=json_data, **kwargs)
+        response = self._make_request("POST", "chat/completions", json=json_data, **kwargs)
+
+        # Update used_models
+        if 'model' in response:
+            model_info = response['model']
+            model_id = f"{model_info['name']}/{model_info['provider']}/{model_info.get('quantization', 'full')}"
+            self._used_models[model_id] = {
+                "supported_parameters": model_info.get('supported_parameters', []),
+                "provider": model_info['provider'],
+                "quantization": model_info.get('quantization', 'full')
+            }
+
+        return response
 
     def get_parameters(self, model_id: str) -> Dict[str, Any]:
         return self._make_request("GET", f"parameters/{model_id}")
@@ -136,8 +155,59 @@ class OpenRouter:
         }
         self._provider_preferences = {k: v for k, v in self._provider_preferences.items() if v is not None}
 
+    @property
     def models(self) -> Dict[str, Any]:
-        return self._make_request("GET", "models")
+        current_time = time.time()
+        if self._models is None or (current_time - self._models_last_fetched) > OpenRouter.MODEL_CACHE_EXPIRY:
+            self._models = self._fetch_models()
+            self._models_last_fetched = current_time
+        return self._models
+
+    def _fetch_models(self) -> Dict[str, Any]:
+        cached_models = self._get_cached_models()
+        if cached_models:
+            return cached_models
+
+        models_data = self._make_request("GET", "models")
+        models_dictionary = self._transform_models_data(models_data)
+        self._save_models_to_cache(models_dictionary)
+        return models_dictionary
+
+    @staticmethod
+    def _transform_models_data(models_data: Dict[str, Any]) -> Dict[str, Any]:
+        models_dictionary = {}
+        for model in models_data.get('data', []):
+            model_id = model['id']
+            models_dictionary[model_id] = model
+        return models_dictionary
+
+    @staticmethod
+    def _get_cached_models() -> Optional[Dict[str, Any]]:
+        if MODEL_CACHE_FILE.exists():
+            with MODEL_CACHE_FILE.open("r") as f:
+                cache_data = json.load(f)
+            if time.time() - cache_data["timestamp"] < MODEL_FILE_CACHE_EXPIRY:
+                return cache_data["models"]
+        return None
+
+    @staticmethod
+    def _save_models_to_cache(models: Dict[str, Any]):
+        cache_data = {
+            "timestamp": time.time(),
+            "models": models
+        }
+        MODEL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        with MODEL_CACHE_FILE.open("w") as f:
+            json.dump(cache_data, f)
+
+    @property
+    def used_models(self) -> Dict[str, Dict[str, Any]]:
+        return self._used_models
+
+    def clear_model_cache(self):
+        self._models = None
+        self._models_last_fetched = 0
+
 
 class OpenRouterModel:
     def __init__(self, model_data: Dict):
@@ -155,54 +225,33 @@ class OpenRouterModel:
         return f"OpenRouterModel(id={self.id}, name={self.name})"
 
 
-def get_cached_models() -> Optional[List[Dict]]:
-    if MODEL_CACHE_FILE.exists():
-        with MODEL_CACHE_FILE.open("r") as f:
-            cache_data = json.load(f)
-        if time.time() - cache_data["timestamp"] < MODEL_FILE_CACHE_EXPIRY:
-            return cache_data["models"]
-    return None
+def fetch_openrouter_models(openrouter_client: OpenRouter) -> List[OpenRouterModel]:
+    return [OpenRouterModel(model_data) for model_data in openrouter_client.models.values()]
 
-def save_models_to_cache(models: List[Dict]):
-    cache_data = {
-        "timestamp": time.time(),
-        "models": models
-    }
-    MODEL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    with MODEL_CACHE_FILE.open("w") as f:
-        json.dump(cache_data, f)
 
-def fetch_openrouter_models() -> List[OpenRouterModel]:
-    cached_models = get_cached_models()
-    if cached_models:
-        return [OpenRouterModel(model_data) for model_data in cached_models]
-
-    models_data = client.models()["data"]
-    save_models_to_cache(models_data)
-
-    return [OpenRouterModel(model_data) for model_data in models_data]
-
-def get_openrouter_client() -> OpenRouter:
-    api_key = os.environ.get("OPENROUTER_API_KEY")
-    if not api_key:
-        raise ValueError("OPENROUTER_API_KEY environment variable is not set")
-    return OpenRouter(api_key=api_key)
-
-def register_openrouter_models():
+def register_openrouter_models(openrouter_client: OpenRouter):
     try:
-        global client
-        if client is None:
-            client = get_openrouter_client()
-        models = fetch_openrouter_models()
+        models = fetch_openrouter_models(openrouter_client)
         for model in models:
-            config.register_model(model.id, "openrouter")
+            config.register_model(model.id, client)
         logger.info(f"Registered {len(models)} OpenRouter models successfully.")
     except Exception as e:
         logger.error(f"Failed to fetch and register OpenRouter models: {e}")
 
+def get_client(api_key=None) -> OpenRouter:
+    global client
+    if api_key is None:
+        api_key = os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        raise ValueError("OPENROUTER_API_KEY environment variable is not set")
+    if client is None:
+        client = OpenRouter(api_key=api_key)
+    return client
+
 try:
-    client = get_openrouter_client()
-    register_openrouter_models()
+    client = get_client()
+    register_openrouter_models(client)
     logger.info("Default OpenRouter client created and models registered successfully.")
 except Exception as e:
     logger.warning(f"Failed to create default OpenRouter client or register models: {e}")
+
