@@ -3,7 +3,7 @@ from ell.lmp._track import _track
 from ell.types._lstr import _lstr
 from ell.types import Message, ContentBlock
 from ell.types.message import LMP, InvocableLM, LMPParams, MessageOrDict, _lstr_generic
-from ell.types.studio import LMPType
+from ell.types.lmp import LMPType
 from ell.util._warnings import _warnings
 from ell.util.api import  call
 from ell.util.verbosity import compute_color, model_usage_logger_pre

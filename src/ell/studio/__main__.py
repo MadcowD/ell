@@ -1,12 +1,13 @@
 import asyncio
 import os
+from fastapi import FastAPI
 import uvicorn
 from argparse import ArgumentParser
 from ell.studio.config import Config
+from ell.studio.logger import setup_logging
 from ell.studio.server import create_app
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from watchfiles import awatch
 import time
 
 
@@ -16,22 +17,32 @@ def main():
                         help="Directory for filesystem serializer storage (default: current directory)")
     parser.add_argument("--pg-connection-string", default=None,
                         help="PostgreSQL connection string (default: None)")
-    parser.add_argument("--host", default="127.0.0.1", help="Host to run the server on")
-    parser.add_argument("--port", type=int, default=5000, help="Port to run the server on")
-    parser.add_argument("--dev", action="store_true", help="Run in development mode")
+    parser.add_argument("--mqtt-connection-string", default=None,
+                        help="MQTT connection string (default: None)")
+    parser.add_argument("--host", default="0.0.0.0",
+                        help="Host to run the server on")
+    parser.add_argument("--port", type=int, default=5000,
+                        help="Port to run the server on")
+    parser.add_argument("--dev", action="store_true",
+                        help="Run in development mode")
     args = parser.parse_args()
 
     if args.dev:
         assert args.port == 5000, "Port must be 5000 in development mode"
 
-    config = Config.create(storage_dir=args.storage_dir,
-                    pg_connection_string=args.pg_connection_string)
+    config = Config(
+        storage_dir=args.storage_dir,
+        pg_connection_string=args.pg_connection_string,
+        mqtt_connection_string=args.mqtt_connection_string
+    )
+
     app = create_app(config)
 
     if not args.dev:
         # In production mode, serve the built React app
         static_dir = os.path.join(os.path.dirname(__file__), "static")
-        # app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+        app.mount("/", StaticFiles(directory=static_dir,
+                  html=True), name="static")
 
         @app.get("/{full_path:path}")
         async def serve_react_app(full_path: str):
@@ -41,16 +52,15 @@ def main():
             else:
                 return FileResponse(os.path.join(static_dir, "index.html"))
 
-    db_path = os.path.join(args.storage_dir)
 
-    async def db_watcher(db_path, app):
+    async def db_watcher(db_path: str, app: FastAPI):
         last_stat = None
 
         while True:
             await asyncio.sleep(0.1)  # Fixed interval of 0.1 seconds
             try:
                 current_stat = os.stat(db_path)
-                
+
                 if last_stat is None:
                     print(f"Database file found: {db_path}")
                     await app.notify_clients("database_updated")
@@ -83,9 +93,15 @@ def main():
 
     config = uvicorn.Config(app=app, host=args.host, port=args.port, loop=loop)
     server = uvicorn.Server(config)
-    loop.create_task(server.serve())
-    loop.create_task(db_watcher(db_path, app))
+
+    tasks = []
+    tasks.append(loop.create_task(server.serve()))
+
+    if args.storage_dir:
+        tasks.append(loop.create_task(db_watcher(args.storage_dir, app)))
+
     loop.run_forever()
+
 
 if __name__ == "__main__":
     main()

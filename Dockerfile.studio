@@ -1,0 +1,44 @@
+# Start with a Node.js base image for building the React app
+FROM node:20 AS client-builder
+
+WORKDIR /app/ell-studio
+
+# Copy package.json and package-lock.json (if available)
+COPY ell-studio/package.json ell-studio/package-lock.json* ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy the rest of the client code
+COPY ell-studio .
+
+# Build the React app
+RUN npm run build
+
+# Now, start with the Python base image
+FROM python:3.12
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry
+RUN pip install --no-cache-dir poetry
+
+# Copy only requirements to cache them in docker layer
+COPY pyproject.toml poetry.lock* ./
+
+# Project initialization:
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi
+
+# Copy the Python project
+COPY src .
+
+# Copy the built React app from the client-builder stage
+COPY --from=client-builder /app/ell-studio/build /app/ell/studio/static
+
+CMD ["python", "-m", "ell.studio"]

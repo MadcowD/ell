@@ -9,7 +9,7 @@ from ell.lmp._track import _track
 # from ell.util.verbosity import compute_color, tool_usage_logger_pre
 from ell.configurator import config
 from ell.types._lstr import _lstr
-from ell.types.studio import LMPType
+from ell.types.lmp import LMPType
 import inspect
 
 from ell.types.message import ContentBlock, InvocableTool, ToolResult, coerce_content_list

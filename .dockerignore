@@ -1,0 +1,10 @@
+**/__pycache__/
+.pytest_cache/
+.git
+.github
+.vscode
+.DS_Store
+.env
+
+
+tests

@@ -1,0 +1,23 @@
+FROM python:3.12
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry
+RUN pip install --no-cache-dir poetry
+
+# Copy only requirements to cache them in docker layer
+COPY pyproject.toml poetry.lock* ./
+
+# Project initialization:
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi
+
+# Copy project
+COPY src .
+
+CMD ["python", "-m", "ell.api"]

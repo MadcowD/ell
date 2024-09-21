@@ -25,7 +25,7 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9"
+python = ">=3.9,<4"
 fastapi = "^0.111.1"
 numpy = "^2.0.1"
 dill = "^0.3.8"
@@ -41,8 +41,12 @@ typing-extensions = "^4.12.2"
 black = "^24.8.0"
 json-fix = "^1.0.0"
 pillow = "^10.4.0"
+aiomqtt = "^2.3.0"
+psycopg2 = "^2.9.9"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
+polyfactory = "^2.16.2"
+pytest-mock = "^3.14.0"
 
 sphinx = "<8.0.0"
 sphinx-rtd-theme = "^2.0.0"

@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from datetime import datetime
-from typing import Any, Optional, Dict, List, Set, Union
-from ell.types._lstr import _lstr
-from ell.types import SerializedLMP, Invocation
+from sqlmodel import Session
+from ell.sqlmodels import Invocation, SerializedLMP
 from ell.types.message import InvocableLM
+from typing import Any, Optional, List, Set
+
+
 
 class BlobStore(ABC):
     @abstractmethod
@@ -30,7 +31,17 @@ class Store(ABC):
         return self.blob_store is not None
 
     @abstractmethod
-    def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:
+    def get_lmp(self, lmp_id: str, session: Optional[Session] = None) -> Optional[SerializedLMP]:
+        """
+        Get an LMP by its ID.
+
+        :param lmp_id: ID of the LMP to retrieve.
+        :return: SerializedLMP object containing all LMP details, or None if the LMP does not exist.
+        """
+        pass
+
+    @abstractmethod
+    def write_lmp(self, serialized_lmp: SerializedLMP, uses: List[str]) -> Optional[Any]:
         """
         Write an LMP (Language Model Package) to the storage.
 
@@ -46,7 +57,6 @@ class Store(ABC):
         Write an invocation of an LMP to the storage.
 
         :param invocation: Invocation object containing all invocation details.
-        :param results: List of SerializedLStr objects representing the results.
         :param consumes: Set of invocation IDs consumed by this invocation.
         :return: Optional return value.
         """
