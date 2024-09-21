@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ell-ai"
-version = "0.0.5"
+version = "0.0.6"
 description = "ell - the language model programming library"
 authors = ["William Guss <will@lrsys.xyz>"]
 license = "MIT"

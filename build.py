@@ -1,6 +1,7 @@
 import os
 import subprocess
 import shutil
+import toml
 
 
 def run_command(command, cwd=None):
@@ -27,8 +28,15 @@ def npm_build():
     print(f"Copied static files from {source_dir} to {target_dir}")
 
 
+def get_ell_version():
+    pyproject_path = "pyproject.toml"
+    pyproject_data = toml.load(pyproject_path)
+    return pyproject_data["tool"]["poetry"]["version"]
+
 
 def main():
+    ell_version = get_ell_version()
+    os.environ['REACT_APP_ELL_VERSION'] = ell_version
     npm_install()
     npm_build()
 

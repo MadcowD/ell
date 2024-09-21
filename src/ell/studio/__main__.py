@@ -21,11 +21,14 @@ def main():
                         help="MQTT connection string (default: None)")
     parser.add_argument("--host", default="0.0.0.0",
                         help="Host to run the server on")
-    parser.add_argument("--port", type=int, default=8080,
+    parser.add_argument("--port", type=int, default=5000,
                         help="Port to run the server on")
     parser.add_argument("--dev", action="store_true",
                         help="Run in development mode")
     args = parser.parse_args()
+
+    if args.dev:
+        assert args.port == 5000, "Port must be 5000 in development mode"
 
     config = Config(
         storage_dir=args.storage_dir,
