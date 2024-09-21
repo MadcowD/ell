@@ -11,21 +11,15 @@ from ell.stores.sql import PostgresStore, SQLiteStore
 from ell import __version__
 from fastapi import FastAPI, Query, HTTPException, Depends, Response, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-import logging
-import json
 from ell.studio.config import Config
-from ell.studio.datamodels import InvocationPublicWithConsumes, SerializedLMPWithUses
-from ell.studio.datamodels import SerializedLMPWithUses,InvocationsAggregate
+from ell.studio.datamodels import InvocationPublicWithConsumes,SerializedLMPWithUses,InvocationsAggregate
 from ell.studio.pubsub import MqttWebSocketPubSub, NoOpPubSub, WebSocketPubSub
 
-from ell.types import SerializedLMP
+from ell.sqlmodels import SerializedLMP
 from datetime import datetime, timedelta
 from sqlmodel import select
 
 logger = logging.getLogger(__name__)
-
-
-from ell.studio.datamodels import InvocationsAggregate
 
 
 def get_serializer(config: Config):

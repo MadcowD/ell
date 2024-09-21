@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import List, Optional, Dict, Any
-from sqlmodel import SQLModel
-from ell.types import SerializedLMPBase, InvocationBase, InvocationContentsBase
+from typing import List 
+from ell.sqlmodels import InvocationBase, InvocationContentsBase, SerializedLMPBase
+
 
 
 class SerializedLMPWithUses(SerializedLMPBase):

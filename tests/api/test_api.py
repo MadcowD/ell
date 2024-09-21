@@ -9,10 +9,11 @@ from ell.api.server import NoopPublisher, create_app, get_publisher, get_seriali
 from ell.api.config import Config
 from ell.api.types import WriteLMPInput
 
+from ell.sqlmodels import SerializedLMP
 from ell.stores.sql import SQLStore, SQLiteStore
 from ell.studio.logger import setup_logging
-from ell.types import SerializedLMP, utc_now
-from ell.types.studio import LMPType
+from ell.api.types import utc_now
+from ell.types.lmp import LMPType
 
 
 @pytest.fixture

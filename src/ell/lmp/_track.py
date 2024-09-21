@@ -4,7 +4,8 @@ import logging
 import threading
 
 from ell.api.types import WriteInvocationInput, WriteLMPInput, Invocation, InvocationContents
-from ell.types.studio import LMPType, utc_now
+from ell.api.types import utc_now
+from ell.types.lmp import LMPType
 from ell.util._warnings import _autocommit_warning
 import ell.util.closure
 from ell.configurator import config

@@ -2,7 +2,7 @@ import httpx
 from typing import Any, Dict, Optional, Protocol, List
 from ell.api.types import LMP, GetLMPResponse, WriteLMPInput, WriteInvocationInput
 from ell.stores.sql import SQLiteStore
-from ell.types import SerializedLMP
+from ell.sqlmodels import SerializedLMP
 import logging
 from httpx import HTTPStatusError
 

@@ -1,15 +1,22 @@
 from functools import cached_property
 from typing import Any, Dict, List,  Optional, Tuple, Union, cast
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 from openai import BaseModel
 from pydantic import AwareDatetime, Field
 
-from ell.types import SerializedLMP, utc_now
-import ell.types
+import ell.sqlmodels
 from ell.types.message import Message
-from ell.types.studio import LMPType
+from ell.types.lmp import LMPType
+
+
+def utc_now() -> datetime:
+    """
+    Returns the current UTC timestamp.
+    Serializes to ISO-8601.
+    """
+    return datetime.now(tz=timezone.utc)
 
 
 class WriteLMPInput(BaseModel):
@@ -32,7 +39,7 @@ class WriteLMPInput(BaseModel):
     created_at:  Optional[AwareDatetime] = Field(default_factory=utc_now)
 
     def to_serialized_lmp(self):
-        return SerializedLMP(
+        return ell.sqlmodels.SerializedLMP(
             lmp_id=self.lmp_id,
             lmp_type=self.lmp_type,
             name=self.name,
@@ -62,7 +69,7 @@ class LMP(BaseModel):
     num_invocations: int
 
     @staticmethod
-    def from_serialized_lmp(serialized: SerializedLMP):
+    def from_serialized_lmp(serialized: ell.sqlmodels.SerializedLMP):
         return LMP(
             lmp_id=cast(str, serialized.lmp_id),
             name=serialized.name,
@@ -101,7 +108,7 @@ class InvocationContents(BaseModel):
     is_external: bool = Field(default=False)
 
     def to_serialized_invocation_contents(self):
-        return ell.types.InvocationContents(
+        return ell.sqlmodels.InvocationContents(
             **self.model_dump()
         )
 
@@ -140,7 +147,7 @@ class Invocation(BaseModel):
     contents: InvocationContents
 
     def to_serialized_invocation(self):
-        return ell.types.Invocation(
+        return ell.sqlmodels.Invocation(
             **self.model_dump(exclude={"contents"}),
             contents=self.contents.to_serialized_invocation_contents()
         )
@@ -153,7 +160,7 @@ class WriteInvocationInput(BaseModel):
     invocation: Invocation
     consumes: List[str]
 
-    def to_serialized_invocation_input(self) -> Tuple[ell.types.Invocation, List[str]]:
+    def to_serialized_invocation_input(self) -> Tuple[ell.sqlmodels.Invocation, List[str]]:
         sinvo = self.invocation.to_serialized_invocation()
         return sinvo, list(set(self.consumes))
 

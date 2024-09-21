@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from sqlmodel import Session
-from ell.types import SerializedLMP, Invocation
+from ell.sqlmodels import Invocation, SerializedLMP
 from ell.types.message import InvocableLM
-from typing import Any, Optional, Dict, List, Set
+from typing import Any, Optional, List, Set
 
 
 

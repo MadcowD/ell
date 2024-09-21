@@ -3,11 +3,10 @@ import json
 import os
 from typing import Any, Optional, Dict, List, Set
 from sqlmodel import Session, SQLModel, create_engine, select
+from ell.sqlmodels import Invocation, InvocationTrace, SerializedLMP
 import ell.store
 from sqlalchemy.sql import text
-from ell.types import InvocationTrace, SerializedLMP, Invocation
 from sqlalchemy import func, and_
-from ell.types.studio import utc_now
 from ell.util.serialization import pydantic_ltype_aware_cattr
 import gzip
 import logging
