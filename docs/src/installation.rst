@@ -12,6 +12,12 @@ Installing ell
 
       pip install -U ell-ai
 
+   By default, this installs only the OpenAI client. If you want to include the Anthropic client, use the "anthropic" extra like so:
+
+      .. code-block:: bash
+
+      pip install -U ell-ai[anthropic]
+
 2. Verify installation:
 
    .. code-block:: bash
