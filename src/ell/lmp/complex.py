@@ -29,12 +29,17 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
             _invocation_origin : Optional[str] = None,
             client: Optional[Any] = None,
             api_params: Optional[Dict[str, Any]] = None,
+            lm_params: Optional[DeprecationWarning] = None,
             **prompt_kwargs,
         ) -> Tuple[Any, Any, Any]:
+            # XXX: Deprecation in 0.1.0
+            if lm_params:
+                raise DeprecationWarning("lm_params is deprecated. Use api_params instead.")
+        
             # promt -> str
             res = prompt(*prompt_args, **prompt_kwargs)
             # Convert prompt into ell messages
-            messages = _get_messages(res, prompt)
+            messages = _get_messages(res, prompt) 
             
             # XXX: move should log to a logger.
             should_log = not exempt_from_tracking and config.verbose
@@ -64,6 +69,7 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
                 (result, final_api_params, metadata) = provider.call(ell_call, origin_id=_invocation_origin, logger=_logger)
                 if isinstance(result, list) and len(result) == 1:
                     result = result[0]
+                
             result = post_callback(result) if post_callback else result
             if should_log:
                 model_usage_logger_post_end()
