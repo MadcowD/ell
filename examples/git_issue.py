@@ -87,7 +87,7 @@ if __name__ == "__main__":
         res = fn(*fn_args, **fn_kwargs)
             ^^^^^^^^^^^^^^^^^^^^^^^^^
     File "d:\\dev\\ell\\examples\\multilmp.py", line 32, in write_a_really_good_story
-        ideas = generate_story_ideas(about, lm_params=(dict(n=4)))
+        ideas = generate_story_ideas(about, api_params=(dict(n=4)))
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     File "D:\\dev\\ell\\ell\\src\\ell\\decorators.py", line 216, in wrapper
         fn_closure, _uses = ell.util.closure.lexically_closured_source(func_to_track)

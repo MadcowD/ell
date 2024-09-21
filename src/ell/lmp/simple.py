@@ -86,7 +86,7 @@ simple.__doc__ = """The fundamental unit of language model programming in ell.
       story1 = generate_story("A day in the life of a time traveler")
 
       # Overriding parameters during function call
-      story2 = generate_story("An AI's first day of consciousness", lm_params={"temperature": 0.9, "max_tokens": 500})
+      story2 = generate_story("An AI's first day of consciousness", api_params={"temperature": 0.9, "max_tokens": 500})
 
   See Also:
 

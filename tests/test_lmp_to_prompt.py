@@ -36,7 +36,7 @@
 
 
 # def test_lm_decorator_with_params(mock_run_lm):
-#     result = lmp_with_default_system_prompt("input", lm_params=dict(temperature=0.5))
+#     result = lmp_with_default_system_prompt("input", api_params=dict(temperature=0.5))
     
 #     mock_run_lm.assert_called_once_with(
 #         model="gpt-4-turbo",
@@ -55,7 +55,7 @@
 # @patch("ell.util.lm._run_lm")
 # def test_lm_decorator_with_docstring_system_prompt(mock_run_lm):
 #     mock_run_lm.return_value = ("Mocked content", None)
-#     result = lmp_with_docstring_system_prompt("input", lm_params=dict(temperature=0.5))
+#     result = lmp_with_docstring_system_prompt("input", api_params=dict(temperature=0.5))
     
 #     mock_run_lm.assert_called_once_with(
 #         model="gpt-4-turbo",
@@ -74,7 +74,7 @@
 # @patch("ell.util.lm._run_lm")
 # def test_lm_decorator_with_msg_fmt_system_prompt(mock_run_lm):
 #     mock_run_lm.return_value = ("Mocked content from msg fmt", None)
-#     result = lmp_with_message_fmt("input", lm_params=dict(temperature=0.5))
+#     result = lmp_with_message_fmt("input", api_params=dict(temperature=0.5))
     
 #     mock_run_lm.assert_called_once_with(
 #         model="gpt-4-turbo",

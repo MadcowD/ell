@@ -212,7 +212,7 @@ class Message(BaseModel):
             >>> message.text
             'Hello\\n<image>\\nWorld'
         """
-        return "\n".join(c.text or f"<{c.type}>" for c in self.content)
+        return _lstr("\n").join(c.text or f"<{c.type}>" for c in self.content)
     
     @cached_property
     def images(self) -> List[PILImage.Image]:

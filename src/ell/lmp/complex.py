@@ -39,11 +39,11 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
             # XXX: move should log to a logger.
             should_log = not exempt_from_tracking and config.verbose
             # Cute verbose logging.
-            if should_log: model_usage_logger_pre(prompt, prompt_args, prompt_kwargs, model_call.__ell_hash__, messages) #type: ignore
+            if should_log: model_usage_logger_pre(prompt, prompt_args, prompt_kwargs, "[]", messages) #type: ignore
 
             # Call the model.
             # Merge API params
-            merged_api_params = {**config.default_lm_params, **default_api_params_from_decorator, **(api_params or {})}
+            merged_api_params = {**config.default_api_params, **default_api_params_from_decorator, **(api_params or {})}
             n = merged_api_params.get("n", 1)
             # Merge client overrides & client registry
             merged_client = _client_for_model(model, client or default_client_from_decorator)
@@ -51,18 +51,19 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
                 # XXX: Could change behaviour of overriding ell params for dyanmic tool calls.
                 model=merged_api_params.pop("model", default_model_from_decorator),
                 messages=messages,
-                client = client or default_client_from_decorator,
+                client = merged_client,
                 api_params=merged_api_params,
-                tools=tools,
+                tools=tools or [],
             )
             # Get the provider for the model
-            provider = config.get_provider_for(ell_call)
-            assert provider is not None, f"No provider found for model {ell_call.client}."
+            provider = config.get_provider_for(ell_call.client)
+            assert provider is not None, f"No provider found for client {ell_call.client}."
 
             if should_log: model_usage_logger_post_start(n)
             with model_usage_logger_post_intermediate(n) as _logger:
                 (result, final_api_params, metadata) = provider.call(ell_call, origin_id=_invocation_origin, logger=_logger)
-
+                if isinstance(result, list) and len(result) == 1:
+                    result = result[0]
             result = post_callback(result) if post_callback else result
             if should_log:
                 model_usage_logger_post_end()
@@ -110,6 +111,7 @@ def _client_for_model(
     # XXX: Move to config to centralize api keys etc.
     if not client:
         client, was_fallback = config.get_client_for(model)
+        
         # XXX: Wrong.
         if not client and not was_fallback:
             raise RuntimeError(_no_api_key_warning(model, _name, '', long=True, error=True))

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
-from ell.provider import APICallResult, EllCallParams, Metadata, Provider
+from ell.provider import  EllCallParams, Metadata, Provider
 from ell.types import Message, ContentBlock, ToolCall
 from ell.types._lstr import _lstr
 import json
@@ -14,7 +14,10 @@ try:
     import openai
     from openai._streaming import Stream
     from openai.types.chat import ChatCompletion, ParsedChatCompletion, ChatCompletionChunk, ChatCompletionMessageParam
+
     class OpenAIProvider(Provider):
+        dangerous_disable_validation = True
+        
         def provider_call_function(self, api_call_params : Optional[Dict[str, Any]] = None) -> Callable[..., Any]:
             if api_call_params and api_call_params.get("response_format"):
                 return openai.beta.chat.completions.parse
@@ -76,7 +79,7 @@ try:
                 else:
                     openai_messages.append(cast(ChatCompletionMessageParam, dict(
                         role=message.role,
-                        content=[content_block_to_openai_format(c) for c in message.content]
+                        content=[_content_block_to_openai_format(c) for c in message.content]
                     )))
             final_call_params["messages"] = openai_messages
             
@@ -98,15 +101,19 @@ try:
             messages : List[Message] = []
             did_stream = provider_call_params.get("stream", False)
 
+        
             if did_stream:
                 stream = cast(Stream[ChatCompletionChunk], provider_response)
                 message_streams = defaultdict(list)
                 role : Optional[str] = None
                 for chunk in stream: 
+        
                     if hasattr(chunk, "usage") and chunk.usage: metadata.update(chunk.model_dump(exclude={"choices"})) 
+                    
                     for chat_compl_chunk in chunk.choices:
                         message_streams[chat_compl_chunk.index].append(chat_compl_chunk)
-                        role = role or (delta := chat_compl_chunk.delta).role
+                        delta = chat_compl_chunk.delta
+                        role = role or delta.role
                         if  chat_compl_chunk.index == 0 and logger:
                             logger(delta.content, is_refusal=delta.refusal)
                 for _, message_stream in sorted(message_streams.items(), key=lambda x: x[0]):
@@ -148,14 +155,13 @@ try:
             return messages, metadata
 
 
-
     openai_provider = OpenAIProvider()
     register_provider(openai_provider, openai.Client)
 except ImportError:
     pass
 
 
-def content_block_to_openai_format(content_block: ContentBlock) -> Dict[str, Any]:
+def _content_block_to_openai_format(content_block: ContentBlock) -> Dict[str, Any]:
     if (image := content_block.image):
         image_url = {"url":  serialize_image(image)}
         # XXX: Solve per content params better

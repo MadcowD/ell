@@ -36,7 +36,7 @@ class Config(BaseModel):
     store: Optional[Store] = Field(default=None, description="An optional Store instance for persistence.")
     autocommit: bool = Field(default=False, description="If True, enables automatic committing of changes to the store.")
     lazy_versioning: bool = Field(default=True, description="If True, enables lazy versioning for improved performance.")
-    default_lm_params: Dict[str, Any] = Field(default_factory=dict, description="Default parameters for language models.")
+    default_api_params: Dict[str, Any] = Field(default_factory=dict, description="Default parameters for language models.")
     default_client: Optional[openai.Client] = Field(default=None, description="The default OpenAI client used when a specific model client is not found.")
     providers: Dict[Type, Provider] = Field(default_factory=dict, description="A dictionary mapping client types to provider classes.")
     def __init__(self, **data):
@@ -131,6 +131,7 @@ class Config(BaseModel):
         :return: The provider instance for the specified client, or None if not found.
         :rtype: Optional[Provider]
         """
+        
         client_type = type(client) if not isinstance(client, type) else client
         return self.providers.get(client_type)
 
@@ -143,7 +144,7 @@ def init(
     verbose: bool = False,
     autocommit: bool = True,
     lazy_versioning: bool = True,
-    default_lm_params: Optional[Dict[str, Any]] = None,
+    default_api_params: Optional[Dict[str, Any]] = None,
     default_client: Optional[Any] = None
 ) -> None:
     """
@@ -157,8 +158,8 @@ def init(
     :type autocommit: bool
     :param lazy_versioning: Enable or disable lazy versioning.
     :type lazy_versioning: bool
-    :param default_lm_params: Set default parameters for language models.
-    :type default_lm_params: Dict[str, Any], optional
+    :param default_api_params: Set default parameters for language models.
+    :type default_api_params: Dict[str, Any], optional
     :param default_openai_client: Set the default OpenAI client.
     :type default_openai_client: openai.Client, optional
     """
@@ -173,8 +174,8 @@ def init(
         config.store = store
     config.autocommit = autocommit or config.autocommit
 
-    if default_lm_params is not None:
-        config.default_lm_params.update(default_lm_params)
+    if default_api_params is not None:
+        config.default_api_params.update(default_api_params)
 
     if default_client is not None:
         config.default_client = default_client

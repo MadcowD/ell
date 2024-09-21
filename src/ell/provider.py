@@ -31,7 +31,7 @@ class EllCallParams(BaseModel):
     model: str = Field(..., description="Model identifier")
     messages: List[Message] = Field(..., description="Conversation context")
     client: Any = Field(..., description="API client")
-    tools: Optional[List[LMP]] = Field(None, description="Available tools")
+    tools: List[LMP] = Field(default_factory=list, description="Available tools")
     api_params: Dict[str, Any] = Field(
         default_factory=dict, description="API parameters"
     )
@@ -54,6 +54,7 @@ class Provider(ABC):
     For example, the OpenAI provider is an API interface to OpenAI's API but also to Ollama and Azure OpenAI.
     In Ell. We hate abstractions. The only reason this exists is to force implementers to implement their own provider correctly -_-.
     """
+    dangerous_disable_validation = False
 
     ################################
     ### API PARAMETERS #############
@@ -110,21 +111,22 @@ class Provider(ABC):
     ) -> Tuple[List[Message], Dict[str, Any], Metadata]:
         # Automatic validation of params
         assert (
-            ell_call.api_params.keys() not in self.disallowed_api_params()
+            not set(ell_call.api_params.keys()).intersection(self.disallowed_api_params()) 
         ), f"Disallowed api parameters: {ell_call.api_params}"
 
         final_api_call_params = self.translate_to_provider(ell_call)
 
         call = self.provider_call_function(final_api_call_params)
-        _validate_provider_call_params(final_api_call_params, call)
-
-        provider_resp = call(final_api_call_params)(**final_api_call_params)
+        assert self.dangerous_disable_validation or _validate_provider_call_params(final_api_call_params, call)
+        
+        
+        provider_resp = call(**final_api_call_params)
 
         messages, metadata = self.translate_from_provider(
             provider_resp, ell_call, final_api_call_params, origin_id, logger
         )
         assert "choices" not in metadata, "choices should be in the metadata."
-        _validate_messages_are_tracked(messages, origin_id)
+        assert self.dangerous_disable_validation or _validate_messages_are_tracked(messages, origin_id)
 
         return messages, final_api_call_params, metadata
 
@@ -155,13 +157,8 @@ def _validate_provider_call_params(
         assert (
             param_name in provider_call_params
         ), f"Provider implementation error: Unexpected parameter '{param_name}' in the converted call parameters."
-
-        param_type = provider_call_params[param_name].annotation
-        if param_type != inspect.Parameter.empty:
-            assert isinstance(
-                param_value, param_type
-            ), f"Provider implementation error: Parameter '{param_name}' should be of type {param_type}."
-
+    
+    return True
 
 def _validate_messages_are_tracked(
     messages: List[Message], origin_id: Optional[str] = None
@@ -174,5 +171,6 @@ def _validate_messages_are_tracked(
             message.text, _lstr
         ), f"Provider implementation error: Message text should be an instance of _lstr, got {type(message.text)}"
         assert (
-            message.text.origin_id == origin_id
-        ), f"Provider implementation error: Message origin_id {message.text.origin_id} does not match the provided origin_id {origin_id}"
+            origin_id in message.text.__origin_trace__
+        ), f"Provider implementation error: Message origin_id {message.text.__origin_trace__} does not match the provided origin_id {origin_id}"
+    return True

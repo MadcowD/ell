@@ -22,7 +22,7 @@ def choose_the_best_draft(drafts : List[str]):
 
 @ell.simple(model="gpt-4-turbo", temperature=0.2)
 def write_a_really_good_story(about : str):
-    ideas = generate_story_ideas(about, lm_params=(dict(n=4)))
+    ideas = generate_story_ideas(about, api_params=(dict(n=4)))
 
     drafts = [write_a_draft_of_a_story(idea) for idea in ideas]
 

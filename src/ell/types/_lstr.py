@@ -298,7 +298,6 @@ class _lstr(str):
             return type(self)
 
         if callable(attr) and name not in _lstr.__dict__:
-
             def wrapped(*args: Any, **kwargs: Any) -> Any:
                 result = attr(*args, **kwargs)
                 # If the result is a string, return an lstr instance
@@ -329,12 +328,14 @@ class _lstr(str):
         Returns:
             lstr: A new lstr instance containing the joined content, with theorigin_trace(s) updated accordingly.
         """
-        parts = [str(item) for item in iterable]
-        new_content = super(_lstr, self).join(parts)
         new__origin_trace__ = self.__origin_trace__
+        parts = []
         for item in iterable:
             if isinstance(item, _lstr):
                 new__origin_trace__ = new__origin_trace__.union(item.__origin_trace__)
+            parts.append(item)
+        new_content = super(_lstr, self).join(parts)
+        
         return _lstr(new_content, None, new__origin_trace__)
 
     @override
