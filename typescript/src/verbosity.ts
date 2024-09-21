@@ -70,7 +70,7 @@ async function checkVersionAndLog(): Promise<void> {
           `${ELL_COLORS.YELLOW}║ ${ELL_COLORS.GREEN}You can update by running:${ELL_COLORS.YELLOW}                                      ║`
         );
         print(
-          `${ELL_COLORS.YELLOW}║ ${ELL_COLORS.CYAN}npm install -g ell-ai${ELL_COLORS.YELLOW}                                           ║`
+          `${ELL_COLORS.YELLOW}║ ${ELL_COLORS.CYAN}npm install ell-ai${ELL_COLORS.YELLOW}                                           ║`
         );
         print(
           `${ELL_COLORS.YELLOW}╚═════════════════════════════════════════════════════════════════╝${RESET}`
@@ -192,54 +192,17 @@ export function modelUsageLoggerPre(
 
   const terminalWidth = process.stdout.columns || 80;
 
-  console.log(`${PIPE_COLOR}╔${"═".repeat(terminalWidth - 2)}╗${RESET}`);
-  console.log(
-    `${PIPE_COLOR}║ ${color}${BOLD}${UNDERLINE}${invokingLmp.name}${RESET}${color}(${formattedParams})${RESET}`
-  );
-  console.log(`${PIPE_COLOR}╠${"═".repeat(terminalWidth - 2)}╣${RESET}`);
-  console.log(`${PIPE_COLOR}║ ${BOLD}Prompt:${RESET}`);
-  console.log(`${PIPE_COLOR}╟${"─".repeat(terminalWidth - 2)}╢${RESET}`);
-
-  const maxRoleLength = Math.max(
-    "assistant".length,
-    ...messages.map((m) => m.role.length)
-  );
-  printWrappedMessages(messages, maxRoleLength, color);
-}
-
-// ... (implement other functions like modelUsageLoggerPostStart, modelUsageLoggerPostIntermediate, modelUsageLoggerPostEnd)
-
-export function modelUsageLoggerPre(
-  invokingLmp: LMP,
-  lmpArgs: any[],
-  lmpKwargs: Record<string, any>,
-  lmpHash: string,
-  messages: Message[],
-  color: string = "",
-  argMaxLength: number = 8
-): void {
-  color = color || computeColor(invokingLmp);
-  const formattedArgs = lmpArgs.map((arg) => formatArg(arg, argMaxLength));
-  const formattedKwargs = Object.entries(lmpKwargs).map(([key, value]) =>
-    formatKwarg(key, value, argMaxLength)
-  );
-  const formattedParams = [...formattedArgs, ...formattedKwargs].join(", ");
-
-  checkVersionAndLog();
-
-  const terminalWidth = process.stdout.columns || 80;
-
   logger.info(
     `Invoking LMP: ${invokingLmp.name} (hash: ${lmpHash.slice(0, 8)})`
   );
 
-  console.log(`${PIPE_COLOR}╔${"═".repeat(terminalWidth - 2)}╗${RESET}`);
-  console.log(
+  print(`${PIPE_COLOR}╔${"═".repeat(terminalWidth - 2)}╗${RESET}`);
+  print(
     `${PIPE_COLOR}║ ${color}${BOLD}${UNDERLINE}${invokingLmp.name}${RESET}${color}(${formattedParams})${RESET}`
   );
-  console.log(`${PIPE_COLOR}╠${"═".repeat(terminalWidth - 2)}╣${RESET}`);
-  console.log(`${PIPE_COLOR}║ ${BOLD}Prompt:${RESET}`);
-  console.log(`${PIPE_COLOR}╟${"─".repeat(terminalWidth - 2)}╢${RESET}`);
+  print(`${PIPE_COLOR}╠${"═".repeat(terminalWidth - 2)}╣${RESET}`);
+  print(`${PIPE_COLOR}║ ${BOLD}Prompt:${RESET}`);
+  print(`${PIPE_COLOR}╟${"─".repeat(terminalWidth - 2)}╢${RESET}`);
 
   const maxRoleLength = Math.max(
     "assistant".length,
@@ -253,11 +216,11 @@ export function modelUsageLoggerPostStart(
   n: number = 1
 ): void {
   const terminalWidth = process.stdout.columns || 80;
-  console.log(`${PIPE_COLOR}╟${"─".repeat(terminalWidth - 2)}╢${RESET}`);
-  console.log(
+  print(`${PIPE_COLOR}╟${"─".repeat(terminalWidth - 2)}╢${RESET}`);
+  print(
     `${PIPE_COLOR}║ ${BOLD}Output${n > 1 ? `[0 of ${n}]` : ""}:${RESET}`
   );
-  console.log(`${PIPE_COLOR}╟${"─".repeat(terminalWidth - 2)}╢${RESET}`);
+  print(`${PIPE_COLOR}╟${"─".repeat(terminalWidth - 2)}╢${RESET}`);
   process.stdout.write(
     `${PIPE_COLOR}│   ${ASSISTANT_COLOR}assistant: ${RESET}`
   );
@@ -282,7 +245,7 @@ export function modelUsageLoggerPostIntermediate(
       const lines = streamChunk.split("\n");
       lines.forEach((line, i) => {
         if (charsPrinted + line.length > terminalWidth - 6) {
-          console.log();
+          print();
           if (i === 0) {
             process.stdout.write(subsequentPrefix);
             charsPrinted = prefix.length;
@@ -290,14 +253,14 @@ export function modelUsageLoggerPostIntermediate(
             process.stdout.write(subsequentPrefix);
             charsPrinted = subsequentPrefix.length;
           }
-          process.stdout.write(line.trimLeft());
+          process.stdout.write(line.trimStart());
         } else {
           process.stdout.write(line);
         }
         charsPrinted += line.length;
 
         if (i < lines.length - 1) {
-          console.log();
+          print();
           process.stdout.write(subsequentPrefix);
           charsPrinted = subsequentPrefix.length;
         }

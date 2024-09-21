@@ -11,7 +11,12 @@ import { generateFunctionHash, generateInvocationId } from "./hash";
 import { config } from "./configurator";
 import { Message } from "./types";
 import { APICallResult } from "./provider";
-import { modelUsageLoggerPostEnd, modelUsageLoggerPostIntermediate, modelUsageLoggerPostStart, modelUsageLoggerPre } from "./verbosity";
+import {
+  modelUsageLoggerPostEnd,
+  modelUsageLoggerPostIntermediate,
+  modelUsageLoggerPostStart,
+  modelUsageLoggerPre,
+} from "./verbosity";
 
 type Kwargs = {
   // The name or identifier of the language model to use.
@@ -109,7 +114,6 @@ const serializeLMP = async (args: LMP) => {
   return await writeLMP(args);
 };
 
-
 const convertMultimodalResponseToLstr = (response: Message[]) => {
   if (
     response.length === 1 &&
@@ -137,7 +141,6 @@ type SimpleLMP<A extends SimpleLMPInner> = ((
   __ell_lmp_id__?: string | null;
   __ell_invocation_id__?: string | null;
 };
-
 
 export const simple = <F extends SimpleLMPInner>(
   a: Kwargs,
@@ -178,7 +181,7 @@ export const simple = <F extends SimpleLMPInner>(
     let invocationId = generateInvocationId();
     return invocationContext.run(
       // todo. check tracing
-      // @ts-ignore 
+      // @ts-ignore
       {
         id: invocationId,
         lmp_id: lmp.lmpId,
@@ -211,7 +214,13 @@ export const simple = <F extends SimpleLMPInner>(
           tools: undefined,
         };
         if (config.verbose) {
-          modelUsageLoggerPre(lmp, args, apiParams, lmp.lmpId, messages, "todo");
+          modelUsageLoggerPre(
+            { ...lmp, name: lmp.lmpName },
+            args,
+            apiParams,
+            lmp.lmpId,
+            messages,
+          );
         }
         const callResult = await provider.callModel(
           modelClient,
@@ -223,14 +232,15 @@ export const simple = <F extends SimpleLMPInner>(
         if (config.verbose) {
           modelUsageLoggerPostStart(lmp.lmpId, callResult.actualN);
         }
-        modelUsageLoggerPostIntermediate(lmp.lmpId, callResult.actualN);
+        const postIntermediate = modelUsageLoggerPostIntermediate(lmp.lmpId, callResult.actualN);
         if (config.verbose) {
           modelUsageLoggerPostEnd();
         }
 
         const [trackedResults, metadata] = await provider.processResponse(
           callResult,
-          "todo"
+          "todo",
+          postIntermediate
         );
 
         const result = convertMultimodalResponseToString(trackedResults[0]);
@@ -291,3 +301,6 @@ export const complex = (a: Kwargs, f: F) => {
 };
 
 const track = () => {};
+
+import { init } from "./configurator";
+export { init, config };
