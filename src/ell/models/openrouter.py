@@ -1,6 +1,4 @@
 # src/ell/models/openrouter.py
-from ell.configurator import config
-
 import json
 import logging
 import os
@@ -10,6 +8,8 @@ from tempfile import gettempdir
 from typing import Dict, Any, Optional, Union, Literal, List
 
 import httpx
+
+from ell.configurator import config
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +144,7 @@ class OpenRouter:
             data_collection: Optional[Literal["deny", "allow"]] = None,
             order: Optional[List[str]] = None,
             ignore: Optional[List[str]] = None,
-            quantizations: Optional[List[Literal["int4", "int8", "fp8", "fp16", "bf16", "unknown"]]] = None
+            quantizations: Optional[List[Literal["int4", "int8", "fp8", "fp16", "bf16", "fp32", "unknown"]]] = None
     ) -> None:
         self._provider_preferences = {
             "allow_fallbacks": allow_fallbacks,
@@ -204,6 +204,12 @@ class OpenRouter:
     @property
     def used_models(self) -> Dict[str, Dict[str, Any]]:
         return self._used_models
+
+    @used_models.setter
+    def used_models(self, value: Dict[str, Dict[str, Any]]):
+        if not isinstance(value, dict):
+            raise ValueError("used_models must be a dictionary")
+        self._used_models = value
 
     @property
     def provider_preferences(self) -> Optional[List[Literal["int4", "int8", "fp8", "fp16", "bf16", "unknown"]]]:

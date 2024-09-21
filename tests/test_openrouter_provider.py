@@ -1,143 +1,172 @@
-from typing import Any, Dict, List, Optional, Tuple, Type
-from ell.provider import APICallResult, Provider
-from ell.types import Message, ContentBlock
-from ell.types._lstr import _lstr
-from ell.configurator import register_provider, config
 import json
-import logging
-import os
+from unittest.mock import Mock, patch
 
-logger = logging.getLogger(__name__)
+import pytest
+from pydantic import BaseModel
 
-try:
-    from ell.models.openrouter import OpenRouter
+import ell
+from ell.models.openrouter import OpenRouter
+from ell.provider import APICallResult
+from ell.providers.openrouter import OpenRouterProvider
+from ell.types import Message, ContentBlock, ToolCall
+from ell.types.message import ToolResult
 
-    class OpenRouterProvider(Provider):
-        @classmethod
-        def call_model(
-            cls,
-            client: OpenRouter,
-            model: str,
-            messages: List[Message],
-            api_params: Dict[str, Any],
-            tools: Optional[List[Any]] = None,
-        ) -> APICallResult:
-            logger.debug(f"call_model called with client: {client}")
-            if client is None:
-                logger.error("OpenRouter client is None in call_model.")
-                raise ValueError("OpenRouter client is not initialized.")
 
-            logger.debug(f"Model: {model}")
-            logger.debug(f"API Params: {api_params}")
-            logger.debug(f"Messages: {messages}")
+class DummyParams(BaseModel):
+    param1: str
+    param2: int
 
-            try:
-                # Convert and prepare messages
-                openrouter_messages = [cls.message_to_openrouter_format(message) for message in messages]
-                logger.debug(f"Converted messages for OpenRouter: {openrouter_messages}")
+@pytest.fixture
+def mock_openrouter_client():
+    client = Mock(spec=OpenRouter, auto_spec=True)
+    client._used_models = {}
+    client.global_stats = {
+        'total_cost': 0,
+        'total_tokens': 0,
+        'used_providers': set()
+    }
+    return client
 
-                # Prepare final call parameters
-                final_call_params = api_params.copy()
-                final_call_params["model"] = model
-                final_call_params["messages"] = openrouter_messages
-                logger.debug(f"Final call parameters: {final_call_params}")
+def test_content_block_to_openrouter_format():
+    # Test text content
+    text_block = ContentBlock(text="Hello, world!")
+    assert OpenRouterProvider.content_block_to_openrouter_format(text_block) == {
+        "type": "text",
+        "text": "Hello, world!"
+    }
 
-                # Make the API call
-                response = client.chat.completions.create(**final_call_params)
-                logger.debug(f"Received response from OpenRouter: {response}")
+    # Test parsed content
+    class DummyParsed(BaseModel):
+        field: str
+    parsed_block = ContentBlock(parsed=DummyParsed(field="value"))
 
-                return APICallResult(
-                    response=response,
-                    actual_streaming=True,  # Adjust based on OpenRouter's actual behavior
-                    actual_n=api_params.get("n", 1),
-                    final_call_params=final_call_params,
-                )
-            except Exception as e:
-                logger.error(f"Exception during call_model: {e}")
-                raise e
+    res = OpenRouterProvider.content_block_to_openrouter_format(parsed_block)
+    assert res["type"] == "text"
+    assert json.loads(res["text"]) == {"field": "value"}
 
-        @classmethod
-        def process_response(
-            cls,
-            call_result: APICallResult,
-            _invocation_origin: str,
-            func_logger: Optional[Any] = None,  # Renamed to avoid shadowing
-            tools: Optional[List[Any]] = None,
-        ) -> Tuple[List[Message], Dict[str, Any]]:
-            logger.debug("Processing OpenRouter response.")
-            try:
-                tracked_results = []
-                metadata = {}
-
-                # Correctly access the 'choices' attribute
-                choices = call_result.response.choices
-                if not choices:
-                    raise ValueError("No choices found in OpenRouter response.")
-
-                for choice in choices:
-                    # Correctly access 'message' and 'content'
-                    content = choice.message.content
-                    if not content:
-                        logger.warning("Empty content in OpenRouter response choice.")
-                        continue
-
-                    tracked_results.append(
-                        Message(
-                            role="assistant",
-                            content=[ContentBlock(text=_lstr(content, _origin_trace=_invocation_origin))]
-                        )
-                    )
-                    logger.debug(f"Tracked results: {tracked_results}")
-
-                logger.debug(f"Metadata: {metadata}")
-
-                return tracked_results, metadata
-            except Exception as e:
-                logger.error(f"Error processing OpenRouter response: {e}")
-                raise e
-
-        @classmethod
-        def supports_streaming(cls) -> bool:
-            streaming_support = True  # Adjust if OpenRouter doesn't support streaming
-            logger.debug(f"supports_streaming: {streaming_support}")
-            return streaming_support
-
-        @classmethod
-        def get_client_type(cls) -> Type:
-            api_key = os.environ.get("OPENROUTER_API_KEY")
-            logger.debug(f"OPENROUTER_API_KEY retrieved: {api_key is not None}")
-            return OpenRouter
-
-        @staticmethod
-        def message_to_openrouter_format(message: Message) -> Dict[str, Any]:
-            # Convert ell Message to OpenRouter format
-            if any(block.parsed for block in message.content):
-                # Handle parsed content blocks
-                parsed_contents = [
-                    json.dumps(block.parsed.model_dump(), separators=(',', ':')) if block.parsed else block.text
-                    for block in message.content
-                ]
-                # Concatenate all content blocks with a newline
-                content = "\n".join(parsed_contents)
-            else:
-                # Handle text content blocks
-                content = message.text
-
-            openrouter_format = {
-                "role": message.role,
-                "content": content
+    # Test image content (mocked)
+    with patch('ell.providers.openrouter.serialize_image', return_value="base64_image_data"):
+        # Test random image content
+        import numpy as np
+        from PIL import Image
+        
+        # Generate a random image
+        random_image = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
+        pil_image = Image.fromarray(random_image)
+        
+        with patch('ell.providers.openrouter.serialize_image', return_value="random_base64_image_data"):
+            random_image_block = ContentBlock(image=pil_image)
+            assert OpenRouterProvider.content_block_to_openrouter_format(random_image_block) == {
+                "type": "image_url",
+                "image_url": {
+                    "url": "random_base64_image_data"
+                }
             }
-            logger.debug(f"Converted message to OpenRouter format: {openrouter_format}")
-            return openrouter_format
 
-    # Register the OpenRouterProvider
-    register_provider(OpenRouterProvider)
-    logger.info("OpenRouterProvider registered successfully.")
-    print("[OpenRouterProvider] OpenRouterProvider registered successfully.")
+def test_message_to_openrouter_format():
+    # Test simple message
+    simple_message = Message(role="user", content=[ContentBlock(text="Hello")])
+    assert OpenRouterProvider.message_to_openrouter_format(simple_message) == {
+        "role": "user",
+        "content": [{"type": "text", "text": "Hello"}]
+    }
 
-except ImportError:
-    logger.warning("OpenRouter package not found. OpenRouter provider will not be available.")
-    print("[OpenRouterProvider] ImportError: OpenRouter package not found.")
+    # Test message with tool calls
+    def dummy_tool(param1: str, param2: int): pass
+    tool_call = ToolCall(tool=dummy_tool, tool_call_id="123", params=DummyParams(param1="test", param2=42))
+    tool_message = Message(role="assistant", content=[tool_call])
+    formatted = OpenRouterProvider.message_to_openrouter_format(tool_message)
+    assert formatted["role"] == "assistant"
+    assert formatted["content"] is None
+    assert len(formatted["tool_calls"]) == 1
+    assert formatted["tool_calls"][0]["id"] == "123"
+    assert formatted["tool_calls"][0]["type"] == "function"
+    assert formatted["tool_calls"][0]["function"]["name"] == "dummy_tool"
+    assert json.loads(formatted["tool_calls"][0]["function"]["arguments"]) == {"param1": "test", "param2": 42}
 
-    def get_openrouter_client():
-        raise ImportError("OpenRouter package is not installed. Unable to create OpenRouter client.")
+    # Test message with tool results
+    tool_result_message = Message(
+        role="user",
+        content=[ToolResult(tool_call_id="123", result=[ContentBlock(text="Tool output")])],
+    )
+    formatted = OpenRouterProvider.message_to_openrouter_format(tool_result_message)
+    assert formatted["role"] == "tool"
+    assert formatted["tool_call_id"] == "123"
+    assert formatted["content"] == "Tool output"
+
+def test_call_model(mock_openrouter_client):
+    messages = [Message(role="user", content=[ContentBlock(text="Hello")], refusal=None)]
+    api_params = {"temperature": 0.7}
+
+    # Mock the client's chat_completions method
+    mock_openrouter_client.chat_completions.return_value = {
+        "id": "chatcmpl-123",
+        "object": "chat.completion",
+        "created": 1677652288,
+        "model": "gpt-3.5-turbo-0613",
+        "choices": [{
+            "index": 0,
+            "message": {
+                "role": "assistant",
+                "content": "Hello! How can I assist you today?"
+            },
+            "finish_reason": "stop"
+        }],
+        "usage": {
+            "prompt_tokens": 9,
+            "completion_tokens": 12,
+            "total_tokens": 21
+        }
+    }
+
+    @ell.tool()
+    def dummy_tool(param1: str, param2: int): pass
+
+    result = OpenRouterProvider.call_model(mock_openrouter_client, "gpt-3.5-turbo", messages, api_params, tools=[dummy_tool])
+
+    assert isinstance(result, APICallResult)
+    assert not "stream" in result.final_call_params
+    assert not result.actual_streaming
+    assert result.actual_n == 1
+    assert "messages" in result.final_call_params
+    assert result.final_call_params["model"] == "gpt-3.5-turbo"
+
+def test_process_response():
+    # Mock APICallResult
+    mock_response = {
+        "id": "chatcmpl-123",
+        "object": "chat.completion",
+        "created": 1677652288,
+        "model": "gpt-3.5-turbo-0613",
+        "choices": [{
+            "index": 0,
+            "message": {
+                "role": "assistant",
+                "content": "Hello, world!"
+            },
+            "finish_reason": "stop"
+        }],
+        "usage": {
+            "prompt_tokens": 9,
+            "completion_tokens": 12,
+            "total_tokens": 21
+        }
+    }
+    call_result = APICallResult(
+        response=mock_response,
+        actual_streaming=False,
+        actual_n=1,
+        final_call_params={}
+    )
+
+    processed_messages, metadata = OpenRouterProvider.process_response(call_result, "test_origin")
+
+    assert len(processed_messages) == 1
+    assert processed_messages[0].role == "assistant"
+    assert len(processed_messages[0].content) == 1
+    assert processed_messages[0].content[0].text == "Hello, world!"
+    assert metadata["id"] == "chatcmpl-123"
+    assert metadata["model"] == "gpt-3.5-turbo-0613"
+
+def test_supports_streaming():
+    assert OpenRouterProvider.supports_streaming() == True

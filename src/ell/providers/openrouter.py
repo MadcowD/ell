@@ -1,11 +1,12 @@
-from typing import Any, Dict, List, Optional, Tuple, Type
-from collections import defaultdict
 import json
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Tuple, Type
+
+from ell.configurator import register_provider
 from ell.provider import APICallResult, Provider
 from ell.types import Message, ContentBlock, ToolCall
 from ell.types._lstr import _lstr
 from ell.types.message import LMP
-from ell.configurator import register_provider
 from ell.util.serialization import serialize_image
 
 try:
@@ -120,8 +121,8 @@ try:
                 client.global_stats['total_tokens'] += tokens
 
             # Update _used_models and global stats based on the generation info
-            generation_info = response.get("generation_info", {}).get("data", {})
-            if generation_info:
+            generation_info = response.get("generation_info", {}).get("data")
+            if generation_info and isinstance(generation_info, dict):
                 model_name = generation_info.get("model")
                 if model_name:
                     cost = generation_info.get("total_cost", 0)
