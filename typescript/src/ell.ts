@@ -17,6 +17,7 @@ import {
   modelUsageLoggerPostStart,
   modelUsageLoggerPre,
 } from './verbosity'
+import { Logger } from '../_logger'
 
 const logger = new Logger('ell')
 
@@ -217,15 +218,15 @@ const invokeWithTracking = async (lmp: LMP, args: any[], f: F, a: Kwargs) => {
         lmp.lmpId,
         callResult.actualN
       )
-      if (config.verbose) {
-        modelUsageLoggerPostEnd()
-      }
 
       const [trackedResults, metadata] = await provider.processResponse(
         callResult,
         'todo',
         postIntermediate
       )
+      if (config.verbose) {
+        modelUsageLoggerPostEnd()
+      }
 
       const result = convertMultimodalResponseToString(trackedResults[0])
       await writeInvocation({
@@ -350,5 +351,5 @@ export const complex = (a: Kwargs, f: F) => {
 }
 
 import { init } from './configurator'
-import { Logger } from '../_logger'
-export { init, config }
+import { system, user } from './types/message'
+export { init, config, system, user }

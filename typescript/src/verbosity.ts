@@ -45,10 +45,11 @@ const ASSISTANT_COLOR = ELL_COLORS.YELLOW
 const PIPE_COLOR = ELL_COLORS.BLUE
 
 let hasLoggedVersionStatement = false
-const print = console.log
+const print = (s:string)=>process.stdout.write(s+'\n')
 
 async function checkVersionAndLog(): Promise<void> {
   if (!hasLoggedVersionStatement) {
+    return
     try {
       const latestVersion = await fetch(
         'https://docs.ell.so/_static/ell_version.txt'
@@ -163,11 +164,11 @@ function printWrappedMessages(
       roleColor
     )
 
-    console.log(`${roleLine}${wrappedLines[0]}`)
-    wrappedLines.slice(1).forEach((line) => console.log(line))
+    print(`${roleLine}${wrappedLines[0]}`)
+    wrappedLines.slice(1).forEach((line) => print(line))
 
     if (i < messages.length - 1) {
-      console.log(`${PIPE_COLOR}│${RESET}`)
+      print(`${PIPE_COLOR}│${RESET}`)
     }
   })
 }
@@ -239,7 +240,7 @@ export function modelUsageLoggerPostIntermediate(
       const lines = streamChunk.split('\n')
       lines.forEach((line, i) => {
         if (charsPrinted + line.length > terminalWidth - 6) {
-          print()
+          process.stdout.write('\n')
           if (i === 0) {
             process.stdout.write(subsequentPrefix)
             charsPrinted = prefix.length
@@ -254,7 +255,7 @@ export function modelUsageLoggerPostIntermediate(
         charsPrinted += line.length
 
         if (i < lines.length - 1) {
-          print()
+          process.stdout.write('\n')
           process.stdout.write(subsequentPrefix)
           charsPrinted = subsequentPrefix.length
         }
@@ -265,7 +266,7 @@ export function modelUsageLoggerPostIntermediate(
 
 export function modelUsageLoggerPostEnd(): void {
   const terminalWidth = process.stdout.columns || 80
-  console.log(`\n${PIPE_COLOR}╚${'═'.repeat(terminalWidth - 2)}╝${RESET}`)
+  process.stdout.write(`\n${PIPE_COLOR}╚${'═'.repeat(terminalWidth - 2)}╝${RESET}`)
 }
 
 export function setLogLevel(level: string): void {
