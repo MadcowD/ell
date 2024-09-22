@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import Mock, patch
-from ell.provider import APICallResult
 from ell.providers.openai import OpenAIProvider
 from ell.types import Message, ContentBlock, ToolCall
 from ell.types.message import LMP, ToolResult

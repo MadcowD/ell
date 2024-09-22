@@ -13,11 +13,11 @@ class TestLstr:
 
         # Test initialization with logits andorigin_trace
         # logits = np.array([0.1, 0.2])
-       origin_trace = "model1"
+        origin_trace = "model1"
         s = _lstr("world",origin_trace=origin_trace)  # Removed logits parameter
         assert str(s) == "world"
         # assert np.array_equal(s.logits, logits)
-        assert s.origin_trace == frozenset({_origin_trace})
+        assert s.origin_trace == frozenset({origin_trace})
 
     def test_add(self):
         s1 = _lstr("hello")
