@@ -31,7 +31,7 @@ numpy = "^2.0.1"
 dill = "^0.3.8"
 colorama = "^0.4.6"
 cattrs = "^23.2.3"
-openai = "^1.40.6"
+openai = "^1.47.0"
 anthropic = { version = "^0.34.2", optional = true }
 sqlmodel = "^0.0.21"
 uvicorn = "^0.30.3"
