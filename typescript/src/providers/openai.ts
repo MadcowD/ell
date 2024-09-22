@@ -1,9 +1,7 @@
 try {
   require('openai')
 } catch (e) {
-  console.error(
-    'OpenAI not found. Please install it to use the OpenAI provider.'
-  )
+  console.error('OpenAI not found. Please install it to use the OpenAI provider.')
 }
 import { APICallResult, Provider } from '../provider'
 import { Message, ContentBlock, ToolCall } from '../types'
@@ -58,9 +56,7 @@ class _OpenAIProvider implements Provider {
   messageToOpenAIFormat(message: Message): any {
     const openaiMessage: any = {
       role: message.toolResults ? 'tool' : message.role,
-      content: message.content
-        .map((c) => OpenAIProvider.contentBlockToOpenAIFormat(c))
-        .filter(Boolean),
+      content: message.content.map((c) => OpenAIProvider.contentBlockToOpenAIFormat(c)).filter(Boolean),
     }
 
     if (message.toolCalls?.length) {
@@ -75,9 +71,7 @@ class _OpenAIProvider implements Provider {
         }))
         openaiMessage.content = null
       } catch (e) {
-        console.error(
-          `Error serializing tool calls: ${e}. Did you fully type your @ell.tool decorated functions?`
-        )
+        console.error(`Error serializing tool calls: ${e}. Did you fully type your @ell.tool decorated functions?`)
         throw e
       }
     }
@@ -99,9 +93,7 @@ class _OpenAIProvider implements Provider {
     tools?: LMP[]
   ): Promise<APICallResult> {
     const finalCallParams = { ...apiParams }
-    const openaiMessages = messages.map((message) =>
-      OpenAIProvider.messageToOpenAIFormat(message)
-    )
+    const openaiMessages = messages.map((message) => OpenAIProvider.messageToOpenAIFormat(message))
 
     const actualN = apiParams.n || 1
     finalCallParams.model = model
@@ -112,9 +104,7 @@ class _OpenAIProvider implements Provider {
     if (model === 'o1-preview' || model === 'o1-mini') {
       // Ensure no system messages are present
       if (finalCallParams.messages.some((msg: any) => msg.role === 'system')) {
-        throw new Error(
-          'System messages are not allowed for o1-preview or o1-mini models'
-        )
+        throw new Error('System messages are not allowed for o1-preview or o1-mini models')
       }
 
       response = await client.chat.completions.create(finalCallParams)
@@ -164,9 +154,7 @@ class _OpenAIProvider implements Provider {
     const apiParams = callResult.finalCallParams
     let metadata: Record<string, any> = {}
 
-    const response = callResult.actualStreaming
-      ? callResult.response
-      : [callResult.response]
+    const response = callResult.actualStreaming ? callResult.response : [callResult.response]
 
     for await (const chunk of response) {
       if (chunk.usage) {
@@ -184,9 +172,7 @@ class _OpenAIProvider implements Provider {
               ? choice.delta.content || ''
               : choice.message.content || choice.message.refusal || '',
             {
-              isRefusal: callResult.actualStreaming
-                ? false
-                : !!choice.message.refusal,
+              isRefusal: callResult.actualStreaming ? false : !!choice.message.refusal,
             }
           )
         }
@@ -195,15 +181,11 @@ class _OpenAIProvider implements Provider {
 
     const trackedResults: Message[] = []
 
-    for (const [_, choiceDeltas] of Object.entries(choicesProgress).sort(
-      (a, b) => Number(a[0]) - Number(b[0])
-    )) {
+    for (const [_, choiceDeltas] of Object.entries(choicesProgress).sort((a, b) => Number(a[0]) - Number(b[0]))) {
       const content: ContentBlock[] = []
 
       if (callResult.actualStreaming) {
-        const textContent = choiceDeltas
-          .map((choice) => choice.delta.content || '')
-          .join('')
+        const textContent = choiceDeltas.map((choice) => choice.delta.content || '').join('')
 
         if (textContent) {
           content.push(
@@ -239,13 +221,9 @@ class _OpenAIProvider implements Provider {
           }
 
           for (const toolCall of choice.toolCalls) {
-            const matchingTool = tools.find(
-              (tool) => tool.name === toolCall.function.name
-            ) as InvocableTool | undefined
+            const matchingTool = tools.find((tool) => tool.name === toolCall.function.name) as InvocableTool | undefined
             if (matchingTool) {
-              const params = new matchingTool.paramsModel(
-                JSON.parse(toolCall.function.arguments)
-              )
+              const params = new matchingTool.paramsModel(JSON.parse(toolCall.function.arguments))
               content.push(
                 new ContentBlock({
                   tool_call: new ToolCall(
@@ -263,12 +241,7 @@ class _OpenAIProvider implements Provider {
       }
 
       trackedResults.push(
-        new Message(
-          callResult.actualStreaming
-            ? choiceDeltas[0].delta.role
-            : choiceDeltas[0].message.role,
-          content
-        )
+        new Message(callResult.actualStreaming ? choiceDeltas[0].delta.role : choiceDeltas[0].message.role, content)
       )
     }
 

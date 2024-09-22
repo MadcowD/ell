@@ -6,10 +6,7 @@ import * as logging from '../_logger'
 
 const logger = logging.getLogger('ell.verbosity')
 
-function memoize<T extends (...args: any[]) => any>(
-  fn: T,
-  maxSize: number = 128
-): T {
+function memoize<T extends (...args: any[]) => any>(fn: T, maxSize: number = 128): T {
   const cache = new Map<string, ReturnType<T>>()
   return function (this: any, ...args: Parameters<T>): ReturnType<T> {
     const key = JSON.stringify(args)
@@ -45,25 +42,19 @@ const ASSISTANT_COLOR = ELL_COLORS.YELLOW
 const PIPE_COLOR = ELL_COLORS.BLUE
 
 let hasLoggedVersionStatement = false
-const print = (s:string)=>process.stdout.write(s+'\n')
+const print = (s: string) => process.stdout.write(s + '\n')
 
 async function checkVersionAndLog(): Promise<void> {
   if (!hasLoggedVersionStatement) {
     return
     try {
-      const latestVersion = await fetch(
-        'https://docs.ell.so/_static/ell_version.txt'
-      )
+      const latestVersion = await fetch('https://docs.ell.so/_static/ell_version.txt')
         .then((r) => r.text())
         .then((text) => text.trim())
       if (latestVersion !== ELL_VERSION) {
+        print(`${ELL_COLORS.YELLOW}╔═════════════════════════════════════════════════════════════════╗`)
         print(
-          `${ELL_COLORS.YELLOW}╔═════════════════════════════════════════════════════════════════╗`
-        )
-        print(
-          `${ELL_COLORS.YELLOW}║ ${
-            ELL_COLORS.GREEN
-          }A new version of ELL is available: ${
+          `${ELL_COLORS.YELLOW}║ ${ELL_COLORS.GREEN}A new version of ELL is available: ${
             ELL_COLORS.CYAN
           }${latestVersion.padEnd(29)}${ELL_COLORS.YELLOW}║`
         )
@@ -73,9 +64,7 @@ async function checkVersionAndLog(): Promise<void> {
         print(
           `${ELL_COLORS.YELLOW}║ ${ELL_COLORS.CYAN}npm install ell-ai${ELL_COLORS.YELLOW}                                           ║`
         )
-        print(
-          `${ELL_COLORS.YELLOW}╚═════════════════════════════════════════════════════════════════╝${RESET}`
-        )
+        print(`${ELL_COLORS.YELLOW}╚═════════════════════════════════════════════════════════════════╝${RESET}`)
       }
     } catch (error) {
       // Silently handle any network-related errors
@@ -112,19 +101,14 @@ function wrapTextWithPrefix(
 ): string[] {
   const paragraphs = text.split('\n')
   const wrappedParagraphs = paragraphs.map(
-    (p) =>
-      p.match(new RegExp(`.{1,${width - prefix.length}}(\\s+|$)`, 'g')) || [p]
+    (p) => p.match(new RegExp(`.{1,${width - prefix.length}}(\\s+|$)`, 'g')) || [p]
   )
   const wrappedLines = wrappedParagraphs.flat()
 
   const result: string[] = []
   if (wrappedLines.length > 0) {
     result.push(`${prefix}${textColor}${wrappedLines[0]}${RESET}`)
-    result.push(
-      ...wrappedLines
-        .slice(1)
-        .map((line) => `${subsequentPrefix}${textColor}${line}${RESET}`)
-    )
+    result.push(...wrappedLines.slice(1).map((line) => `${subsequentPrefix}${textColor}${line}${RESET}`))
   } else {
     result.push(`${prefix}${textColor}${RESET}`)
   }
@@ -132,12 +116,7 @@ function wrapTextWithPrefix(
   return result
 }
 
-function printWrappedMessages(
-  messages: Message[],
-  maxRoleLength: number,
-  color: string,
-  wrapWidth?: number
-): void {
+function printWrappedMessages(messages: Message[], maxRoleLength: number, color: string, wrapWidth?: number): void {
   const terminalWidth = process.stdout.columns || 80
   const prefix = `${PIPE_COLOR}│   `
   const rolePrefix = ' '.repeat(maxRoleLength + 2)
@@ -146,16 +125,9 @@ function printWrappedMessages(
 
   messages.forEach((message, i) => {
     const { role, text } = message
-    const roleColor =
-      role === 'system'
-        ? SYSTEM_COLOR
-        : role === 'user'
-          ? USER_COLOR
-          : ASSISTANT_COLOR
+    const roleColor = role === 'system' ? SYSTEM_COLOR : role === 'user' ? USER_COLOR : ASSISTANT_COLOR
 
-    const roleLine = `${prefix}${roleColor}${role.padStart(
-      maxRoleLength
-    )}: ${RESET}`
+    const roleLine = `${prefix}${roleColor}${role.padStart(maxRoleLength)}: ${RESET}`
     const wrappedLines = wrapTextWithPrefix(
       text || '',
       wrappingWidth - rolePrefix.length,
@@ -184,38 +156,26 @@ export function modelUsageLoggerPre(
 ): void {
   color = color || computeColor(invokingLmp)
   const formattedArgs = lmpArgs.map((arg) => formatArg(arg, argMaxLength))
-  const formattedKwargs = Object.entries(lmpKwargs).map(([key, value]) =>
-    formatKwarg(key, value, argMaxLength)
-  )
+  const formattedKwargs = Object.entries(lmpKwargs).map(([key, value]) => formatKwarg(key, value, argMaxLength))
   const formattedParams = [...formattedArgs, ...formattedKwargs].join(', ')
 
   checkVersionAndLog()
 
   const terminalWidth = process.stdout.columns || 80
 
-  logger.info(
-    `Invoking LMP: ${invokingLmp.name} (hash: ${lmpHash.slice(0, 8)})`
-  )
+  logger.info(`Invoking LMP: ${invokingLmp.name} (hash: ${lmpHash.slice(0, 8)})`)
 
   print(`${PIPE_COLOR}╔${'═'.repeat(terminalWidth - 2)}╗${RESET}`)
-  print(
-    `${PIPE_COLOR}║ ${color}${BOLD}${UNDERLINE}${invokingLmp.name}${RESET}${color}(${formattedParams})${RESET}`
-  )
+  print(`${PIPE_COLOR}║ ${color}${BOLD}${UNDERLINE}${invokingLmp.name}${RESET}${color}(${formattedParams})${RESET}`)
   print(`${PIPE_COLOR}╠${'═'.repeat(terminalWidth - 2)}╣${RESET}`)
   print(`${PIPE_COLOR}║ ${BOLD}Prompt:${RESET}`)
   print(`${PIPE_COLOR}╟${'─'.repeat(terminalWidth - 2)}╢${RESET}`)
 
-  const maxRoleLength = Math.max(
-    'assistant'.length,
-    ...messages.map((m) => m.role.length)
-  )
+  const maxRoleLength = Math.max('assistant'.length, ...messages.map((m) => m.role.length))
   printWrappedMessages(messages, maxRoleLength, color)
 }
 
-export function modelUsageLoggerPostStart(
-  color: string = '',
-  n: number = 1
-): void {
+export function modelUsageLoggerPostStart(color: string = '', n: number = 1): void {
   const terminalWidth = process.stdout.columns || 80
   print(`${PIPE_COLOR}╟${'─'.repeat(terminalWidth - 2)}╢${RESET}`)
   print(`${PIPE_COLOR}║ ${BOLD}Output${n > 1 ? `[0 of ${n}]` : ''}:${RESET}`)
@@ -232,10 +192,7 @@ export function modelUsageLoggerPostIntermediate(
   const subsequentPrefix = `${PIPE_COLOR}│   ${''.padEnd('assistant: '.length)}`
   let charsPrinted = subsequentPrefix.length
 
-  return function logStreamChunk(
-    streamChunk: string,
-    isRefusal: boolean = false
-  ): void {
+  return function logStreamChunk(streamChunk: string, isRefusal: boolean = false): void {
     if (streamChunk) {
       const lines = streamChunk.split('\n')
       lines.forEach((line, i) => {

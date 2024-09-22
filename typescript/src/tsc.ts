@@ -15,9 +15,7 @@ const isEllModuleIdentifier = (identifier: string) =>
  * @param sourceFile
  * @returns
  */
-const getAllImportDeclarations = (
-  sourceFile: ts.SourceFile
-): ts.ImportDeclaration[] => {
+const getAllImportDeclarations = (sourceFile: ts.SourceFile): ts.ImportDeclaration[] => {
   const importDeclarations: ts.ImportDeclaration[] = []
 
   const visit = (statements: ts.Statement[] | ts.NodeArray<ts.Statement>) => {
@@ -39,20 +37,14 @@ const getAllImportDeclarations = (
 const hasEllImport = (sourceFile: ts.SourceFile): boolean => {
   const importDecls = getAllImportDeclarations(sourceFile)
   return importDecls.some(
-    (decl) =>
-      ts.isStringLiteral(decl.moduleSpecifier) &&
-      isEllModuleIdentifier(decl.moduleSpecifier.text)
+    (decl) => ts.isStringLiteral(decl.moduleSpecifier) && isEllModuleIdentifier(decl.moduleSpecifier.text)
   )
 }
 
 export interface EllTSC {
   getAST(filePath: string): Promise<ts.SourceFile | undefined>
   getLMPsInFile(filePath: string): Promise<LMP[]>
-  getFunctionSource(
-    filePath: string,
-    line: number,
-    column: number
-  ): Promise<string | null>
+  getFunctionSource(filePath: string, line: number, column: number): Promise<string | null>
 }
 
 const LMPType = {
@@ -82,21 +74,13 @@ export class EllTSC implements EllTSC {
   // maps filePath to LMPs
   private lmpCache: Map<string, LMP[]> = new Map()
   constructor(rootDir: string = process.cwd()) {
-    const configPath = ts.findConfigFile(
-      rootDir,
-      ts.sys.fileExists,
-      'tsconfig.json'
-    )
+    const configPath = ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.json')
     if (!configPath) {
       throw new Error("Could not find a valid 'tsconfig.json'.")
     }
 
     const configFile = ts.readConfigFile(configPath, ts.sys.readFile)
-    const parsedCommandLine = ts.parseJsonConfigFileContent(
-      configFile.config,
-      ts.sys,
-      path.dirname(configPath)
-    )
+    const parsedCommandLine = ts.parseJsonConfigFileContent(configFile.config, ts.sys, path.dirname(configPath))
 
     this.program = ts.createProgram({
       rootNames: parsedCommandLine.fileNames,
@@ -105,16 +89,8 @@ export class EllTSC implements EllTSC {
     })
   }
 
-  private getNodeAtPosition(
-    sourceFile: ts.SourceFile,
-    line: number,
-    column: number
-  ): ts.Node | undefined {
-    const position = ts.getPositionOfLineAndCharacter(
-      sourceFile,
-      line - 1,
-      column - 1
-    )
+  private getNodeAtPosition(sourceFile: ts.SourceFile, line: number, column: number): ts.Node | undefined {
+    const position = ts.getPositionOfLineAndCharacter(sourceFile, line - 1, column - 1)
 
     let foundNode: ts.Node | undefined
 
@@ -134,11 +110,7 @@ export class EllTSC implements EllTSC {
     return this.program.getSourceFile(filePath)
   }
 
-  async getLMP(
-    filePath: string,
-    line: number,
-    column: number
-  ): Promise<LMP | undefined> {
+  async getLMP(filePath: string, line: number, column: number): Promise<LMP | undefined> {
     let lmp: LMP | undefined
     const lmps = await this.getLMPsInFile(filePath)
     lmp = lmps.find((lmp) => lmp.line === line)
@@ -191,10 +163,7 @@ export class EllTSC implements EllTSC {
     }
 
     function visitImportDeclaration(node: ts.ImportDeclaration) {
-      if (
-        ts.isStringLiteral(node.moduleSpecifier) &&
-        isEllModuleIdentifier(node.moduleSpecifier.text)
-      ) {
+      if (ts.isStringLiteral(node.moduleSpecifier) && isEllModuleIdentifier(node.moduleSpecifier.text)) {
         if (node.importClause) {
           if (node.importClause.name) {
             // Default import
@@ -210,9 +179,7 @@ export class EllTSC implements EllTSC {
                     ellModuleImportIdentifier = element.name.text
                   } else if (
                     // If it's one of the lmp functions
-                    LMP_FUNCTION_EXPORT_NAMES.includes(
-                      element.propertyName.text
-                    )
+                    LMP_FUNCTION_EXPORT_NAMES.includes(element.propertyName.text)
                   ) {
                     // Store the alias for future use
                     const alias = element.name.text
@@ -227,8 +194,7 @@ export class EllTSC implements EllTSC {
               // todo. match on property access
               // import * as ell from "ell-ai";
               // ell.simple
-              ellModuleImportIdentifier =
-                node.importClause.namedBindings.name.text
+              ellModuleImportIdentifier = node.importClause.namedBindings.name.text
             }
           }
         }
@@ -281,12 +247,10 @@ export class EllTSC implements EllTSC {
             if (lmp) {
               if (ts.isIdentifier(declaration.name)) {
                 const lmpName = declaration.name.text
-                const { line, character } =
-                  sourceFile!.getLineAndCharacterOfPosition(
-                    node.getStart(sourceFile)
-                  )
-                const { line: endLine, character: endCharacter } =
-                  sourceFile!.getLineAndCharacterOfPosition(node.getEnd())
+                const { line, character } = sourceFile!.getLineAndCharacterOfPosition(node.getStart(sourceFile))
+                const { line: endLine, character: endCharacter } = sourceFile!.getLineAndCharacterOfPosition(
+                  node.getEnd()
+                )
 
                 lmps.push({
                   lmpType: lmp.lmpType,

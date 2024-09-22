@@ -25,10 +25,7 @@ class Config {
     this.registry.set(modelName, client)
   }
 
-  async modelRegistryOverride<T>(
-    overrides: Map<string, OpenAI>,
-    callback: () => Promise<T>
-  ): Promise<T> {
+  async modelRegistryOverride<T>(overrides: Map<string, OpenAI>, callback: () => Promise<T>): Promise<T> {
     return this.lock.acquire('registry', async () => {
       const originalRegistry = new Map(this.registry)
       this.registry = new Map([...this.registry, ...overrides])
@@ -157,14 +154,9 @@ export function init(options: {
 
 // Helper functions
 export const getStore = (): Store | undefined => config.getStore()
-export const setStore = (store: Store | string, autocommit?: boolean): void =>
-  config.setStore(store, autocommit)
-export const setDefaultLmParams = (params: Record<string, any>): void =>
-  config.setDefaultLmParams(params)
-export const setDefaultSystemPrompt = (prompt: string): void =>
-  config.setDefaultSystemPrompt(prompt)
+export const setStore = (store: Store | string, autocommit?: boolean): void => config.setStore(store, autocommit)
+export const setDefaultLmParams = (params: Record<string, any>): void => config.setDefaultLmParams(params)
+export const setDefaultSystemPrompt = (prompt: string): void => config.setDefaultSystemPrompt(prompt)
 
-export const registerProvider = (providerClass: Provider): void =>
-  config.registerProvider(providerClass)
-export const getProviderFor = (client: any): Provider | undefined =>
-  config.getProviderFor(client)
+export const registerProvider = (providerClass: Provider): void => config.registerProvider(providerClass)
+export const getProviderFor = (client: any): Provider | undefined => config.getProviderFor(client)

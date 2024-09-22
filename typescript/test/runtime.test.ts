@@ -55,10 +55,10 @@ test('runtime', async () => {
     {
       lmpType: 'simple',
       config: `{ model: 'gpt-4o' }`,
-      fn: "async (a: { a: string }) => {\n    const ok = await child(a.a)\n    return a.a + ok\n  }",
+      fn: 'async (a: { a: string }) => {\n    const ok = await child(a.a)\n    return a.a + ok\n  }',
       lmpName: 'hello',
       source:
-       "const hello = simple({ model: 'gpt-4o' }, async (a: { a: string }) => {\n    const ok = await child(a.a)\n    return a.a + ok\n  })",
+        "const hello = simple({ model: 'gpt-4o' }, async (a: { a: string }) => {\n    const ok = await child(a.a)\n    return a.a + ok\n  })",
       filepath: expect.stringContaining(__filename),
       line: 41,
       column: 3,
@@ -71,8 +71,7 @@ test('runtime', async () => {
       config: "{ model: 'gpt-4o-mini' }",
       fn: "async (a: string) => {\n    return 'child'\n  }",
       lmpName: 'child',
-      source:
-        "const child = simple({ model: 'gpt-4o-mini' }, async (a: string) => {\n    return 'child'\n  })",
+      source: "const child = simple({ model: 'gpt-4o-mini' }, async (a: string) => {\n    return 'child'\n  })",
       filepath: expect.stringContaining(__filename),
       line: 38,
       column: 3,

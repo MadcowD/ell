@@ -15,9 +15,7 @@ type Image = any
 // determine how base models are being used in python
 class BaseModel {}
 
-type InvocableTool = (
-  ...args: any[]
-) => ToolResult | _lstr_generic | ContentBlock[]
+type InvocableTool = (...args: any[]) => ToolResult | _lstr_generic | ContentBlock[]
 
 class ToolResult {
   constructor(
@@ -81,16 +79,10 @@ class ContentBlock {
 
     if (
       nonNullFields.length > 1 &&
-      !(
-        nonNullFields.length === 2 &&
-        nonNullFields.includes('image') &&
-        nonNullFields.includes('image_detail')
-      )
+      !(nonNullFields.length === 2 && nonNullFields.includes('image') && nonNullFields.includes('image_detail'))
     ) {
       throw new Error(
-        `Only one field can be non-null (except for image with image_detail). Found: ${nonNullFields.join(
-          ', '
-        )}`
+        `Only one field can be non-null (except for image with image_detail). Found: ${nonNullFields.join(', ')}`
       )
     }
   }
@@ -105,17 +97,12 @@ class ContentBlock {
     return null
   }
 
-  static coerce(
-    content: string | ToolCall | ToolResult | BaseModel | ContentBlock | Image
-  ): ContentBlock {
+  static coerce(content: string | ToolCall | ToolResult | BaseModel | ContentBlock | Image): ContentBlock {
     if (content instanceof ContentBlock) return content
     if (typeof content === 'string') return new ContentBlock({ text: content })
-    if (content instanceof ToolCall)
-      return new ContentBlock({ tool_call: content })
-    if (content instanceof ToolResult)
-      return new ContentBlock({ tool_result: content })
-    if (content instanceof BaseModel)
-      return new ContentBlock({ parsed: content })
+    if (content instanceof ToolCall) return new ContentBlock({ tool_call: content })
+    if (content instanceof ToolResult) return new ContentBlock({ tool_result: content })
+    if (content instanceof BaseModel) return new ContentBlock({ parsed: content })
     if (content instanceof Image) return new ContentBlock({ image: content })
     throw new Error(`Invalid content type: ${typeof content}`)
   }
@@ -124,10 +111,7 @@ class ContentBlock {
 }
 
 function coerceContentList(
-  content?:
-    | string
-    | ContentBlock[]
-    | (string | ContentBlock | ToolCall | ToolResult | BaseModel)[],
+  content?: string | ContentBlock[] | (string | ContentBlock | ToolCall | ToolResult | BaseModel)[],
   contentBlockKwargs: Partial<ContentBlock> = {}
 ): ContentBlock[] {
   if (!content) {
@@ -146,10 +130,7 @@ class Message extends BaseModel {
 
   constructor(
     public role: string,
-    content:
-      | string
-      | ContentBlock[]
-      | (string | ContentBlock | ToolCall | ToolResult | BaseModel)[],
+    content: string | ContentBlock[] | (string | ContentBlock | ToolCall | ToolResult | BaseModel)[],
     contentBlockKwargs: Partial<ContentBlock> = {}
   ) {
     super()
@@ -157,65 +138,48 @@ class Message extends BaseModel {
     this.content = coerceContentList(content, contentBlockKwargs)
   }
 
-  get text(): string {
+  get text(): string | undefined {
     return this.content.map((c) => c.text || `<${c.type}>`).join('\n')
   }
 
-  get images(): Image[] | null {
-    const images = this.content
-      .filter((c) => c.image)
-      .map((c) => c.image as Image)
-    return images.length ? images : null
+  get images(): Image[] | undefined {
+    const images = this.content.filter((c) => c.image).map((c) => c.image as Image)
+    return images.length ? images : undefined
   }
 
-  get audios(): (number[] | Float32Array)[] | null {
-    const audios = this.content
-      .filter((c) => c.audio)
-      .map((c) => c.audio as number[] | Float32Array)
-    return audios.length ? audios : null
+  get audios(): (number[] | Float32Array)[] | undefined {
+    const audios = this.content.filter((c) => c.audio).map((c) => c.audio as number[] | Float32Array)
+    return audios.length ? audios : undefined
   }
 
-  get textOnly(): string | null {
+  get textOnly(): string | undefined {
     const textOnly = this.content.filter((c) => c.text).map((c) => c.text)
-    return textOnly.length ? textOnly.join('\n') : null
+    return textOnly.length ? textOnly.join('\n') : undefined
   }
 
-  get toolCalls(): ToolCall[] | null {
-    const toolCalls = this.content
-      .filter((c) => c.tool_call)
-      .map((c) => c.tool_call as ToolCall)
-    return toolCalls.length ? toolCalls : null
+  get toolCalls(): ToolCall[] | undefined {
+    const toolCalls = this.content.filter((c) => c.tool_call).map((c) => c.tool_call as ToolCall)
+    return toolCalls.length ? toolCalls : undefined
   }
 
-  get toolResults(): ToolResult[] | null {
-    const toolResults = this.content
-      .filter((c) => c.tool_result)
-      .map((c) => c.tool_result as ToolResult)
-    return toolResults.length ? toolResults : null
+  get toolResults(): ToolResult[] | undefined {
+    const toolResults = this.content.filter((c) => c.tool_result).map((c) => c.tool_result as ToolResult)
+    return toolResults.length ? toolResults : undefined
   }
 
   get parsed(): BaseModel | BaseModel[] {
-    const parsedContent = this.content
-      .filter((c) => c.parsed)
-      .map((c) => c.parsed as BaseModel)
+    const parsedContent = this.content.filter((c) => c.parsed).map((c) => c.parsed as BaseModel)
     return parsedContent.length === 1 ? parsedContent[0] : parsedContent
   }
 
-  async callToolsAndCollectAsMessage(
-    parallel: boolean = false,
-    maxWorkers?: number
-  ): Promise<Message> {
+  async callToolsAndCollectAsMessage(parallel: boolean = false, maxWorkers?: number): Promise<Message> {
     let content: ContentBlock[]
     if (parallel) {
       content = await Promise.all(
-        this.content
-          .filter((c) => c.tool_call)
-          .map((c) => c.tool_call!.callAndCollectAsMessageBlock())
+        this.content.filter((c) => c.tool_call).map((c) => c.tool_call!.callAndCollectAsMessageBlock())
       )
     } else {
-      content = this.content
-        .filter((c) => c.tool_call)
-        .map((c) => c.tool_call!.callAndCollectAsMessageBlock())
+      content = this.content.filter((c) => c.tool_call).map((c) => c.tool_call!.callAndCollectAsMessageBlock())
     }
     return new Message('user', content)
   }

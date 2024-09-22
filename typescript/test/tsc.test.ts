@@ -5,10 +5,7 @@ import { EllTSC } from '../src/tsc'
 const pathToRepoRoot = path.resolve(__dirname, '..')
 
 test('getLMPsInFile', async () => {
-  const result = await new EllTSC().getLMPsInFile(
-    path.resolve(path.join(__dirname, './fixtures/example.ts'))
-  )
-
+  const result = await new EllTSC().getLMPsInFile(path.resolve(path.join(__dirname, './fixtures/example.ts')))
 
   expect(result).toEqual([
     {

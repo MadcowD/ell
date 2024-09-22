@@ -20,7 +20,7 @@ export interface Provider {
     model: string,
     messages: any[],
     apiParams: Record<string, any>,
-    tools?: LMP[]
+    tools?: ToolFunction[]
   ): Promise<APICallResult>
 
   /**
