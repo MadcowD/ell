@@ -121,6 +121,7 @@ export class EllTSC implements EllTSC {
       })
       if (!lmp) {
         logger.error(`LMP not found for ${filePath}:${line}:${column}`)
+        // logger.debug(await this.getAST(filePath).then((x) => x?.getText()))
       }
     }
     return lmp

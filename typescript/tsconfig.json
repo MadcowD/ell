@@ -3,10 +3,7 @@
     "target": "es2022",
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "lib": [
-      "es2023",
-      "DOM"
-    ],
+    "lib": ["es2023", "DOM"],
     "plugins": [
       {
         "transform": "./src/ts-plugin.ts"

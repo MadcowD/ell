@@ -1,4 +1,5 @@
-import { Message, LMP } from './types'
+import { Message } from './types'
+import { Tool } from './types/tools'
 
 export interface APICallResult {
   response: any
@@ -20,7 +21,7 @@ export interface Provider {
     model: string,
     messages: any[],
     apiParams: Record<string, any>,
-    tools?: ToolFunction[]
+    tools?: Tool<any, any>[]
   ): Promise<APICallResult>
 
   /**
@@ -30,7 +31,7 @@ export interface Provider {
     callResult: APICallResult,
     _invocationOrigin: string,
     logger?: any,
-    tools?: LMP[]
+    tools?: Tool<any, any>[]
   ): Promise<[Message[], Record<string, any>]>
 
   /**

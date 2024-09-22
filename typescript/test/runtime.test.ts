@@ -1,8 +1,9 @@
 import { test, expect, beforeAll } from 'vitest'
-import { simple } from '../src/ell'
+import { complex, simple } from '../src/ell'
 import { lmps, invocations } from '../src/ell'
 import { config } from '../src/configurator'
 import OpenAI from 'openai'
+import { Message } from '../src/types'
 
 beforeAll(() => {
   // @ts-expect-error
@@ -34,6 +35,7 @@ beforeAll(() => {
     }
   }
 })
+
 test('runtime', async () => {
   const child = simple({ model: 'gpt-4o-mini' }, async (a: string) => {
     return 'child'
@@ -60,9 +62,9 @@ test('runtime', async () => {
       source:
         "const hello = simple({ model: 'gpt-4o' }, async (a: { a: string }) => {\n    const ok = await child(a.a)\n    return a.a + ok\n  })",
       filepath: expect.stringContaining(__filename),
-      line: 41,
+      line: 43,
       column: 3,
-      endLine: 44,
+      endLine: 46,
       endColumn: 5,
       lmpId: 'lmp-e818190022eec4e8edc7fdc248e31244',
     },
@@ -73,9 +75,9 @@ test('runtime', async () => {
       lmpName: 'child',
       source: "const child = simple({ model: 'gpt-4o-mini' }, async (a: string) => {\n    return 'child'\n  })",
       filepath: expect.stringContaining(__filename),
-      line: 38,
+      line: 40,
       column: 3,
-      endLine: 40,
+      endLine: 42,
       endColumn: 5,
       lmpId: 'lmp-a93ecda87d84cbcffbd8dc2dea844b14',
     },
@@ -115,3 +117,12 @@ test('runtime', async () => {
     },
   ])
 })
+
+test("complex", async () => {
+  const child2 = complex({ model: 'gpt-4o-mini' }, async (a: string) => {
+    return 'child'
+  })
+  const result = await child2('world')
+  expect(result).toEqual([new Message('assistant', 'child')])
+})
+

@@ -10,11 +10,11 @@ type ToolArgs<Name, Input, Output> = {
 }
 export type ToolFunction<Input, Output> = (args: Input) => Promise<Output>
 export type Tool<Input, Output> = ToolFunction<Input, Output> & {
-  __ell_tool_input: z.ZodType<Input>
-  __ell_tool_output: z.ZodType<Output>
-  __ell_tool_name: string
-  __ell_tool_description: string
-  __is_tool: true
+  __ell_tool_input__: z.ZodType<Input>
+  __ell_tool_output__: z.ZodType<Output>
+  __ell_tool_name__: string
+  __ell_tool_description__: string
+  __ell_is_tool__: true
 }
 
 export const tool = <

@@ -325,7 +325,7 @@ export const complex = <F extends SimpleLMPInner>(
     }
     const callResult = await provider.callModel(modelClient, a.model, messages, apiParams, a.tools)
     const [trackedResults, metadata] = await provider.processResponse(callResult, 'todo')
-    const result = convertMultimodalResponseToString(trackedResults[0])
+    const result = trackedResults
     return result
   }
 
