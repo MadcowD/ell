@@ -70,10 +70,7 @@ class InvocationContext {
     this.storage = new AsyncLocalStorage<Invocation[]>()
   }
 
-  async run<F extends (...args: any[]) => Promise<any>>(
-    invocation: Invocation,
-    callback: F
-  ) {
+  async run<F extends (...args: any[]) => Promise<any>>(invocation: Invocation, callback: F) {
     let stack = this.storage.getStore() || []
     stack = [...stack, invocation]
     return this.storage.run(stack, callback)
@@ -135,31 +132,26 @@ const serializeLMP = async (args: LMP) => {
 }
 
 const convertMultimodalResponseToLstr = (response: Message[]) => {
-  if (
-    response.length === 1 &&
-    response[0].content.length === 1 &&
-    response[0].content[0].text
-  ) {
+  if (response.length === 1 && response[0].content.length === 1 && response[0].content[0].text) {
     return response[0].content[0].text
   }
   return response
 }
-function convertMultimodalResponseToString(
-  response: APICallResult['response']
-): string | string[] {
-  return Array.isArray(response)
-    ? response.map((x) => x.content[0].text)
-    : response.content[0].text
+function convertMultimodalResponseToString(response: APICallResult['response']): string | string[] {
+  return Array.isArray(response) ? response.map((x) => x.content[0].text) : response.content[0].text
 }
 
 type SimpleLMPInner = (...args: any[]) => Promise<string | Array<Message>>
-type SimpleLMP<A extends SimpleLMPInner> = ((
-  ...args: Parameters<A>
-) => Promise<string>) & {
-  __ell_type__?: string
+type SimpleLMP<A extends SimpleLMPInner> = ((...args: Parameters<A>) => Promise<string>) & {
+  __ell_type__?: 'simple'
   __ell_lmp_name__?: string
   __ell_lmp_id__?: string | null
-  __ell_invocation_id__?: string | null
+}
+type ComplexLMPInner = (...args: any[]) => Promise<string | Array<Message>>
+type ComplexLMP<A extends ComplexLMPInner> = ((...args: Parameters<A>) => Promise<Array<Message>>) & {
+  __ell_type__?: 'complex'
+  __ell_lmp_name__?: string
+  __ell_lmp_id__?: string | null
 }
 
 /**
@@ -186,44 +178,22 @@ const invokeWithTracking = async (lmp: LMP, args: any[], f: F, a: Kwargs) => {
       if (!provider) {
         throw new Error(`No provider found for model ${a.model} ${modelClient}`)
       }
-      const messages =
-        typeof lmpfnoutput === 'string'
-          ? [new Message('user', lmpfnoutput)]
-          : lmpfnoutput
+      const messages = typeof lmpfnoutput === 'string' ? [new Message('user', lmpfnoutput)] : lmpfnoutput
       const apiParams = {
         // everything from a except tools
         ...a,
         tools: undefined,
       }
       if (config.verbose) {
-        modelUsageLoggerPre(
-          { ...lmp, name: lmp.lmpName },
-          args,
-          apiParams,
-          lmp.lmpId,
-          messages
-        )
+        modelUsageLoggerPre({ ...lmp, name: lmp.lmpName }, args, apiParams, lmp.lmpId, messages)
       }
-      const callResult = await provider.callModel(
-        modelClient,
-        a.model,
-        messages,
-        apiParams,
-        a.tools
-      )
+      const callResult = await provider.callModel(modelClient, a.model, messages, apiParams, a.tools)
       if (config.verbose) {
         modelUsageLoggerPostStart(lmp.lmpId, callResult.actualN)
       }
-      const postIntermediate = modelUsageLoggerPostIntermediate(
-        lmp.lmpId,
-        callResult.actualN
-      )
+      const postIntermediate = modelUsageLoggerPostIntermediate(lmp.lmpId, callResult.actualN)
 
-      const [trackedResults, metadata] = await provider.processResponse(
-        callResult,
-        'todo',
-        postIntermediate
-      )
+      const [trackedResults, metadata] = await provider.processResponse(callResult, 'todo', postIntermediate)
       if (config.verbose) {
         modelUsageLoggerPostEnd()
       }
@@ -248,16 +218,11 @@ const invokeWithTracking = async (lmp: LMP, args: any[], f: F, a: Kwargs) => {
   )
 }
 
-export const simple = <F extends SimpleLMPInner>(
-  a: Kwargs,
-  f: F
-): SimpleLMP<F> => {
+export const simple = <F extends SimpleLMPInner>(a: Kwargs, f: F): SimpleLMP<F> => {
   const { filepath, line, column } = getCallerFileLocation()
 
   if (!filepath || !line || !column) {
-    logger.error(
-      `LMP cannot be tracked. Your source maps may be incorrect or unavailable.`
-    )
+    logger.error(`LMP cannot be tracked. Your source maps may be incorrect or unavailable.`)
   }
 
   let trackAttempted = false
@@ -271,9 +236,7 @@ export const simple = <F extends SimpleLMPInner>(
       trackAttempted = true
       lmp = await tsc.getLMP(filepath!, line!, column!)
       if (!lmp) {
-        logger.error(
-          `No LMP found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`
-        )
+        logger.error(`No LMP found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`)
       } else {
         const lmpId = generateFunctionHash(lmp.source, '', lmp.lmpName)
         lmp.lmpId = lmpId
@@ -289,26 +252,14 @@ export const simple = <F extends SimpleLMPInner>(
     if (!provider) {
       throw new Error(`No provider found for model ${a.model} ${modelClient}`)
     }
-    const messages =
-      typeof lmpfnoutput === 'string'
-        ? [new Message('user', lmpfnoutput)]
-        : lmpfnoutput
+    const messages = typeof lmpfnoutput === 'string' ? [new Message('user', lmpfnoutput)] : lmpfnoutput
     const apiParams = {
       // everything from a except tools
       ...a,
       tools: undefined,
     }
-    const callResult = await provider.callModel(
-      modelClient,
-      a.model,
-      messages,
-      apiParams,
-      a.tools
-    )
-    const [trackedResults, metadata] = await provider.processResponse(
-      callResult,
-      'todo'
-    )
+    const callResult = await provider.callModel(modelClient, a.model, messages, apiParams, a.tools)
+    const [trackedResults, metadata] = await provider.processResponse(callResult, 'todo')
     const result = convertMultimodalResponseToString(trackedResults[0])
     return result
   }
@@ -324,32 +275,72 @@ export const simple = <F extends SimpleLMPInner>(
   return wrapper
 }
 
-export const complex = (a: Kwargs, f: F) => {
-  const name = a.name
+type APIParams = Record<string, any>
 
-  const wrapper = async (...args: any[]) => {
-    const { filepath, line, column } = getCallerFileLocation()
-    await serializeLMP({ name, filepath, line, column })
-    const result = await f(...args)
-    await writeInvocation({
-      id: generateInvocationId(),
-      lmp_id: generateFunctionHash(filepath!, line!, column!),
-      latency_ms: 0,
-      prompt_tokens: 0,
-      completion_tokens: 0,
-      invocation_contents: {
-        invocation_id: generateInvocationId(),
-        params: args,
-        invocation_api_params: a,
-        results: result,
-      },
-    })
-    exit()
+export const complex = <F extends SimpleLMPInner>(
+  a: {
+    model: string
+    exempt_from_tracking?: boolean
+    tools?: ToolFunction<any, any>[]
+    post_callback?: (messages: Array<Message>) => void
+  } & APIParams,
+  f: F
+): ComplexLMP<F> => {
+  const { filepath, line, column } = getCallerFileLocation()
+
+  if (!filepath || !line || !column) {
+    logger.error(`LMP cannot be tracked. Your source maps may be incorrect or unavailable.`)
+  }
+
+  let trackAttempted = false
+  let lmp: LMP | undefined = undefined
+
+  const wrapper: ComplexLMP<F> = async (...args: any[]) => {
+    if (!wrapper.__ell_lmp_id__) {
+      if (trackAttempted) {
+        return f
+      }
+      trackAttempted = true
+      lmp = await tsc.getLMP(filepath!, line!, column!)
+      if (!lmp) {
+        logger.error(`No LMP found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`)
+      } else {
+        const lmpId = generateFunctionHash(lmp.source, '', lmp.lmpName)
+        lmp.lmpId = lmpId
+      }
+    }
+
+    if (lmp && !a.exempt_from_tracking) {
+      return await invokeWithTracking(lmp, args, f, a)
+    }
+    const lmpfnoutput = await f(...args)
+    const modelClient = await getModelClient(a)
+    const provider = config.getProviderFor(modelClient)
+    if (!provider) {
+      throw new Error(`No provider found for model ${a.model} ${modelClient}`)
+    }
+    const messages = typeof lmpfnoutput === 'string' ? [new Message('user', lmpfnoutput)] : lmpfnoutput
+    const apiParams = {
+      ...a,
+    }
+    const callResult = await provider.callModel(modelClient, a.model, messages, apiParams, a.tools)
+    const [trackedResults, metadata] = await provider.processResponse(callResult, 'todo')
+    const result = convertMultimodalResponseToString(trackedResults[0])
     return result
   }
+
+  wrapper.__ell_type__ = 'complex'
+  Object.defineProperty(wrapper, '__ell_lmp_id__', {
+    get: () => lmp?.lmpId,
+  })
+  Object.defineProperty(wrapper, '__ell_lmp_name__', {
+    get: () => lmp?.lmpName,
+  })
+
   return wrapper
 }
 
 import { init } from './configurator'
 import { system, user } from './types/message'
+import { ToolFunction } from './types/tools'
 export { init, config, system, user }
