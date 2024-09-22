@@ -105,6 +105,8 @@ class Provider(ABC):
     # Be careful to override this method in your provider.
     def call(
         self,
+        #XXX: In future refactors, we can fully enumerate the args and make ell_call's internal to the _provider implementer interface.
+        # This gives us a litellm style interface for free.
         ell_call: EllCallParams,
         origin_id: Optional[str] = None,
         logger: Optional[Any] = None,
