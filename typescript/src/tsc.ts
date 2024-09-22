@@ -47,12 +47,7 @@ export interface EllTSC {
   getFunctionSource(filePath: string, line: number, column: number): Promise<string | null>
 }
 
-const LMPType = {
-  LM: 'LM',
-  TOOL: 'TOOL',
-  MULTIMODAL: 'MULTIMODAL',
-  OTHER: 'OTHER',
-}
+
 
 type LMPType = 'simple' | 'complex'
 export type LMP = {
