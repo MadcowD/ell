@@ -30,8 +30,7 @@ def get_lmp(z = 10):
 
 
 if __name__ == "__main__":
-    ell.config.verbose = True
-    ell.set_store(SQLiteStore("./logdir"), autocommit=True)
+    ell.init(verbose=True, store=SQLiteStore("./logdir"), autocommit=True)
     # test[0] = "modified at execution :O"
     w = get_lmp(z=20)
     cls_Def = w("A class that represents a bank")

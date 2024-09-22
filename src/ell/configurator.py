@@ -7,55 +7,70 @@ import threading
 from pydantic import BaseModel, ConfigDict, Field
 from ell.store import Store
 from ell.provider import Provider
+from dataclasses import dataclass, field
 
 _config_logger = logging.getLogger(__name__)
+
+@dataclass(frozen=True)
+class _Model:
+    name: str
+    default_client: Optional[Union[openai.Client, Any]] = None
+    #XXX: Deprecation in 0.1.0
+    #XXX: We will depreciate this when streaming is implemented. 
+    # Currently we stream by default for the verbose renderer,
+    # but in the future we will not support streaming by default 
+    # and stream=True must be passed which will then make API providers the
+    # single source of truth for whether or not a model supports an api parameter.
+    # This makes our implementation extremely light, only requiring us to provide
+    # a list of model names in registration.
+    supports_streaming : Optional[bool] = field(default=None)
+
+
+
 class Config(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    registry: Dict[str, openai.Client] = Field(default_factory=dict, description="A dictionary mapping model names to OpenAI clients.")
+    registry: Dict[str, _Model] = Field(default_factory=dict, description="A dictionary mapping model names to their configurations.")
     verbose: bool = Field(default=False, description="If True, enables verbose logging.")
     wrapped_logging: bool = Field(default=True, description="If True, enables wrapped logging for better readability.")
     override_wrapped_logging_width: Optional[int] = Field(default=None, description="If set, overrides the default width for wrapped logging.")
     store: Optional[Store] = Field(default=None, description="An optional Store instance for persistence.")
     autocommit: bool = Field(default=False, description="If True, enables automatic committing of changes to the store.")
     lazy_versioning: bool = Field(default=True, description="If True, enables lazy versioning for improved performance.")
-    default_lm_params: Dict[str, Any] = Field(default_factory=dict, description="Default parameters for language models.")
+    default_api_params: Dict[str, Any] = Field(default_factory=dict, description="Default parameters for language models.")
     default_client: Optional[openai.Client] = Field(default=None, description="The default OpenAI client used when a specific model client is not found.")
-    providers: Dict[Type, Type[Provider]] = Field(default_factory=dict, description="A dictionary mapping client types to provider classes.")
-
+    providers: Dict[Type, Provider] = Field(default_factory=dict, description="A dictionary mapping client types to provider classes.")
     def __init__(self, **data):
         super().__init__(**data)
         self._lock = threading.Lock()
         self._local = threading.local()
 
-    def register_model(self, model_name: str, client: Any) -> None:
+    
+    def register_model(
+        self, 
+        name: str,
+        default_client: Optional[Union[openai.Client, Any]] = None,
+        supports_streaming: Optional[bool] = None
+    ) -> None:
         """
-        Register an OpenAI client for a specific model name.
-
-        :param model_name: The name of the model to register.
-        :type model_name: str
-        :param client: The OpenAI client to associate with the model.
-        :type client: openai.Client
+        Register a model with its configuration.
         """
         with self._lock:
-            self.registry[model_name] = client
+            # XXX: Will be deprecated in 0.1.0
+            self.registry[name] = _Model(
+                name=name,
+                default_client=default_client,
+                supports_streaming=supports_streaming
+            )
 
-    @property 
-    def has_store(self) -> bool:
-        """
-        Check if a store is set.
 
-        :return: True if a store is set, False otherwise.
-        :rtype: bool
-        """
-        return self.store is not None
 
     @contextmanager
-    def model_registry_override(self, overrides: Dict[str, Any]):
+    def model_registry_override(self, overrides: Dict[str, _Model]):
         """
-        Temporarily override the model registry with new client mappings.
+        Temporarily override the model registry with new model configurations.
 
-        :param overrides: A dictionary of model names to OpenAI clients to override.
-        :type overrides: Dict[str, openai.Client]
+        :param overrides: A dictionary of model names to ModelConfig instances to override.
+        :type overrides: Dict[str, ModelConfig]
         """
         if not hasattr(self._local, 'stack'):
             self._local.stack = []
@@ -71,19 +86,19 @@ class Config(BaseModel):
         finally:
             self._local.stack.pop()
 
-    def get_client_for(self, model_name: str) -> Tuple[Optional[Any], bool]:
+    def get_client_for(self, model_name: str) -> Tuple[Optional[openai.Client], bool]:
         """
         Get the OpenAI client for a specific model name.
 
         :param model_name: The name of the model to get the client for.
         :type model_name: str
-        :return: The OpenAI client for the specified model, or None if not found.
-        :rtype: Optional[openai.Client]
+        :return: The OpenAI client for the specified model, or None if not found, and a fallback flag.
+        :rtype: Tuple[Optional[openai.Client], bool]
         """
         current_registry = self._local.stack[-1] if hasattr(self._local, 'stack') and self._local.stack else self.registry
-        client = current_registry.get(model_name)
+        model_config = current_registry.get(model_name)
         fallback = False
-        if model_name not in current_registry.keys():
+        if not model_config:
             warning_message = f"Warning: A default provider for model '{model_name}' could not be found. Falling back to default OpenAI client from environment variables."
             if self.verbose:
                 from colorama import Fore, Style
@@ -92,84 +107,36 @@ class Config(BaseModel):
                 _config_logger.debug(warning_message)
             client = self.default_client
             fallback = True
+        else:
+            client = model_config.default_client
         return client, fallback
 
-    def reset(self) -> None:
-        """
-        Reset the configuration to its initial state.
-        """
-        with self._lock:
-            self.__init__()
-            if hasattr(self._local, 'stack'):
-                del self._local.stack
-    
-    def set_store(self, store: Union[Store, str], autocommit: bool = True) -> None:
-        """
-        Set the store for the configuration.
-
-        :param store: The store to set. Can be a Store instance or a string path for SQLiteStore.
-        :type store: Union[Store, str]
-        :param autocommit: Whether to enable autocommit for the store.
-        :type autocommit: bool
-        """
-        if isinstance(store, str):
-            from ell.stores.sql import SQLiteStore
-            self.store = SQLiteStore(store)
-        else:
-            self.store = store
-        self.autocommit = autocommit or self.autocommit
-
-    def get_store(self) -> Store:
-        """
-        Get the current store.
-
-        :return: The current store.
-        :rtype: Store
-        """
-        return self.store
-    
-    def set_default_lm_params(self, **params: Dict[str, Any]) -> None:
-        """
-        Set default parameters for language models.
-
-        :param params: Keyword arguments representing the default parameters.
-        :type params: Dict[str, Any]
-        """
-        self.default_lm_params = params
-    
-
-
-    def set_default_client(self, client: openai.Client) -> None:
-        """
-        Set the default OpenAI client.
-
-        :param client: The default OpenAI client to set.
-        :type client: openai.Client
-        """
-        self.default_client = client
-
-    def register_provider(self, provider_class: Type[Provider]) -> None:
+    def register_provider(self, provider: Provider, client_type: Type[Any]) -> None:
         """
         Register a provider class for a specific client type.
 
         :param provider_class: The provider class to register.
-        :type provider_class: Type[AbstractProvider]
+        :type provider_class: Type[Provider]
         """
+        assert isinstance(client_type, type), "client_type must be a type (e.g. openai.Client), not an an instance (myclient := openai.Client()))"
         with self._lock:
-            self.providers[provider_class.get_client_type()] = provider_class
+            self.providers[client_type] = provider
 
-    def get_provider_for(self, client: Any) -> Optional[Type[Provider]]:
+    def get_provider_for(self, client: Union[Type[Any], Any]) -> Optional[Provider]:
         """
-        Get the provider class for a specific client instance.
+        Get the provider instance for a specific client instance.
 
         :param client: The client instance to get the provider for.
         :type client: Any
-        :return: The provider class for the specified client, or None if not found.
-        :rtype: Optional[Type[AbstractProvider]]
+        :return: The provider instance for the specified client, or None if not found.
+        :rtype: Optional[Provider]
         """
-        return next((provider for client_type, provider in self.providers.items() if isinstance(client, client_type)), None)
+        
+        client_type = type(client) if not isinstance(client, type) else client
+        return self.providers.get(client_type)
 
-# Singleton instance
+# Single* instance
+# XXX: Make a singleton
 config = Config()
 
 def init(
@@ -177,8 +144,8 @@ def init(
     verbose: bool = False,
     autocommit: bool = True,
     lazy_versioning: bool = True,
-    default_lm_params: Optional[Dict[str, Any]] = None,
-    default_openai_client: Optional[openai.Client] = None
+    default_api_params: Optional[Dict[str, Any]] = None,
+    default_client: Optional[Any] = None
 ) -> None:
     """
     Initialize the ELL configuration with various settings.
@@ -191,39 +158,39 @@ def init(
     :type autocommit: bool
     :param lazy_versioning: Enable or disable lazy versioning.
     :type lazy_versioning: bool
-    :param default_lm_params: Set default parameters for language models.
-    :type default_lm_params: Dict[str, Any], optional
+    :param default_api_params: Set default parameters for language models.
+    :type default_api_params: Dict[str, Any], optional
     :param default_openai_client: Set the default OpenAI client.
     :type default_openai_client: openai.Client, optional
     """
+    # XXX: prevent double init
     config.verbose = verbose
     config.lazy_versioning = lazy_versioning
 
-    if store is not None:
-        config.set_store(store, autocommit)
+    if isinstance(store, str):
+        from ell.stores.sql import SQLiteStore
+        config.store = SQLiteStore(store)
+    else:
+        config.store = store
+    config.autocommit = autocommit or config.autocommit
 
-    if default_lm_params is not None:
-        config.set_default_lm_params(**default_lm_params)
+    if default_api_params is not None:
+        config.default_api_params.update(default_api_params)
 
-
-
-    if default_openai_client is not None:
-        config.set_default_client(default_openai_client)
+    if default_client is not None:
+        config.default_client = default_client
 
 # Existing helper functions
-@wraps(config.get_store)
-def get_store() -> Store:
-    return config.get_store()
+def get_store() -> Union[Store, None]:
+    return config.store
 
-@wraps(config.set_store)
-def set_store(*args, **kwargs) -> None:
-    return config.set_store(*args, **kwargs)
-
-@wraps(config.set_default_lm_params)
-def set_default_lm_params(*args, **kwargs) -> None:
-    return config.set_default_lm_params(*args, **kwargs)
+# Will be deprecated at 0.1.0 
 
 # You can add more helper functions here if needed
 @wraps(config.register_provider)
 def register_provider(*args, **kwargs) -> None:
     return config.register_provider(*args, **kwargs)
+
+# Deprecated now (remove at 0.1.0)
+def set_store(*args, **kwargs) -> None:
+    raise DeprecationWarning("The set_store function is deprecated and will be removed in a future version. Use ell.init(store=...) instead.")

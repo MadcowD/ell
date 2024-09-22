@@ -94,7 +94,7 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
                 
         
                 if len(cached_invocations) > 0:
-                    # TODO THis is bad?
+                    # XXX: Fix caching.
                     results =  [d.deserialize() for  d in cached_invocations[0].results]
 
                     logger.info(f"Using cached result for {func_to_track.__qualname__} with state cache key: {state_cache_key}")

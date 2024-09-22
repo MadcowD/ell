@@ -29,6 +29,7 @@ jobs:
     - name: Install dependencies
       run: |
         poetry install
+        poetry run pip install anthropic
     
     - name: Run pytest
       run: |

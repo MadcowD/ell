@@ -1,7 +1,7 @@
 import random
 from typing import List, Tuple
 import ell
-ell.config.verbose = True
+
 
 
 names_list = [
@@ -23,8 +23,8 @@ names_list = [
 def create_personality() -> str:
     """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.
 
-Name: <name>
-Backstory: <3 sentence backstory>'""" # System prompt
+    Name: <name>
+    Backstory: <3 sentence backstory>'""" # System prompt
 
     return "Come up with a backstory about " + random.choice(names_list) # User prompt
 
@@ -39,9 +39,9 @@ def chat(message_history : List[Tuple[str, str]], *, personality : str):
 
         return [
             ell.system(f"""Here is your description.
-{personality}. 
+                {personality}. 
 
-Your goal is to come up with a response to a chat. Only respond in one sentence (should be like a text message in informality.) Never use Emojis."""),
+                Your goal is to come up with a response to a chat. Only respond in one sentence (should be like a text message in informality.) Never use Emojis."""),
             ell.user(format_message_history(message_history)),
         ]
 
@@ -49,7 +49,7 @@ Your goal is to come up with a response to a chat. Only respond in one sentence 
 
 if __name__ == "__main__":
     from ell.stores.sql import SQLiteStore
-    ell.set_store('./logdir', autocommit=True)
+    ell.init(store='./logdir', autocommit=True, verbose=True)
 
     for __ in range(100):
         messages : List[Tuple[str, str]]= []

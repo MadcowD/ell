@@ -115,17 +115,17 @@ def print_wrapped_messages(messages: List[Message], max_role_length: int, color:
         if i < len(messages) - 1:
             print(f"{PIPE_COLOR}│{RESET}")
 
+
 def model_usage_logger_pre(
     invoking_lmp: LMP,
     lmp_args: Tuple,
     lmp_kwargs: Dict,
     lmp_hash: str,
     messages: List[Message],
-    color: str = "",
     arg_max_length: int = 8
 ):
     """Log model usage before execution with customizable argument display length and ASCII box."""
-    color = color or compute_color(invoking_lmp)
+    color =  compute_color(invoking_lmp)
     formatted_args = [format_arg(arg, arg_max_length) for arg in lmp_args]
     formatted_kwargs = [format_kwarg(key, lmp_kwargs[key], arg_max_length) for key in lmp_kwargs]
     formatted_params = ', '.join(formatted_args + formatted_kwargs)
@@ -157,7 +157,7 @@ def model_usage_logger_post_start(color: str = "", n: int = 1):
 from contextlib import contextmanager
 
 @contextmanager
-def model_usage_logger_post_intermediate(color: str = "", n: int = 1):
+def model_usage_logger_post_intermediate( n: int = 1):
     """Context manager to log intermediate model output without wrapping, only indenting if necessary."""
     terminal_width = get_terminal_width()
     prefix = f"{PIPE_COLOR}│   "

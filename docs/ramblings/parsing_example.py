@@ -3,7 +3,7 @@ import random
 from typing import Callable, List, Tuple
 import ell
 from ell.types._lstr import _lstr
-ell.config.verbose = True
+
 
 
 

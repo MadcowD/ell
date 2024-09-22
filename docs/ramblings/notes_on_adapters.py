@@ -81,7 +81,7 @@ ell.init(
 
 # inherently you just don't want to fuck around with
 
-""blah(lm_params=dict(client=my_openai_client))
+""blah(api_params=dict(client=my_openai_client))
 ""
 # or even
 

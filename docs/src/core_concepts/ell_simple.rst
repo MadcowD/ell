@@ -100,11 +100,11 @@ One of the most convenient functions of the ``@ell.simple`` decorator is that yo
         """You are a helpful assistant."""
         return f"Hey there {name}!"
         
-Likewise, if you want to modify those parameters for a particular invocation of that prompt, you simply pass them in as ``lm_params`` keyword arguments to the function when calling it. For example:
+Likewise, if you want to modify those parameters for a particular invocation of that prompt, you simply pass them in as ``api_params`` keyword arguments to the function when calling it. For example:
 
 .. code-block:: python
 
-    >>> hello("world", lm_params=dict(temperature=0.7))
+    >>> hello("world", api_params=dict(temperature=0.7))
     'Hey there world!'
 
 
@@ -139,15 +139,15 @@ In the spirit of simplicity, we've designed it to automatically coerce the retur
     >>> hello("world")
     ['Hey there world!', 'Hi, world.']
 
-Similarly, this behavior applies when using runtime ``lm_params`` to specify multiple outputs.
+Similarly, this behavior applies when using runtime ``api_params`` to specify multiple outputs.
 
 .. code-block:: python
 
-    >>> hello("world", lm_params=dict(n=3))
+    >>> hello("world", api_params=dict(n=3))
     ['Hey there world!', 'Hi, world.', 'Hello, world!']
 
 
-.. note:: In the future, we may modify this interface as preserving the ``lm_params`` keyword in its current form could potentially lead to conflicts with user-defined functions. However, during the beta phase, we are closely monitoring for feedback and will make adjustments based on user experiences and needs.
+.. note:: In the future, we may modify this interface as preserving the ``api_params`` keyword in its current form could potentially lead to conflicts with user-defined functions. However, during the beta phase, we are closely monitoring for feedback and will make adjustments based on user experiences and needs.
 
 
 Multimodal inputs
