@@ -1,7 +1,7 @@
 import * as ell from '../src/ell' // Assuming there's a TypeScript-compatible 'ell' library
 
 ell.init({
-  //store: './logdir',
+  store: './logdir',
   autocommit: true,
   verbose: true,
 })

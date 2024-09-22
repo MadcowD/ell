@@ -73,7 +73,7 @@ class Config {
   setStore(store: Store | string, autocommit: boolean = true): void {
     if (typeof store === 'string') {
       // Assuming SQLiteStore is implemented elsewhere
-      const SQLiteStore = require('./stores/sql').SQLiteStore
+      const SQLiteStore = require('./serialize/sql').SQLiteStore
       this.store = new SQLiteStore(store)
     } else {
       this.store = store

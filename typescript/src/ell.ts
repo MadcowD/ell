@@ -18,6 +18,7 @@ import {
   modelUsageLoggerPre,
 } from './verbosity'
 import { Logger } from './_logger'
+import { performance } from 'perf_hooks'
 
 const logger = new Logger('ell')
 
@@ -219,8 +220,8 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
           lmp_type: lmpType,
           api_params: a,
           // todo. requires runtime inspection of the user-provided closure
-          initial_free_vars: [],
-          initial_global_vars: [],
+          initial_free_vars: {},
+          initial_global_vars: {},
           // todo. requires static analysis of direct children of this lmp definition
           uses: [],
         })
@@ -228,6 +229,7 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
         logger.error(`Error serializing LMP: ${e}`)
       }
 
+      const start = performance.now()
       const lmpfnoutput = await f(...args)
       const modelClient = await getModelClient(a)
       const provider = config.getProviderFor(modelClient)
@@ -245,7 +247,8 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
       }
 
       const callResult = await provider.callModel(modelClient, a.model, messages, apiParams, a.tools)
-
+      const end = performance.now()
+      const latency_ms = end - start
       if (config.verbose) {
         modelUsageLoggerPostStart(lmp.lmpId, callResult.actualN)
       }
@@ -261,7 +264,7 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
       serializeInvocation({
         id: invocationId,
         lmp_id: lmp.lmpId,
-        latency_ms: metadata.latency_ms,
+        latency_ms: latency_ms,
         prompt_tokens: metadata.prompt_tokens,
         completion_tokens: metadata.completion_tokens,
         contents: {

@@ -156,6 +156,9 @@ export class SQLiteStore extends Store {
   }
 
   async initialize(): Promise<void> {
+    if (this.db) {
+      return
+    }
     this.db = await open({
       filename: this.dbPath,
       driver: sqlite3.Database,
@@ -166,7 +169,7 @@ export class SQLiteStore extends Store {
 
   private async createTables(): Promise<void> {
     await this.db!.exec(`
-        CREATE TABLE IF NOT EXISTS serialized_lmp (
+        CREATE TABLE IF NOT EXISTS serializedlmp (
           lmp_id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           source TEXT NOT NULL,
@@ -193,7 +196,7 @@ export class SQLiteStore extends Store {
           FOREIGN KEY (lmp_id) REFERENCES serialized_lmp (lmp_id)
         );
   
-        CREATE TABLE IF NOT EXISTS invocation_trace (
+        CREATE TABLE IF NOT EXISTS invocationtrace (
           invocation_consumer_id TEXT NOT NULL,
           invocation_consuming_id TEXT NOT NULL,
           PRIMARY KEY (invocation_consumer_id, invocation_consuming_id),
@@ -201,7 +204,7 @@ export class SQLiteStore extends Store {
           FOREIGN KEY (invocation_consuming_id) REFERENCES invocation (id)
         );
   
-        CREATE TABLE IF NOT EXISTS invocation_contents (
+        CREATE TABLE IF NOT EXISTS invocationcontents (
           invocation_id TEXT PRIMARY KEY,
           params TEXT,
           results TEXT,
@@ -212,20 +215,20 @@ export class SQLiteStore extends Store {
           FOREIGN KEY (invocation_id) REFERENCES invocation (id)
         );
   
-        CREATE TABLE IF NOT EXISTS serialized_lmp_uses (
+        CREATE TABLE IF NOT EXISTS serializedlmpuses (
           lmp_user_id TEXT NOT NULL,
           lmp_using_id TEXT NOT NULL,
           PRIMARY KEY (lmp_user_id, lmp_using_id),
-          FOREIGN KEY (lmp_user_id) REFERENCES serialized_lmp (lmp_id),
-          FOREIGN KEY (lmp_using_id) REFERENCES serialized_lmp (lmp_id)
+          FOREIGN KEY (lmp_user_id) REFERENCES serializedlmp (lmp_id),
+          FOREIGN KEY (lmp_using_id) REFERENCES serializedlmp (lmp_id)
         );
       `)
 
     // Create indexes
     await this.db!.exec(`
-        CREATE INDEX IF NOT EXISTS idx_serialized_lmp_name ON serialized_lmp (name);
-        CREATE INDEX IF NOT EXISTS idx_serialized_lmp_created_at ON serialized_lmp (created_at);
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_serialized_lmp_version_name ON serialized_lmp (version_number, name);
+        CREATE INDEX IF NOT EXISTS idx_serializedlmp_name ON serializedlmp (name);
+        CREATE INDEX IF NOT EXISTS idx_serializedlmp_created_at ON serializedlmp (created_at);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_serializedlmp_version_name ON serializedlmp (version_number, name);
         CREATE INDEX IF NOT EXISTS idx_invocation_lmp_id_created_at ON invocation (lmp_id, created_at);
         CREATE INDEX IF NOT EXISTS idx_invocation_created_at_latency ON invocation (created_at, latency_ms);
         CREATE INDEX IF NOT EXISTS idx_invocation_created_at_tokens ON invocation (created_at, prompt_tokens, completion_tokens);
@@ -233,6 +236,9 @@ export class SQLiteStore extends Store {
   }
 
   async writeLMP(input: WriteLMPInput): Promise<any | undefined> {
+    if (!this.db) {
+      await this.initialize()
+    }
     const {
       lmp_id,
       name,
@@ -244,6 +250,7 @@ export class SQLiteStore extends Store {
       initial_global_vars,
       commit_message,
       version_number,
+      created_at,
       uses,
     } = input
     await this.db!.run('BEGIN TRANSACTION')
@@ -251,9 +258,9 @@ export class SQLiteStore extends Store {
     try {
       await this.db!.run(
         `
-          INSERT OR REPLACE INTO serialized_lmp 
-          (lmp_id, name, source, dependencies, lmp_type, api_params, initial_free_vars, initial_global_vars, commit_message, version_number)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT OR REPLACE INTO serializedlmp 
+          (lmp_id, name, source, dependencies, lmp_type, api_params, initial_free_vars, initial_global_vars, commit_message, version_number, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
           lmp_id,
@@ -266,13 +273,14 @@ export class SQLiteStore extends Store {
           JSON.stringify(initial_global_vars),
           commit_message,
           version_number,
+          created_at,
         ]
       )
 
       for (const useId of Object.keys(uses)) {
         await this.db!.run(
           `
-            INSERT OR IGNORE INTO serialized_lmp_uses (lmp_user_id, lmp_using_id)
+            INSERT OR IGNORE INTO serializedlmpuses (lmp_user_id, lmp_using_id)
             VALUES (?, ?)
           `,
           [lmp_id, useId]
@@ -289,6 +297,9 @@ export class SQLiteStore extends Store {
   }
 
   async writeInvocation(input: WriteInvocationInput): Promise<any | undefined> {
+    if (!this.db) {
+      await this.initialize()
+    }
     // Start a transaction
     await this.db!.run('BEGIN TRANSACTION')
 
@@ -296,7 +307,7 @@ export class SQLiteStore extends Store {
       // Update the num_invocations for the associated LMP
       await this.db!.run(
         `
-        UPDATE serialized_lmp
+        UPDATE serializedlmp
         SET num_invocations = num_invocations + 1
         WHERE lmp_id = ?
       `,
@@ -312,7 +323,7 @@ export class SQLiteStore extends Store {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `,
         [
-          input.invocation_id,
+          input.id,
           input.lmp_id,
           input.latency_ms,
           input.prompt_tokens,
@@ -327,13 +338,13 @@ export class SQLiteStore extends Store {
       if (input.contents) {
         await this.db!.run(
           `
-          INSERT INTO invocation_contents (
+          INSERT INTO invocationcontents (
             invocation_id, params, results, invocation_api_params,
             global_vars, free_vars, is_external
           ) VALUES (?, ?, ?, ?, ?, ?, ?)
         `,
           [
-            input.invocation_id,
+            input.id,
             JSON.stringify(input.contents.params),
             JSON.stringify(input.contents.results),
             JSON.stringify(input.contents.invocation_api_params),
@@ -348,10 +359,10 @@ export class SQLiteStore extends Store {
       for (const consumedId of input.consumes) {
         await this.db!.run(
           `
-          INSERT INTO invocation_trace (invocation_consumer_id, invocation_consuming_id)
+          INSERT INTO invocationtrace (invocation_consumer_id, invocation_consuming_id)
           VALUES (?, ?)
         `,
-          [input.invocation_id, consumedId]
+          [input.id, consumedId]
         )
       }
 
@@ -375,13 +386,16 @@ export class SQLiteStore extends Store {
    * @returns A promise that resolves to an array of SerializedLmp objects.
    */
   async getVersionsByFqn(fqn: string): Promise<SerializedLmp[]> {
+    if (!this.db) {
+      await this.initialize()
+    }
     const rows = await this.db!.all(
       `
       SELECT 
         lmp_id, name, source, dependencies, created_at, lmp_type,
         api_params, initial_free_vars, initial_global_vars,
         num_invocations, commit_message, version_number
-      FROM serialized_lmp
+      FROM serializedlmp
       WHERE name = ?
       ORDER BY version_number DESC
     `,
