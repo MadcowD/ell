@@ -22,13 +22,7 @@ class Config {
   }
 
   registerModel(modelName: string, client: OpenAI): void {
-    this.lock.acquire('registry', () => {
-      this.registry.set(modelName, client)
-    })
-  }
-
-  get hasStore(): boolean {
-    return this.store !== undefined
+    this.registry.set(modelName, client)
   }
 
   async modelRegistryOverride<T>(

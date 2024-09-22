@@ -75,9 +75,7 @@ let defaultClient: OpenAI | null = null
 try {
   defaultClient = new OpenAI()
 } catch (e) {
-  if (e instanceof Error) {
-    logger.error('Failed to create default OpenAI client:', e.message)
-  }
+  logger.error('Failed to create default OpenAI client:', e.message)
 }
 
 if (defaultClient) {

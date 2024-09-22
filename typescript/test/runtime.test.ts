@@ -51,36 +51,6 @@ test('runtime', async () => {
   expect(child.__ell_lmp_id__).toBeDefined()
   expect(child.__ell_lmp_name__).toEqual('child')
 
-  console.log(JSON.stringify(lmps, null, 2))
-
-  // [
-//   {
-//     "lmpType": "simple",
-//     "config": "{ model: 'gpt-4o' }",
-//     "fn": "async (a: { a: string }) => {\n    const ok = await child(a.a)\n    return a.a + ok\n  }",
-//     "lmpName": "hello",
-//     "source": "const hello = simple({ model: 'gpt-4o' }, async (a: { a: string }) => {\n    const ok = await child(a.a)\n    return a.a + ok\n  })",
-//     "filepath": "/Users/alexdixon/projects/ell/typescript/test/runtime.test.ts",
-//     "line": 41,
-//     "column": 3,
-//     "endLine": 44,
-//     "endColumn": 5,
-//     "lmpId": "lmp-e818190022eec4e8edc7fdc248e31244"
-//   },
-//   {
-//     "lmpType": "simple",
-//     "config": "{ model: 'gpt-4o-mini' }",
-//     "fn": "async (a: string) => {\n    return 'child'\n  }",
-//     "lmpName": "child",
-//     "source": "const child = simple({ model: 'gpt-4o-mini' }, async (a: string) => {\n    return 'child'\n  })",
-//     "filepath": "/Users/alexdixon/projects/ell/typescript/test/runtime.test.ts",
-//     "line": 38,
-//     "column": 3,
-//     "endLine": 40,
-//     "endColumn": 5,
-//     "lmpId": "lmp-a93ecda87d84cbcffbd8dc2dea844b14"
-//   }
-// ]
   expect(lmps).toEqual([
     {
       lmpType: 'simple',
