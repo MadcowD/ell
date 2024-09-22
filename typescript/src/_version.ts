@@ -1,3 +1,3 @@
-import { version } from '../package.json';
+import { version } from '../package.json'
 
-export const ELL_VERSION = version;
+export const ELL_VERSION = version

@@ -1,10 +1,10 @@
-import { Message, ContentBlock, ToolCall, LMP } from './types';
+import { Message, ContentBlock, ToolCall, LMP } from './types'
 
 export interface APICallResult {
-  response: any;
-  actualStreaming: boolean;
-  actualN: number;
-  finalCallParams: Record<string, any>;
+  response: any
+  actualStreaming: boolean
+  actualN: number
+  finalCallParams: Record<string, any>
 }
 
 /**
@@ -21,7 +21,7 @@ export interface Provider {
     messages: any[],
     apiParams: Record<string, any>,
     tools?: LMP[]
-  ): Promise<APICallResult>;
+  ): Promise<APICallResult>
 
   /**
    * Process the API response and convert it to ell format.
@@ -31,15 +31,15 @@ export interface Provider {
     _invocationOrigin: string,
     logger?: any,
     tools?: LMP[]
-  ): Promise<[Message[], Record<string, any>]>;
+  ): Promise<[Message[], Record<string, any>]>
 
   /**
    * Check if the provider supports streaming.
    */
-  supportsStreaming(): boolean;
+  supportsStreaming(): boolean
 
   /**
    * Return the type of client this provider supports.
    */
-  getClientType(): any;
+  getClientType(): any
 }

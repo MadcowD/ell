@@ -1,11 +1,11 @@
-type Callable = (...args: any[]) => any;
+type Callable = (...args: any[]) => any
 type EllComplexKwargs = {
-    model: string,
-    client?:any,
-    exempt_from_tracking: boolean,
-    tools?:Callable[],
-    post_callback?:Callable,
-    api_params: any
+  model: string
+  client?: any
+  exempt_from_tracking: boolean
+  tools?: Callable[]
+  post_callback?: Callable
+  api_params: any
 }
 
 /***
@@ -245,8 +245,7 @@ type EllComplexKwargs = {
     - ell.studio: For visualizing and analyzing LMP executions.
  ***/
 export function complex(args: EllComplexKwargs) {
-    return function (fn: Callable) {
-        return fn;
-    }
+  return function (fn: Callable) {
+    return fn
+  }
 }
-    

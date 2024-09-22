@@ -9,9 +9,7 @@
     ],
     "plugins": [
       {
-        "transform": "./src/ts-plugin.ts",
-
-
+        "transform": "./src/ts-plugin.ts"
       }
     ],
     "resolveJsonModule": true,
@@ -23,6 +21,6 @@
     "exactOptionalPropertyTypes": false,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "noErrorTruncation": false,
+    "noErrorTruncation": false
   }
 }

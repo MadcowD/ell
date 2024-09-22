@@ -1,10 +1,10 @@
-import * as ts from 'typescript';
-import { EllTSC } from './tsc';
+import * as ts from 'typescript'
+import { EllTSC } from './tsc'
 
 export function ellTypescriptPlugin(program: ts.Program) {
   return {
     before(ctx: ts.TransformationContext) {
-      const ell = new EllTSC();
+      const ell = new EllTSC()
       // here we need the project root
       return (sourceFile: ts.SourceFile) => {
         const visitor = (node: ts.Node): ts.Node => {
@@ -15,13 +15,13 @@ export function ellTypescriptPlugin(program: ts.Program) {
           // }
           // return ts.visitEachChild(node, visitor, ctx);
           ell.getLMPsInFile(sourceFile.fileName).then((lmp) => {
-            console.log(lmp);
-          });
+            console.log(lmp)
+          })
           return node
-        };
-        
-        return ts.visitNode(sourceFile, visitor);
-      };
+        }
+
+        return ts.visitNode(sourceFile, visitor)
+      }
     },
-  };
+  }
 }
