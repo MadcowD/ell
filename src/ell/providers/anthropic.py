@@ -208,6 +208,8 @@ def content_block_to_anthropic_format(content_block: ContentBlock) -> Dict[str, 
                 "data": base64_image
             }
         }
+    elif content_block.image_url:
+        raise ValueError("Anthropic does not support image URLs. Please provide the image data directly.")
     elif content_block.text:
         return {
             "type": "text",

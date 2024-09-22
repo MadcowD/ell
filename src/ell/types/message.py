@@ -42,12 +42,22 @@ class ToolCall(BaseModel):
     def call_and_collect_as_message(self):
         return Message(role="user", content=[self.call_and_collect_as_message_block()])
 
+class ImageUrl(BaseModel):
+    url: str
+
+    @field_validator('url')
+    @classmethod
+    def validate_url(cls, v):
+        if not isinstance(v, str):
+            raise ValueError('ImageUrl must be a string')
+        return v
 
 class ContentBlock(BaseModel):    
     model_config = ConfigDict(arbitrary_types_allowed=True)
     
     text: Optional[_lstr_generic] = Field(default=None)
     image: Optional[Union[PILImage.Image, str, np.ndarray]] = Field(default=None)
+    image_url: Optional[ImageUrl] = Field(default=None)
     image_detail: Optional[str] = Field(default=None)
     audio: Optional[Union[np.ndarray, List[float]]] = Field(default=None)
     tool_call: Optional[ToolCall] = Field(default=None)
@@ -57,16 +67,16 @@ class ContentBlock(BaseModel):
     @model_validator(mode='after')
     def check_single_non_null(self):
         non_null_fields = [field for field, value in self.__dict__.items() if value is not None]
-        # need to allow for image_detail to be set with an image
-        if len(non_null_fields) > 1 and set(non_null_fields) != {'image', 'image_detail'}:
-            raise ValueError(f"Only one field can be non-null (except for image with image_detail). Found: {', '.join(non_null_fields)}")
+        # need to allow for image_detail to be set with an image or image_url
+        if len(non_null_fields) > 1 and set(non_null_fields) not in [{'image', 'image_detail'}, {'image_url', 'image_detail'}]:
+            raise ValueError(f"Only one field can be non-null (except for image or image_url with image_detail). Found: {', '.join(non_null_fields)}")
         return self
 
     @property
     def type(self):
         if self.text is not None:
             return "text"
-        if self.image is not None:
+        if self.image is not None or self.image_url is not None:
             return "image"
         if self.audio is not None:
             return "audio"
@@ -79,7 +89,7 @@ class ContentBlock(BaseModel):
         return None
 
     @classmethod
-    def coerce(cls, content: Union[str, ToolCall, ToolResult, BaseModel, "ContentBlock", PILImage.Image, np.ndarray]) -> "ContentBlock":
+    def coerce(cls, content: Union[str, ToolCall, ToolResult, BaseModel, "ContentBlock", PILImage.Image, np.ndarray, ImageUrl]) -> "ContentBlock":
         """
         Coerce various types of content into a ContentBlock.
 
@@ -93,6 +103,7 @@ class ContentBlock(BaseModel):
         - ContentBlock: Will be returned as-is.
         - PILImage.Image: Will be converted to an image ContentBlock.
         - np.ndarray: Will be converted to an image ContentBlock if it represents an image.
+        - ImageUrl: Will be converted to an image_url ContentBlock.
 
         Examples:
         ---------
@@ -123,14 +134,18 @@ class ContentBlock(BaseModel):
         >>> ContentBlock.coerce(arr)
         ContentBlock(image=<PIL.Image.Image>)
 
+        >>> image_url = ImageUrl(url="https://example.com/image.jpg")
+        >>> ContentBlock.coerce(image_url)
+        ContentBlock(image_url=image_url)
+
         Notes:
         ------
         - This method is particularly useful when working with heterogeneous content types
           and you want to ensure they are all properly encapsulated in ContentBlock instances.
         - The method performs type checking and appropriate conversions to ensure the resulting
           ContentBlock is valid according to the model's constraints.
-        - For image content, both PIL Image objects and numpy arrays are supported, with
-          automatic conversion to the appropriate format.
+        - For image content, PIL Image objects, numpy arrays, and ImageUrl objects are supported,
+          with automatic conversion to the appropriate format.
         """
         if isinstance(content, ContentBlock):
             return content
@@ -143,8 +158,9 @@ class ContentBlock(BaseModel):
         if isinstance(content, BaseModel):
             return cls(parsed=content)
         if isinstance(content, (PILImage.Image, np.ndarray)):
-
             return cls(image=content)
+        if isinstance(content, ImageUrl):
+            return cls(image_url=content)
         raise ValueError(f"Invalid content type: {type(content)}")
 
     @field_validator('image')

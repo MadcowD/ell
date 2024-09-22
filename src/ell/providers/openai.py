@@ -29,6 +29,16 @@ try:
                     "type": "image_url",
                     "image_url": image_url
                 }
+            elif content_block.image_url:
+                image_url = {"url": content_block.image_url.url}
+
+                if content_block.image_detail:
+                    image_url["detail"] = content_block.image_detail
+
+                return {
+                    "type": "image_url",
+                    "image_url": image_url
+                }
             elif content_block.text:
                 return {
                     "type": "text",
