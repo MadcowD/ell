@@ -1,6 +1,5 @@
 import { test, expect, beforeAll } from 'vitest'
 import { complex, simple } from '../src/ell'
-import { lmps, invocations } from '../src/ell'
 import { config } from '../src/configurator'
 import OpenAI from 'openai'
 import { Message } from '../src/types'
@@ -52,70 +51,6 @@ test('runtime', async () => {
   expect(hello.__ell_lmp_name__).toEqual('hello')
   expect(child.__ell_lmp_id__).toBeDefined()
   expect(child.__ell_lmp_name__).toEqual('child')
-
-  expect(lmps).toEqual([
-    {
-      lmpType: 'simple',
-      config: `{ model: 'gpt-4o' }`,
-      fn: 'async (a: { a: string }) => {\n    const ok = await child(a.a)\n    return a.a + ok\n  }',
-      lmpName: 'hello',
-      source:
-        "const hello = simple({ model: 'gpt-4o' }, async (a: { a: string }) => {\n    const ok = await child(a.a)\n    return a.a + ok\n  })",
-      filepath: expect.stringContaining(__filename),
-      line: 43,
-      column: 3,
-      endLine: 46,
-      endColumn: 5,
-      lmpId: 'lmp-e818190022eec4e8edc7fdc248e31244',
-    },
-    {
-      lmpType: 'simple',
-      config: "{ model: 'gpt-4o-mini' }",
-      fn: "async (a: string) => {\n    return 'child'\n  }",
-      lmpName: 'child',
-      source: "const child = simple({ model: 'gpt-4o-mini' }, async (a: string) => {\n    return 'child'\n  })",
-      filepath: expect.stringContaining(__filename),
-      line: 40,
-      column: 3,
-      endLine: 42,
-      endColumn: 5,
-      lmpId: 'lmp-a93ecda87d84cbcffbd8dc2dea844b14',
-    },
-  ])
-  expect(invocations).toEqual([
-    {
-      completion_tokens: expect.any(Number),
-      id: expect.stringContaining('invocation-'),
-      invocation_contents: {
-        invocation_api_params: {
-          model: 'gpt-4o-mini',
-        },
-        invocation_id: expect.stringContaining('invocation-'),
-        params: ['world'],
-        results: 'child',
-      },
-      latency_ms: expect.any(Number),
-      lmp_id: expect.stringContaining('lmp-'),
-      prompt_tokens: expect.any(Number),
-      used_by_id: expect.stringContaining('invocation-'),
-    },
-    {
-      completion_tokens: expect.any(Number),
-      id: expect.stringContaining('invocation-'),
-      invocation_contents: {
-        invocation_api_params: {
-          model: 'gpt-4o',
-        },
-        invocation_id: expect.stringContaining('invocation-'),
-        params: [{ a: 'world' }],
-        results: 'worldchild',
-      },
-      latency_ms: expect.any(Number),
-      lmp_id: expect.stringContaining('lmp-'),
-      prompt_tokens: expect.any(Number),
-      used_by_id: undefined,
-    },
-  ])
 })
 
 test("complex", async () => {
@@ -126,3 +61,68 @@ test("complex", async () => {
   expect(result).toEqual([new Message('assistant', 'child')])
 })
 
+
+
+  // expect(lmps).toEqual([
+  //   {
+  //     lmpType: 'simple',
+  //     config: `{ model: 'gpt-4o' }`,
+  //     fn: 'async (a: { a: string }) => {\n    const ok = await child(a.a)\n    return a.a + ok\n  }',
+  //     lmpName: 'hello',
+  //     source:
+  //       "const hello = simple({ model: 'gpt-4o' }, async (a: { a: string }) => {\n    const ok = await child(a.a)\n    return a.a + ok\n  })",
+  //     filepath: expect.stringContaining(__filename),
+  //     line: 43,
+  //     column: 3,
+  //     endLine: 46,
+  //     endColumn: 5,
+  //     lmpId: 'lmp-e818190022eec4e8edc7fdc248e31244',
+  //   },
+  //   {
+  //     lmpType: 'simple',
+  //     config: "{ model: 'gpt-4o-mini' }",
+  //     fn: "async (a: string) => {\n    return 'child'\n  }",
+  //     lmpName: 'child',
+  //     source: "const child = simple({ model: 'gpt-4o-mini' }, async (a: string) => {\n    return 'child'\n  })",
+  //     filepath: expect.stringContaining(__filename),
+  //     line: 40,
+  //     column: 3,
+  //     endLine: 42,
+  //     endColumn: 5,
+  //     lmpId: 'lmp-a93ecda87d84cbcffbd8dc2dea844b14',
+  //   },
+  // ])
+  // expect(invocations).toEqual([
+  //   {
+  //     completion_tokens: expect.any(Number),
+  //     id: expect.stringContaining('invocation-'),
+  //     invocation_contents: {
+  //       invocation_api_params: {
+  //         model: 'gpt-4o-mini',
+  //       },
+  //       invocation_id: expect.stringContaining('invocation-'),
+  //       params: ['world'],
+  //       results: 'child',
+  //     },
+  //     latency_ms: expect.any(Number),
+  //     lmp_id: expect.stringContaining('lmp-'),
+  //     prompt_tokens: expect.any(Number),
+  //     used_by_id: expect.stringContaining('invocation-'),
+  //   },
+  //   {
+  //     completion_tokens: expect.any(Number),
+  //     id: expect.stringContaining('invocation-'),
+  //     invocation_contents: {
+  //       invocation_api_params: {
+  //         model: 'gpt-4o',
+  //       },
+  //       invocation_id: expect.stringContaining('invocation-'),
+  //       params: [{ a: 'world' }],
+  //       results: 'worldchild',
+  //     },
+  //     latency_ms: expect.any(Number),
+  //     lmp_id: expect.stringContaining('lmp-'),
+  //     prompt_tokens: expect.any(Number),
+  //     used_by_id: undefined,
+  //   },
+  // ])

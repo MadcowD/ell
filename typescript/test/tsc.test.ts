@@ -10,7 +10,7 @@ test('getLMPsInFile', async () => {
   expect(result).toEqual([
     {
       column: 1,
-      config: `{ name: 'hello', model: 'gpt-4o' }`,
+      config: `{ model: 'gpt-4o' }`,
       filepath: path.join(pathToRepoRoot, '/test/fixtures/example.ts'),
       fn: `async (a: string) => {
   await child(a)
@@ -20,8 +20,8 @@ test('getLMPsInFile', async () => {
       endLine: 8,
       endColumn: 3,
       lmpName: 'hello',
-      lmpType: 'simple',
-      source: `const hello = simple({ name: 'hello', model: 'gpt-4o' }, async (a: string) => {
+      lmpDefinitionType: 'simple',
+      source: `const hello = simple({ model: 'gpt-4o' }, async (a: string) => {
   await child(a)
   console.log(a)
 })`,

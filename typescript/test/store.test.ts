@@ -56,13 +56,13 @@ const testInvocation = {
   },
 }
 
-test('writeLmpAsync and getVersionsByFqnAsync', async () => {
-  await store.writeLmpAsync(testLmp, {})
-  const versions = await store.getVersionsByFqnAsync(testLmp.name)
+test('writeLMP and getVersionsByFqn', async () => {
+  await store.writeLMP(testLmp, {})
+  const versions = await store.getVersionsByFqn(testLmp.name)
   expect(versions.length).toBe(1)
   expect(versions[0].lmp_id).toBe(testLmp.lmp_id)
 })
 
-test('writeInvocationAsync', async () => {
-  await store.writeInvocationAsync(testInvocation, new Set())
+test('writeInvocation', async () => {
+  await store.writeInvocation(testInvocation, new Set())
 })

@@ -6,7 +6,7 @@ import './models/openai'
 
 import { AsyncLocalStorage } from 'async_hooks'
 import { callsites } from './callsites'
-import { EllTSC, LMP } from './tsc'
+import { EllTSC, LMPDefinition, LMPDefinitionType } from './tsc'
 import { generateFunctionHash, generateInvocationId } from './hash'
 import { config } from './configurator'
 import { Message } from './types'
@@ -17,7 +17,7 @@ import {
   modelUsageLoggerPostStart,
   modelUsageLoggerPre,
 } from './verbosity'
-import { Logger } from '../_logger'
+import { Logger } from './_logger'
 
 const logger = new Logger('ell')
 
@@ -54,10 +54,6 @@ type Invocation = {
 }
 
 const tsc = new EllTSC()
-
-// todo. storage
-export let invocations: Invocation[] = []
-export let lmps: LMP[] = []
 
 /**
  * Used for tracing of invocations.
@@ -96,13 +92,7 @@ const getModelClient = async (args: Kwargs) => {
 }
 
 const invocationContext = new InvocationContext()
-const writeInvocation = async (invocation: Invocation) => {
-  invocations.push(invocation)
-}
 
-const writeLMP = async (lmp: LMP) => {
-  lmps.push(lmp)
-}
 
 function getCallerFileLocation() {
   const callerSite = callsites()[2]
@@ -122,12 +112,47 @@ function getCallerFileLocation() {
   return { filepath: file, line, column }
 }
 
-const serializeLMP = async (args: LMP) => {
+const serializeLMP = async (args: Omit<WriteLMPInput, 'commit_message' | 'version_number'>) => {
   try {
-    // todo. commit message if not exists
-    return await writeLMP(args)
+    const serializer = config.getStore()
+    if (!serializer) {
+      return
+    }
+    // todo. see if we can defer some of these responsibilities to the serializer/backend
+    // for now we'll get things working the same as python
+    // todo. we need to come up with a fully qualified name
+    const otherVersions = await serializer.getVersionsByFqn(args.name)
+    if (otherVersions.length === 0) {
+      // We are the first version of the LMP!
+
+      return await serializer.writeLMP({
+        ...args,
+        commit_message: 'Initial version',
+        version_number: 1,
+      })
+    }
+
+    const newVersionNumber = otherVersions[0].version_number + 1
+    return await serializer.writeLMP({
+      ...args,
+      // TODO. check if auto commit and create a commit message if so
+      commit_message: 'New version',
+      version_number: newVersionNumber,
+    })
   } catch (e) {
     logger.error(`Error serializing LMP: ${e}`)
+  }
+}
+
+const serializeInvocation = async (input: WriteInvocationInput) => {
+  try {
+    const serializer = config.getStore()
+    if (!serializer) {
+      return
+    }
+    return await serializer.writeInvocation(input)
+  } catch (e) {
+    logger.error(`Error serializing invocation: ${e}`)
   }
 }
 
@@ -154,6 +179,17 @@ type ComplexLMP<A extends ComplexLMPInner> = ((...args: Parameters<A>) => Promis
   __ell_lmp_id__?: string | null
 }
 
+const lmpTypeFromDefinitionType = (definitionType: LMPDefinitionType) => {
+  switch (definitionType) {
+    case 'simple':
+      return LMPType.LM
+    case 'complex':
+      return LMPType.MULTIMODAL
+    default:
+      throw new Error(`Unknown LMP definition type: ${definitionType}`)
+  }
+}
+
 /**
  * Invokes the LMP with tracking.
  * @param lmp I
@@ -162,7 +198,7 @@ type ComplexLMP<A extends ComplexLMPInner> = ((...args: Parameters<A>) => Promis
  * @param a
  * @returns
  */
-const invokeWithTracking = async (lmp: LMP, args: any[], f: F, a: Kwargs) => {
+const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: any[], f: F, a: Kwargs) => {
   const invocationId = generateInvocationId()
   return await invocationContext.run(
     // @ts-ignore
@@ -171,7 +207,27 @@ const invokeWithTracking = async (lmp: LMP, args: any[], f: F, a: Kwargs) => {
       lmp_id: lmp.lmpId,
     },
     async () => {
-      await serializeLMP(lmp)
+      let lmpType = lmpTypeFromDefinitionType(lmp.lmpDefinitionType)
+      try {
+        // fire and forget
+        serializeLMP({
+          lmp_id: lmp.lmpId,
+          name: lmp.lmpName,
+          dependencies: '',
+          created_at: new Date().toISOString(),
+          source: lmp.source,
+          lmp_type: lmpType,
+          api_params: a,
+          // todo. requires runtime inspection of the user-provided closure
+          initial_free_vars: [],
+          initial_global_vars: [],
+          // todo. requires static analysis of direct children of this lmp definition
+          uses: [],
+        })
+      } catch (e) {
+        logger.error(`Error serializing LMP: ${e}`)
+      }
+
       const lmpfnoutput = await f(...args)
       const modelClient = await getModelClient(a)
       const provider = config.getProviderFor(modelClient)
@@ -187,10 +243,13 @@ const invokeWithTracking = async (lmp: LMP, args: any[], f: F, a: Kwargs) => {
       if (config.verbose) {
         modelUsageLoggerPre({ ...lmp, name: lmp.lmpName }, args, apiParams, lmp.lmpId, messages)
       }
+
       const callResult = await provider.callModel(modelClient, a.model, messages, apiParams, a.tools)
+
       if (config.verbose) {
         modelUsageLoggerPostStart(lmp.lmpId, callResult.actualN)
       }
+
       const postIntermediate = modelUsageLoggerPostIntermediate(lmp.lmpId, callResult.actualN)
 
       const [trackedResults, metadata] = await provider.processResponse(callResult, 'todo', postIntermediate)
@@ -199,19 +258,27 @@ const invokeWithTracking = async (lmp: LMP, args: any[], f: F, a: Kwargs) => {
       }
 
       const result = convertMultimodalResponseToString(trackedResults[0])
-      await writeInvocation({
+      serializeInvocation({
         id: invocationId,
         lmp_id: lmp.lmpId,
         latency_ms: metadata.latency_ms,
         prompt_tokens: metadata.prompt_tokens,
         completion_tokens: metadata.completion_tokens,
-        invocation_contents: {
-          invocation_id: invocationId,
+        contents: {
           params: args,
           results: result,
           invocation_api_params: a,
+          // todo.
+          global_vars: {},
+          free_vars: {},
+          is_external: false,
         },
         used_by_id: invocationContext.getParentInvocation()?.id,
+        created_at: new Date().toISOString(),
+
+        // todo. find what these refer to
+        state_cache_key: '',
+        consumes: [],
       })
       return result
     }
@@ -226,7 +293,10 @@ export const simple = <F extends SimpleLMPInner>(a: Kwargs, f: F): SimpleLMP<F> 
   }
 
   let trackAttempted = false
-  let lmp: LMP | undefined = undefined
+  // We would like to calculate the hash at runtime depending on further analysis of runtime variables
+  // so i'm leaving the id part in this code instead of the static analysis tsc code for now
+  let lmpId: string | undefined = undefined
+  let lmpDefinition: LMPDefinition | undefined = undefined
 
   const wrapper: SimpleLMP<F> = async (...args: any[]) => {
     if (!wrapper.__ell_lmp_id__) {
@@ -234,17 +304,18 @@ export const simple = <F extends SimpleLMPInner>(a: Kwargs, f: F): SimpleLMP<F> 
         return f
       }
       trackAttempted = true
-      lmp = await tsc.getLMP(filepath!, line!, column!)
-      if (!lmp) {
-        logger.error(`No LMP found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`)
+      lmpDefinition = await tsc.getLMP(filepath!, line!, column!)
+      if (!lmpDefinition) {
+        logger.error(
+          `No LMP definition found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`
+        )
       } else {
-        const lmpId = generateFunctionHash(lmp.source, '', lmp.lmpName)
-        lmp.lmpId = lmpId
+        lmpId = generateFunctionHash(lmpDefinition.source, '', lmpDefinition.lmpName)
       }
     }
 
-    if (lmp && !a.exempt_from_tracking) {
-      return await invokeWithTracking(lmp, args, f, a)
+    if (lmpId && !a.exempt_from_tracking) {
+      return await invokeWithTracking({ ...lmpDefinition!, lmpId }, args, f, a)
     }
     const lmpfnoutput = await f(...args)
     const modelClient = await getModelClient(a)
@@ -266,10 +337,10 @@ export const simple = <F extends SimpleLMPInner>(a: Kwargs, f: F): SimpleLMP<F> 
 
   wrapper.__ell_type__ = 'simple'
   Object.defineProperty(wrapper, '__ell_lmp_id__', {
-    get: () => lmp?.lmpId,
+    get: () => lmpId,
   })
   Object.defineProperty(wrapper, '__ell_lmp_name__', {
-    get: () => lmp?.lmpName,
+    get: () => lmpDefinition?.lmpName,
   })
 
   return wrapper
@@ -293,7 +364,8 @@ export const complex = <F extends SimpleLMPInner>(
   }
 
   let trackAttempted = false
-  let lmp: LMP | undefined = undefined
+  let lmpDefinition: LMPDefinition | undefined = undefined
+  let lmpId: string | undefined = undefined
 
   const wrapper: ComplexLMP<F> = async (...args: any[]) => {
     if (!wrapper.__ell_lmp_id__) {
@@ -301,17 +373,16 @@ export const complex = <F extends SimpleLMPInner>(
         return f
       }
       trackAttempted = true
-      lmp = await tsc.getLMP(filepath!, line!, column!)
-      if (!lmp) {
+      lmpDefinition = await tsc.getLMP(filepath!, line!, column!)
+      if (!lmpDefinition) {
         logger.error(`No LMP found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`)
       } else {
-        const lmpId = generateFunctionHash(lmp.source, '', lmp.lmpName)
-        lmp.lmpId = lmpId
+        lmpId = generateFunctionHash(lmpDefinition.source, '', lmpDefinition.lmpName)
       }
     }
 
-    if (lmp && !a.exempt_from_tracking) {
-      return await invokeWithTracking(lmp, args, f, a)
+    if (lmpId && !a.exempt_from_tracking) {
+      return await invokeWithTracking({ ...lmpDefinition!, lmpId }, args, f, a)
     }
     const lmpfnoutput = await f(...args)
     const modelClient = await getModelClient(a)
@@ -331,10 +402,10 @@ export const complex = <F extends SimpleLMPInner>(
 
   wrapper.__ell_type__ = 'complex'
   Object.defineProperty(wrapper, '__ell_lmp_id__', {
-    get: () => lmp?.lmpId,
+    get: () => lmpId,
   })
   Object.defineProperty(wrapper, '__ell_lmp_name__', {
-    get: () => lmp?.lmpName,
+    get: () => lmpDefinition?.lmpName,
   })
 
   return wrapper
@@ -343,4 +414,6 @@ export const complex = <F extends SimpleLMPInner>(
 import { init } from './configurator'
 import { system, user } from './types/message'
 import { ToolFunction } from './types/tools'
+import { WriteInvocationInput, WriteLMPInput } from './serialize/sql'
+import { LMPType } from './lmp/types'
 export { init, config, system, user }

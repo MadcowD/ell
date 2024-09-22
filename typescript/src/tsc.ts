@@ -1,6 +1,6 @@
 import * as path from 'path'
 import ts from 'typescript'
-import { Logger } from '../_logger'
+import { Logger } from './_logger'
 
 const logger = new Logger('ell-tsc')
 
@@ -43,16 +43,15 @@ const hasEllImport = (sourceFile: ts.SourceFile): boolean => {
 
 export interface EllTSC {
   getAST(filePath: string): Promise<ts.SourceFile | undefined>
-  getLMPsInFile(filePath: string): Promise<LMP[]>
+  getLMPsInFile(filePath: string): Promise<LMPDefinition[]>
   getFunctionSource(filePath: string, line: number, column: number): Promise<string | null>
 }
 
 
 
-type LMPType = 'simple' | 'complex'
-export type LMP = {
-  lmpId: string
-  lmpType: LMPType
+export type LMPDefinitionType = 'simple' | 'complex'
+export type LMPDefinition = {
+  lmpDefinitionType: LMPDefinitionType
   lmpName: string
   config: string
   source: string
@@ -67,7 +66,7 @@ export type LMP = {
 export class EllTSC implements EllTSC {
   private program: ts.Program
   // maps filePath to LMPs
-  private lmpCache: Map<string, LMP[]> = new Map()
+  private lmpCache: Map<string, LMPDefinition[]> = new Map()
   constructor(rootDir: string = process.cwd()) {
     const configPath = ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.json')
     if (!configPath) {
@@ -105,8 +104,8 @@ export class EllTSC implements EllTSC {
     return this.program.getSourceFile(filePath)
   }
 
-  async getLMP(filePath: string, line: number, column: number): Promise<LMP | undefined> {
-    let lmp: LMP | undefined
+  async getLMP(filePath: string, line: number, column: number): Promise<LMPDefinition | undefined> {
+    let lmp: LMPDefinition | undefined
     const lmps = await this.getLMPsInFile(filePath)
     lmp = lmps.find((lmp) => lmp.line === line)
     if (!lmp) {
@@ -116,13 +115,14 @@ export class EllTSC implements EllTSC {
       })
       if (!lmp) {
         logger.error(`LMP not found for ${filePath}:${line}:${column}`)
+        logger.error('lmps',lmps)
         // logger.debug(await this.getAST(filePath).then((x) => x?.getText()))
       }
     }
     return lmp
   }
 
-  async getLMPsInFile(filePath: string): Promise<LMP[]> {
+  async getLMPsInFile(filePath: string): Promise<LMPDefinition[]> {
     if (this.lmpCache.has(filePath)) {
       return this.lmpCache.get(filePath)!
     }
@@ -148,12 +148,12 @@ export class EllTSC implements EllTSC {
     // import {simple, complex} from "ell-ai";
     let ellModuleImportIdentifier: string | null = null
 
-    const lmps: LMP[] = []
-    const lmpTypeToAlias: Record<LMPType, string> = {
+    const lmpDefinitions: LMPDefinition[] = []
+    const lmpTypeToAlias: Record<LMPDefinitionType, string> = {
       simple: 'simple',
       complex: 'complex',
     }
-    const aliasToLMPType: Record<string, LMPType> = {
+    const aliasToLMPType: Record<string, LMPDefinitionType> = {
       simple: 'simple',
       complex: 'complex',
     }
@@ -179,7 +179,7 @@ export class EllTSC implements EllTSC {
                   ) {
                     // Store the alias for future use
                     const alias = element.name.text
-                    const lmpType = element.propertyName.text as LMPType
+                    const lmpType = element.propertyName.text as LMPDefinitionType
                     lmpTypeToAlias[lmpType] = alias
                     aliasToLMPType[alias] = lmpType
                   }
@@ -196,7 +196,7 @@ export class EllTSC implements EllTSC {
         }
       }
     }
-    function visitCallExpression(node: ts.CallExpression) {
+    function visitCallExpression(node: ts.CallExpression): Pick<LMPDefinition, 'lmpDefinitionType' | 'config' | 'fn'> | undefined {
       // Bare function call
       // mySimpleAlias()
       // myComplexAlias()
@@ -206,7 +206,7 @@ export class EllTSC implements EllTSC {
             const lmpFnConfig = node.arguments[0]
             const lmpFn = node.arguments[1]
             return {
-              lmpType: aliasToLMPType[node.expression.text],
+              lmpDefinitionType: aliasToLMPType[node.expression.text],
               config: lmpFnConfig.getText(sourceFile),
               fn: lmpFn.getText(sourceFile),
             }
@@ -223,7 +223,7 @@ export class EllTSC implements EllTSC {
       ) {
         if (node.arguments.length > 0) {
           return {
-            lmpType: aliasToLMPType[node.expression.name.text],
+            lmpDefinitionType: aliasToLMPType[node.expression.name.text],
             config: node.arguments[0].getText(sourceFile),
             fn: node.arguments[1].getText(sourceFile),
           }
@@ -248,8 +248,8 @@ export class EllTSC implements EllTSC {
                   node.getEnd()
                 )
 
-                lmps.push({
-                  lmpType: lmp.lmpType,
+                lmpDefinitions.push({
+                  lmpDefinitionType: lmp.lmpDefinitionType,
                   config: lmp.config,
                   fn: lmp.fn,
                   lmpName,
@@ -272,8 +272,8 @@ export class EllTSC implements EllTSC {
 
     visit(sourceFile)
 
-    this.lmpCache.set(filePath, lmps)
-    return lmps
+    this.lmpCache.set(filePath, lmpDefinitions)
+    return lmpDefinitions
   }
 }
 

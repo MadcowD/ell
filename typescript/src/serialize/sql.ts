@@ -9,6 +9,14 @@ import { LMPType } from '../lmp/types'
 const gzip = promisify(zlib.gzip)
 const gunzip = promisify(zlib.gunzip)
 
+export type ISODateString = string
+
+export function utcNow(): ISODateString {
+  return new Date().toISOString()
+}
+
+// SQL model types
+
 type SerializedLmpUses = {
   lmp_user_id: string
   lmp_using_id: string
@@ -40,7 +48,6 @@ type InvocationTrace = {
 }
 const InvocationTrace = (props: InvocationTrace) => props
 
-type ISODateString = string
 export type Invocation = {
   id: string
   lmp_id: string
@@ -77,12 +84,12 @@ export const InvocationContents = (props: InvocationContents) => ({
       .filter((field) => field !== null)
       .reduce((sum, field) => sum + JSON.stringify(field).length, 0)
     return totalSize > 102400 // Precisely 100kb in bytes
-  }
+  },
 })
 
 export interface BlobStore {
-  storeBlobAsync(blob: Uint8Array, blobId: string): Promise<string>
-  retrieveBlobAsync(blobId: string): Promise<Uint8Array>
+  storeBlob(blob: Uint8Array, blobId: string): Promise<string>
+  retrieveBlob(blobId: string): Promise<Uint8Array>
 }
 
 export abstract class Store {
@@ -96,11 +103,11 @@ export abstract class Store {
     return this.blobStore !== undefined
   }
 
-  abstract writeLmpAsync(serializedLmp: SerializedLmp, uses: Record<string, any>): Promise<any | undefined>
+  abstract writeLMP(input: WriteLMPInput): Promise<any | undefined>
 
-  abstract writeInvocationAsync(invocation: Invocation, consumes: Set<string>): Promise<any | undefined>
+  abstract writeInvocation(input: WriteInvocationInput): Promise<any | undefined>
 
-  abstract getVersionsByFqnAsync(fqn: string): Promise<SerializedLmp[]>
+  abstract getVersionsByFqn(fqn: string): Promise<SerializedLmp[]>
 
   //   abstract getCachedInvocationsAsync(lmpId: string, stateCacheKey: string): Promise<Invocation[]>
 
@@ -128,31 +135,24 @@ export abstract class Store {
   //   }
 }
 
-
-export function utcNow(): string {
-  return new Date().toISOString()
-}
-
-
-
 export class SQLiteStore extends Store {
   private db: Database | null = null
   private dbPath: string
 
   constructor(dbDir: string) {
     if (dbDir === ':memory:') {
-        const blobStore = new SQLBlobStore(dbDir)
-        super(blobStore)
-        this.dbPath = ':memory:'
-      } else {
-        if (dbDir.endsWith('.db')) {
-          throw new Error('Create store with a directory not a db.')
-        }
-        fs.mkdirSync(dbDir, { recursive: true })
-        const blobStore = new SQLBlobStore(dbDir)
-        super(blobStore)
-        this.dbPath = path.join(dbDir, 'ell.db')
+      const blobStore = new SQLBlobStore(dbDir)
+      super(blobStore)
+      this.dbPath = ':memory:'
+    } else {
+      if (dbDir.endsWith('.db')) {
+        throw new Error('Create store with a directory not a db.')
       }
+      fs.mkdirSync(dbDir, { recursive: true })
+      const blobStore = new SQLBlobStore(dbDir)
+      super(blobStore)
+      this.dbPath = path.join(dbDir, 'ell.db')
+    }
   }
 
   async initialize(): Promise<void> {
@@ -232,7 +232,7 @@ export class SQLiteStore extends Store {
       `)
   }
 
-  async writeLmpAsync(serializedLmp: SerializedLmp, uses: Record<string, any>): Promise<any | undefined> {
+  async writeLMP(input: WriteLMPInput): Promise<any | undefined> {
     const {
       lmp_id,
       name,
@@ -244,42 +244,51 @@ export class SQLiteStore extends Store {
       initial_global_vars,
       commit_message,
       version_number,
-    } = serializedLmp
+      uses,
+    } = input
+    await this.db!.run('BEGIN TRANSACTION')
 
-    await this.db!.run(
-      `
+    try {
+      await this.db!.run(
+        `
           INSERT OR REPLACE INTO serialized_lmp 
           (lmp_id, name, source, dependencies, lmp_type, api_params, initial_free_vars, initial_global_vars, commit_message, version_number)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
-      [
-        lmp_id,
-        name,
-        source,
-        dependencies,
-        lmp_type,
-        JSON.stringify(api_params),
-        JSON.stringify(initial_free_vars),
-        JSON.stringify(initial_global_vars),
-        commit_message,
-        version_number,
-      ]
-    )
+        [
+          lmp_id,
+          name,
+          source,
+          dependencies,
+          lmp_type,
+          JSON.stringify(api_params),
+          JSON.stringify(initial_free_vars),
+          JSON.stringify(initial_global_vars),
+          commit_message,
+          version_number,
+        ]
+      )
 
-    for (const useId of Object.keys(uses)) {
-      await this.db!.run(
-        `
+      for (const useId of Object.keys(uses)) {
+        await this.db!.run(
+          `
             INSERT OR IGNORE INTO serialized_lmp_uses (lmp_user_id, lmp_using_id)
             VALUES (?, ?)
           `,
-        [lmp_id, useId]
-      )
+          [lmp_id, useId]
+        )
+      }
+    } catch (error) {
+      await this.db!.run('ROLLBACK')
+      throw error
     }
+
+    await this.db!.run('COMMIT')
 
     return undefined
   }
 
-  async writeInvocationAsync(invocation: Invocation, consumes: Set<string>): Promise<any | undefined> {
+  async writeInvocation(input: WriteInvocationInput): Promise<any | undefined> {
     // Start a transaction
     await this.db!.run('BEGIN TRANSACTION')
 
@@ -291,7 +300,7 @@ export class SQLiteStore extends Store {
         SET num_invocations = num_invocations + 1
         WHERE lmp_id = ?
       `,
-        [invocation.lmp_id]
+        [input.lmp_id]
       )
 
       // Insert the invocation record
@@ -303,19 +312,19 @@ export class SQLiteStore extends Store {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `,
         [
-          invocation.id,
-          invocation.lmp_id,
-          invocation.latency_ms,
-          invocation.prompt_tokens,
-          invocation.completion_tokens,
-          invocation.state_cache_key,
-          invocation.created_at,
-          invocation.used_by_id,
+          input.invocation_id,
+          input.lmp_id,
+          input.latency_ms,
+          input.prompt_tokens,
+          input.completion_tokens,
+          input.state_cache_key,
+          input.created_at,
+          input.used_by_id,
         ]
       )
 
       // Insert invocation contents
-      if (invocation.contents) {
+      if (input.contents) {
         await this.db!.run(
           `
           INSERT INTO invocation_contents (
@@ -324,25 +333,25 @@ export class SQLiteStore extends Store {
           ) VALUES (?, ?, ?, ?, ?, ?, ?)
         `,
           [
-            invocation.id,
-            JSON.stringify(invocation.contents.params),
-            JSON.stringify(invocation.contents.results),
-            JSON.stringify(invocation.contents.invocation_api_params),
-            JSON.stringify(invocation.contents.global_vars),
-            JSON.stringify(invocation.contents.free_vars),
-            invocation.contents.is_external ? 1 : 0,
+            input.invocation_id,
+            JSON.stringify(input.contents.params),
+            JSON.stringify(input.contents.results),
+            JSON.stringify(input.contents.invocation_api_params),
+            JSON.stringify(input.contents.global_vars),
+            JSON.stringify(input.contents.free_vars),
+            input.contents.is_external ? 1 : 0,
           ]
         )
       }
 
       // Insert invocation traces
-      for (const consumedId of consumes) {
+      for (const consumedId of input.consumes) {
         await this.db!.run(
           `
           INSERT INTO invocation_trace (invocation_consumer_id, invocation_consuming_id)
           VALUES (?, ?)
         `,
-          [invocation.id, consumedId]
+          [input.invocation_id, consumedId]
         )
       }
 
@@ -365,7 +374,7 @@ export class SQLiteStore extends Store {
    * @param fqn - The fully qualified name of the LMP.
    * @returns A promise that resolves to an array of SerializedLmp objects.
    */
-  async getVersionsByFqnAsync(fqn: string): Promise<SerializedLmp[]> {
+  async getVersionsByFqn(fqn: string): Promise<SerializedLmp[]> {
     const rows = await this.db!.all(
       `
       SELECT 
@@ -407,7 +416,7 @@ export class SQLBlobStore implements BlobStore {
     this.dbDir = dbDir
   }
 
-  async storeBlobAsync(blob: Uint8Array, blobId: string): Promise<string> {
+  async storeBlob(blob: Uint8Array, blobId: string): Promise<string> {
     const filePath = this.getBlobPath(blobId)
     fs.mkdirSync(path.dirname(filePath), { recursive: true })
     const compressedBlob = await gzip(blob)
@@ -415,7 +424,7 @@ export class SQLBlobStore implements BlobStore {
     return blobId
   }
 
-  async retrieveBlobAsync(blobId: string): Promise<Uint8Array> {
+  async retrieveBlob(blobId: string): Promise<Uint8Array> {
     const filePath = this.getBlobPath(blobId)
     const compressedBlob = fs.readFileSync(filePath)
     return gunzip(compressedBlob)
@@ -431,4 +440,43 @@ export class SQLBlobStore implements BlobStore {
     const fileName = _id.slice(depth * increment)
     return path.join(this.dbDir, ...dirs, fileName)
   }
+}
+
+// API types
+
+export type WriteLMPInput = {
+  lmp_id: string
+  name: string
+  source: string
+  dependencies: string
+  created_at: ISODateString
+  lmp_type: LMPType
+  api_params: Record<string, any>
+  initial_free_vars: Record<string, any>
+  initial_global_vars: Record<string, any>
+  commit_message: string
+  version_number: number
+  uses: string[]
+}
+
+export type WriteInvocationContentsInput = {
+  params: Record<string, any>
+  results: any
+  invocation_api_params: Record<string, any>
+  global_vars: Record<string, any>
+  free_vars: Record<string, any>
+  is_external?: boolean
+}
+
+export type WriteInvocationInput = {
+  id: string
+  lmp_id: string
+  latency_ms: number
+  prompt_tokens: number
+  completion_tokens: number
+  state_cache_key: string
+  created_at: ISODateString
+  used_by_id: string | undefined
+  contents: WriteInvocationContentsInput
+  consumes: string[]
 }

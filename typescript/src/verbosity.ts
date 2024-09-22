@@ -1,8 +1,7 @@
 import { Message, LMP } from './types'
-import { config } from './configurator'
 import { ELL_VERSION } from './_version'
 import { createHash } from 'crypto'
-import * as logging from '../_logger'
+import * as logging from './_logger'
 
 const logger = logging.getLogger('ell.verbosity')
 

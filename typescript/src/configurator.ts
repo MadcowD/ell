@@ -1,7 +1,6 @@
 import { OpenAI } from 'openai'
-// import { Store } from "./store";
+import { Store } from "./serialize/sql";
 import { Provider } from './provider' // Assuming you have a Provider interface/class
-type Store = any
 
 class Config {
   private registry: Map<string, OpenAI> = new Map()
