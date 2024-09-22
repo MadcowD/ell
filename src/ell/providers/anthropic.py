@@ -17,6 +17,7 @@ try:
     from anthropic._streaming import Stream
 
     class AnthropicProvider(Provider):
+        dangerous_disable_validation = True
            
         def provider_call_function(self, client : Anthropic, api_call_params : Optional[Dict[str, Any]] = None) -> Callable[..., Any]:
             return client.messages.create

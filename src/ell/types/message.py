@@ -21,7 +21,6 @@ InvocableTool = Callable[..., Union["ToolResult", _lstr_generic, List["ContentBl
 
 class ToolResult(BaseModel):
     tool_call_id: _lstr_generic
-    #XXX: Add a validator to check that the result is a list of ContentBlocks.
     result: List["ContentBlock"]
 
 class ToolCall(BaseModel):
@@ -29,7 +28,7 @@ class ToolCall(BaseModel):
     tool_call_id : Optional[_lstr_generic] = Field(default=None)
     params : BaseModel
 
-    def __init__(self, tool, tool_call_id, params : Union[BaseModel, Dict[str, Any]]):
+    def __init__(self, tool, params : Union[BaseModel, Dict[str, Any]],  tool_call_id=None):
         if not isinstance(params, BaseModel):
             params = tool.__ell_params_model__(**params) #convenience.
         super().__init__(tool=tool, tool_call_id=tool_call_id, params=params)

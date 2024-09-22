@@ -126,6 +126,7 @@ try:
                 chat_completion = cast(Union[ChatCompletion, ParsedChatCompletion], provider_response)
                 metadata = chat_completion.model_dump(exclude={"choices"})
                 for oai_choice in chat_completion.choices: 
+                    role = oai_choice.message.role
                     content_blocks = []
                     if (refusal := (message := oai_choice.message).refusal):
                         raise ValueError(refusal)
