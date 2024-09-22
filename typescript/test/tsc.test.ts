@@ -8,25 +8,26 @@ test('getLMPsInFile', async () => {
   const result = await new EllTSC().getLMPsInFile(
     path.resolve(path.join(__dirname, './fixtures/example.ts'))
   )
+
+
   expect(result).toEqual([
     {
       column: 1,
-      config: `{ name: "hello", model: "gpt-4o" }`,
+      config: `{ name: 'hello', model: 'gpt-4o' }`,
       filepath: path.join(pathToRepoRoot, '/test/fixtures/example.ts'),
       fn: `async (a: string) => {
-    await child(a);
-  console.log(a);
+  await child(a)
+  console.log(a)
 }`,
       line: 5,
-      endLine: 9,
-      endColumn: 4,
+      endLine: 8,
+      endColumn: 3,
       lmpName: 'hello',
       lmpType: 'simple',
-      source: `const hello = simple({ name: "hello", model: "gpt-4o" }, 
-  async (a: string) => {
-    await child(a);
-  console.log(a);
-});`,
+      source: `const hello = simple({ name: 'hello', model: 'gpt-4o' }, async (a: string) => {
+  await child(a)
+  console.log(a)
+})`,
     },
   ])
 })
