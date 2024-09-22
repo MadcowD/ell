@@ -18,27 +18,27 @@ class Logger {
     this.level = level;
   }
 
-  private log(level: LogLevel, message: string) {
+  private log(level: LogLevel, message: string, data?: Record<string, any>) {
     if (this.level <= level && Logger.globalLevel <= level) {
       const levelName = LogLevel[level];
-      console.log(`${levelName} - ${this.name} - ${message}`);
+      console.log(`${levelName} - ${this.name} - ${message}`, data);
     }
   }
 
-  debug(message: string) {
-    this.log(LogLevel.DEBUG, message);
+  debug(message: string, data?: Record<string, any>) {
+    this.log(LogLevel.DEBUG, message, data);
   }
 
-  info(message: string) {
-    this.log(LogLevel.INFO, message);
+  info(message: string, data?: Record<string, any>) {
+    this.log(LogLevel.INFO, message, data);
   }
 
-  warn(message: string) {
-    this.log(LogLevel.WARN, message);
+  warn(message: string, data?: Record<string, any>) {
+    this.log(LogLevel.WARN, message, data);
   }
 
-  error(message: string) {
-    this.log(LogLevel.ERROR, message);
+  error(message: string, data?: Record<string, any>) {
+    this.log(LogLevel.ERROR, message, data);
   }
 
   static globalLevel: LogLevel = LogLevel.INFO;

@@ -1,5 +1,8 @@
 import * as path from "path";
 import ts from "typescript";
+import { Logger } from "../_logger";
+
+const logger = new Logger("ell-tsc");
 
 const LMP_FUNCTION_EXPORT_NAMES = ["simple", "complex"];
 const ELL_MODULE_IDENTIFIERS = ["ell-ai", "./ell", "../src/ell"];
@@ -130,23 +133,22 @@ export class EllTSC implements EllTSC {
   async getAST(filePath: string): Promise<ts.SourceFile | undefined> {
     return this.program.getSourceFile(filePath);
   }
+
   async getLMP(
     filePath: string,
     line: number,
     column: number
-  ): Promise<LMP | null> {
-    let lmp: LMP | null = null;
+  ): Promise<LMP | undefined> {
+    let lmp: LMP | undefined;
     const lmps = await this.getLMPsInFile(filePath);
-    lmp = lmps.find((lmp) => lmp.line === line) || null;
+    lmp = lmps.find((lmp) => lmp.line === line)
     if (!lmp) {
-      const maybe = lmps.find((lmp) => {
+      lmp = lmps.find((lmp) => {
         const { line: startLine, endLine } = lmp;
         return line >= startLine && line <= endLine ;
       });
-      if (maybe) {
-        lmp = maybe;
-      } else {
-        console.error(`LMP not found for ${filePath}:${line}:${column}`);
+      if (!lmp) {
+        logger.error(`LMP not found for ${filePath}:${line}:${column}`);
       }
     }
     return lmp;
@@ -158,9 +160,9 @@ export class EllTSC implements EllTSC {
     }
     const sourceFile = await this.getAST(filePath);
     if (!sourceFile) {
-      console.log(
-        "available files",
-        this.program.getSourceFiles().map((f) => f.fileName)
+      logger.info(
+        "Could not get ast for files",
+        {availableFiles: this.program.getSourceFiles().map((f) => f.fileName)}
       );
       throw new Error("Could not get AST for file " + filePath);
     }

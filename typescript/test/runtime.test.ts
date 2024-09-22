@@ -7,7 +7,6 @@ import OpenAI from "openai";
 beforeAll(() => {
   // @ts-expect-error
   config.defaultClient.chat.completions.create = async (...args) => {
-    console.log("chat.completions.create called with", args);
     return <OpenAI.Chat.Completions.ChatCompletion>{
       usage: {
         prompt_tokens: 10,
@@ -61,9 +60,9 @@ test("runtime", async () => {
     "lmpName": "hello",
     "source": "const hello = simple({ model: \"gpt-4o\" }, async (a: { a: string }) => {\n    const ok = await child(a.a);\n    return a.a + ok;\n  });",
     "filepath": expect.stringContaining(__filename),
-    "line": 42,
+    "line": 41,
     "column": 3,
-    "endLine": 45,
+    "endLine": 44,
     "endColumn": 6,
     "lmpId": "lmp-0635945d4c5aecb95ac9e46307faceae"
   },
@@ -74,9 +73,9 @@ test("runtime", async () => {
     "lmpName": "child",
     "source": "const child = simple({ model: \"gpt-4o-mini\" }, async (a: string) => {\n    return \"child\";\n  });",
     "filepath": expect.stringContaining(__filename),
-    "line": 39,
+    "line": 38,
     "column": 3,
-    "endLine": 41,
+    "endLine": 40,
     "endColumn": 6,
     "lmpId": "lmp-3b530b92eff3623af0815ebb8c127a8e"
   }
