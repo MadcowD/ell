@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Tuple, Type
 from ell.provider import APICallResult, Provider
-from ell.types import Message, ContentBlock, ToolCall
+from ell.types import Message, ContentBlock, ToolCall, Image
 from ell.types._lstr import _lstr
 from ell.types.message import LMP
 from ell.configurator import register_provider
@@ -8,6 +8,8 @@ from ell.util.serialization import serialize_image
 import base64
 from io import BytesIO
 import json
+import requests
+from PIL import Image as PILImage
 
 try:
     import anthropic
@@ -187,11 +189,24 @@ try:
             return Anthropic
         
         @staticmethod
-        def serialize_image_for_anthropic(img):
+        def serialize_image_for_anthropic(img: Image) -> str:
+            if img.url:
+                # Download the image from the URL
+                response = requests.get(img.url)
+                response.raise_for_status()  # Raise an exception for bad responses
+                pil_image = PILImage.open(BytesIO(response.content))
+            elif img.image:
+                pil_image = img.image
+            else:
+                raise ValueError("Image object has neither url nor image data.")
+            
+            # Convert the image to PNG format in a BytesIO object
             buffer = BytesIO()
-            img.save(buffer, format="PNG")
+            pil_image.save(buffer, format="PNG")
+            
+            # Encode the image data to base64
             return base64.b64encode(buffer.getvalue()).decode()
-        
+
     register_provider(AnthropicProvider)
 except ImportError:
     pass

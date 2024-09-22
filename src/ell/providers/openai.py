@@ -17,23 +17,15 @@ try:
         @staticmethod
         def content_block_to_openai_format(content_block: ContentBlock) -> Dict[str, Any]:
             if content_block.image:
-                base64_image = serialize_image(content_block.image)
-                image_url = {"url": base64_image}
+                image_url = {}
+                if content_block.image.url:
+                    image_url["url"] = content_block.image.url
+                else:
+                    base64_image = serialize_image(content_block.image.image)
+                    image_url["url"] = base64_image
 
-                # add detail only if supplied by user
-                # OpenAI's default is "auto", we omit the "detail" key entirely if not provided by user
-                if content_block.image_detail:
-                    image_url["detail"] = content_block.image_detail
-
-                return {
-                    "type": "image_url",
-                    "image_url": image_url
-                }
-            elif content_block.image_url:
-                image_url = {"url": content_block.image_url.url}
-
-                if content_block.image_detail:
-                    image_url["detail"] = content_block.image_detail
+                if content_block.image.detail:
+                    image_url["detail"] = content_block.image.detail
 
                 return {
                     "type": "image_url",
