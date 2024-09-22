@@ -315,8 +315,8 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Hey there </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span>
 </span></code></pre></div>
 </div>
-<p>Likewise, if you want to modify those parameters for a particular invocation of that prompt, you simply pass them in as <code class="docutils literal notranslate"><span class="pre">lm_params</span></code> keyword arguments to the function when calling it. For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">hello</span><span class="p">(</span><span class="s2">"world"</span><span class="p">,</span> <span class="n">lm_params</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">))</span>
+<p>Likewise, if you want to modify those parameters for a particular invocation of that prompt, you simply pass them in as <code class="docutils literal notranslate"><span class="pre">api_params</span></code> keyword arguments to the function when calling it. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">hello</span><span class="p">(</span><span class="s2">"world"</span><span class="p">,</span> <span class="n">api_params</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">))</span>
 </span><span id="line-2"><span class="go">'Hey there world!'</span>
 </span></code></pre></div>
 </div>
@@ -345,14 +345,14 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </span><span id="line-2"><span class="go">['Hey there world!', 'Hi, world.']</span>
 </span></code></pre></div>
 </div>
-<p>Similarly, this behavior applies when using runtime <code class="docutils literal notranslate"><span class="pre">lm_params</span></code> to specify multiple outputs.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">hello</span><span class="p">(</span><span class="s2">"world"</span><span class="p">,</span> <span class="n">lm_params</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+<p>Similarly, this behavior applies when using runtime <code class="docutils literal notranslate"><span class="pre">api_params</span></code> to specify multiple outputs.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">hello</span><span class="p">(</span><span class="s2">"world"</span><span class="p">,</span> <span class="n">api_params</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
 </span><span id="line-2"><span class="go">['Hey there world!', 'Hi, world.', 'Hello, world!']</span>
 </span></code></pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>In the future, we may modify this interface as preserving the <code class="docutils literal notranslate"><span class="pre">lm_params</span></code> keyword in its current form could potentially lead to conflicts with user-defined functions. However, during the beta phase, we are closely monitoring for feedback and will make adjustments based on user experiences and needs.</p>
+<p>In the future, we may modify this interface as preserving the <code class="docutils literal notranslate"><span class="pre">api_params</span></code> keyword in its current form could potentially lead to conflicts with user-defined functions. However, during the beta phase, we are closely monitoring for feedback and will make adjustments based on user experiences and needs.</p>
 </div>
 </section>
 </section>
@@ -460,7 +460,7 @@ Parameters passed during the function call will override those set in the decora
 </span><span id="line-6"><span class="n">story1</span> <span class="o">=</span> <span class="n">generate_story</span><span class="p">(</span><span class="s2">"A day in the life of a time traveler"</span><span class="p">)</span>
 </span><span id="line-7">
 </span><span id="line-8"><span class="c1"># Overriding parameters during function call</span>
-</span><span id="line-9"><span class="n">story2</span> <span class="o">=</span> <span class="n">generate_story</span><span class="p">(</span><span class="s2">"An AI's first day of consciousness"</span><span class="p">,</span> <span class="n">lm_params</span><span class="o">=</span><span class="p">{</span><span class="s2">"temperature"</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s2">"max_tokens"</span><span class="p">:</span> <span class="mi">500</span><span class="p">})</span>
+</span><span id="line-9"><span class="n">story2</span> <span class="o">=</span> <span class="n">generate_story</span><span class="p">(</span><span class="s2">"An AI's first day of consciousness"</span><span class="p">,</span> <span class="n">api_params</span><span class="o">=</span><span class="p">{</span><span class="s2">"temperature"</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s2">"max_tokens"</span><span class="p">:</span> <span class="mi">500</span><span class="p">})</span>
 </span></code></pre></div>
 </div>
 <p>See Also:</p>

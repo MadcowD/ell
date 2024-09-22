@@ -348,7 +348,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <h2>Reference<a class="headerlink" href="#reference" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#reference'">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="ell.complex">
-<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">complex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exempt_from_tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_callback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">api_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.complex" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.complex'">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">complex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exempt_from_tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_callback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">api_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.complex" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.complex'">¶</a></dt>
 <dd><p>A sophisticated language model programming decorator for complex LLM interactions.</p>
 <p>This decorator transforms a function into a Language Model Program (LMP) capable of handling
 multi-turn conversations, tool usage, and various output formats. It’s designed for advanced
@@ -381,19 +381,39 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 </dl>
 <p>Functionality:</p>
 <ol class="arabic simple">
-<li><p>Advanced LMP Creation:
-- Supports multi-turn conversations and stateful interactions.
-- Enables tool usage within the LLM context.
-- Allows for various output formats, including structured data and function calls.</p></li>
-<li><p>Flexible Input Handling:
-- Can process both single prompts and conversation histories.
-- Supports multimodal inputs (text, images, etc.) in the prompt.</p></li>
-<li><p>Comprehensive Integration:
-- Integrates with ell’s tracking system for monitoring LMP versions, usage, and performance.
-- Supports various language models and API configurations.</p></li>
-<li><p>Output Processing:
-- Can return raw LLM outputs or process them through a post-callback function.
-- Supports returning multiple message types (e.g., text, function calls, tool results).</p></li>
+<li><dl class="simple">
+<dt>Advanced LMP Creation:</dt><dd><ul class="simple">
+<li><p>Supports multi-turn conversations and stateful interactions.</p></li>
+<li><p>Enables tool usage within the LLM context.</p></li>
+<li><p>Allows for various output formats, including structured data and function calls.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Flexible Input Handling:</dt><dd><ul class="simple">
+<li><p>Can process both single prompts and conversation histories.</p></li>
+<li><p>Supports multimodal inputs (text, images, etc.) in the prompt.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Comprehensive Integration:</dt><dd><ul class="simple">
+<li><p>Integrates with ell’s tracking system for monitoring LMP versions, usage, and performance.</p></li>
+<li><p>Supports various language models and API configurations.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Output Processing:</dt><dd><ul class="simple">
+<li><p>Can return raw LLM outputs or process them through a post-callback function.</p></li>
+<li><p>Supports returning multiple message types (e.g., text, function calls, tool results).</p></li>
+</ul>
+</dd>
+</dl>
+</li>
 </ol>
 <p>Usage Modes and Examples:</p>
 <ol class="arabic simple">
@@ -474,7 +494,7 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 </span><span id="line-13">
 </span><span id="line-14"><span class="n">text</span> <span class="o">=</span> <span class="s2">"John Doe is a 30-year-old software engineer."</span>
 </span><span id="line-15"><span class="n">result</span> <span class="p">:</span> <span class="n">ell</span><span class="o">.</span><span class="n">Message</span> <span class="o">=</span> <span class="n">extract_person_info</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
-</span><span id="line-16"><span class="n">person_info</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">structured</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-16"><span class="n">person_info</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">parsed</span>
 </span><span id="line-17"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Name: </span><span class="si">{</span><span class="n">person_info</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, Age: </span><span class="si">{</span><span class="n">person_info</span><span class="o">.</span><span class="n">age</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span></code></pre></div>
 </div>

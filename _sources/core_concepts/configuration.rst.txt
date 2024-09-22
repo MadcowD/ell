@@ -12,7 +12,7 @@ You can modify the global configuration using the ``ell.config`` object which is
 
 .. autopydantic_model:: ell.Config
     :members:
-    :exclude-members: default_client, registry, store, has_store
+    :exclude-members: default_client, registry, store
     :model-show-json: false
     :model-show-validator-members: false
     :model-show-config-summary: false
