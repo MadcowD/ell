@@ -104,8 +104,6 @@ def prepare_invocation_params(params):
     
     # Thisis because we wneed the caching to work on the hash of a cleaned and serialized object.
     jstr = json.dumps(cleaned_invocation_params, sort_keys=True, default=repr)
-    print(cleaned_invocation_params, invocation_params)
-    print(jstr)
 
     consumes = set()
     import re
