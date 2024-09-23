@@ -19,6 +19,9 @@ import {
 } from './verbosity'
 import { Logger } from './_logger'
 import { performance } from 'perf_hooks'
+import * as inspector from 'inspector/promises'
+import * as sm from 'source-map'
+// import * as inspectorAsync from 'inspector/promises'
 
 const logger = new Logger('ell')
 
@@ -93,7 +96,6 @@ const getModelClient = async (args: Kwargs) => {
 }
 
 const invocationContext = new InvocationContext()
-
 
 function getCallerFileLocation() {
   const callerSite = callsites()[2]
@@ -201,6 +203,204 @@ const lmpTypeFromDefinitionType = (definitionType: LMPDefinitionType) => {
  */
 const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: any[], f: F, a: Kwargs) => {
   const invocationId = generateInvocationId()
+
+  // Start the inspector session
+  const session = new inspector.Session()
+  await session.connect()
+
+  // Enable debugger
+  const debuggerId = await session.post('Debugger.enable')
+
+
+  // this only works for inline source maps. it looks like ts-node always gives those to node
+  // regardless of what the tsconfig says?
+  function extractSourceMapUrl(fileContent: string) {
+    const sourceMapRegex = /\/\/[#@]\s*sourceMappingURL=(.+)$/m
+    const match = fileContent.match(sourceMapRegex)
+    if (match) {
+      if (match[1].indexOf('base64,') > -1) {
+        return match[1].split('base64,')[1]
+      }
+      return match[1]
+    }
+    return null
+  }
+  function getSourceMapJSON(base64SourceMap: string) {
+    try {
+      const sourceMapContent = Buffer.from(base64SourceMap, 'base64').toString()
+      return JSON.parse(sourceMapContent)
+    } catch (e) {
+      console.error('Error parsing source map', e)
+      return null
+    }
+  }
+
+  async function resolveScriptIdToFile(scriptId: string) {
+    try {
+      const result = await session.post('Debugger.getScriptSource', { scriptId })
+      console.log('scriptsource', result)
+      return result
+    } catch (err) {
+      console.error(`Error resolving scriptId ${scriptId}:`, err)
+      return err
+    }
+  }
+
+  async function resolveMultipleScriptIds(scriptIds: string[]) {
+    const results = []
+    for (const scriptId of scriptIds) {
+      try {
+        const result = await resolveScriptIdToFile(scriptId)
+        results.push(result)
+      } catch (error) {
+        console.error(`Error resolving scriptId ${scriptId}:`, error)
+        results.push({ scriptId, filePath: 'Error: ' + error.message })
+      }
+    }
+    return results
+  }
+
+  const setBreakpoint = async (lmp: LMPDefinition) => {
+    try {
+      const result = await session.post('Debugger.setBreakpointByUrl', {
+        lineNumber: 19,
+        // urlRegex: lmp.filepath.replace("\.", "\\."),
+        url: 'file://' + lmp.filepath,
+        columnNumber: 0,
+      })
+      console.log('got a breakpoint', result)
+      for (const location of result.locations) {
+        const file = await resolveScriptIdToFile(location.scriptId)
+        const source = file.scriptSource
+        const sourceMapUrl = extractSourceMapUrl(source)
+        if (sourceMapUrl) {
+          const json = getSourceMapJSON(sourceMapUrl)
+          console.log('sourceMap', json)
+          const consumer = new sm.SourceMapConsumer(json)
+          const generatedPosition = consumer.generatedPositionFor({
+            source: json['sources'][0],
+            line: lmp.line,
+            column: 0,
+          })
+          console.log('generatedPosition', generatedPosition)
+          const result = await session.post('Debugger.setBreakpointByUrl', {
+            lineNumber: generatedPosition.line + 5,
+            // urlRegex: lmp.filepath.replace("\.", "\\."),
+            url: 'file://' + lmp.filepath,
+            columnNumber: 1,
+          })
+        }
+      }
+      return result.breakpointId
+    } catch (e) {
+      console.error('Error setting breakpoint', e)
+    }
+  }
+
+  const breakpointId = await setBreakpoint(lmp)
+
+  let variableValues: Record<string, any> = {}
+
+  type BreakpointHitEvent = inspector.InspectorNotification<inspector.Debugger.PausedEventDataType>
+  const getNextPausedEvent = (): Promise<BreakpointHitEvent> =>
+    new Promise((resolve, reject) => {
+      session.once('Debugger.paused', (params) => {
+        console.log('paused', JSON.stringify(params, null, 2))
+        resolve(params)
+      })
+    })
+  const handleBreakpointHit = async ({ params }: BreakpointHitEvent) => {
+    const { callFrames } = params
+    const scopes = callFrames[0].scopeChain
+
+    // Get the variables you're interested in
+    for (const scope of scopes) {
+      if (scope.type === 'closure') {
+        const result = await session
+          .post('Runtime.getProperties', {
+            objectId: scope.object.objectId,
+            ownProperties: false,
+            accessorPropertiesOnly: false,
+            generatePreview: false,
+          })
+          .catch((err) => {
+            logger.error('Failed to get properties', err)
+            return null
+          })
+        if (!result) {
+          continue
+        }
+        for (const prop of result.result) {
+          if (prop.value && prop.value.value !== undefined) {
+            variableValues[prop.name] = prop.value.value
+          }
+        }
+      }
+    }
+  }
+  let resolve = undefined
+  let latch = new Promise((_resolve, reject) => {
+    resolve = _resolve
+  })
+
+  // Listen for breakpoint hits
+  session.on('Debugger.paused', async ({ params }) => {
+    console.log('paused listener', JSON.stringify(params, null, 2))
+    const { callFrames } = params
+    const scopes = callFrames[0].scopeChain
+
+    // Get the variables you're interested in
+    for (const scope of scopes) {
+      if (scope.type === 'closure') {
+        const result = await session
+          .post('Runtime.getProperties', {
+            objectId: scope.object.objectId,
+            ownProperties: false,
+            accessorPropertiesOnly: false,
+            generatePreview: false,
+          })
+          .catch((err) => {
+            logger.error('Failed to get properties', err)
+            return null
+          })
+        if (!result) {
+          continue
+        }
+        for (const prop of result.result) {
+          if (prop.value && prop.value.value !== undefined) {
+            variableValues[prop.name] = prop.value.value
+          }
+        }
+      }
+      if (scope.type === 'local') {
+        const result = await session
+          .post('Runtime.getProperties', {
+            objectId: scope.object.objectId,
+            ownProperties: false,
+            accessorPropertiesOnly: false,
+            generatePreview: false,
+          })
+          .catch((err) => {
+            logger.error('Failed to get properties', err)
+            return null
+          })
+        if (!result) {
+          continue
+        }
+
+        for (const prop of result.result) {
+          if (prop.value && prop.value.value !== undefined) {
+            variableValues[prop.name] = prop.value.value
+          }
+        }
+      }
+    }
+
+    resolve(undefined)
+    // Resume execution
+    // await session.post('Debugger.resume')
+  })
+
   return await invocationContext.run(
     // @ts-ignore
     {
@@ -231,6 +431,17 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
 
       const start = performance.now()
       const lmpfnoutput = await f(...args)
+      // const event = await getNextPausedEvent()
+      // console.log('event', event)
+      // await handleBreakpointHit(event)
+      // await session.post('Debugger.resume')
+      await latch
+      await session.post('Debugger.removeBreakpoint', { breakpointId })
+      console.log('Capturedvariables', variableValues)
+      // await session.post('Debugger.resume')
+      await session.post('Debugger.disable')
+      session.disconnect()
+
       const modelClient = await getModelClient(a)
       const provider = config.getProviderFor(modelClient)
       if (!provider) {
@@ -303,17 +514,16 @@ export const simple = <F extends SimpleLMPInner>(a: Kwargs, f: F): SimpleLMP<F> 
 
   const wrapper: SimpleLMP<F> = async (...args: any[]) => {
     if (!wrapper.__ell_lmp_id__) {
-      if (trackAttempted) {
-        return f
-      }
-      trackAttempted = true
-      lmpDefinition = await tsc.getLMP(filepath!, line!, column!)
-      if (!lmpDefinition) {
-        logger.error(
-          `No LMP definition found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`
-        )
-      } else {
-        lmpId = generateFunctionHash(lmpDefinition.source, '', lmpDefinition.lmpName)
+      if (!trackAttempted) {
+        trackAttempted = true
+        lmpDefinition = await tsc.getLMP(filepath!, line!, column!)
+        if (!lmpDefinition) {
+          logger.error(
+            `No LMP definition found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`
+          )
+        } else {
+          lmpId = generateFunctionHash(lmpDefinition.source, '', lmpDefinition.lmpName)
+        }
       }
     }
 

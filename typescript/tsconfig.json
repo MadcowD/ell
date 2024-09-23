@@ -11,6 +11,7 @@
     ],
     "resolveJsonModule": true,
     "sourceMap": true,
+    // "inlineSourceMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
