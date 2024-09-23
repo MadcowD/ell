@@ -119,8 +119,8 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
                 )
             latency_ms = (utc_now() - _start_time).total_seconds() * 1000
             usage = metadata.get("usage", {"prompt_tokens": 0, "completion_tokens": 0})
-            prompt_tokens= usage.get("prompt_tokens", 0)
-            completion_tokens= usage.get("completion_tokens", 0)
+            prompt_tokens= usage.get("prompt_tokens", 0) if usage else 0
+            completion_tokens= usage.get("completion_tokens", 0) if usage else 0
 
 
             #XXX: cattrs add invocation origin here recursively on all pirmitive types within a message.
