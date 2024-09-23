@@ -284,20 +284,21 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 By forcing a functional decomposition of the problem, <code class="docutils literal notranslate"><span class="pre">ell</span></code> makes it <strong>easy to implement test-time compute leveraged techniques in a readable and modular way.</strong></p>
 <a class="rounded-image invertible-image reference internal image-reference" href="_images/compositionality.webp"><img alt="ell demonstration" class="rounded-image invertible-image" src="_images/compositionality.webp" style="width: 100%;"/></a>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
-</span><span id="line-2">
-</span><span id="line-3"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-mini"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</span><span id="line-4"><span class="k">def</span> <span class="nf">write_ten_drafts</span><span class="p">(</span><span class="n">idea</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="line-5"><span class="w">   </span><span class="sd">"""You are an adept story writer. The story should only be 3 paragraphs"""</span>
-</span><span id="line-6">   <span class="k">return</span> <span class="sa">f</span><span class="s2">"Write a story about </span><span class="si">{</span><span class="n">idea</span><span class="si">}</span><span class="s2">."</span>
-</span><span id="line-7">
-</span><span id="line-8"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-</span><span id="line-9"><span class="k">def</span> <span class="nf">choose_the_best_draft</span><span class="p">(</span><span class="n">drafts</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
-</span><span id="line-10"><span class="w">   </span><span class="sd">"""You are an expert fiction editor."""</span>
-</span><span id="line-11">   <span class="k">return</span> <span class="sa">f</span><span class="s2">"Choose the best draft from the following list: </span><span class="si">{</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">drafts</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
-</span><span id="line-12">
-</span><span id="line-13"><span class="n">drafts</span> <span class="o">=</span> <span class="n">write_ten_drafts</span><span class="p">(</span><span class="n">idea</span><span class="p">)</span>
-</span><span id="line-14">
-</span><span id="line-15"><span class="n">best_draft</span> <span class="o">=</span> <span class="n">choose_the_best_draft</span><span class="p">(</span><span class="n">drafts</span><span class="p">)</span> <span class="c1"># Best of 10 sampling.</span>
+</span><span id="line-2"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-mini"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</span><span id="line-5"><span class="k">def</span> <span class="nf">write_ten_drafts</span><span class="p">(</span><span class="n">idea</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-6"><span class="w">   </span><span class="sd">"""You are an adept story writer. The story should only be 3 paragraphs"""</span>
+</span><span id="line-7">   <span class="k">return</span> <span class="sa">f</span><span class="s2">"Write a story about </span><span class="si">{</span><span class="n">idea</span><span class="si">}</span><span class="s2">."</span>
+</span><span id="line-8">
+</span><span id="line-9"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</span><span id="line-10"><span class="k">def</span> <span class="nf">choose_the_best_draft</span><span class="p">(</span><span class="n">drafts</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+</span><span id="line-11"><span class="w">   </span><span class="sd">"""You are an expert fiction editor."""</span>
+</span><span id="line-12">   <span class="k">return</span> <span class="sa">f</span><span class="s2">"Choose the best draft from the following list: </span><span class="si">{</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">drafts</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+</span><span id="line-13">
+</span><span id="line-14"><span class="n">drafts</span> <span class="o">=</span> <span class="n">write_ten_drafts</span><span class="p">(</span><span class="n">idea</span><span class="p">)</span>
+</span><span id="line-15">
+</span><span id="line-16"><span class="n">best_draft</span> <span class="o">=</span> <span class="n">choose_the_best_draft</span><span class="p">(</span><span class="n">drafts</span><span class="p">)</span> <span class="c1"># Best of 10 sampling.</span>
 </span></code></pre></div>
 </div>
 </section>
