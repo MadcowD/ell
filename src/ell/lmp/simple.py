@@ -11,7 +11,7 @@ def simple(model: str, client: Optional[Any] = None,  exempt_from_tracking=False
 
     def convert_multimodal_response_to_lstr(response):
         return [x.content[0].text for x in response] if isinstance(response, list) else response.content[0].text
-    return complex(model, client,  exempt_from_tracking, **api_params, post_callback=convert_multimodal_response_to_lstr)
+    return complex(model, client,  exempt_from_tracking=exempt_from_tracking, **api_params, post_callback=convert_multimodal_response_to_lstr)
 
 
 
