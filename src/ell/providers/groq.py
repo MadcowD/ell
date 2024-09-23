@@ -1,5 +1,5 @@
 """
-OpenAI like providers.
+Groq provider.
 """
 
 from ell.providers.openai import OpenAIProvider
@@ -12,7 +12,6 @@ try:
         dangerous_disable_validation = True
         def translate_to_provider(self, *args, **kwargs):
             params = super().translate_to_provider(*args, **kwargs)
-            # Unsported arguments.
             params.pop('stream_options', None)
             return params
         
