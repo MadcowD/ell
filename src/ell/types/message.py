@@ -108,6 +108,12 @@ class ContentBlock(BaseModel):
     parsed: Optional[BaseModel] = Field(default=None)
     tool_result: Optional[ToolResult] = Field(default=None)
 
+    def __init__(self, *args, **kwargs):
+        if "image" in kwargs and not isinstance(kwargs["image"], Image):
+            kwargs["image"] = Image.coerce(kwargs["image"])
+        super().__init__(*args, **kwargs)
+
+
     @model_validator(mode='after')
     def check_single_non_null(self):
         non_null_fields = [field for field, value in self.__dict__.items() if value is not None]
