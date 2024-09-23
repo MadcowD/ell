@@ -30,12 +30,9 @@ const preprocessData = (data, currentLevel = 0, typeMatchLevel = 0) => {
     
     if (typeMatchers.ContentBlock(data)) {
       const contentType = Object.keys(data).find(key => ['text', 'image', 'audio', 'tool_call', 'parsed', 'tool_result'].includes(key));
-      return { type: 'ContentBlock', content: preprocessData(data[contentType]) };
+      return { type: 'ContentBlock', [contentType]: preprocessData(data[contentType]) };
     }
-    
-    // ... other type matchers ...
   }
-  
   if (Array.isArray(data)) {
     return data.map(item => preprocessData(item, currentLevel + 1, typeMatchLevel));
   }
@@ -150,8 +147,6 @@ const renderNdarray = (data) => {
     // Add more types as needed
     arrayData = Array.from(decodedData);
   }
-  console.log(arrayData)
-
   let displayData;
   if (numElements > 3) {
     displayData = arrayData.slice(0, 3);
@@ -159,7 +154,6 @@ const renderNdarray = (data) => {
   } else {
     displayData = arrayData;
   }
-  console.log(displayData[0])
   return (
     <span className="text-indigo-400">
       np.array(

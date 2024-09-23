@@ -64,7 +64,8 @@ pydantic_ltype_aware_cattr.register_unstructure_hook(
     BaseModel,
     lambda obj: obj.model_dump(exclude_none=True, exclude_unset=True)
 )
-# Register hooks for complex types (deserialization)
+
+
 
 
 def get_immutable_vars(vars_dict):
@@ -103,6 +104,8 @@ def prepare_invocation_params(params):
     
     # Thisis because we wneed the caching to work on the hash of a cleaned and serialized object.
     jstr = json.dumps(cleaned_invocation_params, sort_keys=True, default=repr)
+    print(cleaned_invocation_params, invocation_params)
+    print(jstr)
 
     consumes = set()
     import re
