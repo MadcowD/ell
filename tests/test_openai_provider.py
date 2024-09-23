@@ -366,6 +366,7 @@ def test_content_block_to_openai_format():
     from ell.types import ContentBlock
     from ell.util.serialization import serialize_image
     from PIL import Image
+    from ell.types.message import ImageContent 
     import numpy as np
 
     # Test text content
@@ -384,7 +385,7 @@ def test_content_block_to_openai_format():
     # Test image content with image_detail
     img = Image.new('RGB', (100, 100))
     serialized_img = serialize_image(img)
-    image_block = ContentBlock(image=img, image_detail="Sample Image")
+    image_block = ContentBlock(image=ImageContent(image=img, detail="Sample Image"))
     expected_image = {
         "type": "image_url",
         "image_url": {

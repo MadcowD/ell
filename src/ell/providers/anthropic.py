@@ -1,6 +1,7 @@
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type, Union, cast
 from ell.provider import  EllCallParams, Metadata, Provider
-from ell.types import Message, ContentBlock, ToolCall
+from ell.types import Message, ContentBlock, ToolCall, ImageContent
+
 from ell.types._lstr import _lstr
 from ell.types.message import LMP
 from ell.configurator import register_provider
@@ -8,6 +9,8 @@ from ell.util.serialization import serialize_image
 import base64
 from io import BytesIO
 import json
+import requests
+from PIL import Image as PILImage
 
 try:
     import anthropic
@@ -158,9 +161,18 @@ except ImportError:
     raise
     pass
 
-def serialize_image_for_anthropic(img):
+def serialize_image_for_anthropic(img : ImageContent):
+    if img.url:
+        # Download the image from the URL
+        response = requests.get(img.url)
+        response.raise_for_status()  # Raise an exception for bad responses
+        pil_image = PILImage.open(BytesIO(response.content))
+    elif img.image:
+        pil_image = img.image
+    else:
+        raise ValueError("Image object has neither url nor image data.")
     buffer = BytesIO()
-    img.save(buffer, format="PNG")
+    pil_image.save(buffer, format="PNG")
     base64_image =  base64.b64encode(buffer.getvalue()).decode()
     return dict(
         type="image",

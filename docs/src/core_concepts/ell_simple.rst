@@ -160,22 +160,27 @@ Here's an example of how to use ``@ell.simple`` with multimodal inputs:
 
     from PIL import Image
     import ell
+    from ell.types.message import ImageContent
 
     @ell.simple(model="gpt-4-vision-preview")
     def describe_image(image: Image.Image):
         return [
             ell.system("You are a helpful assistant that describes images."),
             ell.user(["What's in this image?", image])
+            # Or ell.user(["What's in this image?", ImageContent(url=image_url, detail="low")])
         ]
 
-    # Usage
+    # Usage with PIL Image
     image = Image.open("path/to/your/image.jpg")
     description = describe_image(image)
     print(description)  # This will print a text description of the image
 
-In this example, the ``describe_image`` function takes a PIL Image object as input. The ``ell.user`` message combines both text and image inputs. ``@ell.simple`` automatically handles the conversion of the PIL Image object into the appropriate format for the language model.
+
+In these examples, the ``describe_image`` function takes a PIL Image object as input, while ``describe_image_url`` takes a string URL. The ``ell.user`` message combines both text and image inputs. ``@ell.simple`` automatically handles the conversion of the PIL Image object or ImageContent into the appropriate format for the language model.
 
 This approach simplifies working with multimodal inputs, allowing you to focus on your application logic rather than the intricacies of API payloads.
+
+.. note:: Not all language model providers support image URLs. For example, as of the current version, Anthropic's models do not support image URLs. Always check the capabilities and requirements of your chosen language model provider when working with multimodal inputs.
 
 .. warning:: While ``@ell.simple`` supports multimodal inputs, it is designed to return text-only outputs. For handling multimodal outputs (such as generated images or audio), you need to use ``@ell.complex``. Please refer to the :doc:`ell_complex` documentation for more information on working with multimodal outputs.
 
