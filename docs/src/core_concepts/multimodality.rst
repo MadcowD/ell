@@ -57,25 +57,22 @@ ell also supports working with image URLs, making it easy to reference images ho
 
 .. code-block:: python
 
-    from ell.types.message import ImageUrl
+    from ell.types.message import ImageContent
 
     @ell.simple(model="gpt-4o-2024-08-06")
     def describe_image_from_url(image_url: str):
         return [
             ell.system("You are a helpful assistant that describes images."),
-            ell.user(["What's in this image?", ImageUrl(url=image_url)])
+            ell.user(["What's in this image?", ImageContent(url=image_url, detail="low")])
         ]
 
     result = describe_image_from_url("https://example.com/cat.jpg")
-
-.. note::
-    Not all language model providers support ImageUrl. For example, as of this writing, Anthropic does not support image URLs in their API. Always check the documentation of your specific provider for the most up-to-date information on supported content types.
 
 This flexibility allows developers to work with both local images and remote image URLs seamlessly within the ell framework.
 
 2. Flexible Output Handling
 
-Just as ell simplifies input construction, it also provides flexible ways to handle multimodal outputs. The Message object returned by @ell.complex decorators offers convenient properties for accessing different types of content:
+Just as ell simplifies input construction, it also provides flexible ways to handle multimodal outputs. The Message object returned by ``@ell.complex`` decorators offers convenient properties for accessing different types of content:
 
 .. code-block:: python
 

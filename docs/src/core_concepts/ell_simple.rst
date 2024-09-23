@@ -160,7 +160,7 @@ Here's an example of how to use ``@ell.simple`` with multimodal inputs:
 
     from PIL import Image
     import ell
-    from ell.types.message import ImageUrl
+    from ell.types.message import ImageContent
 
     @ell.simple(model="gpt-4-vision-preview")
     def describe_image(image: Image.Image):
@@ -173,7 +173,7 @@ Here's an example of how to use ``@ell.simple`` with multimodal inputs:
     def describe_image_url(image_url: str):
         return [
             ell.system("You are a helpful assistant that describes images."),
-            ell.user(["What's in this image?", ImageUrl(url=image_url)])
+            ell.user(["What's in this image?", ImageContent(url=image_url)])
         ]
 
     # Usage with PIL Image
@@ -186,7 +186,7 @@ Here's an example of how to use ``@ell.simple`` with multimodal inputs:
     description = describe_image_url(image_url)
     print(description)  # This will print a text description of the image from the URL
 
-In these examples, the ``describe_image`` function takes a PIL Image object as input, while ``describe_image_url`` takes a string URL. The ``ell.user`` message combines both text and image inputs. ``@ell.simple`` automatically handles the conversion of the PIL Image object or ImageUrl into the appropriate format for the language model.
+In these examples, the ``describe_image`` function takes a PIL Image object as input, while ``describe_image_url`` takes a string URL. The ``ell.user`` message combines both text and image inputs. ``@ell.simple`` automatically handles the conversion of the PIL Image object or ImageContent into the appropriate format for the language model.
 
 This approach simplifies working with multimodal inputs, allowing you to focus on your application logic rather than the intricacies of API payloads.
 
