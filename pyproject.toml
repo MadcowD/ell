@@ -33,6 +33,7 @@ colorama = "^0.4.6"
 cattrs = "^23.2.3"
 openai = "^1.47.0"
 anthropic = { version = "^0.34.2", optional = true }
+groq = { version = "^0.11.0", optional = true }
 sqlmodel = "^0.0.21"
 uvicorn = "^0.30.3"
 requests = "^2.32.3"
@@ -49,7 +50,8 @@ sphinx-rtd-theme = "^2.0.0"
 [tool.poetry.extras]
 openai = ["openai"]
 anthropic = ["anthropic"]
-all = ["openai", "anthropic"]
+groq = ["groq"]
+all = ["openai", "anthropic", "groq"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -190,7 +190,10 @@ class TestOpenAIProvider:
             assert messages == [
                 Message(role="assistant", content=[ContentBlock(text="Hello")])
             ]
-            assert metadata == {}
+            assert metadata['id'] == 'chatcmpl-123'
+            assert not metadata['usage']
+            assert metadata['model'] == 'gpt-4'
+            assert metadata['object'] == 'chat.completion.chunk'
 
     def test_translate_from_provider_non_streaming(self, provider, ell_call_params):
         provider_call_params = {"stream": False}
@@ -355,7 +358,7 @@ class TestOpenAIProvider:
         assert messages == [
             Message(role="assistant", content=[ContentBlock(text="Hello World")])
         ]
-        assert metadata == {}
+
 
     # Suggested Test for _content_block_to_openai_format
 def test_content_block_to_openai_format():

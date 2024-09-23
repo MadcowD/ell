@@ -579,6 +579,25 @@ docs = ["Sphinx", "furo"]
 test = ["objgraph", "psutil"]
 
 [[package]]
+name = "groq"
+version = "0.11.0"
+description = "The official Python library for the groq API"
+optional = true
+python-versions = ">=3.7"
+files = [
+    {file = "groq-0.11.0-py3-none-any.whl", hash = "sha256:e328531c979542e563668c62260aec13b43a6ee0ca9e2fb22dff1d26f8c8ce54"},
+    {file = "groq-0.11.0.tar.gz", hash = "sha256:dbb9aefedf388ddd4801ec7bf3eba7f5edb67948fec0cd2829d97244059f42a7"},
+]
+
+[package.dependencies]
+anyio = ">=3.5.0,<5"
+distro = ">=1.7.0,<2"
+httpx = ">=0.23.0,<1"
+pydantic = ">=1.9.0,<3"
+sniffio = "*"
+typing-extensions = ">=4.7,<5"
+
+[[package]]
 name = "h11"
 version = "0.14.0"
 description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
@@ -2292,11 +2311,12 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 type = ["pytest-mypy"]
 
 [extras]
-all = ["anthropic", "openai"]
+all = ["anthropic", "groq", "openai"]
 anthropic = ["anthropic"]
+groq = ["groq"]
 openai = ["openai"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9"
-content-hash = "1db008749153abc0dba7bcacc6b92bb3d15d47e10addbec9c175a8981a489b3a"
+content-hash = "621457432d7ef7d5348d1909b7dcc4feec959a7a46d9101687e4f76fd3e9dff8"
