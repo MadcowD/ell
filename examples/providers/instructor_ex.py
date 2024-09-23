@@ -48,10 +48,10 @@ class UserDetail(BaseModel):
 
 
 @ell.complex(model="gpt-4-turbo-preview", client=client, response_model=UserDetail)
-def extract_user():
-    return "Extract Jason is 25 years old"
+def extract_user(details : str):
+    return f"Extract {details}"
 
-print(extract_user())
+print(extract_user("Jason is 25 years old"))
 ell.init(verbose=True)
 
 
