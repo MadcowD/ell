@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 
 
 const API_BASE_URL = process.env.NODE_ENV === 'development' 
-  ? "http://localhost:5000" 
+  ? "http://localhost:5555" 
   : window.location.origin;
 
 // Function to get WebSocket URL
 const getWebSocketURL = () => {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = process.env.NODE_ENV === 'development' ? 'localhost:5000' : window.location.host;
+  const host = process.env.NODE_ENV === 'development' ? 'localhost:5555' : window.location.host;
   console.log(host)
   return `${protocol}//${host}/ws`;
   

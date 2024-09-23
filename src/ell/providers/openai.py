@@ -132,11 +132,13 @@ try:
                     if hasattr(message, "parsed"):
                         if (parsed := message.parsed): 
                             content_blocks.append(ContentBlock(parsed=parsed)) #XXX: Origin tracing
+                            if logger: logger(parsed.model_dump_json())
                     else:
                         if (content := message.content):
                             content_blocks.append(
                                 ContentBlock(
                                     text=_lstr(content=content,origin_trace=origin_id)))
+                            if logger: logger(content)
                         if (tool_calls := message.tool_calls):
                             for tool_call in tool_calls:
                                 matching_tool = ell_call.get_tool_by_name(tool_call.function.name)
@@ -151,6 +153,7 @@ try:
                                         )
                                     )
                                 )
+                                if logger: logger(tool_call)
                     messages.append(Message(role=role, content=content_blocks))
             return messages, metadata
 

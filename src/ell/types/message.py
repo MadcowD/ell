@@ -152,6 +152,13 @@ class ContentBlock(BaseModel):
 
             return cls(image=content)
         raise ValueError(f"Invalid content type: {type(content)}")
+    
+    @field_serializer('parsed')
+    def serialize_parsed(self, value: Optional[BaseModel], _info):
+        if value is None:
+            return None
+        return value.model_dump(exclude_none=True, exclude_unset=True)
+    
 
     @field_validator('image')
     @classmethod
