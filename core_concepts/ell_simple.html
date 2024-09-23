@@ -362,22 +362,28 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <p>Here’s an example of how to use <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> with multimodal inputs:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
 </span><span id="line-2"><span class="kn">import</span> <span class="nn">ell</span>
-</span><span id="line-3">
-</span><span id="line-4"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-vision-preview"</span><span class="p">)</span>
-</span><span id="line-5"><span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
-</span><span id="line-6">    <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-7">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant that describes images."</span><span class="p">),</span>
-</span><span id="line-8">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span><span class="s2">"What's in this image?"</span><span class="p">,</span> <span class="n">image</span><span class="p">])</span>
-</span><span id="line-9">    <span class="p">]</span>
-</span><span id="line-10">
-</span><span id="line-11"><span class="c1"># Usage</span>
-</span><span id="line-12"><span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"path/to/your/image.jpg"</span><span class="p">)</span>
-</span><span id="line-13"><span class="n">description</span> <span class="o">=</span> <span class="n">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-</span><span id="line-14"><span class="nb">print</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>  <span class="c1"># This will print a text description of the image</span>
+</span><span id="line-3"><span class="kn">from</span> <span class="nn">ell.types.message</span> <span class="kn">import</span> <span class="n">ImageContent</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-vision-preview"</span><span class="p">)</span>
+</span><span id="line-6"><span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
+</span><span id="line-7">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-8">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant that describes images."</span><span class="p">),</span>
+</span><span id="line-9">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span><span class="s2">"What's in this image?"</span><span class="p">,</span> <span class="n">image</span><span class="p">])</span>
+</span><span id="line-10">        <span class="c1"># Or ell.user(["What's in this image?", ImageContent(url=image_url, detail="low")])</span>
+</span><span id="line-11">    <span class="p">]</span>
+</span><span id="line-12">
+</span><span id="line-13"><span class="c1"># Usage with PIL Image</span>
+</span><span id="line-14"><span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"path/to/your/image.jpg"</span><span class="p">)</span>
+</span><span id="line-15"><span class="n">description</span> <span class="o">=</span> <span class="n">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</span><span id="line-16"><span class="nb">print</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>  <span class="c1"># This will print a text description of the image</span>
 </span></code></pre></div>
 </div>
-<p>In this example, the <code class="docutils literal notranslate"><span class="pre">describe_image</span></code> function takes a PIL Image object as input. The <code class="docutils literal notranslate"><span class="pre">ell.user</span></code> message combines both text and image inputs. <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> automatically handles the conversion of the PIL Image object into the appropriate format for the language model.</p>
+<p>In these examples, the <code class="docutils literal notranslate"><span class="pre">describe_image</span></code> function takes a PIL Image object as input, while <code class="docutils literal notranslate"><span class="pre">describe_image_url</span></code> takes a string URL. The <code class="docutils literal notranslate"><span class="pre">ell.user</span></code> message combines both text and image inputs. <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> automatically handles the conversion of the PIL Image object or ImageContent into the appropriate format for the language model.</p>
 <p>This approach simplifies working with multimodal inputs, allowing you to focus on your application logic rather than the intricacies of API payloads.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Not all language model providers support image URLs. For example, as of the current version, Anthropic’s models do not support image URLs. Always check the capabilities and requirements of your chosen language model provider when working with multimodal inputs.</p>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>While <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> supports multimodal inputs, it is designed to return text-only outputs. For handling multimodal outputs (such as generated images or audio), you need to use <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code>. Please refer to the <a class="reference internal" href="ell_complex.html"><span class="doc">@ell.complex</span></a> documentation for more information on working with multimodal outputs.</p>

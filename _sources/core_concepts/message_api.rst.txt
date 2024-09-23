@@ -196,3 +196,5 @@ The following conevnience functions and properties are available on a Message ob
 .. autoproperty:: ell.Message.images
 .. autoproperty:: ell.Message.audios
 .. automethod:: ell.Message.call_tools_and_collect_as_message
+
+.. XXX put all the content block types here.

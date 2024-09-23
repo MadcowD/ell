@@ -293,8 +293,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <dt class="field-odd">Fields<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">audio</span> <span class="pre">(numpy.ndarray</span> <span class="pre">|</span> <span class="pre">List[float]</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">image</span> <span class="pre">(PIL.Image.Image</span> <span class="pre">|</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">numpy.ndarray</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">image_detail</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">image</span> <span class="pre">(ell.types.message.ImageContent</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parsed</span> <span class="pre">(pydantic.main.BaseModel</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">text</span> <span class="pre">(ell.types._lstr._lstr</span> <span class="pre">|</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tool_call</span> <span class="pre">(ell.types.message.ToolCall</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
@@ -302,17 +301,6 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </ul>
 </dd>
 </dl>
-<dl class="py attribute pydantic_field">
-<dt class="sig sig-object py" id="ell.ContentBlock.image_detail">
-<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">image_detail</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#ell.ContentBlock.image_detail" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.image_detail'">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Validated by<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_single_non_null</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="ell.ContentBlock.serialize_parsed">
 <span class="sig-name descname"><span class="pre">serialize_parsed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BaseModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.ContentBlock.serialize_parsed" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.serialize_parsed'">¶</a></dt>
@@ -504,20 +492,27 @@ Message: A Message object with role set to ‘assistant’ and the provided cont
 </dd></dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="ell.Message.images">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Message.</span></span><span class="sig-name descname"><span class="pre">images</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Image</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ell.Message.images" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.images'">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Message.</span></span><span class="sig-name descname"><span class="pre">images</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ImageContent</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ell.Message.images" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.images'">¶</a></dt>
 <dd><p>Returns a list of all image content.</p>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">image1</span> <span class="o">=</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">'RGB'</span><span class="p">,</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
-</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">image2</span> <span class="o">=</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">'RGB'</span><span class="p">,</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">))</span>
-</span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">[</span><span class="s2">"Text"</span><span class="p">,</span> <span class="n">image1</span><span class="p">,</span> <span class="s2">"More text"</span><span class="p">,</span> <span class="n">image2</span><span class="p">])</span>
-</span><span id="line-4"><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">images</span><span class="p">)</span>
-</span><span id="line-5"><span class="go">2</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">PILImage</span>
+</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">image1</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">"https://example.com/image.jpg"</span><span class="p">)</span>
+</span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">image2</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">PILImage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">'RGB'</span><span class="p">,</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">)))</span>
+</span><span id="line-4"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">[</span><span class="s2">"Text"</span><span class="p">,</span> <span class="n">image1</span><span class="p">,</span> <span class="s2">"More text"</span><span class="p">,</span> <span class="n">image2</span><span class="p">])</span>
+</span><span id="line-5"><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">images</span><span class="p">)</span>
+</span><span id="line-6"><span class="go">2</span>
+</span><span id="line-7"><span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Image</span><span class="p">)</span>
+</span><span id="line-8"><span class="go">True</span>
+</span><span id="line-9"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">url</span>
+</span><span id="line-10"><span class="go">'https://example.com/image.jpg'</span>
+</span><span id="line-11"><span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span>
+</span><span id="line-12"><span class="go">True</span>
 </span></code></pre></div>
 </div>
 </dd></dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="ell.Message.audios">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Message.</span></span><span class="sig-name descname"><span class="pre">audios</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ell.Message.audios" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.audios'">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Message.</span></span><span class="sig-name descname"><span class="pre">audios</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ell.Message.audios" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.audios'">¶</a></dt>
 <dd><p>Returns a list of all audio content.</p>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">audio1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
@@ -559,7 +554,6 @@ Message: A Message object with role set to ‘assistant’ and the provided cont
 <li><a :data-current="activeSection === '#the-ell-message-api'" class="reference internal" href="#the-ell-message-api">The ell Message API</a><ul>
 <li><a :data-current="activeSection === '#ell.Message'" class="reference internal" href="#ell.Message"><code class="docutils literal notranslate"><span class="pre">Message</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.ContentBlock'" class="reference internal" href="#ell.ContentBlock"><code class="docutils literal notranslate"><span class="pre">ContentBlock</span></code></a><ul>
-<li><a :data-current="activeSection === '#ell.ContentBlock.image_detail'" class="reference internal" href="#ell.ContentBlock.image_detail"><code class="docutils literal notranslate"><span class="pre">ContentBlock.image_detail</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.ContentBlock.serialize_parsed'" class="reference internal" href="#ell.ContentBlock.serialize_parsed"><code class="docutils literal notranslate"><span class="pre">ContentBlock.serialize_parsed()</span></code></a></li>
 </ul>
 </li>

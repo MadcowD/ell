@@ -276,10 +276,24 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </span></code></pre></div>
 </div>
 <p>Notice how ell automatically handles the conversion of the PIL Image object into the appropriate format for the language model. This abstraction allows developers to focus on their application logic rather than the intricacies of API payloads.</p>
+<p>ell also supports working with image URLs, making it easy to reference images hosted online:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">ell.types.message</span> <span class="kn">import</span> <span class="n">ImageContent</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-2024-08-06"</span><span class="p">)</span>
+</span><span id="line-4"><span class="k">def</span> <span class="nf">describe_image_from_url</span><span class="p">(</span><span class="n">image_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-5">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-6">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant that describes images."</span><span class="p">),</span>
+</span><span id="line-7">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span><span class="s2">"What's in this image?"</span><span class="p">,</span> <span class="n">ImageContent</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">image_url</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"low"</span><span class="p">)])</span>
+</span><span id="line-8">    <span class="p">]</span>
+</span><span id="line-9">
+</span><span id="line-10"><span class="n">result</span> <span class="o">=</span> <span class="n">describe_image_from_url</span><span class="p">(</span><span class="s2">"https://example.com/cat.jpg"</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>This flexibility allows developers to work with both local images and remote image URLs seamlessly within the ell framework.</p>
 <ol class="arabic simple" start="2">
 <li><p>Flexible Output Handling</p></li>
 </ol>
-<p>Just as ell simplifies input construction, it also provides flexible ways to handle multimodal outputs. The Message object returned by @ell.complex decorators offers convenient properties for accessing different types of content:</p>
+<p>Just as ell simplifies input construction, it also provides flexible ways to handle multimodal outputs. The Message object returned by <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> decorators offers convenient properties for accessing different types of content:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-5-omni"</span><span class="p">)</span>
 </span><span id="line-2"><span class="k">def</span> <span class="nf">generate_audiovisual_novel</span><span class="p">(</span><span class="n">topic</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
