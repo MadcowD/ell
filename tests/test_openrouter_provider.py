@@ -5,7 +5,7 @@ import pytest
 from pydantic import BaseModel
 
 import ell
-from ell.models.openrouter import OpenRouter
+from ell.providers.openrouter import OpenRouter
 from ell.provider import APICallResult
 from ell.providers.openrouter import OpenRouterProvider
 from ell.types import Message, ContentBlock, ToolCall
@@ -20,7 +20,7 @@ class DummyParams(BaseModel):
 def mock_openrouter_client():
     client = Mock(spec=OpenRouter, auto_spec=True)
     client.fetch_generation_data = False
-    client._used_models = {}
+    client.used_models = {}
     client.global_stats = {
         'total_cost': 0,
         'total_tokens': 0,
