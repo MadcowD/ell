@@ -8,16 +8,15 @@ from collections import defaultdict
 from enum import Enum
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Dict, Any, List, Optional, Union, Tuple, Type
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 
 import httpx
 from pydantic import BaseModel, Field, field_validator, ValidationError
 
-from ell.configurator import register_provider
-from ell.provider import APICallResult, Provider
+from ell.configurator import config, register_provider
+from ell.provider import EllCallParams, Metadata, Provider
 from ell.types import Message, ContentBlock, ToolCall
 from ell.types._lstr import _lstr
-from ell.types.message import LMP
 from ell.util.serialization import serialize_image
 
 logger = logging.getLogger(__name__)
@@ -173,7 +172,6 @@ class ProviderPreferences(BaseModel):
 
 class OpenRouter:
 
-    API_VERSION = "v1"
     OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
     REQUEST_TIMEOUT = 600
@@ -474,332 +472,344 @@ def get_client(api_key=None, **client_kwargs) -> OpenRouter:
     return OpenRouter(api_key=api_key, **client_kwargs)
 
 
-try:
-    class OpenRouterProvider(Provider):
-        @staticmethod
-        def content_block_to_openrouter_format(content_block: ContentBlock) -> Optional[Dict[str, Any]]:
-            if content_block.image:
-                if isinstance(content_block.image, str) and content_block.image.startswith(('http://', 'https://', 'data:')):
-                    image_url = {"url": content_block.image}
-                else:
-                    base64_image = serialize_image(content_block.image)
-                    image_url = {"url": base64_image}
-                if content_block.image_detail:
-                    image_url["detail"] = content_block.image_detail
-                return {
-                    "type": "image_url",
-                    "image_url": image_url
-                }
-            elif content_block.text:
-                return {
-                    "type": "text",
-                    "text": content_block.text
-                }
-            elif content_block.parsed:
-                return {
-                    "type": "text",
-                    "text": content_block.parsed.model_dump_json()
-                }
-            else:
-                return None
+class OpenRouterProvider(Provider):
+    dangerous_disable_validation = True
 
-        @staticmethod
-        def message_to_openrouter_format(message: Message) -> Dict[str, Any]:
-            openrouter_message = {
-                "role": "tool" if message.tool_results else message.role,
-                "content": list(filter(None, [
-                    OpenRouterProvider.content_block_to_openrouter_format(c) for c in message.content
-                ])) or None  # Set to None if empty list
-            }
+    def provider_call_function(self, client: 'OpenRouter', api_call_params: Optional[Dict[str, Any]] = None) -> Callable[..., Any]:
+        return client.chat_completions
 
-            if message.tool_calls:
-                try:
-                    openrouter_message["tool_calls"] = [
-                        {
-                            "id": tool_call.tool_call_id,
-                            "type": "function",
-                            "function": {
-                                "name": tool_call.tool.__name__,
-                                "arguments": json.dumps(tool_call.params.model_dump())
-                            }
-                        } for tool_call in message.tool_calls
-                    ]
-                    openrouter_message["content"] = None
-                except TypeError as e:
-                    raise TypeError(
-                        f"Error serializing tool calls: {e}. Ensure all @ell.tool decorated functions are fully typed.") from e
+    def translate_to_provider(self, ell_call: EllCallParams) -> Dict[str, Any]:
+        final_call_params = ell_call.api_params.copy()
+        final_call_params["model"] = ell_call.model
 
-            if message.tool_results:
-                if not (tool_result := message.tool_results[0]).tool_call_id:
-                    raise ValueError("Tool result missing tool_call_id")
+        # XXX: Deprecation of config.registry.supports_streaming when streaming is implemented.
+        if final_call_params.get("response_format") or config.registry[ell_call.model].supports_streaming is False or ell_call.tools:
+            final_call_params.pop("stream", None)
 
-                if len(tool_result.result) != 1 or tool_result.result[0].type != "text":
-                    raise ValueError("Tool result should contain exactly one text content block")
-
-                openrouter_message.update({
-                    "tool_call_id": tool_result.tool_call_id,
-                    "content": tool_result.result[0].text
-                })
-
-            return openrouter_message
-
-        @classmethod
-        def update_stats(cls, client: 'OpenRouter', response: Dict[str, Any]):
-            response["client"] = client
-
-            model_name = response.get("model")
-            if model_name:
-                if model_name not in client.used_models:
-                    client.used_models[model_name] = {
-                        "total_cost": 0,
-                        "total_tokens": 0,
-                        "usage_count": 0,
-                    }
-
-                usage = response.get("usage", {})
-                tokens = usage.get("total_tokens", 0)
-                client.used_models[model_name].update({
-                    "last_used": response["created"],
-                    "last_message_id": response["id"],
-                    "usage": usage,
-                    "total_tokens": client.used_models[model_name]["total_tokens"] + tokens,
-                    "usage_count": client.used_models[model_name]["usage_count"] + 1,
-                })
-                client.global_stats['total_tokens'] += tokens
-
-            generation_info = response.get("generation_info", {}).get("data")
-            if generation_info and isinstance(generation_info, dict):
-                model_name = generation_info.get("model")
-                if model_name:
-                    cost = generation_info.get("total_cost", 0)
-                    tokens_prompt = generation_info.get("tokens_prompt", 0)
-                    tokens_completion = generation_info.get("tokens_completion", 0)
-                    provider = generation_info.get("provider_name")
-
-                    client.used_models[model_name].update({
-                        "provider_name": provider,
-                        "quantization": generation_info.get("quantization", "unspecified"),
-                        "last_used": generation_info.get("created_at"),
-                        "total_cost": client.used_models[model_name]["total_cost"] + cost,
-                        "tokens_prompt": tokens_prompt,
-                        "tokens_completion": tokens_completion,
-                        "native_tokens_prompt": generation_info.get("native_tokens_prompt"),
-                        "native_tokens_completion": generation_info.get("native_tokens_completion"),
-                    })
-
-                    client.global_stats['total_cost'] += cost
-                    if provider:
-                        client.global_stats['used_providers'].add(provider)
-
-                # Update last_generation_info in global_stats
-                client.global_stats['last_generation_info'] = generation_info
-
-        @classmethod
-        def schedule_generation_data_update(cls, client: 'OpenRouter', response: Dict[str, Any], delay: float = 1.0, max_attempts: int = 5):
-            """Schedule the generation info update, choosing between sync and async methods."""
-            generation_id = response.get('id')
-            if not generation_id:
-                return
-
-            try:
-                loop = asyncio.get_running_loop()
-                asyncio.create_task(cls._update_generation_info_async(client, response, generation_id, delay, max_attempts))
-            except RuntimeError:
-                # No running event loop, use synchronous update
-                cls._update_generation_info_sync(client, response, generation_id, delay, max_attempts)
-
-        @classmethod
-        def _update_generation_info_sync(cls, client: 'OpenRouter', response: Dict[str, Any], generation_id: str, delay: float, max_attempts: int):
-            """Synchronously update generation info."""
-            # This is a chained API request relying on the first API request propagating on OpenRouter servers.
-            time.sleep(0.1)  # Use a small sleep to allow the generation ID to propagate
-            try:
-                generation_info = client.get_generation_data(generation_id, delay=delay, max_attempts=max_attempts)
-                if generation_info:
-                    response['generation_info'] = generation_info
-                    cls.update_stats(client, response)
-            except Exception as e:
-                print(f"Failed to update generation info synchronously: {e}")
-
-        @classmethod
-        async def _update_generation_info_async(cls, client: 'OpenRouter', response: Dict[str, Any], generation_id: str, delay: float, max_attempts: int):
-            """Asynchronously update generation info."""
-            # This is a chained API request relying on the first API request propagating on OpenRouter servers.
-            await asyncio.sleep(0.1)  # Use a small asyncio.sleep to allow the generation ID to propagate
-            try:
-                generation_info = await client.get_generation_data_async(generation_id, delay=delay, max_attempts=max_attempts)
-                if generation_info:
-                    response['generation_info'] = generation_info
-                    cls.update_stats(client, response)
-            except Exception as e:
-                print(f"Failed to update generation info asynchronously: {e}")
-
-        @classmethod
-        def call_model(
-                cls,
-                client: 'OpenRouter',
-                model: str,
-                messages: List[Message],
-                api_params: Dict[str, Any],
-                tools: Optional[list[LMP]] = None,
-        ) -> APICallResult:
-
-            final_call_params = api_params.copy()
-            openrouter_messages = [cls.message_to_openrouter_format(message) for message in messages]
-
-            final_call_params["model"] = model
-            final_call_params["messages"] = openrouter_messages
-
-            if tools:
-                final_call_params["tools"] = [
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": tool.__name__,
-                            "description": tool.__doc__,
-                            "parameters": tool.__ell_params_model__.model_json_schema(),
-                        },
-                    }
-                    for tool in tools
+        if ell_call.tools:
+            final_call_params.update(
+                tool_choice="auto",
+                tools=[
+                    dict(
+                        type="function",
+                        function=dict(
+                            name=tool.__name__,
+                            description=tool.__doc__,
+                            parameters=tool.__ell_params_model__.model_json_schema(),  #type: ignore
+                        )
+                    ) for tool in ell_call.tools
                 ]
-                final_call_params["tool_choice"] = "auto"
-
-            # Determine whether to fetch generation data, falling back to client if api_params value is not present
-            fetch_generation_data = final_call_params.pop("generation_data", client.fetch_generation_data)
-
-            response = client.chat_completions(**final_call_params)
-
-            # Only schedule generation data update if the preference is set
-            if fetch_generation_data:
-                cls.schedule_generation_data_update(client, response)
-
-            # Update stats with initial data
-            cls.update_stats(client, response)
-
-            return APICallResult(
-                response=response,
-                actual_streaming=final_call_params.get("stream", False),
-                actual_n=final_call_params.get("n", 1),
-                final_call_params=final_call_params,
             )
 
-        @classmethod
-        def process_response(
-                cls,
-                call_result: APICallResult,
-                _invocation_origin: str,
-                logger: Optional[Any] = None,
-                tools: Optional[List[LMP]] = None,
-        ) -> Tuple[List[Message], Dict[str, Any]]:
-
-            response = call_result.response
-            client = response.get('client')
-
-            metadata = {
-                "id": response.get("id"),
-                "created": response.get("created"),
-                "model": response.get("model"),
-                "object": response.get("object"),
-                "system_fingerprint": response.get("system_fingerprint"),
-                "usage": response.get("usage", {}),
-                "global_stats": client.global_stats if client else {},
-                # Note: generation_info might be empty here, because OpenRouter requires a second API call to fetch it
-                "generation_info": response.get("generation_info", {}).get("data", {})
-            }
-
-            choices_progress = defaultdict(list)
-            is_streaming = call_result.actual_streaming
-
-            if is_streaming:
-                for chunk in response:
-                    for choice in chunk.get("choices", []):
-                        choices_progress[choice["index"]].append(choice)
-                        if choice["index"] == 0 and logger:
-                            logger(choice.get("delta", {}).get("content", ""))
+        # messages
+        openrouter_messages = []
+        for message in ell_call.messages:
+            if (tool_calls := message.tool_calls):
+                assert message.role == "assistant", "Tool calls must be from the assistant."
+                assert all(t.tool_call_id for t in tool_calls), "Tool calls must have tool call ids."
+                openrouter_messages.append(dict(
+                    tool_calls=[
+                        dict(
+                            id=cast(str, tool_call.tool_call_id),
+                            type="function",
+                            function=dict(
+                                name=tool_call.tool.__name__,
+                                arguments=json.dumps(tool_call.params.model_dump())
+                            )
+                        ) for tool_call in tool_calls ],
+                    role="assistant",
+                    content=None,
+                ))
+            elif (tool_results := message.tool_results):
+                assert len(tool_results) == 1, "Message should only have one tool result"
+                assert (tr_content := tool_results[0].result[0]).type == "text", "Tool result should only have one text content block"
+                openrouter_messages.append(dict(
+                    role="tool",
+                    tool_call_id=tool_results[0].tool_call_id,
+                    content=cast(str, tr_content.text),
+                ))
             else:
-                for choice in response.get("choices", []):
+                openrouter_messages.append(dict(
+                    role=message.role,
+                    content=[self._content_block_to_openrouter_format(c) for c in message.content]
+                ))
+        final_call_params["messages"] = openrouter_messages
+
+        return final_call_params
+
+    def translate_from_provider(
+        self,
+        provider_response: Any,
+        ell_call: EllCallParams,
+        provider_call_params: Dict[str, Any],
+        origin_id: Optional[str] = None,
+        logger: Optional[Callable[..., None]] = None,
+    ) -> Tuple[List[Message], Metadata]:
+
+        metadata: Metadata = {}
+        messages: List[Message] = []
+        is_streaming = provider_call_params.get("stream", False)
+
+        if is_streaming:
+            choices_progress = defaultdict(list)
+            for chunk in provider_response:
+                # Update metadata with each chunk
+                metadata.update({
+                    "id": chunk.get("id"),
+                    "created": chunk.get("created"),
+                    "model": chunk.get("model"),
+                    "object": chunk.get("object"),
+                })
+                for choice in chunk.get("choices", []):
                     choices_progress[choice["index"]].append(choice)
                     if choice["index"] == 0 and logger:
-                        logger(choice.get("message", {}).get("content", ""))
+                        logger(choice.get("delta", {}).get("content", ""))
 
-            tracked_results = []
             for _, choice_data in sorted(choices_progress.items(), key=lambda x: x[0]):
                 content = []
                 role = "assistant"
-                finish_reason = None
+                text_content = ""
+                for chunk in choice_data:
+                    delta = chunk.get("delta", {})
+                    text_content += delta.get("content", "") or ""
+                    if "role" in delta:
+                        role = delta["role"]
 
-                if is_streaming:
-                    text_content = ""
-                    for chunk in choice_data:
-                        delta = chunk.get("delta", {})
-                        text_content += delta.get("content", "") or ""
-                        if "role" in delta:
-                            role = delta["role"]
-                        finish_reason = chunk.get("finish_reason")
+                if text_content:
+                    content.append(ContentBlock(text=_lstr(content=text_content, origin_trace=origin_id)))
 
-                        if "tool_calls" in delta:
-                            cls._process_tool_calls(delta["tool_calls"], content, tools, _invocation_origin)
-
-                    if text_content:
-                        content.append(ContentBlock(text=_lstr(content=text_content, _origin_trace=_invocation_origin)))
-                else:
-                    choice = choice_data[0]
-                    message = choice.get("message", {})
-                    role = message.get("role", "assistant")
-                    finish_reason = choice.get("finish_reason")
-
-                    if message.get("content"):
-                        content.append(
-                            ContentBlock(text=_lstr(content=message["content"], _origin_trace=_invocation_origin)))
-
-                    if "tool_calls" in message:
-                        cls._process_tool_calls(message["tool_calls"], content, tools, _invocation_origin)
-
-                tracked_results.append(
+                messages.append(
                     Message(
                         role=role,
                         content=content,
-                        metadata={"finish_reason": finish_reason}
+                        metadata={"finish_reason": choice_data[-1].get("finish_reason")}
+                    )
+                )
+        else:
+            # Non-streaming response handling
+            metadata = {
+                "id": provider_response.get("id"),
+                "created": provider_response.get("created"),
+                "model": provider_response.get("model"),
+                "object": provider_response.get("object"),
+                "system_fingerprint": provider_response.get("system_fingerprint"),
+                "usage": provider_response.get("usage", {}),
+            }
+
+            for choice in provider_response.get("choices", []):
+                message = choice.get("message", {})
+                role = message.get("role", "assistant")
+                content = []
+
+                if message.get("content"):
+                    content.append(ContentBlock(text=_lstr(content=message["content"], origin_trace=origin_id)))
+
+                messages.append(
+                    Message(
+                        role=role,
+                        content=content,
+                        metadata={"finish_reason": choice.get("finish_reason")}
                     )
                 )
 
-            return tracked_results, metadata
+        # Schedule generation data update
+        fetch_generation_data = provider_call_params.pop("generation_data", ell_call.client.fetch_generation_data)
+        if fetch_generation_data:
+            self.schedule_generation_data_update(ell_call.client, provider_response)
 
-        @staticmethod
-        def _process_tool_calls(tool_calls, content, tools, _invocation_origin):
-            assert tools is not None, "Tools not provided, yet tool calls in response."
-            for tool_call in tool_calls:
-                matching_tool = next(
-                    (tool for tool in tools if tool.__name__ == tool_call["function"]["name"]),
-                    None,
+        # Update stats
+        self.update_stats(ell_call.client, provider_response)
+
+        # OpenRouter-specific: Add global stats and generation info
+        metadata["global_stats"] = ell_call.client.global_stats
+        metadata["generation_info"] = provider_response.get("generation_info", {}).get("data", {})
+
+        return messages, metadata
+
+    @staticmethod
+    def _content_block_to_openrouter_format(content_block: ContentBlock) -> Optional[Dict[str, Any]]:
+        if content_block.image:
+            if isinstance(content_block.image, str) and content_block.image.startswith(('http://', 'https://', 'data:')):
+                image_url = {"url": content_block.image}
+            else:
+                base64_image = serialize_image(content_block.image)
+                image_url = {"url": base64_image}
+            if content_block.image_detail:
+                image_url["detail"] = content_block.image_detail
+            return {
+                "type": "image_url",
+                "image_url": image_url
+            }
+        elif content_block.text:
+            return {
+                "type": "text",
+                "text": content_block.text
+            }
+        elif content_block.parsed:
+            return {
+                "type": "text",
+                "text": content_block.parsed.model_dump_json()
+            }
+        else:
+            return None
+
+    def _message_to_openrouter_format(self, message: Message) -> Dict[str, Any]:
+        openrouter_message = {
+            "role": "tool" if message.tool_results else message.role,
+            "content": list(filter(None, [
+                self._content_block_to_openrouter_format(c) for c in message.content
+            ])) or None  # Set to None if empty list
+        }
+
+        if message.tool_calls:
+            try:
+                openrouter_message["tool_calls"] = [
+                    {
+                        "id": tool_call.tool_call_id,
+                        "type": "function",
+                        "function": {
+                            "name": tool_call.tool.__name__,
+                            "arguments": json.dumps(tool_call.params.model_dump())
+                        }
+                    } for tool_call in message.tool_calls
+                ]
+                openrouter_message["content"] = None
+            except TypeError as e:
+                raise TypeError(
+                    f"Error serializing tool calls: {e}. Ensure all @ell.tool decorated functions are fully typed.") from e
+
+        if message.tool_results:
+            if not (tool_result := message.tool_results[0]).tool_call_id:
+                raise ValueError("Tool result missing tool_call_id")
+
+            if len(tool_result.result) != 1 or tool_result.result[0].type != "text":
+                raise ValueError("Tool result should contain exactly one text content block")
+
+            openrouter_message.update({
+                "tool_call_id": tool_result.tool_call_id,
+                "content": tool_result.result[0].text
+            })
+
+        return openrouter_message
+
+    @staticmethod
+    def _process_tool_calls(tool_calls, content, tools, origin_id):
+        assert tools is not None, "Tools not provided, yet tool calls in response."
+        for tool_call in tool_calls:
+            matching_tool = next(
+                (tool for tool in tools if tool.__name__ == tool_call["function"]["name"]),
+                None,
+            )
+            if matching_tool:
+                params = matching_tool.__ell_params_model__(
+                    **json.loads(tool_call["function"]["arguments"])
                 )
-                if matching_tool:
-                    params = matching_tool.__ell_params_model__(
-                        **json.loads(tool_call["function"]["arguments"])
-                    )
-                    content.append(
-                        ContentBlock(
-                            tool_call=ToolCall(
-                                tool=matching_tool,
-                                tool_call_id=_lstr(
-                                    tool_call["id"], _origin_trace=_invocation_origin
-                                ),
-                                params=params,
-                            )
+                content.append(
+                    ContentBlock(
+                        tool_call=ToolCall(
+                            tool=matching_tool,
+                            tool_call_id=_lstr(
+                                tool_call["id"], origin_trace=origin_id
+                            ),
+                            params=params,
                         )
                     )
+                )
 
-        @classmethod
-        def supports_streaming(cls) -> bool:
-            return True
+    @classmethod
+    def update_stats(cls, client: 'OpenRouter', response: Dict[str, Any]):
+        response["client"] = client
 
-        @classmethod
-        def get_client_type(cls) -> Type['OpenRouter']:
-            return OpenRouter
+        model_name = response.get("model")
+        if model_name:
+            if model_name not in client.used_models:
+                client.used_models[model_name] = {
+                    "total_cost": 0,
+                    "total_tokens": 0,
+                    "usage_count": 0,
+                }
 
-    register_provider(OpenRouterProvider)
-except ImportError:
-    pass
+            usage = response.get("usage", {})
+            tokens = usage.get("total_tokens", 0)
+            client.used_models[model_name].update({
+                "last_used": response["created"],
+                "last_message_id": response["id"],
+                "usage": usage,
+                "total_tokens": client.used_models[model_name]["total_tokens"] + tokens,
+                "usage_count": client.used_models[model_name]["usage_count"] + 1,
+            })
+            client.global_stats['total_tokens'] += tokens
+
+        generation_info = response.get("generation_info", {}).get("data")
+        if generation_info and isinstance(generation_info, dict):
+            model_name = generation_info.get("model")
+            if model_name:
+                cost = generation_info.get("total_cost", 0)
+                tokens_prompt = generation_info.get("tokens_prompt", 0)
+                tokens_completion = generation_info.get("tokens_completion", 0)
+                provider = generation_info.get("provider_name")
+
+                client.used_models[model_name].update({
+                    "provider_name": provider,
+                    "quantization": generation_info.get("quantization", "unspecified"),
+                    "last_used": generation_info.get("created_at"),
+                    "total_cost": client.used_models[model_name]["total_cost"] + cost,
+                    "tokens_prompt": tokens_prompt,
+                    "tokens_completion": tokens_completion,
+                    "native_tokens_prompt": generation_info.get("native_tokens_prompt"),
+                    "native_tokens_completion": generation_info.get("native_tokens_completion"),
+                })
+
+                client.global_stats['total_cost'] += cost
+                if provider:
+                    client.global_stats['used_providers'].add(provider)
+
+            # Update last_generation_info in global_stats
+            client.global_stats['last_generation_info'] = generation_info
+
+    @classmethod
+    def schedule_generation_data_update(cls, client: 'OpenRouter', response: Dict[str, Any], delay: float = 1.0, max_attempts: int = 5):
+        """Schedule the generation info update, choosing between sync and async methods."""
+        generation_id = response.get('id')
+        if not generation_id:
+            return
+
+        try:
+            loop = asyncio.get_running_loop()
+            asyncio.create_task(cls._update_generation_info_async(client, response, generation_id, delay, max_attempts))
+        except RuntimeError:
+            # No running event loop, use synchronous update
+            cls._update_generation_info_sync(client, response, generation_id, delay, max_attempts)
+
+    @classmethod
+    def _update_generation_info_sync(cls, client: 'OpenRouter', response: Dict[str, Any], generation_id: str, delay: float, max_attempts: int):
+        """Synchronously update generation info."""
+        # This is a chained API request relying on the first API request propagating on OpenRouter servers.
+        time.sleep(0.1)  # Use a small sleep to allow the generation ID to propagate
+        try:
+            generation_info = client.get_generation_data(generation_id, delay=delay, max_attempts=max_attempts)
+            if generation_info:
+                response['generation_info'] = generation_info
+                cls.update_stats(client, response)
+        except Exception as e:
+            print(f"Failed to update generation info synchronously: {e}")
+
+    @classmethod
+    async def _update_generation_info_async(cls, client: 'OpenRouter', response: Dict[str, Any], generation_id: str, delay: float, max_attempts: int):
+        """Asynchronously update generation info."""
+        # This is a chained API request relying on the first API request propagating on OpenRouter servers.
+        await asyncio.sleep(0.1)  # Use a small asyncio.sleep to allow the generation ID to propagate
+        try:
+            generation_info = await client.get_generation_data_async(generation_id, delay=delay, max_attempts=max_attempts)
+            if generation_info:
+                response['generation_info'] = generation_info
+                cls.update_stats(client, response)
+        except Exception as e:
+            print(f"Failed to update generation info asynchronously: {e}")
+
+# Register the provider
+openrouter_provider = OpenRouterProvider()
+register_provider(openrouter_provider, OpenRouter)
 
 
 Client = OpenRouter

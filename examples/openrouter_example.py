@@ -13,7 +13,7 @@ openrouter_client = get_client()
 # Provider Name Alias
 ProviderName = ProviderPreferences.ProviderName
 
-@ell.simple(model="meta-llama/llama-3.1-8b-instruct")
+@ell.simple(model="meta-llama/llama-3.1-8b-instruct", client=openrouter_client)
 def generate_greeting(name: str) -> str:
     """You are a friendly AI assistant."""
     return f"Generate a warm greeting for {name}"
@@ -127,11 +127,12 @@ def get_generation_data_example():
     ))
 
     # Generate a greeting to get a new generation
-    greeting = generate_greeting("Ell")
-    print(f"Generation Data Example Greeting: {greeting}")
-
     # Get the last used model and its generation ID
-    last_used_model = next(iter(openrouter_client.used_models.keys()))
+    if not openrouter_client.used_models:
+        greeting = generate_greeting("Ell")
+        print(f"Generation Data Example Greeting: {greeting}")
+
+    last_used_model = next(iter(openrouter_client.used_models.keys()), None)
     generation_id = openrouter_client.used_models[last_used_model].get('last_message_id')
 
     if generation_id:

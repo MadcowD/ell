@@ -1,173 +1,175 @@
-import json
-from unittest.mock import Mock, patch
-
 import pytest
-from pydantic import BaseModel
-
-import ell
-from ell.providers.openrouter import OpenRouter
-from ell.provider import APICallResult
+import pydantic
+from unittest.mock import MagicMock, patch
 from ell.providers.openrouter import OpenRouterProvider
+from ell.provider import EllCallParams
 from ell.types import Message, ContentBlock, ToolCall
 from ell.types.message import ToolResult
 
-
-class DummyParams(BaseModel):
-    param1: str
-    param2: int
+@pytest.fixture
+def provider():
+    return OpenRouterProvider()
 
 @pytest.fixture
-def mock_openrouter_client():
-    client = Mock(spec=OpenRouter, auto_spec=True)
-    client.fetch_generation_data = False
-    client.used_models = {}
-    client.global_stats = {
-        'total_cost': 0,
-        'total_tokens': 0,
-        'used_providers': set()
-    }
+def ell_call_params(openrouter_client):
+    return EllCallParams(
+        client=openrouter_client,
+        api_params={},
+        model="gpt-3.5-turbo",
+        messages=[],
+        tools=[],
+    )
+
+@pytest.fixture
+def openrouter_client():
+    client = MagicMock()
+    client.chat.completions.create = MagicMock()
     return client
 
-def test_content_block_to_openrouter_format():
-    # Test text content
-    text_block = ContentBlock(text="Hello, world!")
-    assert OpenRouterProvider.content_block_to_openrouter_format(text_block) == {
-        "type": "text",
-        "text": "Hello, world!"
-    }
+@pytest.fixture
+def mock_tool():
+    mock = MagicMock()
+    mock.__name__ = "mock_tool"
+    mock.__doc__ = "A mock tool"
+    params_model = pydantic.create_model("MyModel", param1=(str, "..."))
+    mock.__ell_params_model__ = params_model
+    return mock
 
-    # Test parsed content
-    class DummyParsed(BaseModel):
-        field: str
-    parsed_block = ContentBlock(parsed=DummyParsed(field="value"))
+class TestOpenRouterProvider:
+    def test_translate_to_provider_streaming_enabled(self, provider, ell_call_params):
+        ell_call_params.api_params = {"some_param": "value"}
+        ell_call_params.messages = [
+            Message(role="user", content=[ContentBlock(text="Hello")])
+        ]
 
-    res = OpenRouterProvider.content_block_to_openrouter_format(parsed_block)
-    assert res["type"] == "text"
-    assert json.loads(res["text"]) == {"field": "value"}
+        translated = provider.translate_to_provider(ell_call_params)
+        assert translated["model"] == "gpt-3.5-turbo"
+        assert translated["messages"] == [
+            {"role": "user", "content": [{"type": "text", "text": "Hello"}]}
+        ]
 
-    # Test image content (mocked)
-    with patch('ell.providers.openrouter.serialize_image', return_value="base64_image_data"):
-        # Test random image content
-        import numpy as np
-        from PIL import Image
-        
-        # Generate a random image
-        random_image = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
-        pil_image = Image.fromarray(random_image)
-        
-        with patch('ell.providers.openrouter.serialize_image', return_value="random_base64_image_data"):
-            random_image_block = ContentBlock(image=pil_image)
-            assert OpenRouterProvider.content_block_to_openrouter_format(random_image_block) == {
-                "type": "image_url",
-                "image_url": {
-                    "url": "random_base64_image_data"
-                }
+    def test_translate_to_provider_with_tools(self, provider, ell_call_params, mock_tool):
+        ell_call_params.tools = [mock_tool]
+        ell_call_params.messages = []
+
+        translated = provider.translate_to_provider(ell_call_params)
+        assert translated["tools"] == [
+            {
+                "type": "function",
+                "function": {
+                    "name": "mock_tool",
+                    "description": "A mock tool",
+                    "parameters": {
+                        "properties": {
+                            "param1": {
+                                "default": "...",
+                                "title": "Param1",
+                                "type": "string",
+                            },
+                        },
+                        "title": "MyModel",
+                        "type": "object",
+                    },
+                },
             }
+        ]
 
-def test_message_to_openrouter_format():
-    # Test simple message
-    simple_message = Message(role="user", content=[ContentBlock(text="Hello")])
-    assert OpenRouterProvider.message_to_openrouter_format(simple_message) == {
-        "role": "user",
-        "content": [{"type": "text", "text": "Hello"}]
-    }
+    def test_translate_to_provider_with_tool_calls(self, provider, ell_call_params, mock_tool):
+        tool_call = ToolCall(
+            tool=mock_tool, tool_call_id="123", params={"param1": "value1"}
+        )
+        message = Message(role="assistant", content=[tool_call])
+        ell_call_params.tools = [mock_tool]
+        ell_call_params.messages = [message]
 
-    # Test message with tool calls
-    def dummy_tool(param1: str, param2: int): pass
-    tool_call = ToolCall(tool=dummy_tool, tool_call_id="123", params=DummyParams(param1="test", param2=42))
-    tool_message = Message(role="assistant", content=[tool_call])
-    formatted = OpenRouterProvider.message_to_openrouter_format(tool_message)
-    assert formatted["role"] == "assistant"
-    assert formatted["content"] is None
-    assert len(formatted["tool_calls"]) == 1
-    assert formatted["tool_calls"][0]["id"] == "123"
-    assert formatted["tool_calls"][0]["type"] == "function"
-    assert formatted["tool_calls"][0]["function"]["name"] == "dummy_tool"
-    assert json.loads(formatted["tool_calls"][0]["function"]["arguments"]) == {"param1": "test", "param2": 42}
-
-    # Test message with tool results
-    tool_result_message = Message(
-        role="user",
-        content=[ToolResult(tool_call_id="123", result=[ContentBlock(text="Tool output")])],
-    )
-    formatted = OpenRouterProvider.message_to_openrouter_format(tool_result_message)
-    assert formatted["role"] == "tool"
-    assert formatted["tool_call_id"] == "123"
-    assert formatted["content"] == "Tool output"
-
-def test_call_model(mock_openrouter_client):
-    messages = [Message(role="user", content=[ContentBlock(text="Hello")], refusal=None)]
-    api_params = {"temperature": 0.7}
-
-    # Mock the client's chat_completions method
-    mock_openrouter_client.chat_completions.return_value = {
-        "id": "chatcmpl-123",
-        "object": "chat.completion",
-        "created": 1677652288,
-        "model": "gpt-3.5-turbo-0613",
-        "choices": [{
-            "index": 0,
-            "message": {
+        translated = provider.translate_to_provider(ell_call_params)
+        assert translated["messages"] == [
+            {
+                "tool_calls": [
+                    {
+                        "id": "123",
+                        "type": "function",
+                        "function": {
+                            "name": "mock_tool",
+                            "arguments": '{"param1": "value1"}',
+                        },
+                    }
+                ],
                 "role": "assistant",
-                "content": "Hello! How can I assist you today?"
-            },
-            "finish_reason": "stop"
-        }],
-        "usage": {
-            "prompt_tokens": 9,
-            "completion_tokens": 12,
-            "total_tokens": 21
+                "content": None,
+            }
+        ]
+
+    def test_translate_from_provider_streaming(self, provider, ell_call_params, openrouter_client):
+        provider_call_params = {"stream": True}
+        stream_chunk = {
+            "id": "chatcmpl-123",
+            "object": "chat.completion.chunk",
+            "created": 1234567890,
+            "model": "gpt-3.5-turbo",
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {"role": "assistant", "content": "Hello"},
+                    "finish_reason": None
+                }
+            ]
         }
-    }
+        mock_stream = MagicMock()
+        mock_stream.__iter__.return_value = [stream_chunk]
+        openrouter_client.chat.completions.create.return_value = mock_stream
 
-    @ell.tool()
-    def dummy_tool(param1: str, param2: int): pass
+        messages, metadata = provider.translate_from_provider(
+            provider_response=mock_stream,
+            ell_call=ell_call_params,
+            provider_call_params=provider_call_params,
+        )
+        assert messages == [
+            Message(role="assistant", content=[ContentBlock(text="Hello")])
+        ]
+        assert metadata['id'] == 'chatcmpl-123'
+        assert metadata['model'] == 'gpt-3.5-turbo'
+        assert metadata['object'] == 'chat.completion.chunk'
 
-    result = OpenRouterProvider.call_model(mock_openrouter_client, "gpt-3.5-turbo", messages, api_params, tools=[dummy_tool])
-
-    assert isinstance(result, APICallResult)
-    assert not "stream" in result.final_call_params
-    assert not result.actual_streaming
-    assert result.actual_n == 1
-    assert "messages" in result.final_call_params
-    assert result.final_call_params["model"] == "gpt-3.5-turbo"
-
-def test_process_response():
-    # Mock APICallResult
-    mock_response = {
-        "id": "chatcmpl-123",
-        "object": "chat.completion",
-        "created": 1677652288,
-        "model": "gpt-3.5-turbo-0613",
-        "choices": [{
-            "index": 0,
-            "message": {
-                "role": "assistant",
-                "content": "Hello, world!"
-            },
-            "finish_reason": "stop"
-        }],
-        "usage": {
-            "prompt_tokens": 9,
-            "completion_tokens": 12,
-            "total_tokens": 21
+    def test_translate_from_provider_non_streaming(self, provider, ell_call_params, openrouter_client):
+        provider_call_params = {"stream": False}
+        chat_completion = {
+            "id": "chatcmpl-123",
+            "object": "chat.completion",
+            "created": 1234567890,
+            "model": "gpt-3.5-turbo",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": "Hello"},
+                    "finish_reason": "stop"
+                }
+            ]
         }
-    }
-    call_result = APICallResult(
-        response=mock_response,
-        actual_streaming=False,
-        actual_n=1,
-        final_call_params={}
-    )
+        openrouter_client.chat.completions.create.return_value = chat_completion
 
-    processed_messages, metadata = OpenRouterProvider.process_response(call_result, "test_origin")
+        messages, metadata = provider.translate_from_provider(
+            provider_response=chat_completion,
+            ell_call=ell_call_params,
+            provider_call_params=provider_call_params,
+        )
+        assert messages == [
+            Message(role="assistant", content=[ContentBlock(text="Hello")])
+        ]
+        assert metadata['id'] == 'chatcmpl-123'
+        assert metadata['model'] == 'gpt-3.5-turbo'
+        assert metadata['object'] == 'chat.completion'
 
-    assert len(processed_messages) == 1
-    assert processed_messages[0].role == "assistant"
-    assert len(processed_messages[0].content) == 1
-    assert processed_messages[0].content[0].text == "Hello, world!"
-    assert metadata["id"] == "chatcmpl-123"
-    assert metadata["model"] == "gpt-3.5-turbo-0613"
+    def test_translate_from_provider_with_tool_results(self, provider, ell_call_params):
+        tool_result = ToolResult(tool_call_id="123", result=[ContentBlock(text="Tool output")])
+        message = Message(role="tool", content=[tool_result])
+        ell_call_params.messages = [message]
 
-def test_supports_streaming():
-    assert OpenRouterProvider.supports_streaming() == True
+        translated = provider.translate_to_provider(ell_call_params)
+        assert translated["messages"] == [
+            {
+                "role": "tool",
+                "tool_call_id": "123",
+                "content": "Tool output"
+            }
+        ]

@@ -1,6 +1,8 @@
 # src/ell/models/openrouter.py
 import logging
 from typing import Dict, List
+from dotenv import load_dotenv
+load_dotenv()
 
 from ell.configurator import config
 from ell.providers import openrouter
