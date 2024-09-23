@@ -17,7 +17,7 @@ def describe_activity(image: Image.Image):
 
 
 def capture_webcam_image():
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     for _ in range(10):
         ret, frame = cap.read()
     ret, frame = cap.read()

@@ -185,16 +185,16 @@ class ContentBlock(BaseModel):
         >>> from PIL import Image as PILImage
         >>> img = PILImage.new('RGB', (100, 100))
         >>> ContentBlock.coerce(img)
-        ContentBlock(image=Image(image=<PIL.Image.Image object>))
+        ContentBlock(image=ImageContent(image=<PIL.Image.Image object>))
 
         >>> import numpy as np
         >>> arr = np.random.rand(100, 100, 3)
         >>> ContentBlock.coerce(arr)
-        ContentBlock(image=Image(image=<PIL.Image.Image object>))
+        ContentBlock(image=ImageContent(image=<PIL.Image.Image object>))
 
         >>> image = Image(url="https://example.com/image.jpg")
         >>> ContentBlock.coerce(image)
-        ContentBlock(image=Image(url="https://example.com/image.jpg"))
+        ContentBlock(image=ImageContent(url="https://example.com/image.jpg"))
 
         Notes:
         - This method is particularly useful when working with heterogeneous content types

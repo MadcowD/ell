@@ -70,7 +70,7 @@ Solving the construction problem
 
 The Message and ContentBlock objects solve the problem of pedantic construction by incorporating type coercion directly into their constructors.
 
-ConsiConsider constructing a message that contains both text and an image. Traditionally, you might need to create a Message with a role and two ContentBlocks - one for text and one for an image:
+Consider constructing a message that contains both text and an image. Traditionally, you might need to create a Message with a role and two ContentBlocks - one for text and one for an image:
 
 .. code-block:: python
 
