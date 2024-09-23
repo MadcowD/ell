@@ -309,7 +309,7 @@ class Message(BaseModel):
         return [c.image for c in self.content if c.image]
     
     @cached_property
-    def audios(self) -> List[np.ndarray | List[float]]:
+    def audios(self) -> List[Union[np.ndarray, List[float]]]:
         """Returns a list of all audio content.
 
         Example:
