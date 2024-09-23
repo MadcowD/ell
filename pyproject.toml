@@ -21,7 +21,8 @@ classifiers = [
 ]
 include = [
     { path = "src/ell/studio/static", format = ["sdist", "wheel"] },
-    { path = "src/ell/studio/static/**/*", format = ["sdist", "wheel"] }
+    { path = "src/ell/studio/static/**/*", format = ["sdist", "wheel"] },
+    { path = "src/ell/util/char_bitmaps.npy", format = ["sdist", "wheel"] }
 ]
 
 [tool.poetry.dependencies]

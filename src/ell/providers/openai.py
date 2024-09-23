@@ -168,7 +168,7 @@ def _content_block_to_openai_format(content_block: ContentBlock) -> Dict[str, An
     if (image := content_block.image):
         image_url = dict(url=serialize_image(image.image) if image.image else image.url)
         # XXX: Solve per content params better
-        if (image_detail := content_block.image_detail): image_url["detail"] = image_detail
+        if image.detail: image_url["detail"] = image.detail
         return {
             "type": "image_url",
             "image_url": image_url

@@ -1,6 +1,6 @@
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type, Union, cast
 from ell.provider import  EllCallParams, Metadata, Provider
-from ell.types import Message, ContentBlock, ToolCall, Image
+from ell.types import Message, ContentBlock, ToolCall, ImageContent
 
 from ell.types._lstr import _lstr
 from ell.types.message import LMP
@@ -161,7 +161,7 @@ except ImportError:
     raise
     pass
 
-def serialize_image_for_anthropic(img : Image):
+def serialize_image_for_anthropic(img : ImageContent):
     if img.url:
         # Download the image from the URL
         response = requests.get(img.url)

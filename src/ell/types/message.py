@@ -46,8 +46,8 @@ class ToolCall(BaseModel):
         return Message(role="user", content=[self.call_and_collect_as_message_block()])
     
 
-
-class Image(BaseModel):
+# XXX: This needs a non conflicting name
+class ImageContent(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     image: Optional[PILImage.Image] = Field(default=None)
@@ -63,7 +63,7 @@ class Image(BaseModel):
         return self
 
     @classmethod
-    def coerce(cls, value: Union[str, np.ndarray, PILImage.Image, "Image"]):
+    def coerce(cls, value: Union[str, np.ndarray, PILImage.Image, "ImageContent"]):
         if isinstance(value, cls):
             return value
         
@@ -102,15 +102,18 @@ class ContentBlock(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     
     text: Optional[_lstr_generic] = Field(default=None)
-    image: Optional[Image] = Field(default=None)
+    image: Optional[ImageContent] = Field(default=None)
     audio: Optional[Union[np.ndarray, List[float]]] = Field(default=None)
     tool_call: Optional[ToolCall] = Field(default=None)
     parsed: Optional[BaseModel] = Field(default=None)
     tool_result: Optional[ToolResult] = Field(default=None)
 
     def __init__(self, *args, **kwargs):
-        if "image" in kwargs and not isinstance(kwargs["image"], Image):
-            kwargs["image"] = Image.coerce(kwargs["image"])
+        if "image" in kwargs and not isinstance(kwargs["image"], ImageContent):
+            im = kwargs["image"] = ImageContent.coerce(kwargs["image"])
+            # XXX: Backwards compatibility, Deprecate.
+            if (d := kwargs.get("image_detail", None)): im.detail = d
+
         super().__init__(*args, **kwargs)
 
 
@@ -138,7 +141,7 @@ class ContentBlock(BaseModel):
         return None
 
     @classmethod
-    def coerce(cls, content: Union["ContentBlock", str, ToolCall, ToolResult, Image, np.ndarray, PILImage.Image, BaseModel]) -> "ContentBlock":
+    def coerce(cls, content: Union["ContentBlock", str, ToolCall, ToolResult, ImageContent, np.ndarray, PILImage.Image, BaseModel]) -> "ContentBlock":
         """
         Coerce various types of content into a ContentBlock.
 
@@ -211,8 +214,8 @@ class ContentBlock(BaseModel):
             return cls(tool_call=content)
         if isinstance(content, ToolResult):
             return cls(tool_result=content)
-        if isinstance(content, (Image, np.ndarray, PILImage.Image)):
-            return cls(image=Image.coerce(content))
+        if isinstance(content, (ImageContent, np.ndarray, PILImage.Image)):
+            return cls(image=ImageContent.coerce(content))
         if isinstance(content, BaseModel):
             return cls(parsed=content)
 
@@ -226,7 +229,7 @@ class ContentBlock(BaseModel):
     
 
 def coerce_content_list(
-    content: Optional[Union[str, List[ContentBlock], List[Union[ContentBlock, str, ToolCall, ToolResult, Image, np.ndarray, PILImage.Image, BaseModel]]]] = None,
+    content: Optional[Union[str, List[ContentBlock], List[Union[ContentBlock, str, ToolCall, ToolResult, ImageContent, np.ndarray, PILImage.Image, BaseModel]]]] = None,
     **content_block_kwargs
 ) -> List[ContentBlock]:
     """
@@ -270,7 +273,7 @@ class Message(BaseModel):
     content: List[ContentBlock]
     
 
-    def __init__(self, role, content: Union[str, List[ContentBlock], List[Union[ContentBlock, str, ToolCall, ToolResult, Image, np.ndarray, PILImage.Image, BaseModel]]] = None, **content_block_kwargs):
+    def __init__(self, role, content: Union[str, List[ContentBlock], List[Union[ContentBlock, str, ToolCall, ToolResult, ImageContent, np.ndarray, PILImage.Image, BaseModel]]] = None, **content_block_kwargs):
         content = coerce_content_list(content, **content_block_kwargs)
         
         super().__init__(content=content, role=role)
@@ -286,7 +289,7 @@ class Message(BaseModel):
         return _lstr("\n").join(c.text or f"<{c.type}>" for c in self.content)
     
     @cached_property
-    def images(self) -> List[Image]:
+    def images(self) -> List[ImageContent]:
         """Returns a list of all image content.
 
         Example:
@@ -431,3 +434,5 @@ OneTurn = Callable[..., _lstr_generic]
 ChatLMP = Callable[[Chat, Any], Chat]
 LMP = Union[OneTurn, MultiTurnLMP, ChatLMP]
 InvocableLM = Callable[..., _lstr_generic]
+
+
