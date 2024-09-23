@@ -2,7 +2,7 @@ from typing import List, Optional
 import ell
 from pydantic import BaseModel, Field
 
-ell.config.verbose = True
+
 
  
 class Test(BaseModel):

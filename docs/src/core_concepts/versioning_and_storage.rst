@@ -118,9 +118,9 @@ In addition, when a language model program depends on another prompt (i.e., when
     @ell.simple(model="gpt-4-turbo", temperature=0.2)
     def write_a_really_good_story(about : str):
         """You are an expert novelist that writes in the style of Hemmingway. You write in lowercase."""
-        # Note: You can pass in lm_params to control the language model call
+        # Note: You can pass in api_params to control the language model call
         # in the case n = 4 tells OpenAI to generate a batch of 4 outputs.
-        ideas = generate_story_ideas(about, lm_params=(dict(n=4))) 
+        ideas = generate_story_ideas(about, api_params=(dict(n=4))) 
 
         drafts = [write_a_draft_of_a_story(idea) for idea in ideas]
 

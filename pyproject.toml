@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ell-ai"
-version = "0.0.6"
+version = "0.0.7"
 description = "ell - the language model programming library"
 authors = ["William Guss <will@lrsys.xyz>"]
 license = "MIT"
@@ -31,30 +31,34 @@ numpy = "^2.0.1"
 dill = "^0.3.8"
 colorama = "^0.4.6"
 cattrs = "^23.2.3"
-openai = "^1.40.6"
+openai = "^1.47.0"
+anthropic = { version = "^0.34.2", optional = true }
+groq = { version = "^0.11.0", optional = true }
 sqlmodel = "^0.0.21"
 uvicorn = "^0.30.3"
 requests = "^2.32.3"
 typing-extensions = "^4.12.2"
-
-
 black = "^24.8.0"
 json-fix = "^1.0.0"
 pillow = "^10.4.0"
+
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
-
 sphinx = "<8.0.0"
 sphinx-rtd-theme = "^2.0.0"
+
+[tool.poetry.extras]
+openai = ["openai"]
+anthropic = ["anthropic"]
+groq = ["groq"]
+all = ["openai", "anthropic", "groq"]
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-
-
 [tool.poetry.scripts]
 ell-studio = "ell.studio.__main__:main"
-
 
 # [tool.poetry.build]
 # # script = "build.py"

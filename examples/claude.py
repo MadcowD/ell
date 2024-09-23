@@ -8,5 +8,5 @@ def hello_from_claude():
 
 if __name__ == "__main__":
     ell.init(verbose=True, store="./logdir", autocommit=True)
-    hello_from_claude()
+    print(hello_from_claude())
 

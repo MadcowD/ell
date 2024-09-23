@@ -3,6 +3,7 @@ import openai
 import requests
 import logging
 
+#XXX: May be deprecated soon because of the new provider framework.
 logger = logging.getLogger(__name__)
 client = None
 

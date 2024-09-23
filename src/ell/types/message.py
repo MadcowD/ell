@@ -20,13 +20,17 @@ InvocableTool = Callable[..., Union["ToolResult", _lstr_generic, List["ContentBl
 
 class ToolResult(BaseModel):
     tool_call_id: _lstr_generic
-    #XXX: Add a validator to check that the result is a list of ContentBlocks.
     result: List["ContentBlock"]
 
 class ToolCall(BaseModel):
     tool : InvocableTool
     tool_call_id : Optional[_lstr_generic] = Field(default=None)
     params : BaseModel
+
+    def __init__(self, tool, params : Union[BaseModel, Dict[str, Any]],  tool_call_id=None):
+        if not isinstance(params, BaseModel):
+            params = tool.__ell_params_model__(**params) #convenience.
+        super().__init__(tool=tool, tool_call_id=tool_call_id, params=params)
 
     def __call__(self, **kwargs):
         assert not kwargs, "Unexpected arguments provided. Calling a tool uses the params provided in the ToolCall."
@@ -40,6 +44,8 @@ class ToolCall(BaseModel):
 
     def call_and_collect_as_message(self):
         return Message(role="user", content=[self.call_and_collect_as_message_block()])
+    
+
 
 class Image(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -205,6 +211,13 @@ class ContentBlock(BaseModel):
             return cls(parsed=content)
 
         raise ValueError(f"Invalid content type: {type(content)}")
+    
+    @field_serializer('parsed')
+    def serialize_parsed(self, value: Optional[BaseModel], _info):
+        if value is None:
+            return None
+        return value.model_dump(exclude_none=True, exclude_unset=True)
+    
 
 def coerce_content_list(
     content: Optional[Union[str, List[ContentBlock], List[Union[ContentBlock, str, ToolCall, ToolResult, Image, np.ndarray, PILImage.Image, BaseModel]]]] = None,
@@ -264,7 +277,7 @@ class Message(BaseModel):
             >>> message.text
             'Hello\\n<image>\\nWorld'
         """
-        return "\n".join(c.text or f"<{c.type}>" for c in self.content)
+        return _lstr("\n").join(c.text or f"<{c.type}>" for c in self.content)
     
     @cached_property
     def images(self) -> List[Image]:

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
-from ell.provider import APICallResult, Provider
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
+from ell.provider import  EllCallParams, Metadata, Provider
 from ell.types import Message, ContentBlock, ToolCall
 from ell.types._lstr import _lstr
 import json
@@ -10,246 +10,170 @@ from ell.types.message import LMP
 from ell.util.serialization import serialize_image
 
 try: 
+    # XXX: Could genericize.
     import openai
+    from openai._streaming import Stream
+    from openai.types.chat import ChatCompletion, ParsedChatCompletion, ChatCompletionChunk, ChatCompletionMessageParam
+
     class OpenAIProvider(Provider):
-
-        # XXX: This content block conversion etc might need to happen on a per model basis for providers like groq etc. We will think about this at a future date.
-        @staticmethod
-        def content_block_to_openai_format(content_block: ContentBlock) -> Dict[str, Any]:
-            if content_block.image:
-                image_url = {}
-                if content_block.image.url:
-                    image_url["url"] = content_block.image.url
-                else:
-                    base64_image = serialize_image(content_block.image.image)
-                    image_url["url"] = base64_image
-
-                if content_block.image.detail:
-                    image_url["detail"] = content_block.image.detail
-
-                return {
-                    "type": "image_url",
-                    "image_url": image_url
-                }
-            elif content_block.text:
-                return {
-                    "type": "text",
-                    "text": content_block.text
-                }
-            elif content_block.parsed:
-                return {
-                    "type": "text",
-                    "text": content_block.parsed.model_dump_json()
-                }
-            # Tool calls handled in message_to_openai_format.
-            #XXX: Feel free to refactor this.
+        dangerous_disable_validation = True
+        
+        def provider_call_function(self, client : openai.Client, api_call_params : Optional[Dict[str, Any]] = None) -> Callable[..., Any]:
+            if api_call_params and api_call_params.get("response_format"):
+                return client.beta.chat.completions.parse
             else:
-                return None
+                return client.chat.completions.create
+            
+        def translate_to_provider(self, ell_call : EllCallParams) -> Dict[str, Any]: 
+            final_call_params = ell_call.api_params.copy()
+            final_call_params["model"] = ell_call.model
+            # Stream by default for verbose logging.
+            final_call_params["stream"] = True
+            final_call_params["stream_options"] = {"include_usage": True}
 
-        @staticmethod
-        def message_to_openai_format(message: Message) -> Dict[str, Any]:
-            openai_message = {
-                "role": "tool" if message.tool_results else message.role,
-                "content": list(filter(None, [
-                    OpenAIProvider.content_block_to_openai_format(c) for c in message.content
-                ]))
-            }
-            if message.tool_calls:
-                try:
-                    openai_message["tool_calls"] = [
-                        {
-                            "id": tool_call.tool_call_id,
-                            "type": "function",
-                            "function": {
-                                "name": tool_call.tool.__name__,
-                                "arguments": json.dumps(tool_call.params.model_dump())
-                            }
-                        } for tool_call in message.tool_calls
+            # XXX: Deprecation of config.registry.supports_streaming when streaming is implemented.
+            if final_call_params.get("response_format") or config.registry[ell_call.model].supports_streaming is False or ell_call.tools:
+                final_call_params.pop("stream", None)
+                final_call_params.pop("stream_options", None)
+            if ell_call.tools:
+                final_call_params.update(
+                    tool_choice="auto",
+                    tools=[  
+                        dict(
+                            type="function",
+                            function=dict(
+                                name=tool.__name__,
+                                description=tool.__doc__,
+                                parameters=tool.__ell_params_model__.model_json_schema(),  #type: ignore
+                            )
+                        ) for tool in ell_call.tools
                     ]
-                except TypeError as e:
-                    print(f"Error serializing tool calls: {e}. Did you fully type your @ell.tool decorated functions?")
-                    raise
-                openai_message["content"] = None  # Set content to null when there are tool calls
-
-            if message.tool_results:
-                openai_message["tool_call_id"] = message.tool_results[0].tool_call_id
-                openai_message["content"] = message.tool_results[0].result[0].text
-                assert len(message.tool_results[0].result) == 1, "Tool result should only have one content block"
-                assert message.tool_results[0].result[0].type == "text", "Tool result should only have one text content block"
-            return openai_message
-
-        @classmethod
-        def call_model(
-            cls,
-            client: Any,
-            model: str,
-            messages: List[Message],
-            api_params: Dict[str, Any],
-            tools: Optional[list[LMP]] = None,
-        ) -> APICallResult:
-            final_call_params = api_params.copy()
-            openai_messages = [cls.message_to_openai_format(message) for message in messages]
-
-            actual_n = api_params.get("n", 1)
-            final_call_params["model"] = model
+                )
+            # messages
+            openai_messages : List[ChatCompletionMessageParam] = []
+            for message in ell_call.messages:
+                if (tool_calls := message.tool_calls):
+                    assert message.role == "assistant", "Tool calls must be from the assistant."
+                    assert all(t.tool_call_id for t in tool_calls), "Tool calls must have tool call ids."
+                    openai_messages.append(dict(
+                        tool_calls=[
+                            dict(
+                                id=cast(str, tool_call.tool_call_id),
+                                type="function",
+                                function=dict(
+                                    name=tool_call.tool.__name__,
+                                    arguments=json.dumps(tool_call.params.model_dump())
+                                )
+                            ) for tool_call in tool_calls ],
+                        role="assistant",
+                        content=None,
+                    ))
+                elif (tool_results := message.tool_results):
+                    assert len(tool_results) == 1, "Message should only have one tool result"
+                    assert (tr_content := tool_results[0].result[0]).type == "text", "Tool result should only have one text content block"
+                    openai_messages.append(dict(
+                        role="tool",
+                        tool_call_id=tool_results[0].tool_call_id,
+                        content=cast(str, tr_content.text),
+                    ))
+                else:
+                    openai_messages.append(cast(ChatCompletionMessageParam, dict(
+                        role=message.role,
+                        content=[_content_block_to_openai_format(c) for c in message.content]
+                    )))
             final_call_params["messages"] = openai_messages
-
-            if model == "o1-preview" or model == "o1-mini":
-                # Ensure no system messages are present
-                assert all(msg['role'] != 'system' for msg in final_call_params['messages']), "System messages are not allowed for o1-preview or o1-mini models"
-                
-                response = client.chat.completions.create(**final_call_params)
-                final_call_params.pop("stream", None)
-                final_call_params.pop("stream_options", None)
-
-
-            elif final_call_params.get("response_format"):
-                final_call_params.pop("stream", None)
-                final_call_params.pop("stream_options", None)
-                response = client.beta.chat.completions.parse(**final_call_params)
-            else:
-                # Tools not workign with structured API
-                if tools:
-                    final_call_params["tool_choice"] = "auto"
-                    final_call_params["tools"] = [
-                        {
-                            "type": "function",
-                            "function": {
-                                "name": tool.__name__,
-                                "description": tool.__doc__,
-                                "parameters": tool.__ell_params_model__.model_json_schema(),
-                            },
-                        }
-                        for tool in tools
-                    ]
-                    final_call_params.pop("stream", None)
-                    final_call_params.pop("stream_options", None)
-                else:
-                    final_call_params["stream_options"] = {"include_usage": True}
-                    final_call_params["stream"] = True
-
-                response = client.chat.completions.create(**final_call_params)
             
-
-            return APICallResult(
-                response=response,
-                actual_streaming=isinstance(response, openai.Stream),
-                actual_n=actual_n,
-                final_call_params=final_call_params,
-            )
-
-        @classmethod
-        def process_response(
-            cls, call_result: APICallResult, _invocation_origin: str,  logger : Optional[Any] = None,  tools: Optional[List[LMP]] = None,
-        ) -> Tuple[List[Message], Dict[str, Any]]:
-            choices_progress = defaultdict(list)
-            api_params = call_result.final_call_params
-            metadata = {}
-            #XXX: Remove logger and refactor this API
-
-            if not call_result.actual_streaming:
-                response = [call_result.response]
-            else:
-                response = call_result.response
+            return final_call_params
+        
+        def translate_from_provider(
+            self,
+            provider_response: Union[
+                ChatCompletion, 
+                ParsedChatCompletion,
+                Stream[ChatCompletionChunk], Any],
+            ell_call: EllCallParams,
+            provider_call_params: Dict[str, Any],
+            origin_id: Optional[str] = None,
+            logger: Optional[Callable[..., None]] = None,
+        ) -> Tuple[List[Message], Metadata]:
             
+            metadata : Metadata = {} 
+            messages : List[Message] = []
+            did_stream = provider_call_params.get("stream", False)
 
-            for chunk in response:
-                if hasattr(chunk, "usage") and chunk.usage:
-                    metadata = chunk.to_dict()
+        
+            if did_stream:
+                stream = cast(Stream[ChatCompletionChunk], provider_response)
+                message_streams = defaultdict(list)
+                role : Optional[str] = None
+                for chunk in stream: 
+                    metadata.update(chunk.model_dump(exclude={"choices"})) 
                     
-
-                for choice in chunk.choices:
-                    choices_progress[choice.index].append(choice)
-                    
-                    if  choice.index == 0 and logger:
-                        # print(choice, streaming)
-                        logger(choice.delta.content if call_result.actual_streaming else 
-                            choice.message.content or getattr(choice.message, "refusal", ""), is_refusal=getattr(choice.message, "refusal", False) if not call_result.actual_streaming else False)
-
-
-
-            tracked_results = []
-            for _, choice_deltas in sorted(choices_progress.items(), key=lambda x: x[0]):
-                content = []
-
-                if call_result.actual_streaming:
-                    text_content = "".join(
-                        (choice.delta.content or "" for choice in choice_deltas)
-                    )
-                    if text_content:
-                        content.append(
-                            ContentBlock(
-                                text=_lstr(
-                                    content=text_content, _origin_trace=_invocation_origin
-                                )
-                            )
-                        )
-
-                    # Determine the role for streaming responses, defaulting to 'assistant' if not provided
-                    streamed_role = next((choice.delta.role for choice in choice_deltas if choice.delta.role), 'assistant')
-                else:
-                    choice = choice_deltas[0].message
-                    if choice.refusal:
-                        raise ValueError(choice.refusal)
-                    if api_params.get("response_format"):
-                        content.append(ContentBlock(parsed=choice.parsed))
-                    elif choice.content:
-                        content.append(
-                            ContentBlock(
-                                text=_lstr(
-                                    content=choice.content, _origin_trace=_invocation_origin
-                                )
-                            )
-                        )
-
-                if not call_result.actual_streaming and hasattr(choice, "tool_calls") and choice.tool_calls:
-                    assert tools is not None, "Tools not provided, yet tool calls in response. Did you manually specify a tool spec without using ell.tool?"
-                    for tool_call in choice.tool_calls:
-                        matching_tool = next(
-                            (
-                                tool
-                                for tool in tools
-                                if tool.__name__ == tool_call.function.name
-                            ),
-                            None,
-                        )
-                        if matching_tool:
-                            params = matching_tool.__ell_params_model__(
-                                **json.loads(tool_call.function.arguments)
-                            )
-                            content.append(
+                    for chat_compl_chunk in chunk.choices:
+                        message_streams[chat_compl_chunk.index].append(chat_compl_chunk)
+                        delta = chat_compl_chunk.delta
+                        role = role or delta.role
+                        if  chat_compl_chunk.index == 0 and logger:
+                            logger(delta.content, is_refusal=hasattr(delta, "refusal") and delta.refusal)
+                for _, message_stream in sorted(message_streams.items(), key=lambda x: x[0]):
+                    text = "".join((choice.delta.content or "") for choice in message_stream)
+                    messages.append(
+                        Message(role=role, 
+                                content=_lstr(content=text,origin_trace=origin_id)))
+                    #XXX: Support streaming other types.
+            else:
+                chat_completion = cast(Union[ChatCompletion, ParsedChatCompletion], provider_response)
+                metadata = chat_completion.model_dump(exclude={"choices"})
+                for oai_choice in chat_completion.choices: 
+                    role = oai_choice.message.role
+                    content_blocks = []
+                    if (hasattr(message := oai_choice.message, "refusal") and (refusal := message.refusal)):
+                        raise ValueError(refusal)
+                    if hasattr(message, "parsed"):
+                        if (parsed := message.parsed): 
+                            content_blocks.append(ContentBlock(parsed=parsed)) #XXX: Origin tracing
+                            if logger: logger(parsed.model_dump_json())
+                    else:
+                        if (content := message.content):
+                            content_blocks.append(
                                 ContentBlock(
-                                    tool_call=ToolCall(
-                                        tool=matching_tool,
-                                        tool_call_id=_lstr(
-                                            tool_call.id, _origin_trace=_invocation_origin
-                                        ),
-                                        params=params,
+                                    text=_lstr(content=content,origin_trace=origin_id)))
+                            if logger: logger(content)
+                        if (tool_calls := message.tool_calls):
+                            for tool_call in tool_calls:
+                                matching_tool = ell_call.get_tool_by_name(tool_call.function.name)
+                                assert matching_tool, "Model called tool not found in provided toolset."
+                                content_blocks.append(
+                                    ContentBlock(
+                                        tool_call=ToolCall(
+                                            tool=matching_tool,
+                                            tool_call_id=_lstr(
+                                                tool_call.id, origin_trace= origin_id),
+                                            params=json.loads(tool_call.function.arguments),
+                                        )
                                     )
                                 )
-                            )
-
-                tracked_results.append(
-                    Message(
-                        role=(
-                            choice.role
-                            if not call_result.actual_streaming
-                            else streamed_role
-                        ),
-                        content=content,
-                    )
-                )
-            return tracked_results, metadata
-
-        @classmethod
-        def supports_streaming(cls) -> bool:
-            return True
-
-        @classmethod
-        def get_client_type(cls) -> Type:
-            return openai.Client
+                                if logger: logger(tool_call)
+                    messages.append(Message(role=role, content=content_blocks))
+            return messages, metadata
 
 
-    register_provider(OpenAIProvider)
+    # xx: singleton needed
+    openai_provider = OpenAIProvider()
+    register_provider(openai_provider, openai.Client)
 except ImportError:
     pass
+
+def _content_block_to_openai_format(content_block: ContentBlock) -> Dict[str, Any]:
+    if (image := content_block.image):
+        image_url = dict(url=serialize_image(image.image) if image.image else image.url)
+        # XXX: Solve per content params better
+        if (image_detail := content_block.image_detail): image_url["detail"] = image_detail
+        return {
+            "type": "image_url",
+            "image_url": image_url
+        }
+    elif (text := content_block.text): return dict(type="text", text=text)
+    elif (parsed := content_block.parsed): return dict(type="text", text=parsed.model_dump_json())    
+    else:
+        raise ValueError(f"Unsupported content block type for openai: {content_block}")

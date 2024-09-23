@@ -4,7 +4,7 @@ from midiutil import MIDIFile
 import pygame
 import time
 
-ell.config.verbose = True
+
 
 CHORD_FORMAT = "| Chord | Chord | ... |"
 
@@ -57,7 +57,7 @@ def play_midi_file(file_path):
 from ell.stores.sql import SQLiteStore
 
 if __name__ == "__main__":
-    ell.set_store('./logdir', autocommit=True)
+    ell.init(store='./logdir', autocommit=True, verbose=True)
     
     genre = input("Enter the genre of the song (or press Enter to skip): ").strip() or None
     key = input("Enter the key of the song (or press Enter to skip): ").strip() or None

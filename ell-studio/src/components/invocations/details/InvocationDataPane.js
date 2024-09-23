@@ -30,7 +30,7 @@ const InvocationDataPane = ({ invocation }) => {
            invocation.contents?.results !== undefined;
   }, [invocation.contents?.results]);
 
-  const renderCodeSection = (title, content, expanded, setExpanded) => (
+  const renderCodeSection = (title, content, expanded, setExpanded, typeMatchLevel) => (
     <CodeSection
       title={title}
       raw={isExternalLoading ? "Loading..." : JSON.stringify(content, null, 2)}
@@ -47,7 +47,7 @@ const InvocationDataPane = ({ invocation }) => {
         {isExternalLoading ? (
           <SkeletonLoader />
         ) : (
-          <IORenderer content={content} typeMatchLevel={1} inline={false} />
+          <IORenderer content={content} typeMatchLevel={typeMatchLevel} inline={false} />
         )}
       </div>
     </CodeSection>
@@ -59,14 +59,16 @@ const InvocationDataPane = ({ invocation }) => {
         "Input",
         invocation.contents?.params,
         inputExpanded,
-        setInputExpanded
+        setInputExpanded,
+        1
       )}
 
       {(hasResults || isExternalLoading) && renderCodeSection(
         "Results",
         invocation.contents?.results,
         outputExpanded,
-        setOutputExpanded
+        setOutputExpanded,
+        0
       )}
     </div>
   );
