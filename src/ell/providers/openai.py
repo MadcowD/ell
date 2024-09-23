@@ -107,15 +107,14 @@ try:
                 message_streams = defaultdict(list)
                 role : Optional[str] = None
                 for chunk in stream: 
-        
-                    if hasattr(chunk, "usage") and chunk.usage: metadata.update(chunk.model_dump(exclude={"choices"})) 
+                    metadata.update(chunk.model_dump(exclude={"choices"})) 
                     
                     for chat_compl_chunk in chunk.choices:
                         message_streams[chat_compl_chunk.index].append(chat_compl_chunk)
                         delta = chat_compl_chunk.delta
                         role = role or delta.role
                         if  chat_compl_chunk.index == 0 and logger:
-                            logger(delta.content, is_refusal=delta.refusal)
+                            logger(delta.content, is_refusal=hasattr(delta, "refusal") and delta.refusal)
                 for _, message_stream in sorted(message_streams.items(), key=lambda x: x[0]):
                     text = "".join((choice.delta.content or "") for choice in message_stream)
                     messages.append(
@@ -128,7 +127,7 @@ try:
                 for oai_choice in chat_completion.choices: 
                     role = oai_choice.message.role
                     content_blocks = []
-                    if (refusal := (message := oai_choice.message).refusal):
+                    if (hasattr(message := oai_choice.message, "refusal") and (refusal := message.refusal)):
                         raise ValueError(refusal)
                     if hasattr(message, "parsed"):
                         if (parsed := message.parsed): 
@@ -156,6 +155,7 @@ try:
             return messages, metadata
 
 
+    # xx: singleton needed
     openai_provider = OpenAIProvider()
     register_provider(openai_provider, openai.Client)
 except ImportError:

@@ -1,4 +1,5 @@
 import ell.providers.openai
+import ell.providers.openai_like
 import ell.providers.anthropic
 # import ell.providers.groq
 # import ell.providers.mistral

@@ -187,9 +187,8 @@ def get_store() -> Union[Store, None]:
 # Will be deprecated at 0.1.0 
 
 # You can add more helper functions here if needed
-@wraps(config.register_provider)
-def register_provider(*args, **kwargs) -> None:
-    return config.register_provider(*args, **kwargs)
+def register_provider(provider: Provider, client_type: Type[Any]) -> None:
+    return config.register_provider(provider, client_type)
 
 # Deprecated now (remove at 0.1.0)
 def set_store(*args, **kwargs) -> None:

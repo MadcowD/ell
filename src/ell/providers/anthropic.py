@@ -148,10 +148,11 @@ try:
             metadata["usage"] = usage
             return tracked_results, metadata
 
-    # XXX: Could register a true base class.
-    register_provider(AnthropicProvider(), anthropic.Anthropic)
-    register_provider(AnthropicProvider(), anthropic.AnthropicBedrock)
-    register_provider(AnthropicProvider(), anthropic.AnthropicVertex)
+    # XXX: Make a singleton.
+    anthropic_provider = AnthropicProvider()
+    register_provider(anthropic_provider, anthropic.Anthropic)
+    register_provider(anthropic_provider, anthropic.AnthropicBedrock)
+    register_provider(anthropic_provider, anthropic.AnthropicVertex)
 
 except ImportError:
     raise
