@@ -58,7 +58,7 @@ Our API centers around two key objects: Messages and ContentBlocks.
     :model-show-json: false
 
 .. autopydantic_model:: ell.ContentBlock()
-    :members: text, image, audio, tool_call, parsed, tool_result, image_url
+    :members: text, image, audio, tool_call, parsed, tool_result
     :exclude-members: audio, image, parsed, text, tool_call, tool_result, check_single_non_null, to_openai_content_block, serialize_image, validate_image, validate_image, coerce, type
     :model-show-validator-members: false
     :model-show-config-summary: false
@@ -70,37 +70,27 @@ Solving the construction problem
 
 The Message and ContentBlock objects solve the problem of pedantic construction by incorporating type coercion directly into their constructors.
 
-Consider constructing a message that contains text, an image, and an image URL. Traditionally, you might need to create a Message with a role and three ContentBlocks - one for text, one for an image, and one for an image URL:
+ConsiConsider constructing a message that contains both text and an image. Traditionally, you might need to create a Message with a role and two ContentBlocks - one for text and one for an image:
 
 .. code-block:: python
 
-    from ell import Message, ContentBlock, ImageUrl
+    from ell import Message, ContentBlock
 
     message = Message(
         role="user",
         content=[
             ContentBlock(text="What is the capital of the moon?"),
-            ContentBlock(image=some_PIL_image_object),
-            ContentBlock(image_url=ImageUrl(url="https://example.com/image.jpg"))
+            ContentBlock(image=some_PIL_image_object)
         ]
     )
-
-.. note::
-    Not all language model providers support ImageUrl. For example, as of this writing, Anthropic does not support image URLs in their API. Always check the documentation of your specific provider for the most up-to-date information on supported content types.
 
 However, the Message object can infer the types of content blocks within it. This allows for a more concise construction:
 
 .. code-block:: python
 
-    from ell import ImageUrl
-
     message = Message(
         role="user",
-        content=[
-            "What is the capital of the moon?",
-            some_PIL_image_object,
-            ImageUrl(url="https://example.com/image.jpg")
-        ]
+        content=["What is the capital of the moon?", some_PIL_image_object]
     )
 
 Furthermore, if a message contains only one type of content (for example, just an image), we also support shape coercion:
@@ -206,3 +196,5 @@ The following conevnience functions and properties are available on a Message ob
 .. autoproperty:: ell.Message.images
 .. autoproperty:: ell.Message.audios
 .. automethod:: ell.Message.call_tools_and_collect_as_message
+
+.. XXX put all the content block types here.
