@@ -1,4 +1,4 @@
-from functools import wraps
+from functools import lru_cache, wraps
 from typing import Dict, Any, Optional, Tuple, Union, Type
 import openai
 import logging
@@ -133,7 +133,10 @@ class Config(BaseModel):
         """
         
         client_type = type(client) if not isinstance(client, type) else client
-        return self.providers.get(client_type)
+        for provider_type, provider in self.providers.items():
+            if issubclass(client_type, provider_type) or client_type == provider_type:
+                return provider
+        return None
 
 # Single* instance
 # XXX: Make a singleton

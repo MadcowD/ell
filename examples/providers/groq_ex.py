@@ -6,6 +6,8 @@ import groq
 
 
 ell.init(verbose=True, store='./logdir')
+
+# (Recomended) Option 1: Register all groq models.
 ell.models.groq.register() # use GROQ_API_KEY env var
 # ell.models.groq.register(api_key="gsk-") # 
 
@@ -15,7 +17,7 @@ def write_a_story(about : str):
 
 write_a_story("cats")
 
-# or use the client directly
+# Option 2: Use a client directly
 client = groq.Groq()
 
 @ell.simple(model="llama3-8b-8192", temperature=0.1, client=client)

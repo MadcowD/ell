@@ -17,7 +17,6 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
     default_client_from_decorator = client
     default_model_from_decorator = model
     default_api_params_from_decorator = api_params
-
     def parameterized_lm_decorator(
         prompt: LMP,
     ) -> Callable[..., Union[List[Message], Message]]:
@@ -66,7 +65,7 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
 
             if should_log: model_usage_logger_post_start(n)
             with model_usage_logger_post_intermediate(n) as _logger:
-                (result, final_api_params, metadata) = provider.call(ell_call, origin_id=_invocation_origin, logger=_logger)
+                (result, final_api_params, metadata) = provider.call(ell_call, origin_id=_invocation_origin, logger=_logger if should_log else None)
                 if isinstance(result, list) and len(result) == 1:
                     result = result[0]
                 
