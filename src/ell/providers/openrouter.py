@@ -1,30 +1,28 @@
-# providers/openrouter.py
-import asyncio
 import json
 import logging
 import os
 import time
-from collections import defaultdict
 from enum import Enum
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, Iterable
 
 import httpx
-from pydantic import BaseModel, Field, field_validator, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
-from ell.configurator import config, register_provider
-from ell.provider import EllCallParams, Metadata, Provider
-from ell.types import Message, ContentBlock, ToolCall
-from ell.types._lstr import _lstr
-from ell.util.serialization import serialize_image
+from ell.configurator import register_provider
+from ell.provider import EllCallParams, Metadata
+from ell.types import Message
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
 class ProviderPreferences(BaseModel):
     """
     Class representing provider preferences for OpenRouter API requests.
+
+    Schema documentation: https://openrouter.ai/docs/provider-routing
 
     Attributes:
         allow_fallbacks (Optional[bool]): Allow fallback to backup providers if the primary is unavailable.
@@ -99,8 +97,9 @@ class ProviderPreferences(BaseModel):
         LYNN = "Lynn"
         REFLECTION = "Reflection"
         # Additional providers can be added as needed.
-        # Suggestion: Use GitHub Actions to update this list daily and store it locally in a cache file, and on a CDN.
-        # Schema documentation: https://openrouter.ai/docs/provider-routing
+        # Using ProviderPreferences enums is optional; raw strings or other formats are also supported.
+        # Suggestion: Automate updates to this list using GitHub Actions, and store on a CDN and fetch for local caching.
+        # For schema details, refer to: https://openrouter.ai/docs/provider-routing
 
     class QuantizationLevel(str, Enum):
         """
@@ -154,15 +153,6 @@ class ProviderPreferences(BaseModel):
     class Config:
         use_enum_values = True
 
-    @classmethod
-    @field_validator('data_collection', 'order', 'ignore', 'quantizations', mode='before')
-    def validate_string_or_enum(cls, v):
-        if isinstance(v, Enum):
-            return v.value
-        elif isinstance(v, str):
-            return v
-        raise ValueError(f"Invalid value: {v}. Expected a string or an enum value.")
-
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert the ProviderPreferences to a dictionary, excluding None values.
@@ -170,646 +160,278 @@ class ProviderPreferences(BaseModel):
         return {k: v for k, v in self.model_dump().items() if v is not None}
 
 
-class OpenRouter:
+try:
+    from ell.providers.openai import OpenAIProvider
+    import openai
 
-    OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+    class OpenRouter(openai.Client):
 
-    REQUEST_TIMEOUT = 600
+        OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
-    MODEL_CACHE_DIR = Path(gettempdir()) / "ell_openrouter_cache"
-    MODEL_CACHE_FILE = MODEL_CACHE_DIR / "openrouter_models_cache.json"
-    MODEL_FILE_CACHE_EXPIRY = 3600  # 60 minutes
-    MODEL_CACHE_EXPIRY = 300  # 5 minutes
+        REQUEST_TIMEOUT = 600
 
-    def __init__(
-            self,
-            api_key: Optional[str] = None,
-            base_url: str = OPENROUTER_BASE_URL,
-            timeout: float = REQUEST_TIMEOUT,
-            max_retries: int = 2,
-            fetch_generation_data: bool = False,
-            provider_preferences: Optional[ProviderPreferences] = None,
-    ) -> None:
+        MODEL_CACHE_DIR = Path(gettempdir()) / "ell_cache"
+        MODEL_CACHE_FILE = MODEL_CACHE_DIR / "openrouter_models_cache.json"
+        MODEL_FILE_CACHE_EXPIRY = 3600  # 60 minutes
+        MODEL_CACHE_EXPIRY = 300  # 5 minutes
 
-        self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
-        if not self.api_key:
-            raise ValueError("OPENROUTER_API_KEY must be provided or set as an environment variable")
+        def __init__(self, api_key: Optional[str] = None, base_url: str = OPENROUTER_BASE_URL,
+                     timeout: float = REQUEST_TIMEOUT, max_retries: int = 2,
+                     provider_preferences: Optional[ProviderPreferences] = None) -> None:
+            """Construct a new synchronous OpenRouter client instance, a subclass of a synchronous openai client instance.
+            This automatically infers the `api_key` from the `OPENROUTER_API_KEY` environment variable if it is not provided.
+            """
+            if api_key is None:
+                api_key = os.environ.get("OPENROUTER_API_KEY")
+            if not api_key:
+                raise ValueError(
+                    "The api_key client option must be set either by passing api_key to the client or by setting the OPENROUTER_API_KEY environment variable"
+                )
+            super().__init__(api_key=api_key, base_url=base_url, timeout=timeout, max_retries=max_retries)
 
-        self.base_url = base_url
-        self.timeout = timeout
-        self.max_retries = max_retries
-        self.fetch_generation_data = fetch_generation_data
+            self.base_url = base_url
+            self.timeout = timeout
+            self.session = httpx.Client(base_url=self.base_url, timeout=self.timeout)
 
-        self.session = httpx.Client(base_url=self.base_url, timeout=self.timeout)
-        self.async_session = None
+            self._provider_preferences = provider_preferences or ProviderPreferences()
+            self._models: Optional[Dict[str, Any]] = None
+            self._models_last_fetched: float = 0
+            self._used_models: Dict[str, Dict[str, Any]] = {}
 
-        self._provider_preferences = provider_preferences or ProviderPreferences()
+            self.global_stats = {
+                'total_cost': 0.,
+                'total_tokens': 0,
+                'used_providers': set()
+            }
 
-        self._models: Optional[Dict[str, Any]] = None
-        self._models_last_fetched: float = 0
-        self._used_models: Dict[str, Dict[str, Any]] = {}
+        @property
+        def default_headers(self) -> Dict[str, str]:
+            return {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_key}",
+            }
 
-        self.global_stats = {
-            'total_cost': 0,
-            'total_tokens': 0,
-            'used_providers': set()
-        }
+        def get_model_parameters(self, model_id: str, *args, **kwargs) -> Dict[str, Any]:
+            response_json =  self._make_request("GET", f"parameters/{model_id}", *args, **kwargs)
+            return response_json.get("data", {})
 
-    @property
-    def default_headers(self) -> Dict[str, str]:
-        return {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
-            "HTTP-Referer": f"{os.environ.get('HTTP_REFERER', 'http://localhost')}",
-            "X-Title": f"{os.environ.get('X_TITLE', 'OpenRouter Python Client')}"
-        }
+        def get_generation_data(self, generation_id: str, *args, **kwargs) -> Dict[str, Any]:
+            response_json = self._make_request("GET", f"generation?id={generation_id}", *args, **kwargs)
+            return response_json.get("data", {})
 
-    def _make_request(self, method: str, path: str, delay: float = 1.0, max_attempts: int = 2, timeout: float = None, **kwargs) -> Dict[str, Any]:
-        """
-        Make a synchronous HTTP request with retries and exponential backoff.
-        Supports configurable timeouts and handles both HTTP errors and timeouts.
-        """
-        url = f"{self.base_url}/{path}"
-        headers = {**self.default_headers, **kwargs.get('headers', {})}
-        request_timeout = timeout or self.timeout
+        @property
+        def provider_preferences(self) -> Optional[ProviderPreferences]:
+            return self._provider_preferences
 
-        for attempt in range(max_attempts):
-            try:
-                response = self.session.request(method, url, headers=headers, timeout=request_timeout, **kwargs)
-                response.raise_for_status()
-                return response.json()
+        @provider_preferences.setter
+        def provider_preferences(self, value: Optional[Union[Dict, ProviderPreferences]]):
+            if value is None:
+                value = ProviderPreferences()
+            self._provider_preferences = self._process_provider_preferences(value)
 
-            except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
-                logger.warning(f"Request failed (attempt {attempt + 1}/{max_attempts}): {e}")
-                if attempt == max_attempts - 1:
-                    raise
-                time.sleep(delay * (2 ** attempt))
+        def set_provider_preferences(self, preferences: Union[Dict, ProviderPreferences]) -> None:
+            """Set the provider preferences."""
+            self._provider_preferences = self._process_provider_preferences(preferences)
 
-    async def _make_request_async(self, method: str, path: str, delay: float = 1.0, max_attempts: int = 2, timeout: float = None, **kwargs) -> Dict[str, Any]:
-        """
-        Make an asynchronous HTTP request with retries and exponential backoff.
-        Supports configurable timeouts and handles both HTTP errors and timeouts.
-        """
-        url = f"{self.base_url}/{path}"
-        headers = {**self.default_headers, **kwargs.get('headers', {})}
+        def clear_provider_preferences(self) -> None:
+            """Clear the provider preferences."""
+            self._provider_preferences = ProviderPreferences()
 
-        if not self._initiate_async_session_if_enabled():
-            logger.error("Failed to initialize the async session, cannot proceed with the request.")
-            return {"error": "Async session not initialized."}
+        @classmethod
+        def _process_provider_preferences(cls, preferences: Optional[Union[Dict, ProviderPreferences]]) -> Optional[ProviderPreferences]:
+            if preferences is None:
+                return None
+            if isinstance(preferences, ProviderPreferences):
+                return preferences
+            if isinstance(preferences, dict):
+                try:
+                    return ProviderPreferences(**preferences)
+                except ValidationError as e:
+                    logger.warning(f"OpenRouter Client: Invalid provider preferences: {e}")
+                    return None
+            raise ValueError("provider_preferences must be either a dictionary or an instance of ProviderPreferences")
 
-        request_timeout = timeout or self.timeout
+        def get_models(self, model_ids: Union[str, Iterable[str], None] = None) -> Dict[str, Any]:
+            """Retrieve model(s) from cache or API, returning a dict of specified model ids or all models."""
+            current_time = time.time()
+            if self._models is None or (current_time - self._models_last_fetched) > self.MODEL_CACHE_EXPIRY:
+                cached_models = self._get_cached_models()
 
-        async with self.async_session as async_session:
+                if not cached_models:
+                    models_list = self.models.list()
+                    if not hasattr(models_list, 'data'):
+                        raise ValueError("Unexpected data format received from models.list()")
+
+                    models_dictionary = {model.id: model.to_dict() for model in models_list.data}
+                    if not models_dictionary:
+                        raise ValueError("No models found in the response")
+
+                    self._save_models_to_cache(models_dictionary)
+                else:
+                    models_dictionary = cached_models
+
+                self._models = models_dictionary
+                self._models_last_fetched = current_time
+
+            if model_ids is None:
+                return self._models
+            if isinstance(model_ids, str):
+                return {model_ids: self._models.get(model_ids)} if model_ids in self._models else {}
+            if isinstance(model_ids, Iterable):
+                return {model: self._models[model] for model in model_ids if model in self._models}
+            raise ValueError("Invalid input type. Expected str, Iterable[str], or None.")
+
+        @property
+        def used_models(self) -> Dict[str, Dict[str, Any]]:
+            return self._used_models
+
+        @used_models.setter
+        def used_models(self, value: Dict[str, Dict[str, Any]]):
+            if not isinstance(value, dict):
+                raise ValueError("used_models must be a dictionary")
+            self._used_models = value
+
+        def clear_used_models(self) -> None:
+            self._used_models = {}
+
+        def clear_model_cache(self):
+            self._models = None
+            self._models_last_fetched = 0
+            if os.path.exists(OpenRouter.MODEL_CACHE_FILE):
+                os.remove(OpenRouter.MODEL_CACHE_FILE)
+
+        @staticmethod
+        def _get_cached_models() -> Optional[Dict[str, Any]]:
+            if OpenRouter.MODEL_CACHE_FILE.exists():
+                with OpenRouter.MODEL_CACHE_FILE.open("r") as f:
+                    cache_data = json.load(f)
+                if time.time() - cache_data["timestamp"] < OpenRouter.MODEL_FILE_CACHE_EXPIRY:
+                    return cache_data["models"]
+            return None
+
+        @staticmethod
+        def _save_models_to_cache(models: Dict[str, Any]):
+            cache_data = {
+                "timestamp": time.time(),
+                "models": models
+            }
+            OpenRouter.MODEL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            with OpenRouter.MODEL_CACHE_FILE.open("w") as f:
+                json.dump(cache_data, f)
+
+        def _make_request(
+                self,
+                method: str,
+                path: str,
+                delay: float = 1.0,
+                max_attempts: int = 2,
+                timeout: float = None,
+                **kwargs
+        ) -> Dict[str, Any]:
+            """
+            Make a synchronous HTTP request with retries and exponential backoff.
+            Supports configurable timeouts and handles both HTTP errors and timeouts.
+            """
+            url = f"{self.base_url}{path}"
+            headers = {**self.default_headers, **kwargs.get('headers', {})}
+            request_timeout = timeout or self.timeout
+
             for attempt in range(max_attempts):
                 try:
-                    response = await async_session.request(method, url, headers=headers, timeout=request_timeout, **kwargs)
+                    response = self.session.request(method, url, headers=headers, timeout=request_timeout, **kwargs)
                     response.raise_for_status()
                     return response.json()
 
                 except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
-                    logger.warning(f"Async request failed (attempt {attempt + 1}/{max_attempts}): {e}")
+                    logger.warning(f"Request failed (attempt {attempt + 1}/{max_attempts}): {e}")
                     if attempt == max_attempts - 1:
                         raise
-                    await asyncio.sleep(delay * (2 ** attempt))
-
-    def _initiate_async_session_if_enabled(self, raise_on_error=True) -> bool:
-        """Initialize an asynchronous HTTP client session if not already set up.
-
-        Parameters:
-            raise_on_error (bool): Whether to raise an error if the session cannot be initialized.
-
-        Returns:
-            bool: True if the session was successfully initialized or False if it was not due to absence of an async loop.
-        """
-        try:
-            # Attempt to get the current running event loop
-            _ = asyncio.get_running_loop()
-            if self.async_session is None:
-                self.async_session = httpx.AsyncClient(base_url=self.base_url, timeout=self.timeout)
-            return True
-        except RuntimeError:
-            # No asynchronous running loop available in the current context
-            # This typically occurs if the function is called outside of an async context
-            return False
-        except Exception as e:
-            logger.error(f"An error occurred while initializing the async session: {e}")
-            if raise_on_error:
-                raise RuntimeError("Asynchronous session is not initialized. Ensure that it is set up correctly.")
-            return False
-
-    def chat_completions(
-            self,
-            model: str,
-            messages: List[Dict[str, str]],
-            temperature: float = 1.0,
-            top_p: float = 1.0,
-            top_k: int = 0,
-            frequency_penalty: float = 0.0,
-            presence_penalty: float = 0.0,
-            repetition_penalty: float = 1.0,
-            min_p: float = 0.0,
-            top_a: float = 0.0,
-            seed: Optional[int] = None,
-            max_tokens: Optional[int] = None,
-            logit_bias: Optional[Dict[int, float]] = None,
-            logprobs: Optional[bool] = None,
-            top_logprobs: Optional[int] = None,
-            response_format: Optional[Dict[str, str]] = None,
-            stop: Optional[List[str]] = None,
-            tools: Optional[List[Dict[str, Any]]] = None,
-            tool_choice: Optional[Union[str, Dict[str, Any]]] = None,
-            stream: bool = False,
-            provider_preferences: Optional['ProviderPreferences'] = None,
-            **kwargs: Any
-    ) -> Dict[str, Any]:
-
-        json_data = {
-            "model": model,
-            "messages": messages,
-            "temperature": temperature,
-            "top_p": top_p,
-            "top_k": top_k,
-            "frequency_penalty": frequency_penalty,
-            "presence_penalty": presence_penalty,
-            "repetition_penalty": repetition_penalty,
-            "min_p": min_p,
-            "top_a": top_a,
-            "seed": seed,
-            "max_tokens": max_tokens,
-            "logit_bias": logit_bias,
-            "logprobs": logprobs,
-            "top_logprobs": top_logprobs,
-            "response_format": response_format,
-            "stop": stop,
-            "tools": tools,
-            "tool_choice": tool_choice,
-            "stream": stream,
-        }
-
-        # Add provider preferences to the request
-        if provider_preferences is None:
-            provider_preferences = self._provider_preferences
-        else:
-            provider_preferences = self._process_provider_preferences(provider_preferences)
-
-        if isinstance(provider_preferences, ProviderPreferences):
-            json_data["provider"] = provider_preferences.to_dict()
-
-        json_data = {k: v for k, v in json_data.items() if v is not None}
-        response = self._make_request("POST", "chat/completions", json=json_data, **kwargs)
-        return response
-
-    def get_generation_data(self, generation_id: str, delay: float = 1.0, max_attempts: int = 2) -> Dict[str, Any]:
-        return self._make_request("GET", f"generation?id={generation_id}", delay=delay, max_attempts=max_attempts)
-
-    async def get_generation_data_async(self, generation_id: str, delay: float = 1.0, max_attempts: int = 2) -> Dict[str, Any]:
-        return await self._make_request_async("GET", f"generation?id={generation_id}", delay=delay, max_attempts=max_attempts)
-
-    def get_parameters(self, model_id: str) -> Dict[str, Any]:
-        return self._make_request("GET", f"parameters/{model_id}")
-
-    def set_generation_data_preference(self, fetch: bool) -> None:
-        """Set the preference for fetching generation data."""
-        self.fetch_generation_data = fetch
-
-    @classmethod
-    def _process_provider_preferences(cls, preferences: Optional[Union[Dict, ProviderPreferences]]) -> Optional[ProviderPreferences]:
-        if preferences is None:
-            return None
-        if isinstance(preferences, ProviderPreferences):
-            return preferences
-        if isinstance(preferences, dict):
-            try:
-                return ProviderPreferences(**preferences)
-            except ValidationError as e:
-                logger.warning(f"OpenRouter Client: Invalid provider preferences: {e}")
-                return None
-        raise ValueError("provider_preferences must be either a dictionary or an instance of ProviderPreferences")
-
-    @property
-    def provider_preferences(self) -> Optional[ProviderPreferences]:
-        return self._provider_preferences
-
-    @provider_preferences.setter
-    def provider_preferences(self, value: Optional[Union[Dict, ProviderPreferences]]):
-        if value is None:
-            value = ProviderPreferences()
-        self._provider_preferences = self._process_provider_preferences(value)
-
-    def set_provider_preferences(self, preferences: Union[Dict, ProviderPreferences]) -> None:
-        """Set the provider preferences."""
-        self._provider_preferences = self._process_provider_preferences(preferences)
-
-    def clear_provider_preferences(self) -> None:
-        """Clear the provider preferences."""
-        self._provider_preferences = ProviderPreferences()
-
-    @property
-    def models(self) -> Dict[str, Any]:
-        current_time = time.time()
-        if self._models is None or (current_time - self._models_last_fetched) > OpenRouter.MODEL_CACHE_EXPIRY:
-            self._models = self._fetch_models()
-            self._models_last_fetched = current_time
-        return self._models
-
-    def _fetch_models(self) -> Dict[str, Any]:
-        cached_models = self._get_cached_models()
-        if cached_models:
-            return cached_models
-
-        models_data = self._make_request("GET", "models")
-        models_dictionary = self._transform_models_data(models_data)
-        self._save_models_to_cache(models_dictionary)
-        return models_dictionary
-
-    @staticmethod
-    def _transform_models_data(models_data: Dict[str, Any]) -> Dict[str, Any]:
-        models_dictionary = {}
-        for model in models_data.get('data', []):
-            model_id = model['id']
-            models_dictionary[model_id] = model
-        return models_dictionary
-
-    @staticmethod
-    def _get_cached_models() -> Optional[Dict[str, Any]]:
-        if OpenRouter.MODEL_CACHE_FILE.exists():
-            with OpenRouter.MODEL_CACHE_FILE.open("r") as f:
-                cache_data = json.load(f)
-            if time.time() - cache_data["timestamp"] < OpenRouter.MODEL_FILE_CACHE_EXPIRY:
-                return cache_data["models"]
-        return None
-
-    @staticmethod
-    def _save_models_to_cache(models: Dict[str, Any]):
-        cache_data = {
-            "timestamp": time.time(),
-            "models": models
-        }
-        OpenRouter.MODEL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        with OpenRouter.MODEL_CACHE_FILE.open("w") as f:
-            json.dump(cache_data, f)
-
-    @property
-    def used_models(self) -> Dict[str, Dict[str, Any]]:
-        return self._used_models
-
-    @used_models.setter
-    def used_models(self, value: Dict[str, Dict[str, Any]]):
-        if not isinstance(value, dict):
-            raise ValueError("used_models must be a dictionary")
-        self._used_models = value
-
-    def clear_model_cache(self):
-        self._models = None
-        self._models_last_fetched = 0
+                    time.sleep(delay * (2 ** attempt))
 
 
-def get_client(api_key=None, **client_kwargs) -> OpenRouter:
-    if api_key is None:
-        api_key = os.environ.get("OPENROUTER_API_KEY")
-    if not api_key:
-        raise ValueError("OPENROUTER_API_KEY environment variable is not set")
-    return OpenRouter(api_key=api_key, **client_kwargs)
+    def get_client(api_key=None, **client_kwargs) -> OpenRouter:
+        return OpenRouter(api_key=api_key, **client_kwargs)
 
 
-class OpenRouterProvider(Provider):
-    dangerous_disable_validation = True
+    class OpenRouterProvider(OpenAIProvider):
+        def translate_to_provider(self, ell_call: EllCallParams):
+            # OpenRouter-specific intrinsics
+            provider_preferences = ell_call.api_params.pop('provider_preferences', None)
 
-    def provider_call_function(self, client: 'OpenRouter', api_call_params: Optional[Dict[str, Any]] = None) -> Callable[..., Any]:
-        return client.chat_completions
+            params = super().translate_to_provider(ell_call)
+            params.pop('stream_options', None)
 
-    def translate_to_provider(self, ell_call: EllCallParams) -> Dict[str, Any]:
-        final_call_params = ell_call.api_params.copy()
-        final_call_params["model"] = ell_call.model
+            # OpenRouter-specific intrinsics, if any, can be added here.
+            openrouter_client = ell_call.client
+            if provider_preferences is None:
+                provider_preferences = openrouter_client.provider_preferences
+            if isinstance(provider_preferences, ProviderPreferences):
+                params["extra_body"] = {"provider": provider_preferences.to_dict()}
+            elif isinstance(provider_preferences, dict):
+                params["extra_body"] = {"provider": provider_preferences}
+            return params
 
-        # XXX: Deprecation of config.registry.supports_streaming when streaming is implemented.
-        if final_call_params.get("response_format") or config.registry[ell_call.model].supports_streaming is False or ell_call.tools:
-            final_call_params.pop("stream", None)
-
-        if ell_call.tools:
-            final_call_params.update(
-                tool_choice="auto",
-                tools=[
-                    dict(
-                        type="function",
-                        function=dict(
-                            name=tool.__name__,
-                            description=tool.__doc__,
-                            parameters=tool.__ell_params_model__.model_json_schema(),  #type: ignore
-                        )
-                    ) for tool in ell_call.tools
-                ]
-            )
-
-        # messages
-        openrouter_messages = []
-        for message in ell_call.messages:
-            if (tool_calls := message.tool_calls):
-                assert message.role == "assistant", "Tool calls must be from the assistant."
-                assert all(t.tool_call_id for t in tool_calls), "Tool calls must have tool call ids."
-                openrouter_messages.append(dict(
-                    tool_calls=[
-                        dict(
-                            id=cast(str, tool_call.tool_call_id),
-                            type="function",
-                            function=dict(
-                                name=tool_call.tool.__name__,
-                                arguments=json.dumps(tool_call.params.model_dump())
-                            )
-                        ) for tool_call in tool_calls ],
-                    role="assistant",
-                    content=None,
-                ))
-            elif (tool_results := message.tool_results):
-                assert len(tool_results) == 1, "Message should only have one tool result"
-                assert (tr_content := tool_results[0].result[0]).type == "text", "Tool result should only have one text content block"
-                openrouter_messages.append(dict(
-                    role="tool",
-                    tool_call_id=tool_results[0].tool_call_id,
-                    content=cast(str, tr_content.text),
-                ))
+        def translate_from_provider(self, *args, **kwargs) -> Tuple[List[Message], Metadata]:
+            messages, metadata = super().translate_from_provider(*args, **kwargs)
+            ell_call = next((arg for arg in args if isinstance(arg, EllCallParams)), None)
+            if ell_call is not None and hasattr(ell_call, "client"):
+                openrouter_client = ell_call.client
+                self.update_stats(openrouter_client, metadata)
+                metadata["global_stats"] = openrouter_client.global_stats
             else:
-                openrouter_messages.append(dict(
-                    role=message.role,
-                    content=[self._content_block_to_openrouter_format(c) for c in message.content]
-                ))
-        final_call_params["messages"] = openrouter_messages
+                raise ValueError("Invalid arguments: Expected EllCallParams with a client attribute")
+            return messages, metadata
 
-        return final_call_params
+        @classmethod
+        def update_stats(cls, client: 'OpenRouter', metadata: Dict[str, Any]):
+            """Update usage statistics and cost estimates based on the provided metadata."""
+            model_name = metadata.get("model")
+            provider = metadata.get("provider")
+            usage = metadata.get("usage", {})
 
-    def translate_from_provider(
-        self,
-        provider_response: Any,
-        ell_call: EllCallParams,
-        provider_call_params: Dict[str, Any],
-        origin_id: Optional[str] = None,
-        logger: Optional[Callable[..., None]] = None,
-    ) -> Tuple[List[Message], Metadata]:
-
-        metadata: Metadata = {}
-        messages: List[Message] = []
-        is_streaming = provider_call_params.get("stream", False)
-
-        if is_streaming:
-            choices_progress = defaultdict(list)
-            for chunk in provider_response:
-                # Update metadata with each chunk
-                metadata.update({
-                    "id": chunk.get("id"),
-                    "created": chunk.get("created"),
-                    "model": chunk.get("model"),
-                    "object": chunk.get("object"),
-                })
-                for choice in chunk.get("choices", []):
-                    choices_progress[choice["index"]].append(choice)
-                    if choice["index"] == 0 and logger:
-                        logger(choice.get("delta", {}).get("content", ""))
-
-            for _, choice_data in sorted(choices_progress.items(), key=lambda x: x[0]):
-                content = []
-                role = "assistant"
-                text_content = ""
-                for chunk in choice_data:
-                    delta = chunk.get("delta", {})
-                    text_content += delta.get("content", "") or ""
-                    if "role" in delta:
-                        role = delta["role"]
-
-                if text_content:
-                    content.append(ContentBlock(text=_lstr(content=text_content, origin_trace=origin_id)))
-
-                messages.append(
-                    Message(
-                        role=role,
-                        content=content,
-                        metadata={"finish_reason": choice_data[-1].get("finish_reason")}
-                    )
-                )
-        else:
-            # Non-streaming response handling
-            metadata = {
-                "id": provider_response.get("id"),
-                "created": provider_response.get("created"),
-                "model": provider_response.get("model"),
-                "object": provider_response.get("object"),
-                "system_fingerprint": provider_response.get("system_fingerprint"),
-                "usage": provider_response.get("usage", {}),
-            }
-
-            for choice in provider_response.get("choices", []):
-                message = choice.get("message", {})
-                role = message.get("role", "assistant")
-                content = []
-
-                if message.get("content"):
-                    content.append(ContentBlock(text=_lstr(content=message["content"], origin_trace=origin_id)))
-
-                messages.append(
-                    Message(
-                        role=role,
-                        content=content,
-                        metadata={"finish_reason": choice.get("finish_reason")}
-                    )
-                )
-
-        # Schedule generation data update
-        fetch_generation_data = provider_call_params.pop("generation_data", ell_call.client.fetch_generation_data)
-        if fetch_generation_data:
-            self.schedule_generation_data_update(ell_call.client, provider_response)
-
-        # Update stats
-        self.update_stats(ell_call.client, provider_response)
-
-        # OpenRouter-specific: Add global stats and generation info
-        metadata["global_stats"] = ell_call.client.global_stats
-        metadata["generation_info"] = provider_response.get("generation_info", {}).get("data", {})
-
-        return messages, metadata
-
-    @staticmethod
-    def _content_block_to_openrouter_format(content_block: ContentBlock) -> Optional[Dict[str, Any]]:
-        if content_block.image:
-            if isinstance(content_block.image, str) and content_block.image.startswith(('http://', 'https://', 'data:')):
-                image_url = {"url": content_block.image}
-            else:
-                base64_image = serialize_image(content_block.image)
-                image_url = {"url": base64_image}
-            if content_block.image_detail:
-                image_url["detail"] = content_block.image_detail
-            return {
-                "type": "image_url",
-                "image_url": image_url
-            }
-        elif content_block.text:
-            return {
-                "type": "text",
-                "text": content_block.text
-            }
-        elif content_block.parsed:
-            return {
-                "type": "text",
-                "text": content_block.parsed.model_dump_json()
-            }
-        else:
-            return None
-
-    def _message_to_openrouter_format(self, message: Message) -> Dict[str, Any]:
-        openrouter_message = {
-            "role": "tool" if message.tool_results else message.role,
-            "content": list(filter(None, [
-                self._content_block_to_openrouter_format(c) for c in message.content
-            ])) or None  # Set to None if empty list
-        }
-
-        if message.tool_calls:
-            try:
-                openrouter_message["tool_calls"] = [
-                    {
-                        "id": tool_call.tool_call_id,
-                        "type": "function",
-                        "function": {
-                            "name": tool_call.tool.__name__,
-                            "arguments": json.dumps(tool_call.params.model_dump())
-                        }
-                    } for tool_call in message.tool_calls
-                ]
-                openrouter_message["content"] = None
-            except TypeError as e:
-                raise TypeError(
-                    f"Error serializing tool calls: {e}. Ensure all @ell.tool decorated functions are fully typed.") from e
-
-        if message.tool_results:
-            if not (tool_result := message.tool_results[0]).tool_call_id:
-                raise ValueError("Tool result missing tool_call_id")
-
-            if len(tool_result.result) != 1 or tool_result.result[0].type != "text":
-                raise ValueError("Tool result should contain exactly one text content block")
-
-            openrouter_message.update({
-                "tool_call_id": tool_result.tool_call_id,
-                "content": tool_result.result[0].text
-            })
-
-        return openrouter_message
-
-    @staticmethod
-    def _process_tool_calls(tool_calls, content, tools, origin_id):
-        assert tools is not None, "Tools not provided, yet tool calls in response."
-        for tool_call in tool_calls:
-            matching_tool = next(
-                (tool for tool in tools if tool.__name__ == tool_call["function"]["name"]),
-                None,
-            )
-            if matching_tool:
-                params = matching_tool.__ell_params_model__(
-                    **json.loads(tool_call["function"]["arguments"])
-                )
-                content.append(
-                    ContentBlock(
-                        tool_call=ToolCall(
-                            tool=matching_tool,
-                            tool_call_id=_lstr(
-                                tool_call["id"], origin_trace=origin_id
-                            ),
-                            params=params,
-                        )
-                    )
-                )
-
-    @classmethod
-    def update_stats(cls, client: 'OpenRouter', response: Dict[str, Any]):
-        response["client"] = client
-
-        model_name = response.get("model")
-        if model_name:
-            if model_name not in client.used_models:
-                client.used_models[model_name] = {
-                    "total_cost": 0,
-                    "total_tokens": 0,
-                    "usage_count": 0,
-                }
-
-            usage = response.get("usage", {})
-            tokens = usage.get("total_tokens", 0)
-            client.used_models[model_name].update({
-                "last_used": response["created"],
-                "last_message_id": response["id"],
-                "usage": usage,
-                "total_tokens": client.used_models[model_name]["total_tokens"] + tokens,
-                "usage_count": client.used_models[model_name]["usage_count"] + 1,
-            })
-            client.global_stats['total_tokens'] += tokens
-
-        generation_info = response.get("generation_info", {}).get("data")
-        if generation_info and isinstance(generation_info, dict):
-            model_name = generation_info.get("model")
             if model_name:
-                cost = generation_info.get("total_cost", 0)
-                tokens_prompt = generation_info.get("tokens_prompt", 0)
-                tokens_completion = generation_info.get("tokens_completion", 0)
-                provider = generation_info.get("provider_name")
+                # Retrieve model information
+                model_info = next(iter(client.get_models(model_name).values()), {})
+                pricing = model_info.get('pricing', {})
 
-                client.used_models[model_name].update({
-                    "provider_name": provider,
-                    "quantization": generation_info.get("quantization", "unspecified"),
-                    "last_used": generation_info.get("created_at"),
-                    "total_cost": client.used_models[model_name]["total_cost"] + cost,
-                    "tokens_prompt": tokens_prompt,
-                    "tokens_completion": tokens_completion,
-                    "native_tokens_prompt": generation_info.get("native_tokens_prompt"),
-                    "native_tokens_completion": generation_info.get("native_tokens_completion"),
+                model_stats = client.used_models.setdefault(model_name, {
+                    "total_tokens": 0.,
+                    "usage_count": 0.,
+                    "total_cost": 0.,
                 })
 
-                client.global_stats['total_cost'] += cost
+                total_tokens = usage.get("total_tokens", 0)
+                prompt_tokens = usage.get("prompt_tokens", 0)
+                completion_tokens = usage.get("completion_tokens", 0)
+
+                # Calculate cost
+                prompt_cost = float(pricing.get('prompt', 0.)) * prompt_tokens
+                completion_cost = float(pricing.get('completion', 0.)) * completion_tokens
+                total_cost = prompt_cost + completion_cost
+
+                model_stats.update({
+                    "last_used": metadata["created"],
+                    "last_message_id": metadata["id"],
+                    "provider_name": provider,
+                    "total_tokens": model_stats["total_tokens"] + total_tokens,
+                    "usage_count": model_stats["usage_count"] + 1,
+                    "last_usage": usage,
+                    "total_cost": model_stats["total_cost"] + total_cost,
+                    "tokens_prompt": model_stats.get("tokens_prompt", 0) + prompt_tokens,
+                    "tokens_completion": model_stats.get("tokens_completion", 0) + completion_tokens,
+                })
+
+                # Update global stats
+                client.global_stats['total_tokens'] = client.global_stats.get('total_tokens', 0) + total_tokens
+                client.global_stats['total_cost'] = client.global_stats.get('total_cost', 0.) + total_cost
                 if provider:
-                    client.global_stats['used_providers'].add(provider)
+                    client.global_stats.setdefault('used_providers', set()).add(provider)
 
-            # Update last_generation_info in global_stats
-            client.global_stats['last_generation_info'] = generation_info
+            # Update last_metadata in global_stats
+            client.global_stats['last_metadata'] = metadata
 
-    @classmethod
-    def schedule_generation_data_update(cls, client: 'OpenRouter', response: Dict[str, Any], delay: float = 1.0, max_attempts: int = 5):
-        """Schedule the generation info update, choosing between sync and async methods."""
-        generation_id = response.get('id')
-        if not generation_id:
-            return
-
-        try:
-            loop = asyncio.get_running_loop()
-            asyncio.create_task(cls._update_generation_info_async(client, response, generation_id, delay, max_attempts))
-        except RuntimeError:
-            # No running event loop, use synchronous update
-            cls._update_generation_info_sync(client, response, generation_id, delay, max_attempts)
-
-    @classmethod
-    def _update_generation_info_sync(cls, client: 'OpenRouter', response: Dict[str, Any], generation_id: str, delay: float, max_attempts: int):
-        """Synchronously update generation info."""
-        # This is a chained API request relying on the first API request propagating on OpenRouter servers.
-        time.sleep(0.1)  # Use a small sleep to allow the generation ID to propagate
-        try:
-            generation_info = client.get_generation_data(generation_id, delay=delay, max_attempts=max_attempts)
-            if generation_info:
-                response['generation_info'] = generation_info
-                cls.update_stats(client, response)
-        except Exception as e:
-            print(f"Failed to update generation info synchronously: {e}")
-
-    @classmethod
-    async def _update_generation_info_async(cls, client: 'OpenRouter', response: Dict[str, Any], generation_id: str, delay: float, max_attempts: int):
-        """Asynchronously update generation info."""
-        # This is a chained API request relying on the first API request propagating on OpenRouter servers.
-        await asyncio.sleep(0.1)  # Use a small asyncio.sleep to allow the generation ID to propagate
-        try:
-            generation_info = await client.get_generation_data_async(generation_id, delay=delay, max_attempts=max_attempts)
-            if generation_info:
-                response['generation_info'] = generation_info
-                cls.update_stats(client, response)
-        except Exception as e:
-            print(f"Failed to update generation info asynchronously: {e}")
-
-# Register the provider
-openrouter_provider = OpenRouterProvider()
-register_provider(openrouter_provider, OpenRouter)
-
-
-Client = OpenRouter
+    # Register the provider and set alias for Client
+    register_provider(OpenRouterProvider(), OpenRouter)
+    Client = OpenRouter
+except ImportError:
+    pass

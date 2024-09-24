@@ -1,14 +1,21 @@
 import logging
+import os
 
 import ell
 from ell.providers.openrouter import get_client, ProviderPreferences
+
+
+from dotenv import load_dotenv
+load_dotenv()  # Optionally, specify `.env` filepath containing `OPENROUTER_API_KEY`
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Get the OpenRouter client
-openrouter_client = get_client()
+openrouter_client = get_client(
+    api_key=os.getenv("OPENROUTER_API_KEY")
+)
 
 # Provider Name Alias
 ProviderName = ProviderPreferences.ProviderName
@@ -100,7 +107,7 @@ def gemini_example():
 # Example 7: Retrieving model parameters
 def get_parameters_example():
     model_id = "meta-llama/llama-3.1-8b-instruct"
-    parameters = openrouter_client.get_parameters(model_id)
+    parameters = openrouter_client.get_model_parameters(model_id)
     print(f"Parameters for {model_id}:")
     print(parameters)
 
@@ -128,9 +135,9 @@ def get_generation_data_example():
 
     # Generate a greeting to get a new generation
     # Get the last used model and its generation ID
-    if not openrouter_client.used_models:
-        greeting = generate_greeting("Ell")
-        print(f"Generation Data Example Greeting: {greeting}")
+    openrouter_client.clear_used_models()
+    greeting = generate_greeting("Ell")
+    print(f"Generation Data Example Greeting: {greeting}")
 
     last_used_model = next(iter(openrouter_client.used_models.keys()), None)
     generation_id = openrouter_client.used_models[last_used_model].get('last_message_id')
@@ -138,13 +145,13 @@ def get_generation_data_example():
     if generation_id:
         # Fetch generation data
         generation_data = openrouter_client.get_generation_data(generation_id)
-
-        if 'data' in generation_data:
-            provider = generation_data['data'].get('provider_name')
+        if generation_data:
+            provider = generation_data.get('provider_name')
             print(f"Generation Data for model {last_used_model}:")
             print(f"Provider: {provider}")
             print(f"Desired Provider: {desired_provider}")
             print(f"Provider Match: {provider == desired_provider}")
+            print(generation_data)
         else:
             print("Generation data not available")
     else:
@@ -163,8 +170,8 @@ if __name__ == "__main__":
     # anthropic_example()
     # gemini_example()
 
-    get_generation_data_example()
     get_parameters_example()
+    get_generation_data_example()
     get_used_models_example()
 
     print("All examples completed.")
