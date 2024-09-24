@@ -89,6 +89,27 @@ class TestOpenAIProvider:
         assert translated["messages"] == [
             {"role": "user", "content": [{"type": "text", "text": "Hello"}]}
         ]
+    def test_translate_to_provider_unregistered_model(self, provider, ell_call_params):
+        """
+        Test that translate_to_provider does not fail when the model is not registered.
+        It should retain default streaming parameters.
+        """
+        # Set up the EllCallParams with a model that is not registered
+        ell_call_params.model = "unregistered-model"
+        ell_call_params.api_params = {} # No response_format
+        ell_call_params.tools = [] # No tools
+        # Perform the translation
+        translated = provider.translate_to_provider(ell_call_params)
+        # Assert that 'stream' and 'stream_options' are retained
+        assert translated.get("stream") is True, "'stream' should be set to True by default."
+        assert translated.get("stream_options") == {"include_usage": True}, (
+        "'stream_options' should include 'include_usage': True by default."
+        )
+        # Optional: Assert that the model is correctly set
+        assert translated.get("model") == "unregistered-model", "Model should be set correctly."
+        # Ensure no unexpected keys are removed
+        assert "stream" in translated
+        assert "stream_options" in translated
 
     def test_translate_to_provider_streaming_disabled_due_to_response_format(
         self, provider, ell_call_params

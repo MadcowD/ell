@@ -5,7 +5,7 @@ from ell.provider import  EllCallParams, Metadata, Provider
 from ell.types import Message, ContentBlock, ToolCall
 from ell.types._lstr import _lstr
 import json
-from ell.configurator import config, register_provider
+from ell.configurator import _Model, config, register_provider
 from ell.types.message import LMP
 from ell.util.serialization import serialize_image
 
@@ -32,7 +32,7 @@ try:
             final_call_params["stream_options"] = {"include_usage": True}
 
             # XXX: Deprecation of config.registry.supports_streaming when streaming is implemented.
-            if final_call_params.get("response_format") or config.registry[ell_call.model].supports_streaming is False or ell_call.tools:
+            if ell_call.tools or final_call_params.get("response_format") or (regisered_model := config.registry.get(ell_call.model, None)) and regisered_model.supports_streaming is False:
                 final_call_params.pop("stream", None)
                 final_call_params.pop("stream_options", None)
             if ell_call.tools:
