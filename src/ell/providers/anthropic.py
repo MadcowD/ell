@@ -158,7 +158,6 @@ try:
     register_provider(anthropic_provider, anthropic.AnthropicVertex)
 
 except ImportError:
-    raise
     pass
 
 def serialize_image_for_anthropic(img : ImageContent):
