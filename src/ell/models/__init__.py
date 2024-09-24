@@ -9,3 +9,4 @@ For example, to register an OpenAI model:
 import ell.models.openai
 import ell.models.anthropic
 import ell.models.ollama
+import ell.models.groq

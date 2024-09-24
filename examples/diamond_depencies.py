@@ -1,7 +1,7 @@
 import random
 from typing import List, Tuple
 import ell
-ell.config.verbose = True
+
 
 @ell.simple(model="gpt-4o-mini", temperature=1.0)
 def random_number() -> str:
@@ -31,7 +31,7 @@ Choose the better piece of literature"""
 
 if __name__ == "__main__":
     from ell.stores.sql import SQLiteStore
-    ell.set_store('./logdir', autocommit=True)
+    ell.init(store='./logdir', autocommit=True, verbose=True)
 
 
     num = random_number()

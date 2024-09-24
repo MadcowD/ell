@@ -5,7 +5,7 @@ import openai
 import ell.lmp.simple
 
 
-ell.config.verbose = True
+
 
 client = openai.Client(api_key=open(os.path.expanduser("~/.oaikey")).read().strip())
 

@@ -28,7 +28,7 @@ jobs:
             version: 1.5.1
         
       - name: Install project dependencies
-        run: poetry install
+        run: poetry install -E all
 
       - name: Install doc-specific dependencies
         run: |
