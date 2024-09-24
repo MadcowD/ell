@@ -161,8 +161,8 @@ class ProviderPreferences(BaseModel):
 
 
 try:
-    from ell.providers.openai import OpenAIProvider
     import openai
+    from ell.providers.openai import OpenAIProvider
 
     class OpenRouter(openai.Client):
 
@@ -355,13 +355,13 @@ try:
 
     class OpenRouterProvider(OpenAIProvider):
         def translate_to_provider(self, ell_call: EllCallParams):
-            # OpenRouter-specific intrinsics
+            # OpenRouter-specific intrinsics (remove prior to calling `translate_to_provider`)
             provider_preferences = ell_call.api_params.pop('provider_preferences', None)
 
             params = super().translate_to_provider(ell_call)
             params.pop('stream_options', None)
 
-            # OpenRouter-specific intrinsics, if any, can be added here.
+            # OpenRouter-specific intrinsics, if any, can be added here for processing the api request
             openrouter_client = ell_call.client
             if provider_preferences is None:
                 provider_preferences = openrouter_client.provider_preferences
@@ -369,6 +369,7 @@ try:
                 params["extra_body"] = {"provider": provider_preferences.to_dict()}
             elif isinstance(provider_preferences, dict):
                 params["extra_body"] = {"provider": provider_preferences}
+
             return params
 
         def translate_from_provider(self, *args, **kwargs) -> Tuple[List[Message], Metadata]:
@@ -394,12 +395,6 @@ try:
                 model_info = next(iter(client.get_models(model_name).values()), {})
                 pricing = model_info.get('pricing', {})
 
-                model_stats = client.used_models.setdefault(model_name, {
-                    "total_tokens": 0.,
-                    "usage_count": 0.,
-                    "total_cost": 0.,
-                })
-
                 total_tokens = usage.get("total_tokens", 0)
                 prompt_tokens = usage.get("prompt_tokens", 0)
                 completion_tokens = usage.get("completion_tokens", 0)
@@ -408,6 +403,12 @@ try:
                 prompt_cost = float(pricing.get('prompt', 0.)) * prompt_tokens
                 completion_cost = float(pricing.get('completion', 0.)) * completion_tokens
                 total_cost = prompt_cost + completion_cost
+
+                model_stats = client.used_models.setdefault(model_name, {
+                    "total_tokens": 0,
+                    "usage_count": 0,
+                    "total_cost": 0.,
+                })
 
                 model_stats.update({
                     "last_used": metadata["created"],

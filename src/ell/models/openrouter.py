@@ -1,8 +1,4 @@
 import logging
-
-from dotenv import load_dotenv
-load_dotenv()
-
 from ell.configurator import config
 from ell.providers import openrouter
 
