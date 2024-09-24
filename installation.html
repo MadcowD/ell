@@ -243,12 +243,9 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </span></code></pre></div>
 </div>
 <p>By default, this installs only the OpenAI client SDK. If you want to include the Anthropic client SDK, use the “anthropic” extra like so:</p>
-<blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>anthropic<span class="o">]</span>
 </span></code></pre></div>
 </div>
-<p>pip install -U ell-ai[anthropic]</p>
-</div></blockquote>
 </li>
 <li><p>Verify installation:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import ell; print(ell.__version__)"</span>
