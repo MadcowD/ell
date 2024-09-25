@@ -70,10 +70,11 @@ try:
                     ))
                 elif (tool_results := message.tool_results):
                     for tool_result in tool_results:
+                        assert all(cb.type == "text" for cb in tool_result.result), "Tool result does not match expected content blocks."
                         openai_messages.append(dict(
                             role="tool",
                             tool_call_id=tool_result.tool_call_id,
-                            content=json.dumps([content.text for content in tool_result.result]),
+                            content=tool_result.text_only, 
                         ))
                 else:
                     openai_messages.append(cast(ChatCompletionMessageParam, dict(
@@ -155,7 +156,7 @@ try:
                                         )
                                     )
                                 )
-                                if logger: logger(tool_call)
+                                if logger: logger(repr(tool_call))
                     messages.append(Message(role=role, content=content_blocks))
             return messages, metadata
 
