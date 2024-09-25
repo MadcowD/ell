@@ -49,10 +49,11 @@ sphinx = "<8.0.0"
 sphinx-rtd-theme = "^2.0.0"
 
 [tool.poetry.extras]
-openai = ["openai"]
+# N.B. The `openai` dep is always required, but explicitly providing it via an e.g. "openai" extra
+# causes poetry to mark it as optional = true (even if explicitly specified optional = false).
 anthropic = ["anthropic"]
 groq = ["groq"]
-all = ["openai", "anthropic", "groq"]
+all = ["anthropic", "groq"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
