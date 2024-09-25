@@ -308,7 +308,8 @@ def _raise_error(message, exception, recursion_stack):
     """Raise an error with detailed information."""
     error_msg = f"{message}. Error: {str(exception)}\n"
     error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
-    raise Exception(error_msg)
+    print(error_msg)
+    # raise Exception(error_msg)
 
 def should_import(module_name : str):
     """
