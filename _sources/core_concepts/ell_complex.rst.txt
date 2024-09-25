@@ -121,8 +121,9 @@ Key Features
     print(result.text)  # Prints travel advice
     if result.tool_calls:
         # This is done so that we can pass the tool calls to the language model
-        tool_results = result.call_tools_and_collect_as_message()
-        print("Weather info:", tool_results.text)
+        result_message = result.call_tools_and_collect_as_message()
+        print("Weather info:", result_message.tool_results[0].text) # Raw text of the tool call.
+        print("Message to be sent to the LLM:", result_message.text) # Representation of the message to be sent to the LLM.
 
 
 Reference

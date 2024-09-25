@@ -338,8 +338,9 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </span><span id="line-16"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># Prints travel advice</span>
 </span><span id="line-17"><span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
 </span><span id="line-18">    <span class="c1"># This is done so that we can pass the tool calls to the language model</span>
-</span><span id="line-19">    <span class="n">tool_results</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">call_tools_and_collect_as_message</span><span class="p">()</span>
-</span><span id="line-20">    <span class="nb">print</span><span class="p">(</span><span class="s2">"Weather info:"</span><span class="p">,</span> <span class="n">tool_results</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</span><span id="line-19">    <span class="n">result_message</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">call_tools_and_collect_as_message</span><span class="p">()</span>
+</span><span id="line-20">    <span class="nb">print</span><span class="p">(</span><span class="s2">"Weather info:"</span><span class="p">,</span> <span class="n">result_message</span><span class="o">.</span><span class="n">tool_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">)</span> <span class="c1"># Raw text of the tool call.</span>
+</span><span id="line-21">    <span class="nb">print</span><span class="p">(</span><span class="s2">"Message to be sent to the LLM:"</span><span class="p">,</span> <span class="n">result_message</span><span class="o">.</span><span class="n">text</span><span class="p">)</span> <span class="c1"># Representation of the message to be sent to the LLM.</span>
 </span></code></pre></div>
 </div>
 </section>

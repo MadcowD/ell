@@ -305,6 +305,10 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <dt class="sig sig-object py" id="ell.ContentBlock.serialize_parsed">
 <span class="sig-name descname"><span class="pre">serialize_parsed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BaseModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.ContentBlock.serialize_parsed" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.serialize_parsed'">¶</a></dt>
 <dd></dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ell.ContentBlock.content">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">content</span></span><a class="headerlink" href="#ell.ContentBlock.content" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.content'">¶</a></dt>
+<dd></dd></dl>
 </dd></dl>
 <section id="solving-the-construction-problem">
 <h3>Solving the construction problem<a class="headerlink" href="#solving-the-construction-problem" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#solving-the-construction-problem'">¶</a></h3>
@@ -433,11 +437,11 @@ Message: A Message object with role set to ‘assistant’ and the provided cont
 <dl class="py property">
 <dt class="sig sig-object py" id="ell.Message.text">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Message.</span></span><span class="sig-name descname"><span class="pre">text</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#ell.Message.text" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.text'">¶</a></dt>
-<dd><p>Returns all text content, replacing non-text content with type indicators.</p>
+<dd><p>Returns all text content, replacing non-text content with their representations.</p>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">[</span><span class="s2">"Hello"</span><span class="p">,</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">'RGB'</span><span class="p">,</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)),</span> <span class="s2">"World"</span><span class="p">])</span>
 </span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span><span class="o">.</span><span class="n">text</span>
-</span><span id="line-3"><span class="go">'Hello\n&lt;image&gt;\nWorld'</span>
+</span><span id="line-3"><span class="go">'Hello\n&lt;PilImage&gt;\nWorld'</span>
 </span></code></pre></div>
 </div>
 </dd></dl>
@@ -555,6 +559,7 @@ Message: A Message object with role set to ‘assistant’ and the provided cont
 <li><a :data-current="activeSection === '#ell.Message'" class="reference internal" href="#ell.Message"><code class="docutils literal notranslate"><span class="pre">Message</span></code></a></li>
 <li><a :data-current="activeSection === '#ell.ContentBlock'" class="reference internal" href="#ell.ContentBlock"><code class="docutils literal notranslate"><span class="pre">ContentBlock</span></code></a><ul>
 <li><a :data-current="activeSection === '#ell.ContentBlock.serialize_parsed'" class="reference internal" href="#ell.ContentBlock.serialize_parsed"><code class="docutils literal notranslate"><span class="pre">ContentBlock.serialize_parsed()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.ContentBlock.content'" class="reference internal" href="#ell.ContentBlock.content"><code class="docutils literal notranslate"><span class="pre">ContentBlock.content</span></code></a></li>
 </ul>
 </li>
 <li><a :data-current="activeSection === '#solving-the-construction-problem'" class="reference internal" href="#solving-the-construction-problem">Solving the construction problem</a><ul>
