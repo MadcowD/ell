@@ -1,5 +1,4 @@
 import ell.providers.openai
-import ell.providers.openrouter
 import ell.providers.groq
 import ell.providers.anthropic
 # import ell.providers.mistral

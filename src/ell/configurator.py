@@ -131,13 +131,10 @@ class Config(BaseModel):
         :return: The provider instance for the specified client, or None if not found.
         :rtype: Optional[Provider]
         """
+
         client_type = type(client) if not isinstance(client, type) else client
         for provider_type, provider in self.providers.items():
-            # First pass finds exact matches (necessary for prioritizing class inheritance)
-            if client_type == provider_type:
-                return provider
-        for provider_type, provider in self.providers.items():
-            if issubclass(client_type, provider_type):  # If no specific provider was found, check for subclasses
+            if issubclass(client_type, provider_type) or client_type == provider_type:
                 return provider
         return None
 
