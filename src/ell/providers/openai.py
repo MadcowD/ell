@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
+
+from pydantic import BaseModel
 from ell.provider import  EllCallParams, Metadata, Provider
 from ell.types import Message, ContentBlock, ToolCall
 from ell.types._lstr import _lstr
@@ -19,7 +21,7 @@ try:
         dangerous_disable_validation = True
         
         def provider_call_function(self, client : openai.Client, api_call_params : Optional[Dict[str, Any]] = None) -> Callable[..., Any]:
-            if api_call_params and api_call_params.get("response_format"):
+            if api_call_params and isinstance(api_call_params.get("response_format"), BaseModel):
                 return client.beta.chat.completions.parse
             else:
                 return client.chat.completions.create
