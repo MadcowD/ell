@@ -349,6 +349,12 @@ def get_referenced_names(code: str, module_name: str):
     Returns:
     list: A list of all attributes of the module that are referenced in the code.
     """
+    # Remove content between #<BV> and #</BV> tags
+    code = re.sub(r'#<BV>\n.*?\n#</BV>', '', code, flags=re.DOTALL)
+    
+    # Remove content between #<BmV> and #</BmV> tags
+    code = re.sub(r'#<BmV>\n.*?\n#</BmV>', '', code, flags=re.DOTALL)
+
     tree = ast.parse(code)
     referenced_names = []
 
