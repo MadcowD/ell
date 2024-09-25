@@ -131,6 +131,8 @@ class ContentBlock(BaseModel):
     tool_call: Optional[ToolCall] = Field(default=None)
     parsed: Optional[BaseModel] = Field(default=None)
     tool_result: Optional[ToolResult] = Field(default=None)
+    # TODO: Add a JSON type? This would be nice for response_format. This is different than resposne_format = model. Or we could be opinionated and automatically parse the json response. That might be nice.
+    # This breaks us maintaing parity with the openai python client in some sen but so does image.
 
     def __init__(self, *args, **kwargs):
         if "image" in kwargs and not isinstance(kwargs["image"], ImageContent):

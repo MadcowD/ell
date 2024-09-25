@@ -21,7 +21,7 @@ try:
         dangerous_disable_validation = True
         
         def provider_call_function(self, client : openai.Client, api_call_params : Optional[Dict[str, Any]] = None) -> Callable[..., Any]:
-            if api_call_params and isinstance(api_call_params.get("response_format"), BaseModel):
+            if api_call_params and (isinstance(fmt := api_call_params.get("response_format"), type)) and issubclass(fmt, BaseModel):
                 return client.beta.chat.completions.parse
             else:
                 return client.chat.completions.create

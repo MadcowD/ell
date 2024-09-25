@@ -66,9 +66,15 @@ class TestOpenAIProvider:
     def test_provider_call_function_with_response_format(
         self, provider, openai_client, ell_call_params
     ):
-        api_call_params = {"response_format": "parsed"}
+        class MyModel(pydantic.BaseModel):
+            pass
+        api_call_params = {"response_format": MyModel}
         func = provider.provider_call_function(openai_client, api_call_params)
         assert func == openai_client.beta.chat.completions.parse
+
+        api_call_params = {"response_format": {"type": "json_schema", "schema": {}}}
+        func = provider.provider_call_function(openai_client, api_call_params)
+        assert func == openai_client.chat.completions.create
 
     def test_provider_call_function_without_response_format(
         self, provider, openai_client, ell_call_params
