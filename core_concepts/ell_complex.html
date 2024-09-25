@@ -301,19 +301,21 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 <section id="chat-based-use-cases">
 <h3>3. Chat-based Use Cases<a class="headerlink" href="#chat-based-use-cases" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#chat-based-use-cases'">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> is particularly useful for chat-based applications where you need to maintain conversation history:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
-</span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a friendly chatbot. Engage in casual conversation."</span><span class="p">),</span>
-</span><span id="line-5">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
-</span><span id="line-6">
-</span><span id="line-7"><span class="n">message_history</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="line-8"><span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-</span><span id="line-9">    <span class="n">user_input</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">"You: "</span><span class="p">)</span>
-</span><span id="line-10">    <span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">user_input</span><span class="p">))</span>
-</span><span id="line-11">    <span class="n">response</span> <span class="o">=</span> <span class="n">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span>
-</span><span id="line-12">    <span class="nb">print</span><span class="p">(</span><span class="s2">"Bot:"</span><span class="p">,</span> <span class="n">response</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-</span><span id="line-13">    <span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">ell</span> <span class="kn">import</span> <span class="n">Message</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</span><span id="line-4"><span class="k">def</span> <span class="nf">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-5">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-6">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a friendly chatbot. Engage in casual conversation."</span><span class="p">),</span>
+</span><span id="line-7">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
+</span><span id="line-8">
+</span><span id="line-9"><span class="n">message_history</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-10"><span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+</span><span id="line-11">    <span class="n">user_input</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">"You: "</span><span class="p">)</span>
+</span><span id="line-12">    <span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">user_input</span><span class="p">))</span>
+</span><span id="line-13">    <span class="n">response</span> <span class="o">=</span> <span class="n">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span>
+</span><span id="line-14">    <span class="nb">print</span><span class="p">(</span><span class="s2">"Bot:"</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</span><span id="line-15">    <span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
 </section>

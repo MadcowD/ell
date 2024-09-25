@@ -82,6 +82,8 @@ Key Features
 
 .. code-block:: python
 
+    from ell import Message
+
     @ell.complex(model="gpt-4o", temperature=0.7)
     def chat_bot(message_history: List[Message]) -> List[Message]:
         return [
@@ -93,8 +95,8 @@ Key Features
         user_input = input("You: ")
         message_history.append(ell.user(user_input))
         response = chat_bot(message_history)
-        print("Bot:", response[-1].text)
-        message_history.append(response[-1])
+        print("Bot:", response.text)
+        message_history.append(response)
 
 4. Tool Usage
 ^^^^^^^^^^^^^
