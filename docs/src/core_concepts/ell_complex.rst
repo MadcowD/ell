@@ -95,7 +95,7 @@ Key Features
         user_input = input("You: ")
         message_history.append(ell.user(user_input))
         response = chat_bot(message_history)
-        print("Bot:", response.content[0].text)
+        print("Bot:", response.text)
         message_history.append(response)
 
 4. Tool Usage
