@@ -1,4 +1,5 @@
 import json
+from typing import Dict
 import pydantic
 import pytest
 from unittest.mock import MagicMock, patch
@@ -223,12 +224,12 @@ class TestOpenAIProvider:
         translated = provider.translate_to_provider(ell_call_params)
         assert translated["messages"] == [
             {
-                "content": json.dumps(["Hello World 1"]),
+                "content": "Hello World 1",
                 "role": "tool",
                 "tool_call_id": "123"
             },
             {
-                "content": json.dumps(["Hello World 2"]),
+                "content": "Hello World 2",
                 "role": "tool",
                 "tool_call_id": "456"
             }
@@ -251,11 +252,12 @@ class TestOpenAIProvider:
         translated = provider.translate_to_provider(ell_call_params)
         assert translated["messages"] == [
             {
-                "content": json.dumps(choices),
+                "content": "Banana\nApple\nOrange",
                 "role": "tool",
                 "tool_call_id": "123"
             },
         ]
+
 
     def test_translate_from_provider_streaming(
         self, provider, ell_call_params, openai_client
