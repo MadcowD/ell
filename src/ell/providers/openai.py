@@ -69,13 +69,13 @@ try:
                         content=None,
                     ))
                 elif (tool_results := message.tool_results):
-                    assert len(tool_results) == 1, "Message should only have one tool result"
-                    assert (tr_content := tool_results[0].result[0]).type == "text", "Tool result should only have one text content block"
-                    openai_messages.append(dict(
-                        role="tool",
-                        tool_call_id=tool_results[0].tool_call_id,
-                        content=cast(str, tr_content.text),
-                    ))
+                    for tool_result in tool_results:
+                        assert all(cb.type == "text" for cb in tool_result.result), "Tool result does not match expected content blocks."
+                        openai_messages.append(dict(
+                            role="tool",
+                            tool_call_id=tool_result.tool_call_id,
+                            content=tool_result.text_only, 
+                        ))
                 else:
                     openai_messages.append(cast(ChatCompletionMessageParam, dict(
                         role=message.role,
@@ -156,7 +156,7 @@ try:
                                         )
                                     )
                                 )
-                                if logger: logger(tool_call)
+                                if logger: logger(repr(tool_call))
                     messages.append(Message(role=role, content=content_blocks))
             return messages, metadata
 

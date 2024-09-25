@@ -263,7 +263,7 @@ class ContentBlock(BaseModel):
         return value.model_dump(exclude_none=True, exclude_unset=True)
     
 
-def coerce_content_list(
+def to_content_blocks(
     content: Optional[Union[str, List[ContentBlock], List[Union[ContentBlock, str, ToolCall, ToolResult, ImageContent, np.ndarray, PILImage.Image, BaseModel]]]] = None,
     **content_block_kwargs
 ) -> List[ContentBlock]:
@@ -312,7 +312,7 @@ class Message(BaseModel):
     
 
     def __init__(self, role, content: Union[str, List[ContentBlock], List[Union[ContentBlock, str, ToolCall, ToolResult, ImageContent, np.ndarray, PILImage.Image, BaseModel]]] = None, **content_block_kwargs):
-        content = coerce_content_list(content, **content_block_kwargs)
+        content = to_content_blocks(content, **content_block_kwargs)
         
         super().__init__(content=content, role=role)
 

@@ -63,6 +63,7 @@ try:
                     for tool in ell_call.tools
                 ]
 
+            # print(final_call_params)
             return final_call_params
     
         def translate_from_provider(
@@ -82,7 +83,7 @@ try:
 
             if provider_call_params.get("stream", False):
                 content = []
-                current_block: Optional[Dict[str, Any]] = None
+                current_blocks: Dict[int, Dict[str, Any]] = {}
                 message_metadata = {}
 
                 with cast(Stream[RawMessageStreamEvent], provider_response) as stream:
@@ -92,35 +93,38 @@ try:
                             message_metadata.pop("content", None)  # Remove content as we'll build it separately
 
                         elif chunk.type == "content_block_start":
-                            current_block = chunk.content_block.model_dump()
-                            if current_block["type"] == "tool_use":
-                                if logger: logger(f" <tool_use: {current_block['name']}(")
-                                current_block["input"] = "" # force it to be a string, XXX: can implement partially parsed json later.
+                            block = chunk.content_block.model_dump()
+                            current_blocks[chunk.index] = block
+                            if block["type"] == "tool_use":
+                                if logger: logger(f" <tool_use: {block['name']}(")
+                                block["input"] = "" # force it to be a string, XXX: can implement partially parsed json later.
                         elif chunk.type == "content_block_delta":
-                            if current_block is not None:
+                            if chunk.index in current_blocks:
+                                block = current_blocks[chunk.index]
                                 if (delta := chunk.delta).type == "text_delta":
-                                    current_block["text"] += delta.text
+                                    block["text"] += delta.text
                                     if logger: logger(delta.text)
                                 if delta.type == "input_json_delta":
-                                    current_block["input"] += delta.partial_json
+                                    block["input"] += delta.partial_json
                                     if logger: logger(delta.partial_json)
 
                         elif chunk.type == "content_block_stop":
-                            if current_block is not None:
-                                if current_block["type"] == "text":
-                                    content.append(ContentBlock(text=_lstr(current_block["text"],origin_trace=origin_id)))
-                                elif current_block["type"] == "tool_use":
+                            if chunk.index in current_blocks:
+                                block = current_blocks.pop(chunk.index)
+                                if block["type"] == "text":
+                                    content.append(ContentBlock(text=_lstr(block["text"],origin_trace=origin_id)))
+                                elif block["type"] == "tool_use":
                                     try:
-                                        matching_tool = ell_call.get_tool_by_name(current_block["name"])
+                                        matching_tool = ell_call.get_tool_by_name(block["name"])
                                         if matching_tool:
                                             content.append(
                                                 ContentBlock(
                                                     tool_call=ToolCall(
                                                         tool=matching_tool,
                                                         tool_call_id=_lstr(
-                                                            current_block['id'],origin_trace=origin_id
+                                                            block['id'],origin_trace=origin_id
                                                         ),
-                                                        params=json.loads(current_block['input']),
+                                                        params=json.loads(block['input']) if block['input'] else {},
                                                     )
                                                 )
                                             )
@@ -128,8 +132,6 @@ try:
                                         if logger: logger(f" - FAILED TO PARSE JSON")
                                         pass
                                     if logger: logger(f")>")
-                                
-                            current_block = None
 
                         elif chunk.type == "message_delta":
                             message_metadata.update(chunk.delta.model_dump())
