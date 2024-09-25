@@ -131,7 +131,7 @@ class Config(BaseModel):
         :return: The provider instance for the specified client, or None if not found.
         :rtype: Optional[Provider]
         """
-        
+
         client_type = type(client) if not isinstance(client, type) else client
         for provider_type, provider in self.providers.items():
             if issubclass(client_type, provider_type) or client_type == provider_type:
