@@ -80,7 +80,7 @@ try:
                     openai_messages.append(cast(ChatCompletionMessageParam, dict(
                         role=message.role,
                         content=[_content_block_to_openai_format(c) for c in message.content] 
-                             if message.role is not "system" 
+                             if message.role != "system" 
                              else message.text_only
                     )))
                      
