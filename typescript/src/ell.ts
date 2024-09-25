@@ -342,14 +342,14 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
         // we should find a way to add these to a queue or something and then make sure they have all completed before the runtime exits
         await serializeLMP({
           lmp_id: lmp.lmpId,
-          // todo verify this is correct
-          name: lmp.fqn,//lmp.lmpName,
+          name: lmp.fqn,
+          language: 'typescript',
           dependencies: '',
           created_at: new Date().toISOString(),
           source: lmp.source,
           lmp_type: lmpType,
           api_params: a,
-          // todo. requires runtime inspection of the user-provided closure
+          // todo. find what these refer to exactly
           initial_free_vars: {},
           initial_global_vars: {},
           // todo. requires static analysis of direct children of this lmp definition

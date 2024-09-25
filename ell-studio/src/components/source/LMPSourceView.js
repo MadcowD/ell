@@ -174,6 +174,7 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
       <CodeSection
         title="Source"
         code={source}
+        language={lmp.language || 'python'}
         showCode={showSource}
         setShowCode={setShowSource}
         lines={sourceLines}

@@ -30,6 +30,7 @@ type SerializedLmp = {
   dependencies: string
   created_at: Date
   lmp_type: LMPType
+  language: 'python' | 'typescript'
   api_params: Record<string, any>
   initial_free_vars: Record<string, any>
   initial_global_vars: Record<string, any>
@@ -195,6 +196,7 @@ export class SQLiteStore extends Store {
           lmp_id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           source TEXT NOT NULL,
+          language TEXT NOT NULL,
           dependencies TEXT NOT NULL,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           lmp_type TEXT NOT NULL,
@@ -266,6 +268,7 @@ export class SQLiteStore extends Store {
       name,
       source,
       dependencies,
+      language,
       lmp_type,
       api_params,
       initial_free_vars,
@@ -283,14 +286,15 @@ export class SQLiteStore extends Store {
       await this.db!.run(
         `
           INSERT OR REPLACE INTO serializedlmp 
-          (lmp_id, name, source, dependencies, lmp_type, api_params, initial_free_vars, initial_global_vars, commit_message, version_number, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (lmp_id, name, source, dependencies, language, lmp_type, api_params, initial_free_vars, initial_global_vars, commit_message, version_number, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
           lmp_id,
           name,
           source,
           dependencies,
+          language,
           lmp_type,
           JSON.stringify(api_params),
           JSON.stringify(initial_free_vars),
@@ -434,6 +438,7 @@ export class SQLiteStore extends Store {
       lmp_id: row.lmp_id,
       name: row.name,
       source: row.source,
+      language: row.language,
       dependencies: row.dependencies,
       created_at: new Date(row.created_at),
       lmp_type: row.lmp_type,
@@ -490,6 +495,7 @@ export type WriteLMPInput = {
   lmp_id: string
   name: string
   source: string
+  language: 'python' | 'typescript'
   dependencies: string
   created_at: ISODateString
   lmp_type: LMPType

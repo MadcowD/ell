@@ -1,8 +1,6 @@
-import { SQLiteStore } from '../src/serialize/sql'
-import * as fs from 'fs'
-import * as path from 'path'
+import { SQLiteStore, WriteInvocationInput, WriteLMPInput } from '../src/serialize/sql'
 import { LMPType } from '../src/lmp/types'
-import { test, expect, beforeAll, afterAll, describe } from 'vitest'
+import { test, expect, beforeAll } from 'vitest'
 
 let store: SQLiteStore
 
@@ -11,26 +9,23 @@ beforeAll(async () => {
   await store.initialize()
 })
 
-
-const testLmp = {
+const testLmp: WriteLMPInput = {
   lmp_id: 'test-lmp-1',
   name: 'TestLMP',
   source: 'console.log("Hello, World!");',
   dependencies: '{}',
-  created_at: new Date(),
+  language: 'typescript' as const,
+  created_at: new Date().toISOString(),
   lmp_type: LMPType.LM,
   api_params: {},
   initial_free_vars: {},
   initial_global_vars: {},
-  num_invocations: 0,
   commit_message: 'Initial commit',
   version_number: 1,
-  invocations: [],
-  used_by: [],
   uses: [],
 }
 
-const testInvocation = {
+const testInvocation: WriteInvocationInput = {
   id: 'test-invocation-1',
   lmp_id: 'test-lmp-1',
   latency_ms: 100,
@@ -39,30 +34,24 @@ const testInvocation = {
   state_cache_key: 'test-cache-key',
   created_at: new Date().toISOString(),
   used_by_id: '',
-  lmp: testLmp,
-  consumed_by: [],
   consumes: [],
-  used_by: null,
-  uses: [],
   contents: {
-    invocation_id: 'test-invocation-1',
     params: {},
     results: 'Hello, World!',
     invocation_api_params: {},
     global_vars: {},
     free_vars: {},
     is_external: false,
-    invocation: {} as any, // This is a circular reference, so we're using `as any` for simplicity
   },
 }
 
 test('writeLMP and getVersionsByFqn', async () => {
-  await store.writeLMP(testLmp, {})
+  await store.writeLMP(testLmp)
   const versions = await store.getVersionsByFqn(testLmp.name)
   expect(versions.length).toBe(1)
   expect(versions[0].lmp_id).toBe(testLmp.lmp_id)
 })
 
 test('writeInvocation', async () => {
-  await store.writeInvocation(testInvocation, new Set())
+  await store.writeInvocation(testInvocation)
 })
