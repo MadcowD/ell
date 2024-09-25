@@ -135,9 +135,31 @@ export abstract class Store {
   //   }
 }
 
+class Mutex {
+  private mutex = Promise.resolve()
+
+  lock(): PromiseLike<() => void> {
+    let resolve: (unlock: () => void) => void
+
+    const newMutexPromise = new Promise<() => void>((res) => {
+      resolve = res
+    })
+
+    const unlock = () => {
+      resolve()
+    }
+
+    const newMutex = this.mutex.then(() => newMutexPromise)
+    this.mutex = newMutex
+
+    return Promise.resolve(unlock)
+  }
+}
+
 export class SQLiteStore extends Store {
   private db: Database | null = null
   private dbPath: string
+  private txMutex = new Mutex()
 
   constructor(dbDir: string) {
     if (dbDir === ':memory:') {
@@ -253,6 +275,8 @@ export class SQLiteStore extends Store {
       created_at,
       uses,
     } = input
+    const unlock = await this.txMutex.lock()
+
     await this.db!.run('BEGIN TRANSACTION')
 
     try {
@@ -286,12 +310,13 @@ export class SQLiteStore extends Store {
           [lmp_id, useId]
         )
       }
+      await this.db!.run('COMMIT')
     } catch (error) {
       await this.db!.run('ROLLBACK')
       throw error
+    } finally {
+      unlock()
     }
-
-    await this.db!.run('COMMIT')
 
     return undefined
   }
@@ -300,6 +325,7 @@ export class SQLiteStore extends Store {
     if (!this.db) {
       await this.initialize()
     }
+    const unlock = await this.txMutex.lock()
     // Start a transaction
     await this.db!.run('BEGIN TRANSACTION')
 
@@ -374,6 +400,8 @@ export class SQLiteStore extends Store {
       // If there's an error, roll back the transaction
       await this.db!.run('ROLLBACK')
       throw error
+    } finally {
+      unlock()
     }
   }
 

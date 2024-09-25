@@ -25,6 +25,7 @@ import * as sm from 'source-map'
 
 const logger = new Logger('ell')
 
+
 type Kwargs = {
   // The name or identifier of the language model to use.
   model: string
@@ -211,141 +212,63 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
   // Enable debugger
   const debuggerId = await session.post('Debugger.enable')
 
-
-  // this only works for inline source maps. it looks like ts-node always gives those to node
-  // regardless of what the tsconfig says?
-  function extractSourceMapUrl(fileContent: string) {
-    const sourceMapRegex = /\/\/[#@]\s*sourceMappingURL=(.+)$/m
-    const match = fileContent.match(sourceMapRegex)
-    if (match) {
-      if (match[1].indexOf('base64,') > -1) {
-        return match[1].split('base64,')[1]
-      }
-      return match[1]
-    }
-    return null
-  }
-  function getSourceMapJSON(base64SourceMap: string) {
+  const setBreakpoint = async (session: inspector.Session, lmp: LMPDefinition) => {
     try {
-      const sourceMapContent = Buffer.from(base64SourceMap, 'base64').toString()
-      return JSON.parse(sourceMapContent)
-    } catch (e) {
-      console.error('Error parsing source map', e)
-      return null
-    }
-  }
-
-  async function resolveScriptIdToFile(scriptId: string) {
-    try {
-      const result = await session.post('Debugger.getScriptSource', { scriptId })
-      console.log('scriptsource', result)
-      return result
-    } catch (err) {
-      console.error(`Error resolving scriptId ${scriptId}:`, err)
-      return err
-    }
-  }
-
-  async function resolveMultipleScriptIds(scriptIds: string[]) {
-    const results = []
-    for (const scriptId of scriptIds) {
-      try {
-        const result = await resolveScriptIdToFile(scriptId)
-        results.push(result)
-      } catch (error) {
-        console.error(`Error resolving scriptId ${scriptId}:`, error)
-        results.push({ scriptId, filePath: 'Error: ' + error.message })
-      }
-    }
-    return results
-  }
-
-  const setBreakpoint = async (lmp: LMPDefinition) => {
-    try {
+      // we use this to get the script id. the alternative is to listen to all script load events
+      // which we expect to be less performant
+      // the expectation is the script has loaded and will not be reloaded and so a breakpoint at line 0 will not be hit
+      // the actual breakpoint is set below
       const result = await session.post('Debugger.setBreakpointByUrl', {
-        lineNumber: 19,
+        lineNumber: 0,
         // urlRegex: lmp.filepath.replace("\.", "\\."),
         url: 'file://' + lmp.filepath,
         columnNumber: 0,
       })
-      console.log('got a breakpoint', result)
+      logger.debug('got a breakpoint', { result })
       for (const location of result.locations) {
-        const file = await resolveScriptIdToFile(location.scriptId)
-        const source = file.scriptSource
-        const sourceMapUrl = extractSourceMapUrl(source)
-        if (sourceMapUrl) {
-          const json = getSourceMapJSON(sourceMapUrl)
-          console.log('sourceMap', json)
-          const consumer = new sm.SourceMapConsumer(json)
-          const generatedPosition = consumer.generatedPositionFor({
-            source: json['sources'][0],
-            line: lmp.line,
-            column: 0,
-          })
-          console.log('generatedPosition', generatedPosition)
-          const result = await session.post('Debugger.setBreakpointByUrl', {
-            lineNumber: generatedPosition.line + 5,
-            // urlRegex: lmp.filepath.replace("\.", "\\."),
-            url: 'file://' + lmp.filepath,
-            columnNumber: 1,
-          })
+        const file = await resolveScriptIdToFile(session, location.scriptId)
+
+        const source = file?.scriptSource
+        if (!source) {
+          throw new Error('No source found')
         }
+
+        const sourceMapUrl = extractSourceMapUrl(source)
+        if (!sourceMapUrl) {
+          throw new Error('No source map url found')
+        }
+
+        const json = getSourceMapJSON(sourceMapUrl)
+        logger.debug('sourceMap', { json })
+        const consumer = new sm.SourceMapConsumer(json)
+        const generatedPosition = consumer.generatedPositionFor({
+          source: json['sources'][0],
+          line: lmp.line,
+          column: 0,
+        })
+        logger.debug('generatedPosition', { generatedPosition })
+        const result = await session.post('Debugger.setBreakpointByUrl', {
+          lineNumber: generatedPosition.line + 5,
+          // urlRegex: lmp.filepath.replace("\.", "\\."),
+          url: 'file://' + lmp.filepath,
+          columnNumber: 1,
+        })
       }
+      logger.debug('breakpoint result', { result })
       return result.breakpointId
     } catch (e) {
-      console.error('Error setting breakpoint', e)
+      logger.error('Error setting breakpoint', { err: e })
     }
   }
 
-  const breakpointId = await setBreakpoint(lmp)
-
-  let variableValues: Record<string, any> = {}
-
-  type BreakpointHitEvent = inspector.InspectorNotification<inspector.Debugger.PausedEventDataType>
-  const getNextPausedEvent = (): Promise<BreakpointHitEvent> =>
-    new Promise((resolve, reject) => {
-      session.once('Debugger.paused', (params) => {
-        console.log('paused', JSON.stringify(params, null, 2))
-        resolve(params)
-      })
-    })
-  const handleBreakpointHit = async ({ params }: BreakpointHitEvent) => {
-    const { callFrames } = params
-    const scopes = callFrames[0].scopeChain
-
-    // Get the variables you're interested in
-    for (const scope of scopes) {
-      if (scope.type === 'closure') {
-        const result = await session
-          .post('Runtime.getProperties', {
-            objectId: scope.object.objectId,
-            ownProperties: false,
-            accessorPropertiesOnly: false,
-            generatePreview: false,
-          })
-          .catch((err) => {
-            logger.error('Failed to get properties', err)
-            return null
-          })
-        if (!result) {
-          continue
-        }
-        for (const prop of result.result) {
-          if (prop.value && prop.value.value !== undefined) {
-            variableValues[prop.name] = prop.value.value
-          }
-        }
-      }
-    }
-  }
-  let resolve = undefined
+  let resolve: (value: void | PromiseLike<void>) => void
   let latch = new Promise((_resolve, reject) => {
     resolve = _resolve
   })
 
   // Listen for breakpoint hits
   session.on('Debugger.paused', async ({ params }) => {
-    console.log('paused listener', JSON.stringify(params, null, 2))
+    logger.debug('Paused on breakpoint', { params: JSON.stringify(params, null, 2) })
     const { callFrames } = params
     const scopes = callFrames[0].scopeChain
 
@@ -401,6 +324,11 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
     // await session.post('Debugger.resume')
   })
 
+  const breakpointId = await setBreakpoint(session, lmp)
+  logger.debug('breakpointId', { breakpointId })
+
+  let variableValues: Record<string, any> = {}
+
   return await invocationContext.run(
     // @ts-ignore
     {
@@ -410,10 +338,12 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
     async () => {
       let lmpType = lmpTypeFromDefinitionType(lmp.lmpDefinitionType)
       try {
-        // fire and forget
-        serializeLMP({
+        // for now we await this operation because it may be interrupted on exit under normal program operation
+        // we should find a way to add these to a queue or something and then make sure they have all completed before the runtime exits
+        await serializeLMP({
           lmp_id: lmp.lmpId,
-          name: lmp.lmpName,
+          // todo verify this is correct
+          name: lmp.fqn,//lmp.lmpName,
           dependencies: '',
           created_at: new Date().toISOString(),
           source: lmp.source,
@@ -437,7 +367,7 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
       // await session.post('Debugger.resume')
       await latch
       await session.post('Debugger.removeBreakpoint', { breakpointId })
-      console.log('Capturedvariables', variableValues)
+      logger.debug('captured variables', { variableValues })
       // await session.post('Debugger.resume')
       await session.post('Debugger.disable')
       session.disconnect()
@@ -472,7 +402,7 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
       }
 
       const result = convertMultimodalResponseToString(trackedResults[0])
-      serializeInvocation({
+      await serializeInvocation({
         id: invocationId,
         lmp_id: lmp.lmpId,
         latency_ms: latency_ms,
@@ -482,9 +412,9 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
           params: args,
           results: result,
           invocation_api_params: a,
+          free_vars: variableValues,
           // todo.
           global_vars: {},
-          free_vars: {},
           is_external: false,
         },
         used_by_id: invocationContext.getParentInvocation()?.id,
@@ -505,6 +435,7 @@ export const simple = <F extends SimpleLMPInner>(a: Kwargs, f: F): SimpleLMP<F> 
   if (!filepath || !line || !column) {
     logger.error(`LMP cannot be tracked. Your source maps may be incorrect or unavailable.`)
   }
+  logger.debug('simple', { filepath, line, column })
 
   let trackAttempted = false
   // We would like to calculate the hash at runtime depending on further analysis of runtime variables
@@ -629,4 +560,5 @@ import { system, user } from './types/message'
 import { ToolFunction } from './types/tools'
 import { WriteInvocationInput, WriteLMPInput } from './serialize/sql'
 import { LMPType } from './lmp/types'
+import { extractSourceMapUrl, getSourceMapJSON, resolveScriptIdToFile } from './closure'
 export { init, config, system, user }

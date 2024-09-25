@@ -7,15 +7,19 @@ enum LogLevel {
 
 class Logger {
   private name: string
-  private level: LogLevel
+  private _level: LogLevel | undefined
 
-  constructor(name: string, level: LogLevel = Logger.globalLevel) {
+  constructor(name: string, level?: LogLevel ) {
     this.name = name
-    this.level = level
+    this._level = level
+  }
+
+  get level(): LogLevel {
+    return this._level || Logger.globalLevel
   }
 
   setLevel(level: LogLevel) {
-    this.level = level
+    this._level = level
   }
 
   private log(level: LogLevel, message: string, data?: Record<string, any>) {
@@ -41,20 +45,27 @@ class Logger {
     this.log(LogLevel.ERROR, message, data)
   }
 
-  static globalLevel: LogLevel = LogLevel.INFO
+  static _globalLevel: LogLevel | undefined = LogLevel.INFO
+  static get globalLevel(): LogLevel {
+    return Logger._globalLevel || LogLevel.INFO
+  }
 
   static setGlobalLevel(level: LogLevel) {
-    Logger.globalLevel = level
+    Logger._globalLevel = level
   }
+}
+
+const setGlobalLevel = (level: LogLevel) => {
+  Logger.setGlobalLevel(level)
 }
 
 const loggers: Map<string, Logger> = new Map()
 
 function getLogger(name: string): Logger {
   if (!loggers.has(name)) {
-    loggers.set(name, new Logger(name))
+    loggers.set(name, new Logger(name, Logger.globalLevel))
   }
   return loggers.get(name)!
 }
 
-export { Logger, LogLevel, getLogger }
+export { Logger, LogLevel, getLogger, setGlobalLevel }

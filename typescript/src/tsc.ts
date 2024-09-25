@@ -53,6 +53,7 @@ export type LMPDefinitionType = 'simple' | 'complex'
 export type LMPDefinition = {
   lmpDefinitionType: LMPDefinitionType
   lmpName: string
+  fqn: string
   config: string
   source: string
   fn: string
@@ -67,12 +68,13 @@ export class EllTSC implements EllTSC {
   private program: ts.Program
   // maps filePath to LMPs
   private lmpCache: Map<string, LMPDefinition[]> = new Map()
+  private tsconfigPath: string 
   constructor(rootDir: string = process.cwd()) {
     const configPath = ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.json')
     if (!configPath) {
       throw new Error("Could not find a valid 'tsconfig.json'.")
     }
-
+    this.tsconfigPath = configPath
     const configFile = ts.readConfigFile(configPath, ts.sys.readFile)
     const parsedCommandLine = ts.parseJsonConfigFileContent(configFile.config, ts.sys, path.dirname(configPath))
 
@@ -81,6 +83,15 @@ export class EllTSC implements EllTSC {
       options: parsedCommandLine.options,
       projectReferences: parsedCommandLine.projectReferences,
     })
+  }
+
+  public namespace(filePath: string): string {
+    const tsconfigDir = path.dirname(this.tsconfigPath)
+    return filePath.replace(tsconfigDir, '').replace(/\//g, '.').replace(/\.ts$/g, '').slice(1)
+
+  }
+  public fqn(filepath:string,name:string): string {
+    return `${this.namespace(filepath)}.${name}`
   }
 
   private getNodeAtPosition(sourceFile: ts.SourceFile, line: number, column: number): ts.Node | undefined {
@@ -156,6 +167,10 @@ export class EllTSC implements EllTSC {
     const aliasToLMPType: Record<string, LMPDefinitionType> = {
       simple: 'simple',
       complex: 'complex',
+    }
+
+    const getFqn = (filePath: string, name: string) => {
+      return this.fqn(filePath, name)
     }
 
     function visitImportDeclaration(node: ts.ImportDeclaration) {
@@ -253,6 +268,7 @@ export class EllTSC implements EllTSC {
                   config: lmp.config,
                   fn: lmp.fn,
                   lmpName,
+                  fqn: getFqn(filePath, lmpName),
                   source: node.getText(sourceFile),
                   filepath: filePath,
                   // Add 1 because TypeScript uses 0-based line numbers

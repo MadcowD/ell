@@ -20,6 +20,7 @@ test('getLMPsInFile', async () => {
       endLine: 8,
       endColumn: 3,
       lmpName: 'hello',
+      fqn: 'test.fixtures.example.hello',
       lmpDefinitionType: 'simple',
       source: `const hello = simple({ model: 'gpt-4o' }, async (a: string) => {
   await child(a)

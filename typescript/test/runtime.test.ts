@@ -1,8 +1,11 @@
+import * as logging from '../src/_logger'
+logging.setGlobalLevel(logging.LogLevel.DEBUG)
 import { test, expect, beforeAll } from 'vitest'
 import { complex, simple } from '../src/ell'
 import { config } from '../src/configurator'
 import OpenAI from 'openai'
 import { Message } from '../src/types'
+
 
 beforeAll(() => {
   // @ts-expect-error
@@ -35,7 +38,10 @@ beforeAll(() => {
   }
 })
 
+const logger = logging.getLogger('runtime.test')
 test('runtime', async () => {
+
+  logger.debug('runtime', { test: 'test' })
   const child = simple({ model: 'gpt-4o-mini' }, async (a: string) => {
     return 'child'
   })
