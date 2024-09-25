@@ -37,6 +37,8 @@ class ToolResult(BaseModel):
     # def readable_repr(self) -> str:
     #     return f"ToolResult(tool_call_id={self.tool_call_id}, result={_content_to_text(self.result)})"
     
+    def __repr__(self):
+        return f"ToolResult(tool_call_id={self.tool_call_id}, result={_content_to_text(self.result)})"
 
 class ToolCall(BaseModel):
     tool : InvocableTool
@@ -64,6 +66,9 @@ class ToolCall(BaseModel):
 
     def call_and_collect_as_message(self):
         return Message(role="user", content=[self.call_and_collect_as_message_block()])
+    
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.tool.__name__}({self.params}), tool_call_id='{self.tool_call_id}')"
     
 
 class ImageContent(BaseModel):
@@ -468,7 +473,7 @@ def _content_to_text(content: List[ContentBlock]) -> str:
     return _lstr("\n").join(
             available_text
             for c in content
-            if (available_text :=  c.text or repr(c.content)
+            if (available_text :=  c.text or repr(c.content))
         )
 
 
