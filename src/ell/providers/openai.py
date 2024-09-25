@@ -79,8 +79,11 @@ try:
                 else:
                     openai_messages.append(cast(ChatCompletionMessageParam, dict(
                         role=message.role,
-                        content=[_content_block_to_openai_format(c) for c in message.content]
+                        content=[_content_block_to_openai_format(c) for c in message.content] 
+                             if message.role is not "system" 
+                             else message.text_only
                     )))
+                     
             final_call_params["messages"] = openai_messages
             
             return final_call_params
