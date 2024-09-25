@@ -3,6 +3,8 @@ import cv2
 import time
 from PIL import Image
 import ell
+from ell.types.message import ImageContent
+from ell.util.plot_ascii import plot_ascii
 
 ell.init(verbose=True, store='./logdir', autocommit=True)
 
@@ -10,14 +12,16 @@ ell.init(verbose=True, store='./logdir', autocommit=True)
 def describe_activity(image: Image.Image):
     return [
         ell.system("You are VisionGPT. Answer <5 words all lower case."),
-        ell.user(["Describe what the person in the image is doing:", image])
+        ell.user(["Describe what the person in the image is doing:", ImageContent(image=image, detail="low")])
     ]
-
 
 
 def capture_webcam_image():
     cap = cv2.VideoCapture(0)
+    for _ in range(10):
+        ret, frame = cap.read()
     ret, frame = cap.read()
+    
     cap.release()
     if ret:
         image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
@@ -26,7 +30,7 @@ def capture_webcam_image():
     return None
 
 if __name__ == "__main__":
-    
+
     print("Press Ctrl+C to stop the program.")
     try:
         while True:
@@ -39,3 +43,4 @@ if __name__ == "__main__":
             time.sleep(1)
     except KeyboardInterrupt:
         print("Program stopped by user.")
+

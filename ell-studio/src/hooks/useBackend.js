@@ -2,8 +2,22 @@ import { useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
-const API_BASE_URL = "http://localhost:8080";
-const WS_URL = "ws://localhost:8080/ws";
+
+const API_BASE_URL = process.env.NODE_ENV === 'development' 
+  ? "http://localhost:5555" 
+  : window.location.origin;
+
+// Function to get WebSocket URL
+const getWebSocketURL = () => {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = process.env.NODE_ENV === 'development' ? 'localhost:5555' : window.location.host;
+  console.log(host)
+  return `${protocol}//${host}/ws`;
+  
+};
+
+const WS_URL = getWebSocketURL();
+
 
 export const useWebSocketConnection = () => {
   const queryClient = useQueryClient();

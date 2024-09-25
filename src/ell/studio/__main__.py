@@ -17,9 +17,12 @@ def main():
     parser.add_argument("--pg-connection-string", default=None,
                         help="PostgreSQL connection string (default: None)")
     parser.add_argument("--host", default="127.0.0.1", help="Host to run the server on")
-    parser.add_argument("--port", type=int, default=8080, help="Port to run the server on")
+    parser.add_argument("--port", type=int, default=5555, help="Port to run the server on")
     parser.add_argument("--dev", action="store_true", help="Run in development mode")
     args = parser.parse_args()
+
+    if args.dev:
+        assert args.port == 5555, "Port must be 5000 in development mode"
 
     config = Config.create(storage_dir=args.storage_dir,
                     pg_connection_string=args.pg_connection_string)

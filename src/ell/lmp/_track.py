@@ -94,7 +94,7 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
                 
         
                 if len(cached_invocations) > 0:
-                    # TODO THis is bad?
+                    # XXX: Fix caching.
                     results =  [d.deserialize() for  d in cached_invocations[0].results]
 
                     logger.info(f"Using cached result for {func_to_track.__qualname__} with state cache key: {state_cache_key}")
@@ -118,9 +118,9 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
                 else func_to_track(*fn_args, _invocation_origin=invocation_id, **fn_kwargs, )
                 )
             latency_ms = (utc_now() - _start_time).total_seconds() * 1000
-            usage = metadata.get("usage", {})
-            prompt_tokens=usage.get("prompt_tokens", 0)
-            completion_tokens=usage.get("completion_tokens", 0)
+            usage = metadata.get("usage", {"prompt_tokens": 0, "completion_tokens": 0})
+            prompt_tokens= usage.get("prompt_tokens", 0) if usage else 0
+            completion_tokens= usage.get("completion_tokens", 0) if usage else 0
 
 
             #XXX: cattrs add invocation origin here recursively on all pirmitive types within a message.

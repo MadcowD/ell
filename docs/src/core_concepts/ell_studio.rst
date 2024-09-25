@@ -26,7 +26,7 @@ To start using Studio, run the following command in your terminal:
 
     ell-studio --storage ./logdir
 
-Then go to `http://localhost:8080 <http://localhost:8080>`_ to access the Studio interface.
+Then go to `http://localhost:5555 <http://localhost:5555>`_ to access the Studio interface.
 
 This command opens the Studio interface in your web browser, using the data stored in the specified directory (which should be the same directory you specified when initializing ell with `ell.init(store='./logdir')`). Since Studio runs locally, you can be assured that your sensitive prompt data never leaves your machine.
 

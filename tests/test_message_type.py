@@ -45,6 +45,16 @@ def test_content_block_coerce_base_model():
     assert result.parsed == formatted_response
     assert result.type == "parsed"
 
+
+def test_serialization_of_content_block_with_parsed():
+    class DummyFormattedResponse(BaseModel):
+        field1: str
+        field2: int
+
+    msg = Message(role="user", content=[ContentBlock(parsed=DummyFormattedResponse(field1="test", field2=42))])
+    assert msg.model_dump(exclude_none=True, exclude_unset=True) == {'role': 'user', 'content': [{'parsed': {'field1': 'test', 'field2': 42}}]}
+
+
 def test_content_block_coerce_content_block():
     original_block = ContentBlock(text="Original content")
     result = ContentBlock.coerce(original_block)

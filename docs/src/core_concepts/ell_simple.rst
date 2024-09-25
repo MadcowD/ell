@@ -100,11 +100,11 @@ One of the most convenient functions of the ``@ell.simple`` decorator is that yo
         """You are a helpful assistant."""
         return f"Hey there {name}!"
         
-Likewise, if you want to modify those parameters for a particular invocation of that prompt, you simply pass them in as ``lm_params`` keyword arguments to the function when calling it. For example:
+Likewise, if you want to modify those parameters for a particular invocation of that prompt, you simply pass them in as ``api_params`` keyword arguments to the function when calling it. For example:
 
 .. code-block:: python
 
-    >>> hello("world", lm_params=dict(temperature=0.7))
+    >>> hello("world", api_params=dict(temperature=0.7))
     'Hey there world!'
 
 
@@ -139,15 +139,15 @@ In the spirit of simplicity, we've designed it to automatically coerce the retur
     >>> hello("world")
     ['Hey there world!', 'Hi, world.']
 
-Similarly, this behavior applies when using runtime ``lm_params`` to specify multiple outputs.
+Similarly, this behavior applies when using runtime ``api_params`` to specify multiple outputs.
 
 .. code-block:: python
 
-    >>> hello("world", lm_params=dict(n=3))
+    >>> hello("world", api_params=dict(n=3))
     ['Hey there world!', 'Hi, world.', 'Hello, world!']
 
 
-.. note:: In the future, we may modify this interface as preserving the ``lm_params`` keyword in its current form could potentially lead to conflicts with user-defined functions. However, during the beta phase, we are closely monitoring for feedback and will make adjustments based on user experiences and needs.
+.. note:: In the future, we may modify this interface as preserving the ``api_params`` keyword in its current form could potentially lead to conflicts with user-defined functions. However, during the beta phase, we are closely monitoring for feedback and will make adjustments based on user experiences and needs.
 
 
 Multimodal inputs
@@ -160,22 +160,27 @@ Here's an example of how to use ``@ell.simple`` with multimodal inputs:
 
     from PIL import Image
     import ell
+    from ell.types.message import ImageContent
 
     @ell.simple(model="gpt-4-vision-preview")
     def describe_image(image: Image.Image):
         return [
             ell.system("You are a helpful assistant that describes images."),
             ell.user(["What's in this image?", image])
+            # Or ell.user(["What's in this image?", ImageContent(url=image_url, detail="low")])
         ]
 
-    # Usage
+    # Usage with PIL Image
     image = Image.open("path/to/your/image.jpg")
     description = describe_image(image)
     print(description)  # This will print a text description of the image
 
-In this example, the ``describe_image`` function takes a PIL Image object as input. The ``ell.user`` message combines both text and image inputs. ``@ell.simple`` automatically handles the conversion of the PIL Image object into the appropriate format for the language model.
+
+In these examples, the ``describe_image`` function takes a PIL Image object as input, while ``describe_image_url`` takes a string URL. The ``ell.user`` message combines both text and image inputs. ``@ell.simple`` automatically handles the conversion of the PIL Image object or ImageContent into the appropriate format for the language model.
 
 This approach simplifies working with multimodal inputs, allowing you to focus on your application logic rather than the intricacies of API payloads.
+
+.. note:: Not all language model providers support image URLs. For example, as of the current version, Anthropic's models do not support image URLs. Always check the capabilities and requirements of your chosen language model provider when working with multimodal inputs.
 
 .. warning:: While ``@ell.simple`` supports multimodal inputs, it is designed to return text-only outputs. For handling multimodal outputs (such as generated images or audio), you need to use ``@ell.complex``. Please refer to the :doc:`ell_complex` documentation for more information on working with multimodal outputs.
 

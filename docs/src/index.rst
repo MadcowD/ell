@@ -124,6 +124,7 @@ By forcing a functional decomposition of the problem, ``ell`` makes it **easy to
 .. code-block:: python
 
    import ell
+   from typing import List
    
    @ell.simple(model="gpt-4o-mini", temperature=1.0, n=10)
    def write_ten_drafts(idea : str):

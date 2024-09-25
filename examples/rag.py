@@ -48,7 +48,7 @@ def rag(query: str, context: str) -> str:
 
 
 if __name__ == "__main__":
-    ell.config.verbose = True
+    
 
     documents = [
         "ell is a cool new framework written by will",

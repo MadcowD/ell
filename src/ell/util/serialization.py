@@ -64,7 +64,8 @@ pydantic_ltype_aware_cattr.register_unstructure_hook(
     BaseModel,
     lambda obj: obj.model_dump(exclude_none=True, exclude_unset=True)
 )
-# Register hooks for complex types (deserialization)
+
+
 
 
 def get_immutable_vars(vars_dict):
