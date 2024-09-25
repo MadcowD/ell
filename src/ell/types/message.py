@@ -38,7 +38,7 @@ class ToolResult(BaseModel):
     #     return f"ToolResult(tool_call_id={self.tool_call_id}, result={_content_to_text(self.result)})"
     
     def __repr__(self):
-        return f"ToolResult(tool_call_id={self.tool_call_id}, result={_content_to_text(self.result)})"
+        return f"{self.__class__.__name__}(tool_call_id={self.tool_call_id}, result={_content_to_text(self.result)})"
 
 class ToolCall(BaseModel):
     tool : InvocableTool
