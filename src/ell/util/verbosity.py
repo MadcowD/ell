@@ -9,7 +9,7 @@ from ell.configurator import config
 import logging
 from functools import lru_cache
 import threading
-from ell.types.message import LMP
+from ell.types.message import LMP, _content_to_text
 import requests
 
 from ell.util.plot_ascii import plot_ascii
@@ -93,8 +93,8 @@ def wrap_text_with_prefix(message, width: int, prefix: str, subsequent_prefix: s
         if content.image and content.image.image:
             wrapped_lines = plot_ascii(content.image.image, min(80, width - len(prefix)))
         else:
-            text = content.text or f"<{content.type}>"
-            paragraphs = content.text.split('\n')
+            text = _content_to_text([content]) 
+            paragraphs = text.split('\n')
             wrapped_paragraphs = [textwrap.wrap(p, width=width - len(prefix)) for p in paragraphs]
             wrapped_lines = [line for paragraph in wrapped_paragraphs for line in paragraph]
         if i == 0:

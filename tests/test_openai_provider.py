@@ -154,6 +154,30 @@ class TestOpenAIProvider:
             }
         ]
 
+    def test_translate_to_provider_with_empty_text(self, provider, ell_call_params):
+        ell_call_params.messages = [
+            Message(role="user", content=[ContentBlock(text="")])
+        ]
+        ell_call_params.tools = []
+        ell_call_params.api_params = {}
+
+        translated = provider.translate_to_provider(ell_call_params)
+        
+        assert translated["messages"] == [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "",
+                    }
+                ],
+            }
+        ]
+        assert "tools" not in translated
+        assert "tool_choice" not in translated
+
+
     def test_translate_to_provider_with_tool_calls(
         self, provider, ell_call_params, mock_tool
     ):

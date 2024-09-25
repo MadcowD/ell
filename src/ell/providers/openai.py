@@ -176,7 +176,7 @@ def _content_block_to_openai_format(content_block: ContentBlock) -> Dict[str, An
             "type": "image_url",
             "image_url": image_url
         }
-    elif (text := content_block.text): return dict(type="text", text=text)
+    elif ((text := content_block.text) is not None): return dict(type="text", text=text)
     elif (parsed := content_block.parsed): return dict(type="text", text=parsed.model_dump_json())    
     else:
         raise ValueError(f"Unsupported content block type for openai: {content_block}")

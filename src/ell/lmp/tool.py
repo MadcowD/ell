@@ -105,7 +105,7 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
                 fields[param_name] = (annotation, Field(...))
 
         # 3. Create the Pydantic model
-        model_name = f"{fn.__name__}Params"
+        model_name = f"{fn.__name__}"
         ParamsModel = create_model(model_name, **fields)
         
         # Attach the Pydantic model to the wrapper function
