@@ -32,18 +32,17 @@ import collections
 import ast
 import hashlib
 import itertools
-import os
 from typing import Any, Dict, Iterable, Optional, Set, Tuple, Callable
 import dill
 import inspect
 import types
 from dill.source import getsource
-import importlib.util
 import re
 from collections import deque
 import black
 
 from ell.util.serialization import is_immutable_variable
+from ell.util.should_import import should_import
 
 DELIM = "$$$$$$$$$$$$$$$$$$$$$$$$$"
 FORBIDDEN_NAMES = ["ell", "lstr"]
@@ -308,34 +307,9 @@ def _raise_error(message, exception, recursion_stack):
     """Raise an error with detailed information."""
     error_msg = f"{message}. Error: {str(exception)}\n"
     error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
-    print(error_msg)
-    # raise Exception(error_msg)
+    # print(error_msg)
+    raise Exception(error_msg)
 
-def should_import(module_name : str):
-    """
-    This function checks if a module should be imported based on its origin.
-    It returns False if the module is in the local directory or if the module's spec is None.
-    Otherwise, it returns True.
-
-    Returns:
-    bool: True if the module should be imported, False otherwise.
-    """
-
-    # Define the local directory
-    DIRECTORY_TO_WATCH = os.environ.get("DIRECTORY_TO_WATCH", os.getcwd())
-
-    # Get the module's spec
-    spec = importlib.util.find_spec(module_name)
-
-    if module_name.startswith("ell"):
-        return True
-    
-    # Return False if the spec is None or if the spec's origin starts with the local directory
-    if spec is None or (spec.origin is not None and spec.origin.startswith(DIRECTORY_TO_WATCH)):
-        return False
-
-    # Otherwise, return True
-    return True
 
 def get_referenced_names(code: str, module_name: str):
     """
