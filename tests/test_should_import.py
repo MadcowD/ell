@@ -129,11 +129,11 @@ def test_should_import_exception_handling(mock_project_root, mock_sysconfig_path
          patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
          patch("os.environ.get", return_value=str(mock_project_root)):
 
-        result = should_import("any_module")
-        assert result == True, "Function should return True when an exception occurs and raise_on_error is False"
+        with pytest.raises(Exception) as exc_info:
+            should_import("any_module", raise_on_error=True)
+        assert "Test Exception" in str(exc_info.value)
 
-        captured = capsys.readouterr()
-        assert "Failed to find spec for any_module" in captured.out
+        assert should_import("any_module") == True, "Function should return True when an exception occurs and raise_on_error is False"
 
 def test_should_import_raise_on_error(mock_project_root, mock_sysconfig_paths, mock_site_packages, monkeypatch):
     """
