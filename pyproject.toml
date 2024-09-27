@@ -40,7 +40,6 @@ uvicorn = "^0.30.3"
 requests = "^2.32.3"
 typing-extensions = "^4.12.2"
 black = "^24.8.0"
-json-fix = "^1.0.0"
 pillow = "^10.4.0"
 
 [tool.poetry.group.dev.dependencies]

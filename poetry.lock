@@ -883,17 +883,6 @@ files = [
 ]
 
 [[package]]
-name = "json-fix"
-version = "1.0.0"
-description = "allow custom class json behavior on builtin json object"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "json_fix-1.0.0-py3-none-any.whl", hash = "sha256:1b7d622572f3c7dd653ce9e5a87a4c645a437be7ee622bc916bccb145789055b"},
-    {file = "json_fix-1.0.0.tar.gz", hash = "sha256:625b3fc2f7c7c8855eb3e6669c366163cc9b95dbf8e8568fa07f42a65b8d4672"},
-]
-
-[[package]]
 name = "markdown-it-py"
 version = "3.0.0"
 description = "Python port of markdown-it. Markdown parsing, done right!"
