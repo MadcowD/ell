@@ -52,7 +52,6 @@ def diff_loop(prompts: str, glob: str, repo: str = ".", max_loops: int = 3):
   Your changes will be written to the filesystem using relative paths. You are in the root directory of the repository.
   Test application of the changes by calling the `apply_diff` tool with a valid unified diff (like `diff` or `git diff` would generate).
   This will store the patch, but won't apply it to the local filesystem - so always generate a completely new patch for every request.
-  ONLY generate code through the `apply_diff` tool. Don't output any code in the response - IT WILL BE IGNORED.
   Use chain-of-thought reasoning to generate the code and explain your work in your response.
   """)
 
@@ -85,7 +84,7 @@ def main():
     prompts=[
       "Add a simple argument parsing routine to interactive_tool_diff.py that provides a --help argument.",
       "Now extend the argument parsing so the user can specify a model name that will be printed when the file is invoked. Make it default to gpt4o-mini.",
-      "Now modify the diff_loop function in interactive_tool_diff.py to accept a model parameter that is passed via this CLI arg",
+      "Now modify the diff_loop function in interactive_tool_diff.py to accept a model parameter that is passed via this CLI arg.",
       "Now make the default argument for the model name be: claude-3-5-sonnet-20240620."
     ],
     glob="**/interactive_tool_diff.py",
