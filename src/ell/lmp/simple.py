@@ -1,7 +1,16 @@
 from functools import wraps
-from typing import Any, Optional
+from typing import Any, Optional, Callable
 
 from ell.lmp.complex import complex
+from ell.providers.mock import MockAIClient
+
+
+def mock(model: str, client: Optional[Any] = None,  exempt_from_tracking=False, mock_func:Callable[..., Any]=None, **api_params):
+  """Mock decortoar should accept everything passed to simple"""
+  if mock_func:
+      api_params['mock_func'] = mock_func
+
+  return simple(model, client=MockAIClient(), exempt_from_tracking=exempt_from_tracking, **api_params)
 
 
 def simple(model: str, client: Optional[Any] = None,  exempt_from_tracking=False, **api_params):
