@@ -1,33 +1,42 @@
 from contextlib import contextmanager
 
 from .complex import complex as ell_complex
-from ..types import Chat
+from ..types.message import system as ell_system, user as ell_user
 
 
 @contextmanager
-def interactive(lmp, messages: List[Message]):
-  """Creates an interactive, append-mode session on top of an LMP function."""
+def interactive(*args, **kwargs):
+    """A contextmanager that creates an interactive, append-mode session using an inline LMP function."""
 
-  @ell_complex(*args, **kwargs)
-  def interactive(messages: Chat) -> Chat:
-    return messages
+    # TODO(kwlzn): Should this be specified/impl'd a different way for better viz/tracking in ell studio?
+    @ell_complex(*args, **kwargs)
+    def interactive(messages):
+        return messages
 
-  class _InteractiveSession():
-    def __init__(self):
-      self._system_prompt = None
-      self._messages = messages[:]
+    class _InteractiveSession():
+        def __init__(self):
+            self._system_prompt = None
+            self._messages = []
+            self._last_response = None
 
-    def set_system_prompt(self, prompt):
-      self._system_prompt = prompt
+        def set_system_prompt(self, prompt):
+            self._system_prompt = ell_system(prompt)
 
-    def send(self, message = None):
-      if message:
-        self._messages.append(message)
+        def send(self, message = None):
+            if message:
+                self._messages.append(ell_user(message))
 
-      return interactive(
-        [self._system_prompt] + self._messages
-      )
+            # Invoke the LMP function.
+            self._last_response = interactive([self._system_prompt] + self._messages)
 
-  sess = _InteractiveSession()
+            # Append the role="assistant" response to the messages.
+            self._messages.append(self._last_response)
 
-  yield session
+            # If we have a tool call, invoke it and append the tool call result as a user message.
+            if (tool_call_messages := self._last_response.call_tools_and_collect_as_message()):
+              self._messages.append(tool_call_messages)
+              self.send()
+
+            return self._last_response
+
+    yield _InteractiveSession()
