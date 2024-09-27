@@ -18,7 +18,8 @@ def _validate_diff(diff: str) -> subprocess.CompletedProcess:
   return subprocess.run(
     ["patch", "-p1", "--dry-run"],
     input=diff.encode("utf-8"),
-    capture_output=True,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
     check=False
   )
 
@@ -37,7 +38,7 @@ def test_diff(
   else:
     logger.warning("Tool call: test_diff failed")
     # Provide context to the LLM on the failure by proxying the output of `patch -p1`.
-    return f"That patch is invalid, can you try again with the correct diff syntax? Here's the output of `patch -p1`:\n{result.stderr.decode()}"
+    return f"That patch is invalid, can you try again with the correct diff syntax? Here's the output of `patch -p1`:\n{result.stdout.decode()}"
 
 
 def diff_loop(prompts: str, glob: str, repo: str = ".", max_loops: int = 3):
@@ -60,7 +61,7 @@ def diff_loop(prompts: str, glob: str, repo: str = ".", max_loops: int = 3):
     client=client,
     tools=[test_diff],
     max_tokens=1024,
-    temperature=0.9
+    temperature=0.7
   ) as session:
     # Set the system prompt without making a request.
     session.set_system_prompt(system_prompt)
