@@ -17,7 +17,6 @@ def interactive(*args, **kwargs):
         def __init__(self):
             self._system_prompt = None
             self._messages = []
-            self._last_response = None
 
         def set_system_prompt(self, prompt):
             self._system_prompt = ell_system(prompt)
@@ -27,16 +26,17 @@ def interactive(*args, **kwargs):
                 self._messages.append(ell_user(message))
 
             # Invoke the LMP function.
-            self._last_response = interactive([self._system_prompt] + self._messages)
+            response = interactive([self._system_prompt] + self._messages)
 
             # Append the role="assistant" response to the messages.
-            self._messages.append(self._last_response)
+            self._messages.append(response)
 
-            # If we have a tool call, invoke it and append the tool call result as a user message.
-            if (tool_call_messages := self._last_response.call_tools_and_collect_as_message()):
-              self._messages.append(tool_call_messages)
-              self.send()
+            # If we have tool calls, invoke them, append the tool call result as a user message and send it back to the LLM.
+            if response.tool_calls:
+              tool_call_message = response.call_tools_and_collect_as_message()
+              self._messages.append(tool_call_message)
+              return self.send()
 
-            return self._last_response
+            return response
 
     yield _InteractiveSession()
