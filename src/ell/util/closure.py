@@ -32,18 +32,17 @@ import collections
 import ast
 import hashlib
 import itertools
-import os
 from typing import Any, Dict, Iterable, Optional, Set, Tuple, Callable
 import dill
 import inspect
 import types
 from dill.source import getsource
-import importlib.util
 import re
 from collections import deque
 import black
 
 from ell.util.serialization import is_immutable_variable
+from ell.util.should_import import should_import
 
 DELIM = "$$$$$$$$$$$$$$$$$$$$$$$$$"
 FORBIDDEN_NAMES = ["ell", "lstr"]
@@ -149,46 +148,50 @@ def _process_dependencies(func, globals_and_frees, already_closed, recursion_sta
         _process_variable(var_name, var_value, dependencies, modules, imports, already_closed, recursion_stack, uses)
 
     return dependencies, imports, modules
-
 def _process_default_kwargs(func, dependencies, already_closed, recursion_stack, uses):
-    """Process default keyword arguments of a function."""
+    """Process default keyword arguments and annotations of a function."""
     ps = inspect.signature(func).parameters
-    default_kwargs = collections.OrderedDict({k: v.default for k, v in ps.items() if v.default is not inspect.Parameter.empty})
-    for name, val in default_kwargs.items():
-        _process_signature_dependency(val, dependencies, already_closed, recursion_stack, uses, name)
+    for name, param in ps.items():
+        if param.default is not inspect.Parameter.empty:
+            _process_signature_dependency(param.default, dependencies, already_closed, recursion_stack, uses, name)
+        if param.annotation is not inspect.Parameter.empty:
+            _process_signature_dependency(param.annotation, dependencies, already_closed, recursion_stack, uses, f"{name}_annotation")
+    if func.__annotations__.get('return') is not None:
+        _process_signature_dependency(func.__annotations__['return'], dependencies, already_closed, recursion_stack, uses, "return_annotation")
+    # XXX: In order to properly analyze this we should walk the AST rather than inspexting the signature; e.g. Field is FieldInfo not Field.
+    # I don't care about the actual default at time of execution just the symbols required to statically reproduce the prompt.
 
-def _process_signature_dependency(val, dependencies, already_closed, recursion_stack, uses, name : Optional[str] = None):
-    # Todo: Buidl general cattr like utility for unstructureing python objects with ooks that keep track of state variables.
-    # Todo: break up closure into types and fucntions.
+def _process_signature_dependency(val, dependencies, already_closed, recursion_stack, uses, name: Optional[str] = None):
+    # Todo: Build general cattr like utility for unstructuring python objects with hooks that keep track of state variables.
+    # Todo: break up closure into types and functions.
+    # XXX: This is not exhaustive, we should determine should import on all dependencies
     
-    if  (name not in FORBIDDEN_NAMES):
+    if name not in FORBIDDEN_NAMES:
         try:
             dep = None
             _uses = None
-            if isinstance(val, (types.FunctionType, type, types.MethodType)):
+            if isinstance(val, (types.FunctionType, types.MethodType)):
                 dep, _, _uses = lexical_closure(val, already_closed=already_closed, recursion_stack=recursion_stack.copy())
-
-            elif isinstance(val, (list, tuple, set)): # Todo: Figure out recursive ypye closurex
-                # print(val)
+            elif isinstance(val, (list, tuple, set)):
                 for item in val:
                     _process_signature_dependency(item, dependencies, already_closed, recursion_stack, uses)
             else:
+                val_class = val if isinstance(val, type) else val.__class__
                 try:
-                    is_builtin = (val.__class__.__module__ == "builtins" or val.__class__.__module__ == "__builtins__" )
+                    is_builtin = (val_class.__module__ == "builtins" or val_class.__module__ == "__builtins__")
                 except:
                     is_builtin = False
 
                 if not is_builtin:
-                    if should_import(val.__class__.__module__):
-                
-                        dependencies.append(dill.source.getimport(val.__class__, alias=val.__class__.__name__))
+                    if should_import(val_class.__module__):
+                        dependencies.append(dill.source.getimport(val_class, alias=val_class.__name__))
                     else:
-                        dep, _, _uses = lexical_closure(type(val), already_closed=already_closed, recursion_stack=recursion_stack.copy())
+                        dep, _, _uses = lexical_closure(val_class, already_closed=already_closed, recursion_stack=recursion_stack.copy())
 
             if dep: dependencies.append(dep)
             if _uses: uses.update(_uses)
         except Exception as e:
-            _raise_error(f"Failed to capture the lexical closure of default parameter {name}", e, recursion_stack)
+            _raise_error(f"Failed to capture the lexical closure of parameter or annotation {name}", e, recursion_stack)
 
 
 def _process_variable(var_name, var_value, dependencies, modules, imports, already_closed, recursion_stack , uses):
@@ -308,33 +311,9 @@ def _raise_error(message, exception, recursion_stack):
     """Raise an error with detailed information."""
     error_msg = f"{message}. Error: {str(exception)}\n"
     error_msg += f"Recursion stack: {' -> '.join(recursion_stack)}"
+    # print(error_msg)
     raise Exception(error_msg)
 
-def should_import(module_name : str):
-    """
-    This function checks if a module should be imported based on its origin.
-    It returns False if the module is in the local directory or if the module's spec is None.
-    Otherwise, it returns True.
-
-    Returns:
-    bool: True if the module should be imported, False otherwise.
-    """
-
-    # Define the local directory
-    DIRECTORY_TO_WATCH = os.environ.get("DIRECTORY_TO_WATCH", os.getcwd())
-
-    # Get the module's spec
-    spec = importlib.util.find_spec(module_name)
-
-    if module_name.startswith("ell"):
-        return True
-    
-    # Return False if the spec is None or if the spec's origin starts with the local directory
-    if spec is None or (spec.origin is not None and spec.origin.startswith(DIRECTORY_TO_WATCH)):
-        return False
-
-    # Otherwise, return True
-    return True
 
 def get_referenced_names(code: str, module_name: str):
     """
@@ -348,6 +327,12 @@ def get_referenced_names(code: str, module_name: str):
     Returns:
     list: A list of all attributes of the module that are referenced in the code.
     """
+    # Remove content between #<BV> and #</BV> tags
+    code = re.sub(r'#<BV>\n.*?\n#</BV>', '', code, flags=re.DOTALL)
+    
+    # Remove content between #<BmV> and #</BmV> tags
+    code = re.sub(r'#<BmV>\n.*?\n#</BmV>', '', code, flags=re.DOTALL)
+
     tree = ast.parse(code)
     referenced_names = []
 
@@ -518,10 +503,13 @@ def globalvars(func, recurse=True, builtin=False):
                     continue  #XXX: globalvars(func, False)?
                 nested_func = globs.get(key)
                 func.update(globalvars(nested_func, True, builtin))
+    # elif inspect.isclass(func):
+    # XXX: We need to get lexical closures of all the methods and attributes of the class.\
+    # In the future we should exhaustively walk the AST here.
     else:
         return {}
     #NOTE: if name not in __globals__, then we skip it...
     return dict((name,globs[name]) for name in func if name in globs)
 
 
-# XXX: This is a mess. COuld probably be about 100 lines of code max.
+#

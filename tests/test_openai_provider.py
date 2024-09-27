@@ -1,9 +1,11 @@
+import json
+from typing import Dict
 import pydantic
 import pytest
 from unittest.mock import MagicMock, patch
 from ell.providers.openai import OpenAIProvider, _content_block_to_openai_format
 from ell.provider import EllCallParams
-from ell.types import Message, ContentBlock, ToolCall
+from ell.types import Message, ContentBlock, ToolCall, ToolResult
 from openai import Client
 from openai.types.chat import (
     ChatCompletion,
@@ -64,9 +66,15 @@ class TestOpenAIProvider:
     def test_provider_call_function_with_response_format(
         self, provider, openai_client, ell_call_params
     ):
-        api_call_params = {"response_format": "parsed"}
+        class MyModel(pydantic.BaseModel):
+            pass
+        api_call_params = {"response_format": MyModel}
         func = provider.provider_call_function(openai_client, api_call_params)
         assert func == openai_client.beta.chat.completions.parse
+
+        api_call_params = {"response_format": {"type": "json_schema", "schema": {}}}
+        func = provider.provider_call_function(openai_client, api_call_params)
+        assert func == openai_client.chat.completions.create
 
     def test_provider_call_function_without_response_format(
         self, provider, openai_client, ell_call_params
@@ -154,6 +162,30 @@ class TestOpenAIProvider:
             }
         ]
 
+    def test_translate_to_provider_with_empty_text(self, provider, ell_call_params):
+        ell_call_params.messages = [
+            Message(role="user", content=[ContentBlock(text="")])
+        ]
+        ell_call_params.tools = []
+        ell_call_params.api_params = {}
+
+        translated = provider.translate_to_provider(ell_call_params)
+        
+        assert translated["messages"] == [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "",
+                    }
+                ],
+            }
+        ]
+        assert "tools" not in translated
+        assert "tool_choice" not in translated
+
+
     def test_translate_to_provider_with_tool_calls(
         self, provider, ell_call_params, mock_tool
     ):
@@ -181,6 +213,57 @@ class TestOpenAIProvider:
                 "content": None,
             }
         ]
+
+    def test_translate_to_provider_with_multiple_tool_calls(
+        self, provider, ell_call_params, mock_tool
+    ):
+        tool_result_1 = ToolResult(
+            tool_call_id="123",
+            result=[ContentBlock(text="Hello World 1")]
+        )
+        tool_result_2 = ToolResult(
+            tool_call_id="456",
+            result=[ContentBlock(text="Hello World 2")]
+        )
+        message = Message(role="tool", content=[tool_result_1, tool_result_2])
+        ell_call_params.messages = [message]
+        translated = provider.translate_to_provider(ell_call_params)
+        assert translated["messages"] == [
+            {
+                "content": "Hello World 1",
+                "role": "tool",
+                "tool_call_id": "123"
+            },
+            {
+                "content": "Hello World 2",
+                "role": "tool",
+                "tool_call_id": "456"
+            }
+        ]
+
+    def test_translate_to_provider_with_list_tool_response(
+        self, provider, ell_call_params, mock_tool
+    ):
+        choices = [
+            "Banana",
+            "Apple",
+            "Orange"
+        ]
+        tool_result = ToolResult(
+            tool_call_id="123",
+            result=[ContentBlock(text=choice) for choice in choices]
+        )
+        message = Message(role="tool", tool_result=tool_result)
+        ell_call_params.messages = [message]
+        translated = provider.translate_to_provider(ell_call_params)
+        assert translated["messages"] == [
+            {
+                "content": "Banana\nApple\nOrange",
+                "role": "tool",
+                "tool_call_id": "123"
+            },
+        ]
+
 
     def test_translate_from_provider_streaming(
         self, provider, ell_call_params, openai_client

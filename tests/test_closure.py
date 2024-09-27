@@ -6,10 +6,13 @@ from typing import Set, Any
 import numpy as np
 from ell.util.closure import (
     lexical_closure,
+    get_referenced_names,
+    is_function_called,
 )
 import ell
 from ell.util.closure_util import get_referenced_names, should_import
 from ell.util.serialization import is_immutable_variable
+from ell.util.should_import import should_import
 
 
 def test_lexical_closure_simple_function():

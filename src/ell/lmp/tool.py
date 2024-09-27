@@ -12,7 +12,7 @@ from ell.types._lstr import _lstr
 from ell.types.studio import LMPType
 import inspect
 
-from ell.types.message import ContentBlock, InvocableTool, ToolResult, coerce_content_list
+from ell.types.message import ContentBlock, InvocableTool, ToolResult, to_content_blocks
 
 
 
@@ -45,13 +45,23 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
                 result = _lstr(result,origin_trace=_invocation_origin)
 
             #XXX: This _tool_call_id thing is a hack. Tracking should happen via params in the api
+            # So if you call wiuth a _tool_callId
             if _tool_call_id:
+                # XXX: TODO: MOVE TRACKING CODE TO _TRACK AND OUT OF HERE AND API.
                 try:
-                    content_results = coerce_content_list(result)
-                except ValueError as e:
-                    # XXX: TODO: MOVE TRACKING CODE TO _TRACK AND OUT OF HERE AND API.
-                    content_results = [ContentBlock(text=_lstr(json.dumps(result),origin_trace=_invocation_origin))]
-                
+                    if isinstance(result, ContentBlock):
+                        content_results = [result]
+                    elif isinstance(result, list) and all(isinstance(c, ContentBlock) for c in result):
+                        content_results = result
+                    else:
+                        content_results = [ContentBlock(text=_lstr(json.dumps(result),origin_trace=_invocation_origin))]
+                except TypeError as e:
+                    raise TypeError(f"Failed to convert tool use result to ContentBlock: {e}. Tools must return json serializable objects. or a list of ContentBlocks.")
+                # XXX: Need to support images and other content types somehow. We should look for images inside of the the result and then go from there.
+                # try:
+                #     content_results = coerce_content_list(result)
+                # except ValueError as e:
+
                 # TODO: poolymorphic validation here is important (cant have tool_call or formatted_response in the result)
                 # XXX: Should we put this coercion here or in the tool call/result area.
                 for c in content_results:
@@ -105,7 +115,7 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
                 fields[param_name] = (annotation, Field(...))
 
         # 3. Create the Pydantic model
-        model_name = f"{fn.__name__}Params"
+        model_name = f"{fn.__name__}"
         ParamsModel = create_model(model_name, **fields)
         
         # Attach the Pydantic model to the wrapper function

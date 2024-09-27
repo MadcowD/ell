@@ -47,6 +47,7 @@ if __name__ == "__main__":
         if response_message.tool_calls:
             print("Tool call made")
             next_message = response_message.call_tools_and_collect_as_message()
-            print(next_message)
+            print(repr(next_message))
+            print(next_message.text)
             message_history.append(next_message)
             insurance_claim_chatbot(message_history)

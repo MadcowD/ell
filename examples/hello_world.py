@@ -19,4 +19,3 @@ def hello(name: str):
 
 greeting = hello("Sam Altman")
 print(greeting)
-
