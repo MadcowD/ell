@@ -12,8 +12,6 @@ from pydantic import Field
 
 logger = logging.getLogger(__name__)
 
-client = anthropic.Anthropic()
-
 
 def _validate_diff(diff: str) -> subprocess.CompletedProcess:
   logger.info(f"Validating diff: {diff}")
@@ -43,17 +41,18 @@ def apply_diff(
 
 
 def diff_loop(prompts: str, glob: str, repo: str = ".", max_loops: int = 3):
+  repo_path = Path(repo)
+  code_file = next(repo_path.glob(glob)).relative_to(repo_path)
+  code = f"<file:{code_file}>\n{code_file.read_text()}\n</file:{code_file}>"
+
   client = anthropic.Anthropic()
+
   system_prompt = dedent("""\
   You are a helpful, expert-level programmer that generates Python code changes to an existing codebase given a request.
   Your changes will be written to the filesystem using relative paths. You are in the root directory of the repository.
   Apply the changes by calling the `apply_diff` tool with a valid unified diff (like `diff` or `git diff` would generate).
   Use chain-of-thought reasoning to generate the code and explain your work in your response.
-  Carefully analyze any tool call results for any syntax issues and make sure to correct them in your response.
   """)
-  repo_path = Path(repo)
-  code_file = next(repo_path.glob(glob)).relative_to(repo_path)
-  code = f"<file:{code_file}>\n{code_file.read_text()}\n</file:{code_file}>"
 
   with ell.interactive(
     model="claude-3-5-sonnet-20240620",
