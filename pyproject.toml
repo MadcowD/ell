@@ -47,6 +47,7 @@ pytest = "^8.3.2"
 sphinx = "<8.0.0"
 sphinx-rtd-theme = "^2.0.0"
 
+ipykernel = "^6.29.5"
 [tool.poetry.extras]
 # N.B. The `openai` dep is always required, but explicitly providing it via an e.g. "openai" extra
 # causes poetry to mark it as optional = true (even if explicitly specified optional = false).

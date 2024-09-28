@@ -1,9 +1,28 @@
-from typing import List
 import ell
 
-from ell.stores.sql import SQLiteStore
+ell.init(store='./logdir', autocommit=True, verbose=True)
 
 
+
+@ell.simple(model="o1-mini")
+def code_prompt_optimizer(instructions : str, source_code : str) -> str:
+    return f"""You are a prompt engineer. Your goal is to modify promtps language models specified in a framework called ell so that the following objective is met: {instructions}.
+prompt chain:
+{source_code}
+
+For reference (@ell.simple) convert the output of a function into a prompt for a language mdoel by taking the return string as a the user prompt & the doc string as the system prompt.
+Only output the modified prompt chain source code.
+    """
+
+
+# @ell.simple(model="gpt-4o", max_tokens=10)
+# def write_a_story(about : str):
+#     return f"Write a story about {about}."
+
+# write_a_story("a dog")
+# src = write_a_story.__ell_func__.__ell_closure__[0] 
+
+src = '''
 
 @ell.simple(model="gpt-4o-mini", temperature=1.0)
 def generate_story_ideas(about : str):
@@ -30,17 +49,16 @@ def write_a_really_good_story(about : str):
 
     """You are an expert novelist that writes in the style of Hemmingway. You write in lowercase."""
     return f"Make a final revision of this story in your voice: {best_draft}."
-
-if __name__ == "__main__":
-    from ell.stores.sql import SQLiteStore
-    ell.init(store='./logdir', autocommit=True, verbose=True)
-
-    # with ell.cache(write_a_really_good_story):
-    story = write_a_really_good_story("a dog")
+'''
 
 
-    critic = ell.critic("""The stories msuyt be really good""")
-    dataset = ell.examples(X=x, Y=y)
+code_prompt_optimizer(
+    "make the stories more interesting",
+    src
+)
 
-    
-    story_optimizer = ell.Optimizer()
+
+
+
+
+

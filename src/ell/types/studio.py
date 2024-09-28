@@ -55,8 +55,8 @@ class LMPType(str, enum.Enum):
     LM = "LM"
     TOOL = "TOOL"
     MULTIMODAL = "MULTIMODAL"
+    FUNCTION = "FUNCTION"
     OTHER = "OTHER"
-
 
 
 class SerializedLMPBase(SQLModel):
