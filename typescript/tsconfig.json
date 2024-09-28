@@ -14,6 +14,10 @@
     "exactOptionalPropertyTypes": false,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "noErrorTruncation": false
+    "noErrorTruncation": false,
+    "paths": {
+      "ell-ai": ["./src/index.ts"],
+      "ell-ai/*": ["./src/*"]
+    }
   }
 }

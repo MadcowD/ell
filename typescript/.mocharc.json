@@ -1,0 +1,4 @@
+{
+    "require": "ts-node/register/transpile-only",
+    "spec": "test/**/*.mocha.ts"
+}

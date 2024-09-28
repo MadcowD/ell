@@ -183,7 +183,7 @@ type SimpleLMP<A extends SimpleLMPInner> = ((...args: Parameters<A>) => Promise<
   __ell_lmp_name__?: string
   __ell_lmp_id__?: string | null
 }
-type ComplexLMPInner = (...args: any[]) => Promise<string | Array<Message>>
+type ComplexLMPInner = (...args: any[]) => Promise<Array<Message>>
 type ComplexLMP<A extends ComplexLMPInner> = ((...args: Parameters<A>) => Promise<Array<Message>>) & {
   __ell_type__?: 'complex'
   __ell_lmp_name__?: string
@@ -223,7 +223,7 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
     try {
       // We use this to get the script id. The alternative is to listen to all script load events which we expect to be less performant
       // The expectation for this method is that the script has loaded and will not be reloaded, so a breakpoint at line 0 will not be hit.
-     // The actual breakpoint we use to capture variables is set below
+      // The actual breakpoint we use to capture variables is set below
       const result = await session.post('Debugger.setBreakpointByUrl', {
         lineNumber: 0,
         url: `file://${lmp.filepath}`,
@@ -267,20 +267,30 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
         // We get strange behavior if a breakpoint is set to a line that isn't one of the "blessed" possible breakpoint lines
         // (the program exits with code 0 unexpectedly)
         // So we try to find the closest one
-        const bestBreakpoint = await getBestClosureInspectionBreakpoint(session, location.scriptId, {
+        let bestBreakpoint = await getBestClosureInspectionBreakpoint(session, location.scriptId, {
           line: generatedPositionStart.line,
           endLine: generatedPositionEnd.line,
         })
-        logger.debug('bestBreakpoint', bestBreakpoint)
+        if (!bestBreakpoint) {
+          logger.debug('No best breakpoint found, using start line')
+          bestBreakpoint = {
+            scriptId: location.scriptId,
+            lineNumber: generatedPositionStart.line,
+            columnNumber: generatedPositionStart.column,
+          }
+        } else {
+          logger.debug('bestBreakpoint', bestBreakpoint)
+        }
         const result = await session.post('Debugger.setBreakpointByUrl', {
-          lineNumber: bestBreakpoint.lineNumber,
           url: `file://${lmp.filepath}`,
-          columnNumber: 1,
+          lineNumber: bestBreakpoint.lineNumber,
+          columnNumber: bestBreakpoint.columnNumber,
         })
         logger.debug('LMP breakpoint set', result)
         return result.breakpointId
       }
-      throw new Error('No breakpoint set')
+      logger.debug('No breakpoint could be set')
+      return null
     } catch (e) {
       logger.error('Error setting breakpoint', { err: e })
     }
@@ -431,7 +441,8 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
         modelUsageLoggerPostEnd()
       }
 
-      const result = convertMultimodalResponseToString(trackedResults[0])
+      const result =
+        lmp.lmpDefinitionType === 'simple' ? convertMultimodalResponseToString(trackedResults[0]) : trackedResults
       await serializeInvocation({
         id: invocationId,
         lmp_id: lmp.lmpId,
@@ -522,7 +533,7 @@ export const simple = <F extends SimpleLMPInner>(a: Kwargs, f: F): SimpleLMP<F> 
 
 type APIParams = Record<string, any>
 
-export const complex = <F extends SimpleLMPInner>(
+export const complex = <F extends ComplexLMPInner>(
   a: {
     model: string
     exempt_from_tracking?: boolean
@@ -544,6 +555,7 @@ export const complex = <F extends SimpleLMPInner>(
   const wrapper: ComplexLMP<F> = async (...args: any[]) => {
     if (!wrapper.__ell_lmp_id__) {
       if (trackAttempted) {
+        // fixme. still call model
         return f
       }
       trackAttempted = true
@@ -558,13 +570,13 @@ export const complex = <F extends SimpleLMPInner>(
     if (lmpId && !a.exempt_from_tracking) {
       return await invokeWithTracking({ ...lmpDefinition!, lmpId }, args, f, a)
     }
-    const lmpfnoutput = await f(...args)
+    const promptFnOutput = await f(...args)
     const modelClient = await getModelClient(a)
     const provider = config.getProviderFor(modelClient)
     if (!provider) {
       throw new Error(`No provider found for model ${a.model} ${modelClient}`)
     }
-    const messages = typeof lmpfnoutput === 'string' ? [new Message('user', lmpfnoutput)] : lmpfnoutput
+    const messages = typeof promptFnOutput === 'string' ? [new Message('user', promptFnOutput)] : promptFnOutput
     const apiParams = {
       ...a,
     }

@@ -1,8 +1,9 @@
 import * as inspector from 'node:inspector/promises'
-export type BreakpointHitEvent = inspector.InspectorNotification<inspector.Debugger.PausedEventDataType>
 import * as logging from './_logger'
 
 const logger = logging.getLogger('closure')
+
+export type BreakpointHitEvent = inspector.InspectorNotification<inspector.Debugger.PausedEventDataType>
 
 const getNextPausedEvent = (session: inspector.Session): Promise<BreakpointHitEvent> =>
   new Promise((resolve, reject) => {
@@ -73,7 +74,7 @@ export async function resolveScriptIdToFile(session: inspector.Session, scriptId
     return result
   } catch (err) {
     logger.error(`Error resolving scriptId ${scriptId}:`, { err })
-    return 
+    return
   }
 }
 
@@ -91,7 +92,11 @@ export async function resolveMultipleScriptIds(session: inspector.Session, scrip
   return results
 }
 
-export async function getBestClosureInspectionBreakpoint(session: inspector.Session, scriptId: string, location: {line: number, endLine: number}) {
+export async function getBestClosureInspectionBreakpoint(
+  session: inspector.Session,
+  scriptId: string,
+  location: { line: number; endLine: number }
+): Promise<inspector.Debugger.BreakLocation | null> {
   const possibleBreakpoints = await session.post('Debugger.getPossibleBreakpoints', {
     start: {
       scriptId,
@@ -102,11 +107,14 @@ export async function getBestClosureInspectionBreakpoint(session: inspector.Sess
       lineNumber: location.endLine,
     },
   })
+  if (!possibleBreakpoints.locations || possibleBreakpoints.locations.length === 0) {
+    return null
+  }
   // sort by line number ascending
   possibleBreakpoints.locations.sort((a, b) => a.lineNumber - b.lineNumber)
   // if the last one is a 'return' type, use it
   const lastBreakpoint = possibleBreakpoints.locations[possibleBreakpoints.locations.length - 1]
-  if (lastBreakpoint.type === 'return' ) {
+  if (lastBreakpoint.type === 'return') {
     logger.debug('Using return breakpoint', { lastBreakpoint })
     return lastBreakpoint
   }
