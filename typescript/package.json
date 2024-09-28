@@ -7,6 +7,10 @@
   "files": [
     "dist"
   ],
+  "exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/*.js"
+  },
   "scripts": {
     "build": "node scripts/build.js",
     "clean": "rimraf dist",
