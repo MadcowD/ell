@@ -5,7 +5,7 @@ This is a TypeScript/JavaScript library for interacting with the Ell API.
 ## Installation
 
 ```bash
-npm install ell-ai
+npm i ell-ai
 ```
 
 ## Usage
@@ -16,7 +16,7 @@ import * as ell from 'ell-ai'
 const hello = ell.simple(
   { model: 'gpt-4o' },
   async (params: { firstName: string; lastName: string }) => {
-    await fetch('')
+    return `Say hello to ${params.firstName} ${params.lastName}!`
   }
 )
 

@@ -1,4 +1,4 @@
-import * as ell from '../src/ell' // Assuming there's a TypeScript-compatible 'ell' library
+import * as ell from 'ell-ai' 
 
 ell.init({
   store: './logdir',

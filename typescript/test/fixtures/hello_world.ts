@@ -1,4 +1,4 @@
-import * as ell from '../../src/ell' 
+import * as ell from '../../src' 
 
 
 const randomChoice = (arr: string[]) => {
@@ -24,7 +24,7 @@ export const hello = ell.simple({ model: 'gpt-4o-mini' }, async (name: string) =
   ] 
 })
 
-;(async () => {
-  const greeting = await hello('sama')
-  console.log(greeting)
-})()
+// ;(async () => {
+//   const greeting = await hello('sama')
+//   console.log(greeting)
+// })()

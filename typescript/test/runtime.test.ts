@@ -1,7 +1,7 @@
 import * as logging from '../src/_logger'
 logging.setGlobalLevel(logging.LogLevel.DEBUG)
 import { test, expect, beforeAll } from 'vitest'
-import { complex, simple } from '../src/ell'
+import { complex, simple } from '../src'
 import { config } from '../src/configurator'
 import OpenAI from 'openai'
 import { Message } from '../src/types'

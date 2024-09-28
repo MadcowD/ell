@@ -1,4 +1,4 @@
-import * as ell from '../src/ell'
+import * as ell from 'ell-ai'
 
 const generateStoryIdeas = ell.simple({ model: 'gpt-4o-mini', temperature: 1.0 }, async (about: string) => {
   return [

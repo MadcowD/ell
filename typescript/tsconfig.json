@@ -4,14 +4,10 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "lib": ["es2023", "DOM"],
-    "plugins": [
-      {
-        "transform": "./src/ts-plugin.ts"
-      }
-    ],
+    "declaration": true,
+    "declarationMap": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    // "inlineSourceMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
