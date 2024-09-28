@@ -90,3 +90,26 @@ export async function resolveMultipleScriptIds(session: inspector.Session, scrip
   }
   return results
 }
+
+export async function getBestClosureInspectionBreakpoint(session: inspector.Session, scriptId: string, location: {line: number, endLine: number}) {
+  const possibleBreakpoints = await session.post('Debugger.getPossibleBreakpoints', {
+    start: {
+      scriptId,
+      lineNumber: location.line,
+    },
+    end: {
+      scriptId,
+      lineNumber: location.endLine,
+    },
+  })
+  // sort by line number ascending
+  possibleBreakpoints.locations.sort((a, b) => a.lineNumber - b.lineNumber)
+  // if the last one is a 'return' type, use it
+  const lastBreakpoint = possibleBreakpoints.locations[possibleBreakpoints.locations.length - 1]
+  if (lastBreakpoint.type === 'return' ) {
+    logger.debug('Using return breakpoint', { lastBreakpoint })
+    return lastBreakpoint
+  }
+  // use the last one regardless until we have a better idea
+  return lastBreakpoint
+}

@@ -21,10 +21,17 @@ import { Logger } from './_logger'
 import { performance } from 'perf_hooks'
 import * as inspector from 'inspector/promises'
 import * as sm from 'source-map'
-// import * as inspectorAsync from 'inspector/promises'
+import {
+  extractSourceMapUrl,
+  getBestClosureInspectionBreakpoint,
+  getSourceMapJSON,
+  resolveScriptIdToFile,
+} from './closure'
+import { WriteInvocationInput, WriteLMPInput } from './serialize/sql'
+import { ToolFunction } from './types/tools'
+import { LMPType } from './lmp/types'
 
 const logger = new Logger('ell')
-
 
 type Kwargs = {
   // The name or identifier of the language model to use.
@@ -207,25 +214,25 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
 
   // Start the inspector session
   const session = new inspector.Session()
-  await session.connect()
+  session.connect()
 
   // Enable debugger
   const debuggerId = await session.post('Debugger.enable')
 
   const setBreakpoint = async (session: inspector.Session, lmp: LMPDefinition) => {
     try {
-      // we use this to get the script id. the alternative is to listen to all script load events
-      // which we expect to be less performant
-      // the expectation is the script has loaded and will not be reloaded and so a breakpoint at line 0 will not be hit
-      // the actual breakpoint is set below
+      // We use this to get the script id. The alternative is to listen to all script load events which we expect to be less performant
+      // The expectation for this method is that the script has loaded and will not be reloaded, so a breakpoint at line 0 will not be hit.
+     // The actual breakpoint we use to capture variables is set below
       const result = await session.post('Debugger.setBreakpointByUrl', {
         lineNumber: 0,
-        // urlRegex: lmp.filepath.replace("\.", "\\."),
-        url: 'file://' + lmp.filepath,
+        url: `file://${lmp.filepath}`,
         columnNumber: 0,
       })
-      logger.debug('got a breakpoint', { result })
+      logger.debug('Smoke break point', { result })
+      await session.post('Debugger.removeBreakpoint', { breakpointId: result.breakpointId })
       for (const location of result.locations) {
+        // Get the generated code
         const file = await resolveScriptIdToFile(session, location.scriptId)
 
         const source = file?.scriptSource
@@ -233,29 +240,47 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
           throw new Error('No source found')
         }
 
+        // Find the source map information
         const sourceMapUrl = extractSourceMapUrl(source)
         if (!sourceMapUrl) {
           throw new Error('No source map url found')
         }
 
         const json = getSourceMapJSON(sourceMapUrl)
-        logger.debug('sourceMap', { json })
+        // logger.debug('sourceMap', { json })
+
+        // Get the start and end positions of the LMP in the generated code
         const consumer = new sm.SourceMapConsumer(json)
-        const generatedPosition = consumer.generatedPositionFor({
+        const generatedPositionStart = consumer.generatedPositionFor({
           source: json['sources'][0],
           line: lmp.line,
           column: 0,
         })
-        logger.debug('generatedPosition', { generatedPosition })
+        const generatedPositionEnd = consumer.generatedPositionFor({
+          source: json['sources'][0],
+          line: lmp.endLine,
+          column: 0,
+        })
+
+        // Find the best breakpoint for inspection
+        //
+        // We get strange behavior if a breakpoint is set to a line that isn't one of the "blessed" possible breakpoint lines
+        // (the program exits with code 0 unexpectedly)
+        // So we try to find the closest one
+        const bestBreakpoint = await getBestClosureInspectionBreakpoint(session, location.scriptId, {
+          line: generatedPositionStart.line,
+          endLine: generatedPositionEnd.line,
+        })
+        logger.debug('bestBreakpoint', bestBreakpoint)
         const result = await session.post('Debugger.setBreakpointByUrl', {
-          lineNumber: generatedPosition.line + 5,
-          // urlRegex: lmp.filepath.replace("\.", "\\."),
-          url: 'file://' + lmp.filepath,
+          lineNumber: bestBreakpoint.lineNumber,
+          url: `file://${lmp.filepath}`,
           columnNumber: 1,
         })
+        logger.debug('LMP breakpoint set', result)
+        return result.breakpointId
       }
-      logger.debug('breakpoint result', { result })
-      return result.breakpointId
+      throw new Error('No breakpoint set')
     } catch (e) {
       logger.error('Error setting breakpoint', { err: e })
     }
@@ -268,14 +293,17 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
 
   // Listen for breakpoint hits
   session.on('Debugger.paused', async ({ params }) => {
-    logger.debug('Paused on breakpoint', { params: JSON.stringify(params, null, 2) })
+    logger.debug('Paused on breakpoint', {
+      breakpoints: params.hitBreakpoints,
+      // params: JSON.stringify(params, null, 2)
+    })
     const { callFrames } = params
     const scopes = callFrames[0].scopeChain
 
     // Get the variables you're interested in
     for (const scope of scopes) {
       if (scope.type === 'closure') {
-        const result = await session
+        const result = (await session
           .post('Runtime.getProperties', {
             objectId: scope.object.objectId,
             ownProperties: false,
@@ -285,10 +313,11 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
           .catch((err) => {
             logger.error('Failed to get properties', err)
             return null
-          })
+          })) as inspector.Runtime.GetPropertiesReturnType | null
         if (!result) {
           continue
         }
+        logger.debug('closure', { result: result.result })
         for (const prop of result.result) {
           if (prop.value && prop.value.value !== undefined) {
             variableValues[prop.name] = prop.value.value
@@ -296,7 +325,7 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
         }
       }
       if (scope.type === 'local') {
-        const result = await session
+        const result = (await session
           .post('Runtime.getProperties', {
             objectId: scope.object.objectId,
             ownProperties: false,
@@ -306,10 +335,11 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
           .catch((err) => {
             logger.error('Failed to get properties', err)
             return null
-          })
+          })) as inspector.Runtime.GetPropertiesReturnType | null
         if (!result) {
           continue
         }
+        logger.debug('locals', { result: JSON.stringify(result.result, null, 2) })
 
         for (const prop of result.result) {
           if (prop.value && prop.value.value !== undefined) {
@@ -557,8 +587,4 @@ export const complex = <F extends SimpleLMPInner>(
 
 import { init } from './configurator'
 import { system, user } from './types/message'
-import { ToolFunction } from './types/tools'
-import { WriteInvocationInput, WriteLMPInput } from './serialize/sql'
-import { LMPType } from './lmp/types'
-import { extractSourceMapUrl, getSourceMapJSON, resolveScriptIdToFile } from './closure'
 export { init, config, system, user }

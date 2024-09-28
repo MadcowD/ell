@@ -5,7 +5,9 @@ import { promisify } from 'util'
 import * as sqlite3 from 'sqlite3'
 import { open, Database } from 'sqlite'
 import { LMPType } from '../lmp/types'
+import * as logging from '../_logger'
 
+const logger = logging.getLogger('sql')
 const gzip = promisify(zlib.gzip)
 const gunzip = promisify(zlib.gunzip)
 
@@ -110,30 +112,6 @@ export abstract class Store {
 
   abstract getVersionsByFqn(fqn: string): Promise<SerializedLmp[]>
 
-  //   abstract getCachedInvocationsAsync(lmpId: string, stateCacheKey: string): Promise<Invocation[]>
-
-  //   async freeze(...lmps: InvocableLM[]): Promise<void> {
-  //     const oldCacheValues = new Map<InvocableLM, any>()
-
-  //     try {
-  //       for (const lmp of lmps) {
-  //         oldCacheValues.set(lmp, (lmp as any).__ell_use_cache__)
-  //         ;(lmp as any).__ell_use_cache__ = this
-  //       }
-  //       // Yield equivalent in TypeScript would be to return a Promise
-  //       // that resolves immediately
-  //       await Promise.resolve()
-  //     } finally {
-  //       // TODO: Implement cache storage logic here
-  //       for (const lmp of lmps) {
-  //         if (oldCacheValues.has(lmp)) {
-  //           ;(lmp as any).__ell_use_cache__ = oldCacheValues.get(lmp)
-  //         } else {
-  //           delete (lmp as any).__ell_use_cache__
-  //         }
-  //       }
-  //     }
-  //   }
 }
 
 class Mutex {
@@ -147,10 +125,12 @@ class Mutex {
     })
 
     const unlock = () => {
+      // @ts-expect-error
       resolve()
     }
 
     const newMutex = this.mutex.then(() => newMutexPromise)
+    // @ts-expect-error
     this.mutex = newMutex
 
     return Promise.resolve(unlock)
@@ -191,6 +171,7 @@ export class SQLiteStore extends Store {
   }
 
   private async createTables(): Promise<void> {
+    logger.debug('Creating tables')
     await this.db!.exec(`
         CREATE TABLE IF NOT EXISTS serializedlmp (
           lmp_id TEXT PRIMARY KEY,
@@ -278,11 +259,22 @@ export class SQLiteStore extends Store {
       created_at,
       uses,
     } = input
+    const existingLmp = await this.db!.get('SELECT lmp_id, version_number FROM serializedlmp WHERE lmp_id = ?', [
+      lmp_id,
+    ])
+    if (existingLmp) {
+      return existingLmp
+    }
+    logger.debug('Creating new LMP version', { lmp_id, name, version_number })
     const unlock = await this.txMutex.lock()
 
     await this.db!.run('BEGIN TRANSACTION')
 
     try {
+      // FIXME. verify version number starts at 1
+      const previousVersionNumber = existingLmp?.version_number || 0
+      const versionNumber = previousVersionNumber + 1
+
       await this.db!.run(
         `
           INSERT OR REPLACE INTO serializedlmp 
@@ -300,7 +292,7 @@ export class SQLiteStore extends Store {
           JSON.stringify(initial_free_vars),
           JSON.stringify(initial_global_vars),
           commit_message,
-          version_number,
+          versionNumber,
           created_at,
         ]
       )
@@ -315,7 +307,9 @@ export class SQLiteStore extends Store {
         )
       }
       await this.db!.run('COMMIT')
+      logger.debug('Created new LMP version', { lmp_id, name, version_number })
     } catch (error) {
+      logger.error('Error creating new LMP version', { lmp_id, name, version_number, error })
       await this.db!.run('ROLLBACK')
       throw error
     } finally {
@@ -329,6 +323,7 @@ export class SQLiteStore extends Store {
     if (!this.db) {
       await this.initialize()
     }
+    logger.debug('Writing invocation', { id: input.id, lmp_id: input.lmp_id })
     const unlock = await this.txMutex.lock()
     // Start a transaction
     await this.db!.run('BEGIN TRANSACTION')
@@ -398,9 +393,10 @@ export class SQLiteStore extends Store {
 
       // Commit the transaction
       await this.db!.run('COMMIT')
-
+      logger.debug('Wrote invocation', { id: input.id, lmp_id: input.lmp_id })
       return undefined
     } catch (error) {
+      logger.error('Error writing invocation', { id: input.id, lmp_id: input.lmp_id, error })
       // If there's an error, roll back the transaction
       await this.db!.run('ROLLBACK')
       throw error
