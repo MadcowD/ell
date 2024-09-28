@@ -48,6 +48,9 @@ def main():
     if args.dev:
         assert args.port == 5555, "Port must be 5000 in development mode"
 
+    if not args.storage_dir:
+        logger.warning("WARNING: Using current directory as the storage dir, pass --storage-dir to change this.")
+
     config = Config.create(storage_dir=args.storage_dir,
                     pg_connection_string=args.pg_connection_string)
     app = create_app(config)
@@ -65,11 +68,8 @@ def main():
             else:
                 return FileResponse(static_dir / "index.html")
 
-    if not args.storage_dir:
-        logger.warning("WARNING: Using current directory as the storage dir, pass --storage-dir to change this.")
-    db_path = Path(args.storage_dir or ".")
-    assert db_path.exists(), "Could not find path {db_path} (passed as --storage-dir), aborting!"
-    assert db_path.is_dir(), "Path {db_path} (passed as --storage-dir) is not a directory, aborting!"
+    # Respect Config.create behavior, which has fallback to env vars.
+    db_path = Path(config.storage_dir)
 
     async def db_watcher(db_path, app):
         last_stat = None
