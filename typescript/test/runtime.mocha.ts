@@ -4,7 +4,7 @@ import { test, before } from 'mocha'
 import OpenAI from 'openai'
 import { config } from '../src/configurator'
 import { Message } from '../src/types'
-import { complex, simple } from '../src'
+import { complex, simple } from 'ell-ai'
 import assert from 'assert'
 
 before(() => {

@@ -7,7 +7,7 @@ const logger = new Logger('ell-tsc')
 const LMP_FUNCTION_EXPORT_NAMES = ['simple', 'complex']
 
 // FIXME. remove this once we have a stable import
-const ELL_MODULE_IDENTIFIERS = ['ell-ai', './', '../src/ell','../src']
+const ELL_MODULE_IDENTIFIERS = ['ell-ai' ]
 const isEllModuleIdentifier = (identifier: string) =>
   identifier.includes('ell') || ELL_MODULE_IDENTIFIERS.includes(identifier)
 

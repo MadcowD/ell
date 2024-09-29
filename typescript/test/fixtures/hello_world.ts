@@ -1,4 +1,4 @@
-import * as ell from '../../src' 
+import * as ell from 'ell-ai' 
 
 
 const randomChoice = (arr: string[]) => {

@@ -15,9 +15,10 @@ test('getLMPsInFile', async () => {
       fn: `async (a: string) => {
   await child(a)
   console.log(a)
+  return a
 }`,
       line: 5,
-      endLine: 8,
+      endLine: 9,
       endColumn: 3,
       lmpName: 'hello',
       fqn: 'test.fixtures.example.hello',
@@ -25,6 +26,7 @@ test('getLMPsInFile', async () => {
       source: `const hello = simple({ model: 'gpt-4o' }, async (a: string) => {
   await child(a)
   console.log(a)
+  return a
 })`,
     },
   ])

@@ -1,5 +1,5 @@
-import * as ell from '../../src'
-import { simple, complex } from '../../src'
+import * as ell from 'ell-ai'
+import { simple, complex } from 'ell-ai'
 import { child } from './example-child'
 
 const hello = simple({ model: 'gpt-4o' }, async (a: string) => {

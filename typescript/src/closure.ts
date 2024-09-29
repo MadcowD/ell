@@ -70,7 +70,7 @@ export function getSourceMapJSON(base64SourceMap: string) {
 export async function resolveScriptIdToFile(session: inspector.Session, scriptId: string) {
   try {
     const result = await session.post('Debugger.getScriptSource', { scriptId })
-    logger.debug('Script source', { result })
+    // logger.debug('Script source', { result })
     return result
   } catch (err) {
     logger.error(`Error resolving scriptId ${scriptId}:`, { err })
@@ -104,7 +104,8 @@ export async function getBestClosureInspectionBreakpoint(
     },
     end: {
       scriptId,
-      lineNumber: location.endLine,
+      // this helps single line functions
+      lineNumber: location.endLine + 1,
     },
   })
   if (!possibleBreakpoints.locations || possibleBreakpoints.locations.length === 0) {

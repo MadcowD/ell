@@ -301,8 +301,8 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
     resolve = _resolve
   })
 
-  // Listen for breakpoint hits
-  session.on('Debugger.paused', async ({ params }) => {
+
+  const handleBreakpointHit = async ({params}: {params: inspector.Debugger.PausedEventDataType}) => {
     logger.debug('Paused on breakpoint', {
       breakpoints: params.hitBreakpoints,
       // params: JSON.stringify(params, null, 2)
@@ -359,13 +359,15 @@ const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string }, args: 
       }
     }
 
+    session.off('Debugger.paused', handleBreakpointHit)
+
     resolve(undefined)
-    // Resume execution
-    // await session.post('Debugger.resume')
-  })
+  }
+
+  // Listen for breakpoint hits
+  session.on('Debugger.paused', handleBreakpointHit)
 
   const breakpointId = await setBreakpoint(session, lmp)
-  logger.debug('breakpointId', { breakpointId })
 
   let variableValues: Record<string, any> = {}
 
@@ -502,15 +504,15 @@ export const simple = <F extends SimpleLMPInner>(a: Kwargs, f: F): SimpleLMP<F> 
     if (lmpId && !a.exempt_from_tracking) {
       return await invokeWithTracking({ ...lmpDefinition!, lmpId }, args, f, a)
     }
-    const lmpfnoutput = await f(...args)
+    const promptFnOutput = await f(...args)
     const modelClient = await getModelClient(a)
     const provider = config.getProviderFor(modelClient)
     if (!provider) {
       throw new Error(`No provider found for model ${a.model} ${modelClient}`)
     }
-    const messages = typeof lmpfnoutput === 'string' ? [new Message('user', lmpfnoutput)] : lmpfnoutput
+    const messages = typeof promptFnOutput === 'string' ? [new Message('user', promptFnOutput)] : promptFnOutput
     const apiParams = {
-      // everything from a except tools
+      // simple case: everything from `a` except tools
       ...a,
       tools: undefined,
     }
@@ -554,16 +556,16 @@ export const complex = <F extends ComplexLMPInner>(
 
   const wrapper: ComplexLMP<F> = async (...args: any[]) => {
     if (!wrapper.__ell_lmp_id__) {
-      if (trackAttempted) {
-        // fixme. still call model
-        return f
-      }
-      trackAttempted = true
-      lmpDefinition = await tsc.getLMP(filepath!, line!, column!)
-      if (!lmpDefinition) {
-        logger.error(`No LMP found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`)
-      } else {
-        lmpId = generateFunctionHash(lmpDefinition.source, '', lmpDefinition.lmpName)
+      if (!trackAttempted) {
+        trackAttempted = true
+        lmpDefinition = await tsc.getLMP(filepath!, line!, column!)
+        if (!lmpDefinition) {
+          logger.error(
+            `No LMP definition found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`
+          )
+        } else {
+          lmpId = generateFunctionHash(lmpDefinition.source, '', lmpDefinition.lmpName)
+        }
       }
     }
 
