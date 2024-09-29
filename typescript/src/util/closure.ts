@@ -1,7 +1,7 @@
 import * as inspector from 'node:inspector/promises'
-import * as logging from './_logger'
+import * as logging from './_logging'
 
-const logger = logging.getLogger('closure')
+const logger = logging.getLogger('ell.closure')
 
 export type BreakpointHitEvent = inspector.InspectorNotification<inspector.Debugger.PausedEventDataType>
 

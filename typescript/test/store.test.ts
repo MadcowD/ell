@@ -1,6 +1,7 @@
-import { SQLiteStore, WriteInvocationInput, WriteLMPInput } from '../src/serialize/sql'
+import { SQLiteStore } from '../src/serialize/sql'
 import { LMPType } from '../src/lmp/types'
 import { test, expect, beforeAll } from 'vitest'
+import { WriteInvocationInput, WriteLMPInput } from '../src/serialize/types'
 
 let store: SQLiteStore
 

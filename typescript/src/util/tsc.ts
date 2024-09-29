@@ -1,13 +1,13 @@
 import * as path from 'path'
 import ts from 'typescript'
-import { Logger } from './_logger'
+import { Logger } from './_logging'
 
-const logger = new Logger('ell-tsc')
+const logger = new Logger('ell.tsc')
 
 const LMP_FUNCTION_EXPORT_NAMES = ['simple', 'complex']
 
 // FIXME. remove this once we have a stable import
-const ELL_MODULE_IDENTIFIERS = ['ell-ai' ]
+const ELL_MODULE_IDENTIFIERS = ['ell-ai']
 const isEllModuleIdentifier = (identifier: string) =>
   identifier.includes('ell') || ELL_MODULE_IDENTIFIERS.includes(identifier)
 
@@ -48,8 +48,6 @@ export interface EllTSC {
   getFunctionSource(filePath: string, line: number, column: number): Promise<string | null>
 }
 
-
-
 export type LMPDefinitionType = 'simple' | 'complex'
 export type LMPDefinition = {
   lmpDefinitionType: LMPDefinitionType
@@ -69,8 +67,17 @@ export class EllTSC implements EllTSC {
   private program: ts.Program
   // maps filePath to LMPs
   private lmpCache: Map<string, LMPDefinition[]> = new Map()
-  private tsconfigPath: string 
-  constructor(rootDir: string = process.cwd()) {
+  private tsconfigPath: string | undefined
+  constructor(rootDir?: string) {
+    if (!rootDir) {
+      try {
+        rootDir = process.cwd()
+      } catch (e) {
+        logger.error('Could not initialize tsc', { error: e })
+        throw new Error('Could not initialize tsc')
+      }
+    }
+    // todo. try to get the user config file...?
     const configPath = ts.findConfigFile(rootDir, ts.sys.fileExists, 'tsconfig.json')
     if (!configPath) {
       throw new Error("Could not find a valid 'tsconfig.json'.")
@@ -87,11 +94,13 @@ export class EllTSC implements EllTSC {
   }
 
   public namespace(filePath: string): string {
+    if (!this.tsconfigPath) {
+      return ''
+    }
     const tsconfigDir = path.dirname(this.tsconfigPath)
     return filePath.replace(tsconfigDir, '').replace(/\//g, '.').replace(/\.ts$/g, '').slice(1)
-
   }
-  public fqn(filepath:string,name:string): string {
+  public fqn(filepath: string, name: string): string {
     return `${this.namespace(filepath)}.${name}`
   }
 
@@ -127,7 +136,7 @@ export class EllTSC implements EllTSC {
       })
       if (!lmp) {
         logger.error(`LMP not found for ${filePath}:${line}:${column}`)
-        logger.error('lmps',lmps)
+        logger.error('lmps', lmps)
         // logger.debug(await this.getAST(filePath).then((x) => x?.getText()))
       }
     }
@@ -212,7 +221,9 @@ export class EllTSC implements EllTSC {
         }
       }
     }
-    function visitCallExpression(node: ts.CallExpression): Pick<LMPDefinition, 'lmpDefinitionType' | 'config' | 'fn'> | undefined {
+    function visitCallExpression(
+      node: ts.CallExpression
+    ): Pick<LMPDefinition, 'lmpDefinitionType' | 'config' | 'fn'> | undefined {
       // Bare function call
       // mySimpleAlias()
       // myComplexAlias()
@@ -293,6 +304,9 @@ export class EllTSC implements EllTSC {
     return lmpDefinitions
   }
 }
+
+// fixme. initialize for the filename / project being executed
+export const tsc = new EllTSC()
 
 // new EllTSC()
 //   .getLMPsInFile(path.resolve("src/example.ts"))

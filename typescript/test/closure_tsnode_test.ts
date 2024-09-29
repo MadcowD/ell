@@ -1,7 +1,7 @@
 import OpenAI from 'openai'
 import { config } from '../src/configurator'
 import { hello } from './fixtures/hello_world'
-import * as logger from '../src/_logger'
+import * as logger from '../src/util/_logging'
 import * as ell from 'ell-ai'
 
 // logger.setGlobalLevel(logger.LogLevel.DEBUG)

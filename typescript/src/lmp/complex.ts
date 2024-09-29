@@ -1,11 +1,20 @@
-type Callable = (...args: any[]) => any
-type EllComplexKwargs = {
-  model: string
-  client?: any
-  exempt_from_tracking: boolean
-  tools?: Callable[]
-  post_callback?: Callable
-  api_params: any
+import { generateFunctionHash } from "../util/hash"
+import { Message } from "../types/message"
+import { invokeWithTracking } from "./_track"
+import { config } from "../configurator"
+import { getCallerFileLocation, getModelClient } from "./utils"
+import { APIParams } from "./types"
+import { ToolFunction } from "../types/tools"
+import { LMPDefinition, tsc } from "../util/tsc"
+import * as logging from "../util/_logging"
+
+const logger = logging.getLogger('ell')
+
+type ComplexLMPInner = (...args: any[]) => Promise<Array<Message>>
+type ComplexLMP<A extends ComplexLMPInner> = ((...args: Parameters<A>) => Promise<Array<Message>>) & {
+  __ell_type__?: 'complex'
+  __ell_lmp_name__?: string
+  __ell_lmp_id__?: string | null
 }
 
 /***
@@ -244,8 +253,73 @@ type EllComplexKwargs = {
     - ell.tool: For defining tools that can be used within complex LMPs.
     - ell.studio: For visualizing and analyzing LMP executions.
  ***/
-export function complex(args: EllComplexKwargs) {
-  return function (fn: Callable) {
-    return fn
+export const complex = <F extends ComplexLMPInner>(
+  a: {
+    model: string
+    exempt_from_tracking?: boolean
+    tools?: ToolFunction<any, any>[]
+    post_callback?: (messages: Array<Message>) => void
+  } & APIParams,
+  f: F
+): ComplexLMP<F> => {
+  const { filepath, line, column } = getCallerFileLocation()
+
+  if (!filepath || !line || !column) {
+    logger.error(`LMP cannot be tracked. Your source maps may be incorrect or unavailable.`)
   }
+
+  let trackAttempted = false
+  let lmpDefinition: LMPDefinition | undefined = undefined
+  let lmpId: string | undefined = undefined
+
+  const wrapper: ComplexLMP<F> = async (...args: any[]) => {
+    if (!wrapper.__ell_lmp_id__) {
+      if (!trackAttempted) {
+        trackAttempted = true
+        lmpDefinition = await tsc.getLMP(filepath!, line!, column!)
+        if (!lmpDefinition) {
+          logger.error(
+            `No LMP definition found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`
+          )
+        } else {
+          lmpId = generateFunctionHash(lmpDefinition.source, '', lmpDefinition.lmpName)
+        }
+      }
+    }
+
+    if (lmpId && !a.exempt_from_tracking) {
+      return await invokeWithTracking({ ...lmpDefinition!, lmpId }, args, f, a)
+    }
+    const promptFnOutput = await f(...args)
+    const modelClient = await getModelClient(a)
+    const provider = config.getProviderFor(modelClient)
+    if (!provider) {
+      throw new Error(`No provider found for model ${a.model} ${modelClient}`)
+    }
+    const messages = typeof promptFnOutput === 'string' ? [new Message('user', promptFnOutput)] : promptFnOutput
+    const apiParams = {
+      ...a,
+    }
+    const callResult = await provider.callModel(
+      modelClient,
+      a.model,
+      messages,
+      apiParams,
+      // @ts-ignore TODO.
+      a.tools
+    )
+    const [trackedResults, metadata] = await provider.processResponse(callResult, 'todo')
+    const result = trackedResults
+    return result
+  }
+
+  wrapper.__ell_type__ = 'complex'
+  Object.defineProperty(wrapper, '__ell_lmp_id__', {
+    get: () => lmpId,
+  })
+  Object.defineProperty(wrapper, '__ell_lmp_name__', {
+    get: () => lmpDefinition?.lmpName,
+  })
+
+  return wrapper
 }

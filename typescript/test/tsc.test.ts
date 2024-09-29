@@ -1,6 +1,6 @@
 import { test, expect } from 'vitest'
 import path from 'path'
-import { EllTSC } from '../src/tsc'
+import { EllTSC } from '../src/util/tsc'
 
 const pathToRepoRoot = path.resolve(__dirname, '..')
 

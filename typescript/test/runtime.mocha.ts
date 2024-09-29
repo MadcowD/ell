@@ -1,4 +1,4 @@
-import * as logging from '../src/_logger'
+import * as logging from '../src/util/_logging'
 logging.setGlobalLevel(logging.LogLevel.DEBUG)
 import { test, before } from 'mocha'
 import OpenAI from 'openai'

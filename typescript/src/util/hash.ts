@@ -6,11 +6,6 @@ export function generateFunctionHash(source: string, dsrc: string, qualname: str
   return `lmp-${hash}`
 }
 
-// for now, just use the lmp name
-const qualname = (name: string) => {
-  return name
-}
-
 export function generateInvocationId(): string {
   return `invocation-${crypto.randomBytes(16).toString('hex')}`
 }
