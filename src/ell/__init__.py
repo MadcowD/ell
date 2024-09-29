@@ -5,6 +5,7 @@ and intuitive interface for working with large language models.
 
 
 from ell.lmp.simple import simple
+from ell.lmp.simple import mock
 from ell.lmp.tool import tool
 from ell.lmp.complex import complex
 from ell.types.message import system, user, assistant, Message, ContentBlock
