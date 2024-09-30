@@ -16,7 +16,7 @@ Installing ell
 
    .. code-block:: bash
 
-      pip install -U ell-ai[anthropic]
+      pip install -U 'ell-ai[anthropic]'
 
 2. Verify installation:
 
