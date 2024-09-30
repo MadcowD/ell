@@ -5,6 +5,7 @@ from typing import Any, Optional, Dict, List, Set, Union
 from ell.types._lstr import _lstr
 from ell.types import SerializedLMP, Invocation
 from ell.types.message import InvocableLM
+from ell.types.studio import SerializedEvaluation, SerializedEvaluationRun
 
 class BlobStore(ABC):
     @abstractmethod
@@ -51,6 +52,17 @@ class Store(ABC):
         :return: Optional return value.
         """
         pass
+
+    # @abstractmethod
+    # def write_evaluation(self, evaluation: SerializedEvaluation, runs: List[SerializedEvaluationRun]) -> Optional[Any]:
+    #     """
+    #     Write an evaluation to the storage.
+
+    #     :param evaluation: Evaluation object containing all evaluation details.
+    #     :param runs: List of EvaluationRun objects representing the evaluation runs.
+    #     :return: Optional return value.
+    #     """
+    #     pass
 
     @abstractmethod
     def get_cached_invocations(self, lmp_id :str, state_cache_key :str) -> List[Invocation]:
