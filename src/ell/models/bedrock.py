@@ -5,8 +5,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-import boto3
-
 def register(client: Any):
     """
     Register Bedrock models with the provided client.
@@ -58,11 +56,14 @@ def register(client: Any):
         ('meta.llama2-13b-v1', 'bedrock'),
 
     ]
+
     for model_id, owned_by in model_data:
         config.register_model(name=model_id, default_client=client, supports_streaming=True)
 
 default_client = None
 try:
+
+    import boto3
     default_client = boto3.client('bedrock-runtime')
 except Exception as e:
     pass
