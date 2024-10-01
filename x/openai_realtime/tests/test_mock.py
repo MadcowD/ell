@@ -13,12 +13,12 @@ def client():
     
     # Mock methods within realtime
     client.realtime.connect = AsyncMock(return_value=True)
-    client.realtime.send = AsyncMock()
+    client.realtime.send = Mock()
     client.realtime.disconnect = AsyncMock()
     client.realtime.is_connected = Mock(return_value=True)
     
-    # Ensure that send returns a mock that can have .get called on it
-    client.realtime.send.return_value = Mock()
+    # Ensure that send returns a Mock that can have .get called on it
+    client.realtime.send.return_value = Mock(get=Mock(return_value=None))
     
     # Mock methods within conversation
     client.conversation.clear = Mock()
@@ -47,7 +47,7 @@ def test_reset(client):
 async def test_connect(client):
     await client.connect()
     client.realtime.connect.assert_awaited_once()
-    client.realtime.send.assert_awaited_with('session.update', {'session': client.session_config})
+    client.realtime.send.assert_called_once_with('session.update', {'session': client.session_config})
 
 def test_add_tool(client):
     tool_definition = {'name': 'test_tool', 'description': 'A test tool'}
@@ -58,26 +58,37 @@ def test_add_tool(client):
     assert 'test_tool' in client.tools
     assert client.tools['test_tool']['definition'] == tool_definition
     assert client.tools['test_tool']['handler'] == tool_handler
-    client.realtime.send.assert_called_with('session.update', {'session': client.session_config})
+    client.realtime.send.assert_called_once_with('session.update', {'session': client.session_config})
 
 def test_remove_tool(client):
     client.tools = {'test_tool': {}}
     client.remove_tool('test_tool')
     assert 'test_tool' not in client.tools
-    client.realtime.send.assert_called_with('session.update', {'session': client.session_config})
+    client.realtime.send.assert_called_once_with('session.update', {'session': client.session_config})
 
 def test_delete_item(client):
     client.delete_item('item_id')
-    client.realtime.send.assert_called_with('conversation.item.delete', {'item_id': 'item_id'})
+    client.realtime.send.assert_called_once_with('conversation.item.delete', {'item_id': 'item_id'})
 
 def test_update_session(client):
     client.update_session(modalities=['text'])
     assert client.session_config['modalities'] == ['text']
-    client.realtime.send.assert_called_with('session.update', {'session': client.session_config})
+    client.realtime.send.assert_called_once_with('session.update', {'session': client.session_config})
 
 def test_send_user_message_content(client):
     content = [{'type': 'text', 'text': 'Hello'}]
     client.send_user_message_content(content)
+    expected_calls = [
+        ('conversation.item.create', {
+            'item': {
+                'type': 'message',
+                'role': 'user',
+                'content': content
+            }
+        }),
+        ('response.create',)
+    ]
+    assert client.realtime.send.call_count == 2
     client.realtime.send.assert_any_call('conversation.item.create', {
         'item': {
             'type': 'message',
@@ -91,49 +102,48 @@ def test_append_input_audio(client):
     audio_data = np.array([1, 2, 3], dtype=np.int16)
     with patch.object(RealtimeUtils, 'array_buffer_to_base64', return_value='base64audio'):
         client.append_input_audio(audio_data)
-    client.realtime.send.assert_called_with('input_audio_buffer.append', {
+    client.realtime.send.assert_called_once_with('input_audio_buffer.append', {
         'audio': 'base64audio'
     })
     np.testing.assert_array_equal(client.input_audio_buffer, audio_data)
 
 def test_create_response(client):
     client.create_response()
-    client.realtime.send.assert_called_with('response.create')
+    client.realtime.send.assert_called_once_with('response.create')
 
 def test_cancel_response(client):
     client.cancel_response()
-    client.realtime.send.assert_called_with('response.cancel')
+    client.realtime.send.assert_called_once_with('response.cancel')
 
 @pytest.mark.asyncio
 async def test_wait_for_session_created(client):
     client.realtime.is_connected.return_value = True
     client.session_created = False
 
-    # Define a side effect that modifies client.session_created without calling mock_sleep again
-    def set_session_created():
+    # Define a side effect that modifies client.session_created and accepts arguments
+    def set_session_created(*args, **kwargs):
         client.session_created = True
-        return None  # Ensure the side effect does not return the mock itself
 
     with patch('openai_realtime.client.asyncio.sleep', new_callable=AsyncMock) as mock_sleep:
         mock_sleep.side_effect = set_session_created
         result = await client.wait_for_session_created()
     
     assert result == True
-    mock_sleep.assert_awaited_once()
+    mock_sleep.assert_awaited()
 
 @pytest.mark.asyncio
 async def test_wait_for_next_item(client):
     client.wait_for_next = AsyncMock(return_value={'item': {'id': 'test_item'}})
     result = await client.wait_for_next_item()
     assert result == {'item': {'id': 'test_item'}}
-    client.wait_for_next.assert_awaited_with('conversation.item.appended')
+    client.wait_for_next.assert_awaited_once_with('conversation.item.appended')
 
 @pytest.mark.asyncio
 async def test_wait_for_next_completed_item(client):
     client.wait_for_next = AsyncMock(return_value={'item': {'id': 'test_item', 'status': 'completed'}})
     result = await client.wait_for_next_completed_item()
     assert result == {'item': {'id': 'test_item', 'status': 'completed'}}
-    client.wait_for_next.assert_awaited_with('conversation.item.completed')
+    client.wait_for_next.assert_awaited_once_with('conversation.item.completed')
 
 @pytest.mark.asyncio
 async def test_call_tool(client):

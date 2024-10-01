@@ -1,9 +1,13 @@
-# OpenAI Realtime Python Client
+# OpenAI Realtime Python Client (Unofficial) 
+![PyPI version](https://badge.fury.io/py/ell-ai.svg)
+![License](https://img.shields.io/github/license/MadcowD/ell)
+![Python versions](https://img.shields.io/pypi/pyversions/ell-ai)
 
 This is a Python port of the OpenAI Realtime Client, designed to interact with OpenAI's realtime API for advanced AI interactions.
 
-**Note:** This is a port of OpenAI's realtime client to Python by William Guss.
+**Note:** This is a port of OpenAI's realtime client to Python by William Guss. For the original version, see [here](https://github.com/openai/openai-realtime-api-beta).
 
+**Note:** This client is designed to be a reference for how ell will implement realtime Python bindings. For more information on ell, see [ell documentation](https://docs.ell.so/). Discover the power of ell for advanced prompt engineering and seamless integration with OpenAI's realtime API.
 ## Features
 
 - Realtime communication with OpenAI's API
@@ -72,10 +76,10 @@ client.append_input_audio(audio_data)
 client.create_response()
 ```
 ## Documentation
-For more detailed documentation, please refer to the [API Reference](#).
+For more detailed documentation, please refer to the [API Reference](https://github.com/openai/openai-realtime-api-beta/blob/main/README.md).
 
 ## Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! This project is a port of the OpenAI Realtime API to Python. Please feel free to submit a Pull Request.
 
-## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+## License and Attribution
+This project is licensed under the MIT License, respecting the original license of the OpenAI Realtime API. The original JavaScript implementation can be found at the [OpenAI Realtime API GitHub repository](https://github.com/openai/openai-realtime-api-beta). Special thanks to the OpenAI Realtime API team for their work on the original implementation. For more details, see the LICENSE file.
