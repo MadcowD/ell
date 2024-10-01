@@ -120,7 +120,10 @@ class RealtimeClient(RealtimeEventHandler):
             self.realtime.disconnect()
 
     def get_turn_detection_type(self):
-        return self.session_config.get('turn_detection', {}).get('type')
+        turn_detection = self.session_config.get('turn_detection')
+        if isinstance(turn_detection, dict):
+            return turn_detection.get('type')
+        return None
 
     def add_tool(self, definition, handler):
         if not definition.get('name'):

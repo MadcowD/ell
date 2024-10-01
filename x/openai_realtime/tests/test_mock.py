@@ -1,3 +1,4 @@
+# x/openai_realtime/tests/test_mock.py
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
 import numpy as np
@@ -26,6 +27,9 @@ def client():
     # Initialize other necessary attributes
     client.input_audio_buffer = np.array([], dtype=np.int16)
     
+    # Ensure session_config is properly initialized
+    client._reset_config()
+    
     return client
 
 def test_init(client):
@@ -47,7 +51,9 @@ def test_reset(client):
 async def test_connect(client):
     await client.connect()
     client.realtime.connect.assert_awaited_once()
-    client.realtime.send.assert_called_once_with('session.update', {'session': client.session_config})
+    
+    expected_session = client.session_config.copy()
+    client.realtime.send.assert_called_once_with('session.update', {'session': expected_session})
 
 def test_add_tool(client):
     tool_definition = {'name': 'test_tool', 'description': 'A test tool'}
@@ -58,13 +64,36 @@ def test_add_tool(client):
     assert 'test_tool' in client.tools
     assert client.tools['test_tool']['definition'] == tool_definition
     assert client.tools['test_tool']['handler'] == tool_handler
-    client.realtime.send.assert_called_once_with('session.update', {'session': client.session_config})
+    
+    expected_session = client.session_config.copy()
+    expected_session['tools'] = [{
+        'name': 'test_tool',
+        'description': 'A test tool',
+        'type': 'function'
+    }]
+    
+    client.realtime.send.assert_called_once_with('session.update', {'session': expected_session})
 
 def test_remove_tool(client):
-    client.tools = {'test_tool': {}}
+    # Setup: Add a tool first
+    client.tools = {'test_tool': {'definition': {'name': 'test_tool', 'description': 'A test tool'}}}
+    
+    # Remove the tool
     client.remove_tool('test_tool')
+    
+    # Assertions
     assert 'test_tool' not in client.tools
-    client.realtime.send.assert_called_once_with('session.update', {'session': client.session_config})
+    
+    # Ensure 'session.update' was NOT called automatically
+    client.realtime.send.assert_not_called()
+    
+    # If session synchronization is needed, it should be done explicitly
+    # For example:
+    client.update_session()
+    expected_session = client.session_config.copy()
+    expected_session['tools'] = []
+    
+    client.realtime.send.assert_called_once_with('session.update', {'session': expected_session})
 
 def test_delete_item(client):
     client.delete_item('item_id')
@@ -73,11 +102,15 @@ def test_delete_item(client):
 def test_update_session(client):
     client.update_session(modalities=['text'])
     assert client.session_config['modalities'] == ['text']
-    client.realtime.send.assert_called_once_with('session.update', {'session': client.session_config})
+    
+    expected_session = client.session_config.copy()
+    
+    client.realtime.send.assert_called_once_with('session.update', {'session': expected_session})
 
 def test_send_user_message_content(client):
     content = [{'type': 'text', 'text': 'Hello'}]
     client.send_user_message_content(content)
+    
     expected_calls = [
         ('conversation.item.create', {
             'item': {
@@ -88,6 +121,7 @@ def test_send_user_message_content(client):
         }),
         ('response.create',)
     ]
+    
     assert client.realtime.send.call_count == 2
     client.realtime.send.assert_any_call('conversation.item.create', {
         'item': {
@@ -154,7 +188,8 @@ async def test_call_tool(client):
     tool_handler_mock = AsyncMock(return_value=tool_result)
     client.tools = {
         tool_name: {
-            'handler': tool_handler_mock
+            'handler': tool_handler_mock,
+            'definition': {'name': tool_name, 'description': 'A test tool'}
         }
     }
 
@@ -181,7 +216,8 @@ async def test_call_tool_error(client):
     tool_handler_mock = AsyncMock(side_effect=Exception(error_message))
     client.tools = {
         tool_name: {
-            'handler': tool_handler_mock
+            'handler': tool_handler_mock,
+            'definition': {'name': tool_name, 'description': 'A test tool'}
         }
     }
 
