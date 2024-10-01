@@ -2,11 +2,11 @@ from typing import List
 import ell
 
 
-@ell.simple(model="gpt-4o", store=True)
+@ell.simple(model="gpt-4o-2024-08-06", store=True)
 def cached_chat(history : List[str], new_message : str) -> str:
     """You are a helpful assistant who chats with the user. Your resposnes should < 2 sentences."""
 
-    return f"Here is the chat history: {'\n'.join(history)}. Please respond to the last message. {new_message}"
+    return f"Here is the chat history: {'\n'.join(history)}.\n Please respond to this message:\n {new_message}"
 
 
 
