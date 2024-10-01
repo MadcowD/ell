@@ -182,6 +182,9 @@ class Invocation(InvocationBase, table=True):
     )
     evaluation_run: Optional["SerializedEvaluationRun"] = Relationship(back_populates="invocation")
 
+##################
+### Evaluation ###
+##################
 class SerializedEvaluation(SQLModel):
     id: str = Field(primary_key=True)
     name: str

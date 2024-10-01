@@ -25,6 +25,7 @@ Metric = Callable[..., float]
 
 
  #XXX: Seperate this into VersionedEvaluation and Evaluation because versioning is somewhat expensive if someone has a big eval Then perhaps we could default to VersionedEval in the docs or version=False. Not sure.
+ # TODO: Datasets  and automatic metrics.
  # TODO: Link Invocations to EvalRuns
  # TODO: Link Invocations to INvocationScores.
  # TODO: Write to DB

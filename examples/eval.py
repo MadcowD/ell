@@ -1,3 +1,4 @@
+from typing import Any, Optional, Protocol
 import ell
 import ell.evaluation
 
@@ -31,4 +32,3 @@ def predict_capital(question: str):
 result = eval.run(predict_capital, n_workers=4)
 print(result.outputs)
 
-# Would be cool if it opened a UI for you to watch the run as it was going down.
