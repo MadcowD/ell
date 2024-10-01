@@ -28,7 +28,7 @@ include = [
 [tool.poetry.dependencies]
 python = ">=3.9"
 fastapi = "^0.111.1"
-numpy = "^2.0.1"
+numpy = ">=1.26.0"
 dill = "^0.3.8"
 colorama = "^0.4.6"
 cattrs = "^23.2.3"
@@ -40,7 +40,6 @@ uvicorn = "^0.30.3"
 requests = "^2.32.3"
 typing-extensions = "^4.12.2"
 black = "^24.8.0"
-json-fix = "^1.0.0"
 pillow = "^10.4.0"
 
 [tool.poetry.group.dev.dependencies]

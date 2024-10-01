@@ -883,17 +883,6 @@ files = [
 ]
 
 [[package]]
-name = "json-fix"
-version = "1.0.0"
-description = "allow custom class json behavior on builtin json object"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "json_fix-1.0.0-py3-none-any.whl", hash = "sha256:1b7d622572f3c7dd653ce9e5a87a4c645a437be7ee622bc916bccb145789055b"},
-    {file = "json_fix-1.0.0.tar.gz", hash = "sha256:625b3fc2f7c7c8855eb3e6669c366163cc9b95dbf8e8568fa07f42a65b8d4672"},
-]
-
-[[package]]
 name = "markdown-it-py"
 version = "3.0.0"
 description = "Python port of markdown-it. Markdown parsing, done right!"
@@ -1064,13 +1053,13 @@ files = [
 
 [[package]]
 name = "openai"
-version = "1.47.1"
+version = "1.50.1"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-1.47.1-py3-none-any.whl", hash = "sha256:34277583bf268bb2494bc03f48ac123788c5e2a914db1d5a23d5edc29d35c825"},
-    {file = "openai-1.47.1.tar.gz", hash = "sha256:62c8f5f478f82ffafc93b33040f8bb16a45948306198bd0cba2da2ecd9cf7323"},
+    {file = "openai-1.50.1-py3-none-any.whl", hash = "sha256:7967fc8372d5e005ad61514586fb286d593facafccedbee00416bc38ee07c2e6"},
+    {file = "openai-1.50.1.tar.gz", hash = "sha256:80cbdf275488894c70bfbad711dbba6f31ea71d579b97e364bfd99cdf030158e"},
 ]
 
 [package.dependencies]
@@ -2318,4 +2307,4 @@ groq = ["groq"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9"
-content-hash = "92199b8a5bdf2716b6a6d12356504b41f7402c7f2bad53a2d853e0cdb3d7a345"
+content-hash = "4c5039fdc5b1d74d15135dc6f8abc5cd52729d9076539597755a62f12e88d692"
