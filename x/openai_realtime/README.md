@@ -1,7 +1,6 @@
 # OpenAI Realtime Python Client (Unofficial) 
-![PyPI version](https://badge.fury.io/py/ell-ai.svg)
-![License](https://img.shields.io/github/license/MadcowD/ell)
-![Python versions](https://img.shields.io/pypi/pyversions/ell-ai)
+
+[![ell](https://img.shields.io/badge/ell-go)](https://docs.ell.so/) [![Discord](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb) [![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/wgussml)](https://x.com/wgussml)
 
 This is a Python port of the OpenAI Realtime Client, designed to interact with OpenAI's realtime API for advanced AI interactions.
 
