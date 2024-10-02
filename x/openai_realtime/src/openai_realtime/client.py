@@ -82,11 +82,21 @@ class RealtimeClient(RealtimeEventHandler):
         self.realtime.on('server.response.audio.delta', handle_conversation_event)
         self.realtime.on('server.response.text.delta', handle_conversation_event)
         self.realtime.on('server.response.function_call_arguments.delta', handle_conversation_event)
-        self.realtime.on('server.response.output_item.done', lambda event: (
-            handle_conversation_event(event),
-            self.dispatch('conversation.item.completed', {'item': event['item']}) if event['item']['status'] == 'completed' else None,
-            self._call_tool(event['item']['formatted']['tool']) if event['item']['formatted'].get('tool') else None
-        ))
+        def handle_output_item_done( event):
+            handle_conversation_event(event)
+            item = event.get('item', {})
+            
+            if item.get('status') == 'completed':
+                self.dispatch('conversation.item.completed', {'item': item})
+            
+            formatted = item.get('formatted', {})
+            tool = formatted.get('tool') if isinstance(formatted, dict) else None
+            
+            if tool:
+                asyncio.create_task(self._call_tool(tool))
+        self.realtime.on('server.response.output_item.done', handle_output_item_done)
+
+  
 
     def is_connected(self):
         return self.realtime.is_connected() and self.session_created
