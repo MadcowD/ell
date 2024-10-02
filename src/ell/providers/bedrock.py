@@ -8,14 +8,13 @@ import json
 from ell.configurator import config, register_provider
 from ell.types.message import LMP
 from ell.util.serialization import serialize_image
-from botocore.eventstream import (EventStream)
 from io import BytesIO
-from botocore.client import BaseClient
 import requests
 from PIL import Image as PILImage
 
 try:
-
+    from botocore.client import BaseClient
+    from botocore.eventstream import (EventStream)
     class BedrockProvider(Provider):
         dangerous_disable_validation = True
 

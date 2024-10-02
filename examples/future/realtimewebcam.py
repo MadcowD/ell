@@ -10,7 +10,7 @@ def clear_console():
 
 def main():
     print("Press Ctrl+C to stop the program.")
-    cap = cv2.VideoCapture(1)  # Change to 0 for default camera
+    cap = cv2.VideoCapture(0)  # Change to 0 for default camera
     
     if not cap.isOpened():
         print("Error: Could not open camera.")
