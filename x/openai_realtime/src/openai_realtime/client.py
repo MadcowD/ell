@@ -66,7 +66,7 @@ class RealtimeClient(RealtimeEventHandler):
         self.realtime.on('server.response.content_part.added', handle_conversation_event)
         self.realtime.on('server.input_audio_buffer.speech_started', lambda event: (
             handle_conversation_event(event),
-            self.dispatch('conversation.interrupted')
+            self.dispatch('conversation.interrupted', event)
         ))
         self.realtime.on('server.input_audio_buffer.speech_stopped', lambda event: 
             handle_conversation_event(event, self.input_audio_buffer)
