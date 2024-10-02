@@ -95,6 +95,31 @@ def compute_state_cache_key(ipstr, fn_closure):
     _free_vars_str = f"{json.dumps(get_immutable_vars(fn_closure[3]), sort_keys=True, default=repr)}"
     state_cache_key = hashlib.sha256(f"{ipstr}{_global_free_vars_str}{_free_vars_str}".encode('utf-8')).hexdigest()
     return state_cache_key
+    
+
+def float_to_16bit_pcm(float32_array):
+    int16_array = (np.clip(float32_array, -1, 1) * 32767).astype(np.int16)
+    return int16_array.tobytes()
+
+def base64_to_array_buffer(base64_string):
+    return base64.b64decode(base64_string)
+
+def array_buffer_to_base64(array_buffer):
+    if isinstance(array_buffer, np.ndarray):
+        if array_buffer.dtype == np.float32:
+            array_buffer = float_to_16bit_pcm(array_buffer)
+        elif array_buffer.dtype == np.int16:
+            array_buffer = array_buffer.tobytes()
+    return base64.b64encode(array_buffer).decode('utf-8')
+
+def merge_int16_arrays(left, right):
+    if isinstance(left, bytes):
+        left = np.frombuffer(left, dtype=np.int16)
+    if isinstance(right, bytes):
+        right = np.frombuffer(right, dtype=np.int16)
+    if not isinstance(left, np.ndarray) or not isinstance(right, np.ndarray):
+        raise ValueError("Both items must be numpy arrays or bytes objects")
+    return np.concatenate((left, right))
 
 
 def prepare_invocation_params(params):

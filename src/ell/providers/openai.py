@@ -9,7 +9,7 @@ from ell.types._lstr import _lstr
 import json
 from ell.configurator import _Model, config, register_provider
 from ell.types.message import LMP
-from ell.util.serialization import serialize_image
+from ell.util.serialization import array_buffer_to_base64, serialize_image
 
 try: 
     # XXX: Could genericize.
@@ -122,6 +122,7 @@ try:
                             logger(delta.content, is_refusal=hasattr(delta, "refusal") and delta.refusal)
                 for _, message_stream in sorted(message_streams.items(), key=lambda x: x[0]):
                     text = "".join((choice.delta.content or "") for choice in message_stream)
+                    # XXX: API might be close to something else.
                     messages.append(
                         Message(role=role, 
                                 content=_lstr(content=text,origin_trace=origin_id)))
@@ -144,6 +145,7 @@ try:
                                 ContentBlock(
                                     text=_lstr(content=content,origin_trace=origin_id)))
                             if logger: logger(content)
+                            #XXX: Streaming tool calls are coming.
                         if (tool_calls := message.tool_calls):
                             for tool_call in tool_calls:
                                 matching_tool = ell_call.get_tool_by_name(tool_call.function.name)
@@ -178,6 +180,8 @@ def _content_block_to_openai_format(content_block: ContentBlock) -> Dict[str, An
             "type": "image_url",
             "image_url": image_url
         }
+    elif (audio := content_block.audio) is not None: 
+        return dict(type="input_audio", audio=array_buffer_to_base64(audio))
     elif ((text := content_block.text) is not None): return dict(type="text", text=text)
     elif (parsed := content_block.parsed): return dict(type="text", text=parsed.model_dump_json())    
     else:

@@ -252,8 +252,10 @@ class ContentBlock(BaseModel):
             return cls(tool_call=content)
         if isinstance(content, ToolResult):
             return cls(tool_result=content)
-        if isinstance(content, (ImageContent, np.ndarray, PILImage.Image)):
+        if isinstance(content, (ImageContent, PILImage.Image)) or (isinstance(content, np.ndarray) and content.ndim >= 3):
             return cls(image=ImageContent.coerce(content))
+        if isinstance(content, np.ndarray) and content.ndim == 1:
+            return cls(audio=content)
         if isinstance(content, BaseModel):
             return cls(parsed=content)
 
@@ -352,8 +354,8 @@ class Message(BaseModel):
         return [c.image for c in self.content if c.image]
     
     @property
-    def audios(self) -> List[Union[np.ndarray, List[float]]]:
-        """Returns a list of all audio content.
+    def audios(self) -> List[Union[np.ndarray, List[float], List[int]]]:
+        """Returns a list of all audio content in each content block..
 
         Example:
             >>> audio1 = np.array([0.1, 0.2, 0.3])
@@ -363,6 +365,20 @@ class Message(BaseModel):
             2
         """
         return [c.audio for c in self.content if c.audio]
+    
+
+    @property
+    def audio(self) -> np.ndarray:
+        """Returns the first audio content.
+
+        Example:
+            >>> audio1 = np.array([0.1, 0.2, 0.3])
+            >>> message = Message(role="user", content=["Text", audio1, "More text"])
+            >>> message.audio
+            array([0.1, 0.2, 0.3])
+        """
+        return np.concatenate(self.audios)
+    
 
     @property
     def text_only(self) -> str:
