@@ -13,7 +13,7 @@ blob*/
 blob/**/*
 blob/*
 
-*.db 
+*.db
 
 
 # C extensions
@@ -306,8 +306,9 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-
 # Ignore static files
 static/
 *.db-shm
 *.db-wal
+
+uv.lock
