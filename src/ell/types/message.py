@@ -7,20 +7,39 @@ import base64
 from io import BytesIO
 from PIL import Image as PILImage
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator, field_validator, field_serializer
+from pydantic import BaseModel, ConfigDict, model_validator, field_serializer
 from sqlmodel import Field
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from typing import Any, Callable, Dict, List, Literal, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from ell.util.serialization import serialize_image
 _lstr_generic = Union[_lstr, str]
 InvocableTool = Callable[..., Union["ToolResult", _lstr_generic, List["ContentBlock"], ]]
 
+# AnyContent represents any type that can be passed to Message.
+AnyContent = Union["ContentBlock", str, "ToolCall", "ToolResult", "ImageContent", np.ndarray, PILImage.Image, BaseModel]
+
+
 class ToolResult(BaseModel):
     tool_call_id: _lstr_generic
     result: List["ContentBlock"]
+
+    @property
+    def text(self) -> str:
+        return _content_to_text(self.result)
+    
+    @property
+    def text_only(self) -> str:
+        return _content_to_text_only(self.result)
+    
+    # # XXX: Possibly deprecate
+    # def readable_repr(self) -> str:
+    #     return f"ToolResult(tool_call_id={self.tool_call_id}, result={_content_to_text(self.result)})"
+    
+    def __repr__(self):
+        return f"{self.__class__.__name__}(tool_call_id={self.tool_call_id}, result={_content_to_text(self.result)})"
 
 class ToolCall(BaseModel):
     tool : InvocableTool
@@ -37,16 +56,22 @@ class ToolCall(BaseModel):
 
         # XXX: TODO: MOVE TRACKING CODE TO _TRACK AND OUT OF HERE AND API.
         return self.tool(**self.params.model_dump())
-
+    
+    # XXX: Deprecate in 0.1.0
     def call_and_collect_as_message_block(self):
+        raise DeprecationWarning("call_and_collect_as_message_block is deprecated. Use collect_as_content_block instead.")
+    
+    def call_and_collect_as_content_block(self):
         res = self.tool(**self.params.model_dump(), _tool_call_id=self.tool_call_id)
         return ContentBlock(tool_result=res)
 
     def call_and_collect_as_message(self):
         return Message(role="user", content=[self.call_and_collect_as_message_block()])
     
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.tool.__name__}({self.params}), tool_call_id='{self.tool_call_id}')"
+    
 
-# XXX: This needs a non conflicting name
 class ImageContent(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -107,6 +132,8 @@ class ContentBlock(BaseModel):
     tool_call: Optional[ToolCall] = Field(default=None)
     parsed: Optional[BaseModel] = Field(default=None)
     tool_result: Optional[ToolResult] = Field(default=None)
+    # TODO: Add a JSON type? This would be nice for response_format. This is different than resposne_format = model. Or we could be opinionated and automatically parse the json response. That might be nice.
+    # This breaks us maintaing parity with the openai python client in some sen but so does image.
 
     def __init__(self, *args, **kwargs):
         if "image" in kwargs and not isinstance(kwargs["image"], ImageContent):
@@ -123,6 +150,13 @@ class ContentBlock(BaseModel):
         if len(non_null_fields) > 1:
             raise ValueError(f"Only one field can be non-null. Found: {', '.join(non_null_fields)}")
         return self
+    
+    def __str__(self):
+        return repr(self)
+
+    def __repr__(self):
+        non_null_fields = [f"{field}={value}" for field, value in self.__dict__.items() if value is not None]
+        return f"ContentBlock({', '.join(non_null_fields)})"
 
     @property
     def type(self):
@@ -139,9 +173,13 @@ class ContentBlock(BaseModel):
         if self.tool_result is not None:
             return "tool_result"
         return None
+    
+    @property
+    def content(self):
+        return getattr(self, self.type)
 
     @classmethod
-    def coerce(cls, content: Union["ContentBlock", str, ToolCall, ToolResult, ImageContent, np.ndarray, PILImage.Image, BaseModel]) -> "ContentBlock":
+    def coerce(cls, content: AnyContent) -> "ContentBlock":
         """
         Coerce various types of content into a ContentBlock.
 
@@ -228,8 +266,8 @@ class ContentBlock(BaseModel):
         return value.model_dump(exclude_none=True, exclude_unset=True)
     
 
-def coerce_content_list(
-    content: Optional[Union[str, List[ContentBlock], List[Union[ContentBlock, str, ToolCall, ToolResult, ImageContent, np.ndarray, PILImage.Image, BaseModel]]]] = None,
+def to_content_blocks(
+    content: Optional[Union[AnyContent, List[AnyContent]]] = None,
     **content_block_kwargs
 ) -> List[ContentBlock]:
     """
@@ -266,29 +304,34 @@ def coerce_content_list(
 
     if not isinstance(content, list):
         content = [content]
+    
     return [ContentBlock.model_validate(ContentBlock.coerce(c)) for c in content]
+
+
 
 class Message(BaseModel):
     role: str
     content: List[ContentBlock]
     
 
-    def __init__(self, role, content: Union[str, List[ContentBlock], List[Union[ContentBlock, str, ToolCall, ToolResult, ImageContent, np.ndarray, PILImage.Image, BaseModel]]] = None, **content_block_kwargs):
-        content = coerce_content_list(content, **content_block_kwargs)
+    def __init__(self, role: str, content: Union[AnyContent, List[AnyContent], None] = None, **content_block_kwargs):
+        content_blocks = to_content_blocks(content, **content_block_kwargs)
         
-        super().__init__(content=content, role=role)
-    @cached_property
+        super().__init__(role=role, content=content_blocks)
+
+    # XXX: This choice of naming is unfortunate, but it is what it is.
+    @property
     def text(self) -> str:
-        """Returns all text content, replacing non-text content with type indicators.
+        """Returns all text content, replacing non-text content with their representations.
 
         Example:
             >>> message = Message(role="user", content=["Hello", PILImage.new('RGB', (100, 100)), "World"])
             >>> message.text
-            'Hello\\n<image>\\nWorld'
+            'Hello\\n<PilImage>\\nWorld'
         """
-        return _lstr("\n").join(c.text or f"<{c.type}>" for c in self.content)
+        return _content_to_text(self.content)
     
-    @cached_property
+    @property
     def images(self) -> List[ImageContent]:
         """Returns a list of all image content.
 
@@ -308,7 +351,7 @@ class Message(BaseModel):
         """
         return [c.image for c in self.content if c.image]
     
-    @cached_property
+    @property
     def audios(self) -> List[Union[np.ndarray, List[float]]]:
         """Returns a list of all audio content.
 
@@ -321,7 +364,7 @@ class Message(BaseModel):
         """
         return [c.audio for c in self.content if c.audio]
 
-    @cached_property
+    @property
     def text_only(self) -> str:
         """Returns only the text content, ignoring non-text content.
 
@@ -330,7 +373,7 @@ class Message(BaseModel):
             >>> message.text_only
             'Hello\\nWorld'
         """
-        return "\n".join(c.text for c in self.content if c.text)
+        return _content_to_text_only(self.content)
 
     @cached_property
     def tool_calls(self) -> List[ToolCall]:
@@ -344,7 +387,7 @@ class Message(BaseModel):
         """
         return [c.tool_call for c in self.content if c.tool_call is not None]
     
-    @cached_property
+    @property
     def tool_results(self) -> List[ToolResult]:
         """Returns a list of all tool results.
 
@@ -356,7 +399,7 @@ class Message(BaseModel):
         """
         return [c.tool_result for c in self.content if c.tool_result is not None]
 
-    @cached_property
+    @property
     def parsed(self) -> Union[BaseModel, List[BaseModel]]:
         """Returns a list of all parsed content.
 
@@ -370,17 +413,18 @@ class Message(BaseModel):
         """
         parsed_content = [c.parsed for c in self.content if c.parsed is not None]
         return parsed_content[0] if len(parsed_content) == 1 else parsed_content
+    
     def call_tools_and_collect_as_message(self, parallel=False, max_workers=None):
         if parallel:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = [executor.submit(c.tool_call.call_and_collect_as_message_block) for c in self.content if c.tool_call]
+                futures = [executor.submit(c.tool_call.call_and_collect_as_content_block) for c in self.content if c.tool_call]
                 content = [future.result() for future in as_completed(futures)]
         else:
-            content = [c.tool_call.call_and_collect_as_message_block() for c in self.content if c.tool_call]
+            content = [c.tool_call.call_and_collect_as_content_block() for c in self.content if c.tool_call]
         return Message(role="user", content=content)
 
 # HELPERS 
-def system(content: Union[str, List[ContentBlock]]) -> Message:
+def system(content: Union[AnyContent, List[AnyContent]]) -> Message:
     """
     Create a system message with the given content.
 
@@ -393,7 +437,7 @@ def system(content: Union[str, List[ContentBlock]]) -> Message:
     return Message(role="system", content=content)
 
 
-def user(content: Union[str, List[ContentBlock]]) -> Message:
+def user(content: Union[AnyContent, List[AnyContent]]) -> Message:
     """
     Create a user message with the given content.
 
@@ -406,7 +450,7 @@ def user(content: Union[str, List[ContentBlock]]) -> Message:
     return Message(role="user", content=content)
 
 
-def assistant(content: Union[str, List[ContentBlock]]) -> Message:
+def assistant(content: Union[AnyContent, List[AnyContent]]) -> Message:
     """
     Create an assistant message with the given content.
 
@@ -417,6 +461,23 @@ def assistant(content: Union[str, List[ContentBlock]]) -> Message:
     Message: A Message object with role set to 'assistant' and the provided content.
     """
     return Message(role="assistant", content=content)
+
+#XXX: Make a mixi for these properties.
+def _content_to_text_only(content: List[ContentBlock]) -> str:
+    return _lstr("\n").join(
+            available_text
+            for c in content
+            if (available_text := (c.tool_result.text_only if c.tool_result else c.text))
+        )
+
+# Do we include the .text of a tool result? or its repr as in the current implementaiton?
+# What is the user using .text for? I just want to see the result of the tools. text_only should get us the text of the tool results; the tool_call_id is irrelevant.
+def _content_to_text(content: List[ContentBlock]) -> str:
+    return _lstr("\n").join(
+            available_text
+            for c in content
+            if (available_text :=  c.text or repr(c.content))
+        )
 
 
 # want to enable a use case where the user can actually return a standrd oai chat format

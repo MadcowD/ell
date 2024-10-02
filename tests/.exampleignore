@@ -1,0 +1,9 @@
+# .exampleignore
+webcam*.py
+o1_graph.py
+realtimewebcam.py
+webcam_activity_describer.py
+openaigym.py
+o1.py
+chord*
+server_example.py

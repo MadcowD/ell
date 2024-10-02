@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
+
+from pydantic import BaseModel
 from ell.provider import  EllCallParams, Metadata, Provider
 from ell.types import Message, ContentBlock, ToolCall
 from ell.types._lstr import _lstr
@@ -19,7 +21,7 @@ try:
         dangerous_disable_validation = True
         
         def provider_call_function(self, client : openai.Client, api_call_params : Optional[Dict[str, Any]] = None) -> Callable[..., Any]:
-            if api_call_params and api_call_params.get("response_format"):
+            if api_call_params and (isinstance(fmt := api_call_params.get("response_format"), type)) and issubclass(fmt, BaseModel):
                 return client.beta.chat.completions.parse
             else:
                 return client.chat.completions.create
@@ -69,18 +71,21 @@ try:
                         content=None,
                     ))
                 elif (tool_results := message.tool_results):
-                    assert len(tool_results) == 1, "Message should only have one tool result"
-                    assert (tr_content := tool_results[0].result[0]).type == "text", "Tool result should only have one text content block"
-                    openai_messages.append(dict(
-                        role="tool",
-                        tool_call_id=tool_results[0].tool_call_id,
-                        content=cast(str, tr_content.text),
-                    ))
+                    for tool_result in tool_results:
+                        assert all(cb.type == "text" for cb in tool_result.result), "Tool result does not match expected content blocks."
+                        openai_messages.append(dict(
+                            role="tool",
+                            tool_call_id=tool_result.tool_call_id,
+                            content=tool_result.text_only, 
+                        ))
                 else:
                     openai_messages.append(cast(ChatCompletionMessageParam, dict(
                         role=message.role,
-                        content=[_content_block_to_openai_format(c) for c in message.content]
+                        content=[_content_block_to_openai_format(c) for c in message.content] 
+                             if message.role != "system" 
+                             else message.text_only
                     )))
+                     
             final_call_params["messages"] = openai_messages
             
             return final_call_params
@@ -153,7 +158,7 @@ try:
                                         )
                                     )
                                 )
-                                if logger: logger(tool_call)
+                                if logger: logger(repr(tool_call))
                     messages.append(Message(role=role, content=content_blocks))
             return messages, metadata
 
@@ -173,7 +178,7 @@ def _content_block_to_openai_format(content_block: ContentBlock) -> Dict[str, An
             "type": "image_url",
             "image_url": image_url
         }
-    elif (text := content_block.text): return dict(type="text", text=text)
+    elif ((text := content_block.text) is not None): return dict(type="text", text=text)
     elif (parsed := content_block.parsed): return dict(type="text", text=parsed.model_dump_json())    
     else:
         raise ValueError(f"Unsupported content block type for openai: {content_block}")

@@ -82,6 +82,8 @@ Key Features
 
 .. code-block:: python
 
+    from ell import Message
+
     @ell.complex(model="gpt-4o", temperature=0.7)
     def chat_bot(message_history: List[Message]) -> List[Message]:
         return [
@@ -93,8 +95,8 @@ Key Features
         user_input = input("You: ")
         message_history.append(ell.user(user_input))
         response = chat_bot(message_history)
-        print("Bot:", response[-1].text)
-        message_history.append(response[-1])
+        print("Bot:", response.text)
+        message_history.append(response)
 
 4. Tool Usage
 ^^^^^^^^^^^^^
@@ -121,8 +123,9 @@ Key Features
     print(result.text)  # Prints travel advice
     if result.tool_calls:
         # This is done so that we can pass the tool calls to the language model
-        tool_results = result.call_tools_and_collect_as_message()
-        print("Weather info:", tool_results.text)
+        result_message = result.call_tools_and_collect_as_message()
+        print("Weather info:", result_message.tool_results[0].text) # Raw text of the tool call.
+        print("Message to be sent to the LLM:", result_message.text) # Representation of the message to be sent to the LLM.
 
 
 Reference

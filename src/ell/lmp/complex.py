@@ -87,7 +87,8 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
         if exempt_from_tracking:
             return model_call
         else:
-            return _track(model_call, forced_dependencies=dict(tools=tools))
+            # XXX: Analyze decorators with AST instead.
+            return _track(model_call, forced_dependencies=dict(tools=tools, response_format=api_params.get("response_format", {})))
     return parameterized_lm_decorator
 
 

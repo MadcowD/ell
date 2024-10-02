@@ -7,7 +7,7 @@ from ell.lmp.complex import complex
 def simple(model: str, client: Optional[Any] = None,  exempt_from_tracking=False, **api_params):
     assert 'tools' not in api_params, "tools are not supported in lm decorator, use multimodal decorator instead"
     assert 'tool_choice' not in api_params, "tool_choice is not supported in lm decorator, use multimodal decorator instead"
-    assert 'response_format' not in api_params, "response_format is not supported in lm decorator, use multimodal decorator instead"
+    assert 'response_format' not in api_params or isinstance(api_params.get('response_format', None), dict), "response_format is not supported in lm decorator, use multimodal decorator instead"
 
     def convert_multimodal_response_to_lstr(response):
         return [x.content[0].text for x in response] if isinstance(response, list) else response.content[0].text

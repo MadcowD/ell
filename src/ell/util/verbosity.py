@@ -9,7 +9,7 @@ from ell.configurator import config
 import logging
 from functools import lru_cache
 import threading
-from ell.types.message import LMP
+from ell.types.message import LMP, ContentBlock, _content_to_text
 import requests
 
 from ell.util.plot_ascii import plot_ascii
@@ -93,10 +93,21 @@ def wrap_text_with_prefix(message, width: int, prefix: str, subsequent_prefix: s
         if content.image and content.image.image:
             wrapped_lines = plot_ascii(content.image.image, min(80, width - len(prefix)))
         else:
-            text = content.text or f"<{content.type}>"
-            paragraphs = content.text.split('\n')
-            wrapped_paragraphs = [textwrap.wrap(p, width=width - len(prefix)) for p in paragraphs]
-            wrapped_lines = [line for paragraph in wrapped_paragraphs for line in paragraph]
+            if content.tool_result:
+                contnets_to_wrap = [ContentBlock(text=f"ToolResult(tool_call_id={content.tool_result.tool_call_id}):"), *content.tool_result.result]
+            else:
+                contnets_to_wrap = [content]
+
+            wrapped_lines = []
+            for c in contnets_to_wrap:
+                if c.image and c.image.image:
+                    block_wrapped_lines = plot_ascii(c.image.image, min(80, width - len(prefix)))
+                else:
+                    text = _content_to_text([c])  
+                    paragraphs = text.split('\n')
+                    wrapped_paragraphs = [textwrap.wrap(p, width=width - len(prefix)) for p in paragraphs]
+                    block_wrapped_lines = [line for paragraph in wrapped_paragraphs for line in paragraph]
+                wrapped_lines.extend(block_wrapped_lines)
         if i == 0:
             if wrapped_lines:
                 result.append(f"{prefix}{text_color}{wrapped_lines[0]}{RESET}")

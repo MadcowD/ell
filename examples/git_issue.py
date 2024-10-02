@@ -55,8 +55,7 @@ def generate_issue(
 
 if __name__ == "__main__":
 
-    store = './logdir'
-    store.install(autocommit=True)
+    ell.init(store='./logdir', autocommit=True, verbose=True)
 
     # This is an example from ell's early day error
     error_console_output = """
