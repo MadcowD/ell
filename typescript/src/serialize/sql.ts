@@ -6,7 +6,7 @@ import * as sqlite3 from 'sqlite3'
 import { open, Database } from 'sqlite'
 import { LMPType } from '../lmp/types'
 import * as logging from '../util/_logging'
-import { ISODateString } from './types'
+import { ISODateString, WriteInvocationInput, WriteLMPInput } from './types'
 
 const logger = logging.getLogger('sql')
 const gzip = promisify(zlib.gzip)

@@ -12,7 +12,6 @@ const MovieReview = z.object({
 const generateMovieReview = ell.complex({ 
   model: "gpt-4o-mini", 
   response_format: MovieReview ,
-  exempt_from_tracking: true
 }, async (movie: string) => {
   return [
     ell.system("You are a movie review generator. Given the name of a movie, you need to return a structured review."),
@@ -24,8 +23,8 @@ const generateMovieReview = ell.complex({
   ell.init({ store: './logdir', autocommit: true, verbose: true })
 
   const reviewMessage = await generateMovieReview("The Matrix")
+  console.log(reviewMessage)
   const review = reviewMessage.parsed
-  review.rating.toExponential()
 
   console.log(`Movie: ${review.title}, Rating: ${review.rating}/10`)
   console.log(`Summary: ${review.summary}`)

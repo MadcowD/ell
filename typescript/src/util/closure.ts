@@ -104,10 +104,10 @@ export async function getBestClosureInspectionBreakpoint(
     },
     end: {
       scriptId,
-      // this helps single line functions
-      lineNumber: location.endLine + 1,
+      lineNumber: location.line === location.endLine ? location.line + 1 : location.endLine,
     },
   })
+
   if (!possibleBreakpoints.locations || possibleBreakpoints.locations.length === 0) {
     return null
   }
@@ -119,6 +119,21 @@ export async function getBestClosureInspectionBreakpoint(
     logger.debug('Using return breakpoint', { lastBreakpoint })
     return lastBreakpoint
   }
+  // This is the best heuristic we have atm. Alternatives that may be more reliable:
+  // - retrive the return position from typescript ast, get the source mapped position of that, then find the closest available breakpoint to that location here.
+  // Note: When we always add 1 to the range above,  v8 gives us
+  // a breakpoint that is column 0 and of `type: undefined` and a line past function's return statement.
+  // This causes some silent crash and should probably be reported to nodejs.
+  // We may want to avoid that situation in all cases by only using a return breakpoint.
+  const secondLastBreakpoint = possibleBreakpoints.locations[possibleBreakpoints.locations.length - 2]
+  if (secondLastBreakpoint.type === 'return') {
+    logger.debug('Last breakpoint not a return. Using second last breakpoint (return)', {
+      secondLastBreakpoint,
+      lastBreakpoint,
+    })
+    return secondLastBreakpoint
+  }
+  logger.debug('No return breakpoint seemed safe. Using last breakpoint', { lastBreakpoint })
   // use the last one regardless until we have a better idea
   return lastBreakpoint
 }

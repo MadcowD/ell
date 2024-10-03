@@ -89,7 +89,7 @@ const lmpTypeFromDefinitionType = (definitionType: LMPDefinitionType) => {
 
 /**
  * Invokes the LMP with tracking.
- * @param lmp I
+ * @param lmp
  * @param args
  * @param f
  * @param a
@@ -152,7 +152,7 @@ export const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string },
         //
         // We get strange behavior if a breakpoint is set to a line that isn't one of the "blessed" possible breakpoint lines
         // (the program exits with code 0 unexpectedly)
-        // So we try to find the closest one
+        // So we try to find the closest one to the ending return statement of the LMP
         let bestBreakpoint = await getBestClosureInspectionBreakpoint(session, location.scriptId, {
           line: generatedPositionStart.line,
           endLine: generatedPositionEnd.line,
@@ -188,6 +188,12 @@ export const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string },
   })
 
   const handleBreakpointHit = async ({ params }: { params: inspector.Debugger.PausedEventDataType }) => {
+    // TODO. For performance we should aggressively filter the breakpoints we set.
+    // This function runs whenever the debugger pauses, including a user's "step-into/step-over" etc.
+    // When using "step into/out/over", hitBreakpoints is empty
+    if (!params.hitBreakpoints || params.hitBreakpoints.length === 0) {
+      return
+    }
     logger.debug('Paused on breakpoint', {
       breakpoints: params.hitBreakpoints,
       // params: JSON.stringify(params, null, 2)
@@ -195,7 +201,13 @@ export const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string },
     const { callFrames } = params
     const scopes = callFrames[0].scopeChain
 
-    // Get the variables you're interested in
+    // Get the variables we're interested in
+    //
+    // TODO. Once we have clarified what is needed for free vars vs global vars
+    // we should be able to get everything we need here, potentially from scope.type === 'global' in addition to these
+    // There is additional line information on the scope that is available for us to use
+    // for checking we're in the right spot. 
+    // For now we expect to do this work when we set breakpoints in the first place
     for (const scope of scopes) {
       if (scope.type === 'closure') {
         const result = (await session
@@ -244,8 +256,9 @@ export const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string },
       }
     }
 
+    // By this time we assume we captured all variables of interest
     session.off('Debugger.paused', handleBreakpointHit)
-
+    
     resolve(undefined)
   }
 
@@ -279,7 +292,7 @@ export const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string },
           // todo. find what these refer to exactly
           initial_free_vars: {},
           initial_global_vars: {},
-          // todo. requires static analysis of direct children of this lmp definition
+          // todo. requires static analysis of direct children of this lmp definition?
           uses: [],
         })
       } catch (e) {
@@ -352,7 +365,7 @@ export const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string },
         state_cache_key: '',
         consumes: [],
       })
-      return result
+      return result.length === 1 ? result[0] : result
     }
   )
 }
