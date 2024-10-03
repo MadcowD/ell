@@ -3,7 +3,10 @@
     "target": "es2022",
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "lib": ["es2023", "DOM"],
+    "lib": [
+      "es2023",
+      "DOM"
+    ],
     "declaration": true,
     "declarationMap": true,
     "resolveJsonModule": true,
@@ -16,8 +19,17 @@
     "outDir": "./dist",
     "noErrorTruncation": false,
     "paths": {
-      "ell-ai": ["./src/index.ts"],
-      "ell-ai/*": ["./src/*"]
-    }
+      "ell-ai": [
+        "./src/index.ts"
+      ],
+      "ell-ai/*": [
+        "./src/*"
+      ]
+    },
+  },
+  "ts-node": {
+    "require": [
+      "tsconfig-paths/register"
+    ]
   }
 }

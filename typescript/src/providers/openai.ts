@@ -16,6 +16,8 @@ const serializeImage = (image: any) => {
 }
 
 import { Stream as OpenAIStream } from 'openai/streaming'
+import { zodResponseFormat } from 'openai/helpers/zod'
+import { Tool } from '../types/tools'
 
 class _lstr {
   constructor(
@@ -46,7 +48,7 @@ class _OpenAIProvider implements Provider {
     } else if (contentBlock.parsed) {
       return {
         type: 'text',
-        text: JSON.stringify(contentBlock.parsed),
+        text: contentBlock.parsed,
       }
     } else {
       return null
@@ -90,9 +92,13 @@ class _OpenAIProvider implements Provider {
     model: string,
     messages: Message[],
     apiParams: any,
-    tools?: LMP[]
+    tools?: Tool<any, any>[]
   ): Promise<APICallResult> {
     const finalCallParams = { ...apiParams }
+    // todo. create a type that contains all ell params
+    // put it in one place and provide a function that removes them, leaving
+    // the api_params for the model
+    delete finalCallParams.exempt_from_tracking
     const openaiMessages = messages.map((message) => OpenAIProvider.messageToOpenAIFormat(message))
 
     const actualN = apiParams.n || 1
@@ -110,19 +116,23 @@ class _OpenAIProvider implements Provider {
       response = await client.chat.completions.create(finalCallParams)
       delete finalCallParams.stream
       delete finalCallParams.stream_options
-    } else if (finalCallParams.responseFormat) {
+    } else if (finalCallParams.response_format) {
       delete finalCallParams.stream
       delete finalCallParams.stream_options
-      response = await client.beta.chat.completions.parse(finalCallParams)
+      const response_format = zodResponseFormat(finalCallParams.response_format, "mycooltype")
+      response = await client.beta.chat.completions.parse({
+        ...finalCallParams,
+        response_format,
+      })
     } else {
       if (tools) {
         finalCallParams.toolChoice = 'auto'
         finalCallParams.tools = tools.map((tool) => ({
           type: 'function',
           function: {
-            name: tool.name,
-            description: tool.description,
-            parameters: tool.schema,
+            name: tool.__ell_tool_name__,
+            description: tool.__ell_tool_description__,
+            parameters: tool.__ell_tool_input__,
           },
         }))
         delete finalCallParams.stream
@@ -148,7 +158,7 @@ class _OpenAIProvider implements Provider {
     callResult: APICallResult,
     _invocationOrigin: string,
     logger?: (content: string, options: { isRefusal: boolean }) => void,
-    tools?: LMP[]
+    tools?: Tool<any, any>[]
   ): Promise<[Message[], Record<string, any>]> {
     const choicesProgress: Record<number, any[]> = {}
     const apiParams = callResult.finalCallParams
@@ -201,7 +211,7 @@ class _OpenAIProvider implements Provider {
         if (choice.refusal) {
           throw new Error(choice.refusal)
         }
-        if (apiParams.responseFormat) {
+        if (apiParams.response_format) {
           content.push(new ContentBlock({ parsed: choice.parsed }))
         } else if (choice.content) {
           content.push(

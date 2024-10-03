@@ -1,21 +1,27 @@
-import { generateFunctionHash } from "../util/hash"
-import { Message } from "../types/message"
-import { invokeWithTracking } from "./_track"
-import { config } from "../configurator"
-import { getCallerFileLocation, getModelClient } from "./utils"
-import { APIParams } from "./types"
-import { ToolFunction } from "../types/tools"
-import { LMPDefinition, tsc } from "../util/tsc"
-import * as logging from "../util/_logging"
+import { generateFunctionHash } from '../util/hash'
+import { Message } from '../types/message'
+import { invokeWithTracking } from './_track'
+import { config } from '../configurator'
+import { getCallerFileLocation, getModelClient } from './utils'
+import { APIParams } from './types'
+import { ToolFunction } from '../types/tools'
+import { LMPDefinition, tsc } from '../util/tsc'
+import * as logging from '../util/_logging'
+import { ZodType } from 'zod'
 
 const logger = logging.getLogger('ell')
 
+type ResponseFormatValue<ResponseFormat extends ResponseFormatSchema> =
+  ResponseFormat extends ZodType<infer T> ? T : never
 type ComplexLMPInner = (...args: any[]) => Promise<Array<Message>>
-type ComplexLMP<A extends ComplexLMPInner> = ((...args: Parameters<A>) => Promise<Array<Message>>) & {
+type ComplexLMP<A extends ComplexLMPInner, ResponseFormat extends ResponseFormatSchema> = ((
+  ...args: Parameters<A>
+) => Promise<ResponseFormat extends any ? ResponseFormatValue<ResponseFormatSchema> : Array<Message>>) & {
   __ell_type__?: 'complex'
   __ell_lmp_name__?: string
   __ell_lmp_id__?: string | null
 }
+type ResponseFormatSchema = ZodType<any, any, any>
 
 /***
     A sophisticated language model programming decorator for complex LLM interactions.
@@ -253,15 +259,16 @@ type ComplexLMP<A extends ComplexLMPInner> = ((...args: Parameters<A>) => Promis
     - ell.tool: For defining tools that can be used within complex LMPs.
     - ell.studio: For visualizing and analyzing LMP executions.
  ***/
-export const complex = <F extends ComplexLMPInner>(
+export const complex = <PromptFn extends ComplexLMPInner, ResponseFormat extends ResponseFormatSchema>(
   a: {
     model: string
     exempt_from_tracking?: boolean
     tools?: ToolFunction<any, any>[]
     post_callback?: (messages: Array<Message>) => void
+    response_format?: ResponseFormat
   } & APIParams,
-  f: F
-): ComplexLMP<F> => {
+  f: PromptFn
+): ComplexLMP<PromptFn, ResponseFormat> => {
   const { filepath, line, column } = getCallerFileLocation()
 
   if (!filepath || !line || !column) {
@@ -272,7 +279,7 @@ export const complex = <F extends ComplexLMPInner>(
   let lmpDefinition: LMPDefinition | undefined = undefined
   let lmpId: string | undefined = undefined
 
-  const wrapper: ComplexLMP<F> = async (...args: any[]) => {
+  const wrapper: ComplexLMP<PromptFn, ResponseFormat> = async (...args: any[]) => {
     if (!wrapper.__ell_lmp_id__) {
       if (!trackAttempted) {
         trackAttempted = true
@@ -309,7 +316,7 @@ export const complex = <F extends ComplexLMPInner>(
       a.tools
     )
     const [trackedResults, metadata] = await provider.processResponse(callResult, 'todo')
-    const result = trackedResults
+    const result = trackedResults.length === 1 ? trackedResults[0] : trackedResults
     return result
   }
 
