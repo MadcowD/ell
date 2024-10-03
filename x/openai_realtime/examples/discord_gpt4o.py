@@ -12,6 +12,7 @@ from discord.ext import voice_recv
 import time
 from discord import PCMAudio, SpeakingState
 import pyaudio
+import math
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -36,15 +37,13 @@ class MySink(voice_recv.AudioSink):
 
         # Ensure the audio data is in the correct format (int16)
         audio_array = np.frombuffer(data.pcm, dtype=np.int16)
+        # Convert stereo to mono by averaging the left and right channels
+        audio_array = audio_array.reshape(-1, 2).mean(axis=1).astype(np.int16)
 
         # Resample from 48kHz to 24kHz
         resampled_audio = np.zeros(len(audio_array) // 2, dtype=np.int16)
         resampled_audio[0::2] = audio_array[0::4]
         resampled_audio[1::2] = audio_array[2::4]
-
-        # Optional: Play the audio data to verify it's correct (uncomment if needed)
-        # sd.play(resampled_audio, samplerate=24000)
-        # sd.wait()
         # Put the audio data into the input queue using run_coroutine_threadsafe
         asyncio.run_coroutine_threadsafe(self.input_audio_queue.put(resampled_audio), self.loop)
 
@@ -73,18 +72,26 @@ class DiscordRealtimeAssistant(commands.Cog):
         self.pyaudio = pyaudio.PyAudio()
         self.output_stream = None
         self.audio_source = None
+        self.voice_channel = None  # Add this line to store the voice channel
+        self.last_voice_activity_time = time.time()
+        self.conversation_check_task = None
+        self.backoff_exponent = 0
+        self.base_check_interval = 60  # 1 minute
 
     async def initialize(self):
-        self.client = RealtimeClient(api_key=self.api_key, debug=self.debug)
+        self.client = RealtimeClient(api_key=self.api_key, debug=self.debug, instructions=self.instructions)
         self.client.update_session(
-            instructions=self.instructions,
             output_audio_format='pcm16',
             input_audio_format='pcm16',
+            input_audio_transcription={
+                'enabled': True,
+                'model': 'whisper-1'
+            },
             turn_detection={
                 'type': 'server_vad',
                 'threshold': 0.5,
                 'prefix_padding_ms': 300,
-                'silence_duration_ms': 600,
+                'silence_duration_ms': 300,
             }
         )
         self._setup_event_handlers()
@@ -105,16 +112,16 @@ class DiscordRealtimeAssistant(commands.Cog):
             if self.audio_source:
                 self.audio_source.clear_buffer()
             print("\nUser is speaking...")
+            self.last_voice_activity_time = time.time()
+            self.backoff_exponent = 0  # Reset backoff when speech is detected
+            logger.info("Speech detected, reset backoff")
 
         @self.client.realtime.on('server.input_audio_buffer.speech_stopped')
         def handle_speech_stopped(event):
             print("\nUser finished speaking.")
             # self.client.create_response()
 
-        # @self.client.on('realtime.event')
-        # def handle_server_event(event):
-        #     if event['event']['type'] != 'response.audio.delta' and event['event']['type'] != 'input_audio_buffer.append':
-        #         print("Server event", event)
+  
 
     async def clear_queue(self, queue: asyncio.Queue):
         while not queue.empty():
@@ -193,6 +200,10 @@ class DiscordRealtimeAssistant(commands.Cog):
                     self.client.append_input_audio(data.flatten())
                     self.input_audio_queue.task_done()
                     self.last_audio_time = current_time
+                    if not self.input_audio_queue.empty():
+                        self.last_voice_activity_time = time.time()
+                        self.backoff_exponent = 0  # Reset backoff when audio is received
+                        logger.info("Audio received, reset backoff")
                 except asyncio.QueueEmpty:
                     # If queue is empty, wait for a short time before next iteration
                     await asyncio.sleep(0.001)  # 1ms sleep
@@ -210,6 +221,8 @@ class DiscordRealtimeAssistant(commands.Cog):
         if self.bot.user.mentioned_in(message) and "join" in message.content.lower():
             logger.info(f"Bot mentioned with 'join' by {message.author}")
             await self.join_voice_channel(message)
+        if message.channel == self.voice_channel:
+            self.last_voice_activity_time = time.time()
 
     async def join_voice_channel(self, message):
         if message.author.voice:
@@ -222,6 +235,8 @@ class DiscordRealtimeAssistant(commands.Cog):
             logger.info(f"Joined voice channel: {channel.name}")
             await message.channel.send(f"Joined the voice channel: {channel.name}")
             await self.start_listening(message.channel)
+            self.last_voice_activity_time = time.time()
+            self.backoff_exponent = 0  # Reset backoff when joining a channel
         else:
             logger.warning(f"Join attempt failed: {message.author} not in a voice channel")
             await message.channel.send("You need to be in a voice channel for me to join.")
@@ -235,6 +250,8 @@ class DiscordRealtimeAssistant(commands.Cog):
             self.stop_event.set()
             logger.info("Disconnected from voice channel")
             await ctx.send("Disconnected from voice channel.")
+            if self.conversation_check_task:
+                self.conversation_check_task.cancel()
         else:
             logger.warning("Leave command received but not connected to any voice channel")
             await ctx.send("I'm not connected to a voice channel.")
@@ -249,6 +266,7 @@ class DiscordRealtimeAssistant(commands.Cog):
         logger.info("Session created")
 
         playback_task = asyncio.create_task(self.audio_playback_worker())
+        self.client.send_user_message_content([{'type': 'input_text', 'text': 'We are talking to you in a discord. Please hangout with us as if we are in voice chat. Have fun and talk in a thick zoomer accent always. Never use cheesy words like "shooting breee" etc. Only respond with short resposnes at a time.. Talk extremely fluidly, maybe even slightly faster like we\'re in a conversation. Remember you are in a dsicord so you should talk to everyone. Sound as emotive as possible and as emotional as possible. Be as feminine as you possible can. Keep your voice high ptiched always.'}])
         input_task = asyncio.create_task(self.audio_input_worker())
 
         # Pass the input_audio_queue and the event loop to MySink
@@ -258,7 +276,31 @@ class DiscordRealtimeAssistant(commands.Cog):
         await text_channel.send("Listening to the voice channel...")
         logger.info("Started listening to the voice channel")
 
-        # ... rest of the method ...
+        self.conversation_check_task = asyncio.create_task(self.check_conversation_activity())
+
+        # self.voice_client.
+
+
+
+        while not self.stop_event.is_set():
+            item = await self.client.wait_for_next_completed_item()
+            # print(item)
+            print(item)
+            if item['item']['type'] == 'message' and item['item']['role'] == 'assistant':
+                transcript = ''.join([c['text'] for c in item['item']['content'] if c['type'] == 'text'])
+                logger.info(f"Assistant response: {transcript}")
+                await text_channel.send(f"Assistant: {item}")
+
+        await self.client.disconnect()
+        logger.info("Disconnected from RealtimeClient")
+
+        playback_task.cancel()
+        input_task.cancel()
+
+        await asyncio.gather(playback_task, input_task, return_exceptions=True)
+
+        if self.conversation_check_task:
+            self.conversation_check_task.cancel()
 
     def discord_audio_callback(self, sink, data: bytes):
         # logger.debug("Received audio data from Discord")
@@ -275,12 +317,40 @@ class DiscordRealtimeAssistant(commands.Cog):
         if isinstance(channel, discord.VoiceChannel):
             try:
                 self.voice_client = await channel.connect(cls=voice_recv.VoiceRecvClient)
+                self.voice_channel = channel  # Store the voice channel
                 logger.info(f"Automatically joined voice channel: {channel.name}")
                 await self.start_listening(channel)
             except Exception as e:
                 logger.error(f"Failed to join voice channel: {e}")
         else:
             logger.error(f"Channel with ID {self.channel_id} is not a voice channel or doesn't exist.")
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        if self.voice_channel and after.channel == self.voice_channel and before.channel != after.channel:
+            if self.client and self.client.is_connected():
+                message = f"{member.name} joined the channel. Say hi and mention their name!"
+                self.client.send_user_message_content([{'type': 'input_text', 'text': message}])
+                logger.info(f"Sent join notification for {member.name} to the model")
+            self.last_voice_activity_time = time.time()
+            self.backoff_exponent = 0  # Reset backoff when someone joins
+            logger.info(f"{member.name} joined the channel, reset backoff")
+
+    async def check_conversation_activity(self):
+        while not self.stop_event.is_set():
+            check_interval = self.base_check_interval * (3 ** self.backoff_exponent)
+            await asyncio.sleep(check_interval)
+            
+            current_time = time.time()
+            if current_time - self.last_voice_activity_time > check_interval and self.voice_channel and len(self.voice_channel.members) > 1:
+                message = f"It's been quiet for {math.ceil(check_interval / 60)} minutes. Try to start an interesting conversation or ask a question to get people talking!"
+                self.client.send_user_message_content([{'type': 'input_text', 'text': message}])
+                logger.info(f"Sent conversation prompt to the model after {math.ceil(check_interval / 60)} minutes of inactivity")
+                
+                self.backoff_exponent += 1
+                logger.info(f"Increased backoff exponent to {self.backoff_exponent}")
+            else:
+                logger.info(f"Checked for inactivity after {math.ceil(check_interval / 60)} minutes, but found recent activity or not enough members")
 
 class DiscordBot(commands.Bot):
     def __init__(self):
@@ -299,9 +369,10 @@ async def main():
     assistant = DiscordRealtimeAssistant(
         bot, 
         api_key=os.getenv("OPENAI_API_KEY"),
-        instructions="You are a helpful assistant.",
+        instructions="Your knowledge cutoff is 2023-10. You are a helpful, .witty, and friendly person. You are current in discord conversation hang out as if you are in a discord.  If interacting in a non-English language, start by using the standard accent or dialect familiar to the user. Talk quickly. ",
         channel_id=1266849047314960399,  # New: Pass the channel ID
-        debug=False
+        debug=False,
+        
     )
     await bot.add_cog(assistant)
     logger.info("DiscordRealtimeAssistant added as a cog to the bot")

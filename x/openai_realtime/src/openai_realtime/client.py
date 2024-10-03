@@ -7,11 +7,11 @@ from .utils import RealtimeUtils
 import json
 
 class RealtimeClient(RealtimeEventHandler):
-    def __init__(self, url=None, api_key=None, dangerously_allow_api_key_in_browser=False, debug=False):
+    def __init__(self, url=None, api_key=None, instructions='', dangerously_allow_api_key_in_browser=False, debug=False):
         super().__init__()
         self.default_session_config = {
             'modalities': ['text', 'audio'],
-            'instructions': '',
+            'instructions': instructions,
             'voice': 'alloy',
             'input_audio_format': 'pcm16',
             'output_audio_format': 'pcm16',
