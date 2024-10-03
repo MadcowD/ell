@@ -53,7 +53,7 @@ class RealtimeAssistant:
         @self.client.realtime.on('server.input_audio_buffer.speech_stopped')
         def handle_speech_stopped(event):
             print("\nUser finished speaking.")
-            self.client.create_response()
+            # self.client.create_response()
 
     async def clear_queue(self, queue: asyncio.Queue):
         while not queue.empty():
@@ -86,7 +86,6 @@ class RealtimeAssistant:
         while not self.stop_event.is_set():
             try:
                 data = await self.input_audio_queue.get()
-                print(data.mean())
                 self.client.append_input_audio(data.flatten())
                 self.input_audio_queue.task_done()
             except asyncio.CancelledError:
@@ -129,6 +128,7 @@ class RealtimeAssistant:
 
             while not self.stop_event.is_set():
                 item = await self.client.wait_for_next_completed_item()
+                print(item)
                 if item['item']['type'] == 'message' and item['item']['role'] == 'assistant':
                     transcript = ''.join([c['text'] for c in item['item']['content'] if c['type'] == 'text'])
                     if stop_phrase.lower() in transcript.lower():
