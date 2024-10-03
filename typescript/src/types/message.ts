@@ -1,8 +1,5 @@
-// import { BaseModel, Field } from 'pydantic-ts';
-import { z } from 'zod'
-
-// Generic type for any Zod schema
-type AnyZodSchema = z.ZodType<any, any, any>
+import { z, ZodType } from 'zod'
+import { ResponseFormatSchema, ResponseFormatValue } from '../lmp/types'
 
 // Assuming _lstr is a string type for now
 type _lstr = string
@@ -125,12 +122,12 @@ function coerceContentList(
   return content.map((c) => ContentBlock.coerce(c))
 }
 
-class Message extends BaseModel {
+class Message<ResponseFormat extends ResponseFormatSchema | string | Image = string | Image> extends BaseModel {
   content: ContentBlock[]
 
   constructor(
     public role: string,
-    content: string | ContentBlock[] | (string | ContentBlock | ToolCall | ToolResult | BaseModel)[],
+    content: string | ContentBlock[] | Array<string | ContentBlock | ToolCall | ToolResult | BaseModel>,
     contentBlockKwargs: Partial<ContentBlock> = {}
   ) {
     super()
@@ -167,9 +164,12 @@ class Message extends BaseModel {
     return toolResults.length ? toolResults : undefined
   }
 
-  get parsed(): BaseModel | BaseModel[] {
+  get parsed(): ResponseFormat extends ResponseFormatSchema ? ResponseFormatValue<ResponseFormat> : BaseModel[] {
     const parsedContent = this.content.filter((c) => c.parsed).map((c) => c.parsed as BaseModel)
-    return parsedContent.length === 1 ? parsedContent[0] : parsedContent
+    // @ts-ignore
+    return parsedContent.length === 1
+      ? (parsedContent[0] as unknown as ResponseFormatValue<ResponseFormat>)
+      : parsedContent
   }
 
   async callToolsAndCollectAsMessage(parallel: boolean = false, maxWorkers?: number): Promise<Message> {

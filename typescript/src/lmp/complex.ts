@@ -3,25 +3,21 @@ import { Message } from '../types/message'
 import { invokeWithTracking } from './_track'
 import { config } from '../configurator'
 import { getCallerFileLocation, getModelClient } from './utils'
-import { APIParams } from './types'
+import { APIParams, ResponseFormatSchema } from './types'
 import { ToolFunction } from '../types/tools'
 import { LMPDefinition, tsc } from '../util/tsc'
 import * as logging from '../util/_logging'
-import { ZodType } from 'zod'
 
 const logger = logging.getLogger('ell')
 
-type ResponseFormatValue<ResponseFormat extends ResponseFormatSchema> =
-  ResponseFormat extends ZodType<infer T> ? T : never
 type ComplexLMPInner = (...args: any[]) => Promise<Array<Message>>
 type ComplexLMP<A extends ComplexLMPInner, ResponseFormat extends ResponseFormatSchema> = ((
   ...args: Parameters<A>
-) => Promise<ResponseFormat extends any ? ResponseFormatValue<ResponseFormatSchema> : Array<Message>>) & {
+) => Promise<ResponseFormat extends any ? Message<ResponseFormat> : Array<Message>>) & {
   __ell_type__?: 'complex'
   __ell_lmp_name__?: string
   __ell_lmp_id__?: string | null
 }
-type ResponseFormatSchema = ZodType<any, any, any>
 
 /***
     A sophisticated language model programming decorator for complex LLM interactions.

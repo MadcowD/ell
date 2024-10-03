@@ -1,3 +1,5 @@
+import { ZodType } from "zod"
+
 export const LMPType = {
   LM: 'LM',
   TOOL: 'TOOL',
@@ -22,3 +24,10 @@ export type Kwargs = {
 }
 
 export type APIParams = Record<string, any>
+
+
+// todo. json schema
+export type ResponseFormatSchema = ZodType<any, any, any>
+
+export type ResponseFormatValue<ResponseFormat extends ResponseFormatSchema> =
+  ResponseFormat extends ZodType<infer T> ? T : never

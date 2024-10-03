@@ -25,6 +25,7 @@ const generateMovieReview = ell.complex({
 
   const reviewMessage = await generateMovieReview("The Matrix")
   const review = reviewMessage.parsed
+  review.rating.toExponential()
 
   console.log(`Movie: ${review.title}, Rating: ${review.rating}/10`)
   console.log(`Summary: ${review.summary}`)
