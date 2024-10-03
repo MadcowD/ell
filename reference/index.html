@@ -93,6 +93,77 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
       Skip to content
     </a><header class="sticky top-0 z-40 w-full border-b shadow-sm border-border supports-backdrop-blur:bg-background/60 bg-background/95 backdrop-blur"><div class="container flex items-center h-14">
 <div class="hidden mr-4 md:flex">
+<style>
+:root {
+  --color-1: 0 100% 63%;
+  --color-2: 270 100% 63%;
+  --color-3: 210 100% 63%;
+  --color-4: 195 100% 63%;
+  --color-5: 90 100% 63%;
+}
+
+@keyframes rainbow {
+    0% { background-position: 0%; }
+    100% { background-position: 200%; }
+}
+
+.github-star-btn {
+    height: 2.2rem;
+    padding: 0.5rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    border: 0;
+    position: relative;
+    background-size: 200%;
+    background-clip: padding-box, border-box, border-box;
+    background-origin: border-box;
+    border: calc(0.08 * 1rem) solid transparent;
+    color: #030303;
+    background-image: 
+      linear-gradient(#121213, #121213),
+      linear-gradient(#121213 50%, rgba(18,18,19,0.6) 80%, rgba(18,18,19,0)),
+      linear-gradient(90deg, hsl(var(--color-1)), hsl(var(--color-5)), hsl(var(--color-3)), hsl(var(--color-4)), hsl(var(--color-2)));
+    animation: rainbow 2s infinite linear;
+}
+
+.github-star-btn::before {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    left: 50%;
+    z-index: 0;
+    height: 20%;
+    width: 60%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, hsl(var(--color-1)), hsl(var(--color-5)), hsl(var(--color-3)), hsl(var(--color-4)), hsl(var(--color-2)));
+    background-size: 200%;
+    filter: blur(calc(0.8 * 1rem));
+    animation: rainbow 2s infinite linear;
+}
+
+.dark .github-star-btn {
+    background-image: 
+      linear-gradient(#fff, #fff),
+      linear-gradient(#fff 50%, rgba(255,255,255,0.6) 80%, rgba(0,0,0,0)),
+      linear-gradient(90deg, hsl(var(--color-1)), hsl(var(--color-5)), hsl(var(--color-3)), hsl(var(--color-4)), hsl(var(--color-2)));
+}
+
+@media (max-width: 640px) {
+    .github-star-btn {
+        font-size: 12px;
+        padding: 0.4rem 0.8rem;
+    }
+    .github-star-btn .star-icon,
+    .github-star-btn .star-count {
+        display: none;
+    }
+}
+</style>
 <a class="flex items-center mr-6" href="../index.html">
 <img alt="Logo" class="mr-2 hidden dark:block" height="24" src="../_static/ell-wide-dark.png" width="120"/>
 <img alt="Logo" class="mr-2 dark:hidden" height="24" src="../_static/ell-wide-light.png" width="120"/></a>
@@ -108,11 +179,16 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 </button>
 <div class="flex items-center justify-between flex-1 space-x-2 sm:space-x-4 md:justify-end">
 <div class="ml-4">
-<a class="github-star-btn flex items-center px-3 py-2 rounded-md transition-colors rounded-md border border-gray-500 px-4" href="https://github.com/madcowd/ell" rel="noopener noreferrer" target="_blank">
+<a class="github-star-btn" href="https://github.com/madcowd/ell" rel="noopener noreferrer" target="_blank">
 <svg aria-hidden="true" class="w-5 h-5 mr-2" fill="currentColor" viewbox="0 0 24 24">
 <path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path>
 </svg>
 <span class="font-medium">Star on GitHub</span>
+<svg class="star-icon w-4 h-4 ml-2" fill="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+<animate attributename="opacity" dur="2s" repeatcount="indefinite" values="1;0.7;1"></animate>
+</path>
+</svg>
 <span class="ml-2 star-count" data-stars="0" style="min-width: 3ch; text-align: center;">0</span>
 </a>
 </div>
