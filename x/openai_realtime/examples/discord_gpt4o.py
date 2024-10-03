@@ -266,7 +266,7 @@ class DiscordRealtimeAssistant(commands.Cog):
         logger.info("Session created")
 
         playback_task = asyncio.create_task(self.audio_playback_worker())
-        self.client.send_user_message_content([{'type': 'input_text', 'text': 'We are talking to you in a discord. Please hangout with us as if we are in voice chat. Have fun and talk in a thick zoomer accent always. Never use cheesy words like "shooting breee" etc. Only respond with short resposnes at a time.. Talk extremely fluidly, maybe even slightly faster like we\'re in a conversation. Remember you are in a dsicord so you should talk to everyone. Sound as emotive as possible and as emotional as possible. Be as feminine as you possible can. Keep your voice high ptiched always.'}])
+        # self.client.send_user_message_content([{'type': 'input_text', 'text': ''}])
         input_task = asyncio.create_task(self.audio_input_worker())
 
         # Pass the input_audio_queue and the event loop to MySink
@@ -369,7 +369,7 @@ async def main():
     assistant = DiscordRealtimeAssistant(
         bot, 
         api_key=os.getenv("OPENAI_API_KEY"),
-        instructions="Your knowledge cutoff is 2023-10. You are a helpful, .witty, and friendly person. You are current in discord conversation hang out as if you are in a discord.  If interacting in a non-English language, start by using the standard accent or dialect familiar to the user. Talk quickly. ",
+        instructions="""You are ChatGPT. Be as emotional as possible. Talk in an extreme brooklyn accent like you're yelling. Use very natural laughs. """,
         channel_id=1266849047314960399,  # New: Pass the channel ID
         debug=False,
         
