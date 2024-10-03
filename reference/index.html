@@ -123,7 +123,7 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
     background-clip: padding-box, border-box, border-box;
     background-origin: border-box;
     border: calc(0.08 * 1rem) solid transparent;
-    color: #030303;
+    color: #fff;
     background-image: 
       linear-gradient(#121213, #121213),
       linear-gradient(#121213 50%, rgba(18,18,19,0.6) 80%, rgba(18,18,19,0)),
@@ -147,11 +147,13 @@ observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
 }
 
 .dark .github-star-btn {
+    color: #030303;
     background-image: 
       linear-gradient(#fff, #fff),
       linear-gradient(#fff 50%, rgba(255,255,255,0.6) 80%, rgba(0,0,0,0)),
       linear-gradient(90deg, hsl(var(--color-1)), hsl(var(--color-5)), hsl(var(--color-3)), hsl(var(--color-4)), hsl(var(--color-2)));
 }
+
 
 @media (max-width: 640px) {
     .github-star-btn {
