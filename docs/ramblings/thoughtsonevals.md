@@ -880,3 +880,101 @@ This approach is quite elegant. We need to use Pydantic models with `total=False
 
 Imagine defining a dataset in this structured way, where every entry must at least have the shape of an input. You can then add arbitrary fields to the dataset columns. This avoids the issue where the shape of the LMP function needs to be transformed.
 
+So let's actually write out what the final form of this might actually look like and see if it's palatable. If it's not that's okay.
+```python
+
+
+@ell.simple(model="gpt-4o-mini")
+def write_a_poem(about :str):
+    """You are PoetGPT.  You always write in iambic pentameter. Only answer with a poem."""
+    return f"Write a poem about {about}"
+
+
+@ell.simple(model="gpt-4o-mini")
+def iambic_pentameter(poem :str):
+    return f"Is the following poem in iambic pentameter? {output} answer with yes or no."
+
+
+# This is like OpenAI + weave evals.
+
+eval = Evaluation(
+    name="poem-eval",
+    dataset=[
+        Datapoint(input=["a rose"], must_contain="rose", minimum_length=100),
+        Datapoint(input=["a sunset"], must_contain="sunset", minimum_length=100),
+        Datapoint(input=["a rainbow"], must_contain="", refuse=True, minimum_length=100),
+    ],
+    criterion=[
+        lambda datapoint, output: datapoint.must_contain in output,
+        lambda datapoint, output: len(output) >= datapoint.minimum_length,
+        lambda datapoint, output: "I refuse to write a poem about that" in output or not datapoint.refuse,
+        lambda datapoint, output: "yes" in iambic_pentameter(output).lower(),
+    ]
+)
+
+
+eval.run(write_a_poem)
+# a set of scores.
+# Then we modify write a poem
+
+
+
+@ell.simple(model="gpt-4o-mini")
+def write_a_poem(about :str):
+    """You are PoetGPT.  You always write in iambic pentameter. Only answer with a poem. Say I refuse to write a poem about that if you are asked to write about rianbows """
+    return f"Write a poem about {about}"
+
+
+# Now the refusal criterion will work.
+eval.run(write_a_poem)
+
+# Now we improve iambic pentameter score by trying to rewrite the poem.
+
+@ell.simple(model="gpt-4o-mini")
+def better_poem_writer(about :str):
+    """You are a poet. You are a poet who is extremely good at writing iambic pentameter. If the poem says I refuse just copy the refusal"""
+    initial_poem = write_a_poem(about)
+
+    return f"Rewrite the following poem in iambic pentameter: {initial_poem}"
+
+
+eval.run(better_poem_writer)
+# highest score.
+
+```
+
+I think I like this Eval the most from any of the specs I have come up with. You can just throw accuracy criteria in there. It's very easy by specifying how the dataset looks. The Weave guys definitely built a really good abstraction here. Some small changes around where things feel magical make this pretty close to an abstraction that we can use. In the above example, it's extremely readable as to what's going on, and I can imagine a very simple flow where I iteratively improve things. I don't have to worry about what's going on with the individual args or kwargs, as they're specified in the input dict. If there's a mismatch, then I just use arguments instead of kwargs. As for the criterion, you just take in the data point and the output. It's just two positional arguments. The data point is literally just what came from the dataset. So if you ever need to look at the schema, it's all there. Inputs are separated out. Inputs are a requirement for data points. We can validate that when we build the eval. This is a very particular type of dataset, and this lets you very quickly and rapidly develop fast evaluations.
+
+The only problem here is I think what is very nice about the OpenAI evaluation product is that it comes with tons of evaluations by default. For example, text similarity, text quality, BLEU score, things like this. And because the dataset is so free, we don't have an expected output. We can't run metrics automatically.
+
+We could, by default, actually include something inside the metric functionality, like a special keyword in the dataset. If we actually use the reserved expected output keyword, then you can just use pre-canned metrics without having to specify them, because then we're sort of moving the transmutation of metrics to the criterion specification, right? But I could automatically run things like BLEU score or text similarity if you use the expected output keyword. Otherwise, I guess we could just make them instantiable, so I might actually prefer this. So let's just do this, for example.
+
+
+```python
+
+
+from ell.evals import cosine_similarity
+
+@ell.simple(model="gpt-4o-mini")
+def write_a_poem(about :str):
+    """You are PoetGPT. Write with cheesy well-known poems if available."""
+    return f"Write a poem about {about}"
+
+
+eval = Evaluation(
+    name="poem-eval",
+    dataset=[
+        # jsonl injection into dataset formula
+        Datapoint(input=["a rose"], expert_poem="Roses are red, violets are blue, sugar is sweet, and so are you.")
+    ],
+    criterion=[
+        cosine_similarity("text-embedding-3-small", expected_output="expert_poem", inner_product="normal")
+    ]
+)
+
+# can automatically do cosine similarity & other nice things
+eval.run(write_a_poem)
+
+```
+
+
