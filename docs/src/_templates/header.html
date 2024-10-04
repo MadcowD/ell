@@ -62,9 +62,24 @@
       linear-gradient(90deg, hsl(var(--color-1)), hsl(var(--color-5)), hsl(var(--color-3)), hsl(var(--color-4)), hsl(var(--color-2)));
 }
 
+
 nav a {
   white-space: nowrap;
 }
+
+.twin-btn-container {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-direction: row-reverse;
+}
+
+@media (min-width: 640px) {
+    .twin-btn-container {
+        flex-direction: row;
+    }
+}
+
 
 
 @media (max-width: 640px) {
@@ -92,6 +107,7 @@ nav a {
 {%- block header_right %}
 <div class="flex flex-wrap items-center justify-between flex-1 space-x-2 sm:space-x-4 md:justify-end">
   {%- if docsearch or hasdoc('search') %}
+  <div class="twin-btn-container">
   <div class=" md:w-auto mb-2 md:mb-0">
     <a href="https://github.com/madcowd/ell" target="_blank" rel="noopener noreferrer" class="github-star-btn whitespace-nowrap">
       <svg class="w-5 h-5 mr-2 hidden sm:inline-block" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -139,6 +155,7 @@ nav a {
   <div class="w-full md:w-auto md:flex-none">
     {%- include "searchbox.html" %}
   </div>
+</div>
   {%- endif %}
 
   {%- block extra_header_link_icons %}
