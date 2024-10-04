@@ -478,10 +478,8 @@ def quality_score(y_pred : List[Any], y_pred : Optional[List[Any]] = None) -> fl
     return np.mean(is_good_cold_email)
 
 
-ell.metricize(quality_score)
-
-```python
-
+ell.metricize(quality_score) # No.
+```
 ### Conclusion
 
 1. Evaluations
@@ -490,11 +488,395 @@ ell.metricize(quality_score)
     - Versioned "metrics"
 2. Runs (groupds of invocations)
 3. Metric is an **aggregate** statistic on a potentially labeled dataset.
-
+    - This is scikit learn metrics interface.
 
 Which are runs along with versioned datasets and metrics
 
+## Run vs Interprocess Execution.
+Interprocess executions versus runs. Currently, we have evaluations that run on a single process, and those evaluations consist of groups of individual evaluation runs. These evaluation runs are single-process and linked to evaluations. We could envision a scenario where we want to run evaluations or group runs across multiple processes. For instance, let's say I track scores of my evaluations as I perform a prompt engineering process on a thesis. I want to group my runs or invocations by, for example, an emotional empathy thesis. If I'm building a cold email writer, this grouping would be useful.
+
+The only way to effectively flag this would be to make The init function Specify the current experiment or some such similar flag 
+```
+ell.init(experiment="emotional empathy", store='./logdir)
+```
+
+The tree would look like this:
+```
+experiment[emotional-empathy] ->
+    run[leap-for-the-sky-o6] -> # process 1
+        invocation[cold-email-1]
+        invocation[cold-email-2]
+        invocation[cold-email-3]
+    run[leap-for-the-sky-o7] -> # process 2
+        invocation[cold-email-1]
+        invocation[cold-email-2]
+        invocation[cold-email-3]
+    run[leap-for-the-sky-o8] -> # process 3
+        invocation[cold-email-1]
+        invocation[cold-email-2]
+        invocation[cold-email-3]
+```
+
+
+With an eval we get
+
+```
+experiment[emotional-empathy] ->
+    evaluation[cold-email-writer] ->
+        evaluation run | 
+        run[leap-for-the-sky-o6] -> # no logner correspodns to a single process execution.
+            invocation[cold-email-1]
+            invocation[cold-email-2]
+            invocation[cold-email-3]
+        evaluation run | 
+        run[leap-for-the-sky-o7] ->
+            invocation[cold-email-1]
+            invocation[cold-email-2]
+            invocation[cold-email-3]
+```
+
+In general automatically grouping by "run" Is a bad thing when we think about The production execution with multiple process brokers and processes. 
+
+We can just have experiment labeling as a convenience function where. otherwise We don't label by experiment. And also, this doesn't make sense, necessarily, for production runs as well. 
+
+In that case. We might end up with something that looks like this 
+
+```
+experiment[emotional-empathy] ->
+    evaluation[cold-email-writer] ->
+        evaluation run | 
+        run[leap-for-the-sky-o6] -> # no logner correspodns to a single process execution.
+            invocation[cold-email-1]
+            invocation[cold-email-2]
+            invocation[cold-email-3]
+    invocation[cold-email-4]
+    invocation[cold-email-5]
+invocation[cold-email-6] # happened in dev
+invocation[cold-email-7] # happened in production
+invocation[cold-email-8]
+```
+
+We don't necessarily need to solve this in this PR. If we can just build an abstraction that works for evaluations and individualized metrics without thinking about per-invocation scores, adding that later, then we would be happy. I suppose we could take a look at the open AI eval suite and then go from there, just to see if they do scoring per invocation. We could additionally just have an invocation score, and that would be many-to-many. You can score invocations in many different ways. For evals, you build a metric function which takes in a bunch of invocations and labels, and then produces an aggregated metric that is one-to-one with evaluations. We version those metrics. We support individual invocation scores in this PR as a part of the individual changes to the DB schema as well as migrations. But otherwise, don't opinionate the implementation, and we end up with schemas for evaluations and evaluation runs independent of experiments. In fact, this is probably sufficient.
+
+The question would be whether or not we separate evaluation runs and run groupings of invocations, or do we just tie invocations directly to evaluations? If we were to introduce runs as a full-fledged feature within experiments, or something like this later, then we would have sort of a legacy evaluation runs thing that we need to get rid of later.
+
+
+### OpenAI Evals
+It is evident that OpenAI evaluations support multiple metrics by default. An interesting aspect is their criterion specification. Overall the UX is lacking. No ability to see the outputs of individual invocations (perhaps this is what happens if you share the evals with OpenAI etc.).
+
+
+Probably not a good model for our evals but:
+1. Test Data
+   - Import a JSONL file with existing cases or prompts.
+
+2. Generate Responses
+   - Generate responses (Optional)
+   - Prompt
+   - Generated responses can be evaluated using the sample.output_text variable within testing criteria.
+
+
+3. Criterion (multiple)
+   a. Factuality
+      - Check if the content is factually accurate.
+   b. Semantic Similarity
+      - Compare generated text to the reference.
+   c. Sentiment
+      - Identify the emotional tone of the model’s response.
+   d. String Check
+      - Check if the model’s response includes specific string(s).
+   e. Valid JSON or XML
+      - Check if the model’s response is valid JSON or XML.
+   f. Matches Schema
+      - Ensure the model’s response follows the specified structure.
+   g. Criteria Match
+      - Assess if the model’s response matches your criteria.
+   h. Text Quality
+      - Assess response quality with BLEU, ROUGE, or Cosine algorithms.
+   i. Custom Prompt
+      - Create a test criterion by writing your own custom prompt.
+  
+Concrete recommendations for our case are as follows: we want pre-canned criteria and having per-invocation criteria seems to be important for evaluations. It is also important to note that most of these evaluations are done by models, which is how OpenAI prefers to run them. In our case, we are not designing evaluations for individual per-invocation criteria, but rather aggregate metrics to be more in line with scikit-learn and similar frameworks. 
+
+If we were to go in the opposite direction and support per-invocation criteria, allowing arbitrary datasets in an evaluation and providing a programmatic API for OpenAI-like invocations, it might be worthwhile. If I were to envision that API shape, it would look like the following:
 
 
 
+```python
+def criterion1(datapoint):
+    input = datapoint[0]
+    output = datapoint[1]
+    return float(output == "yes")
+
+
+@ell.simple(model="gpt-4o-mini")
+def was_gramatically_correct(datapoint):
+    return f"Did the following cold email have any gramatical errors? {datapoint[1]}. Answer with yes or no."
+
+def criterion2(datapoint):
+    return float( "yes" in was_gramatically_correct(datapoint).lower())
+
+evaluation = Evaluation(
+    name="cold-email-evaluation",
+    dataset=dataset,
+    criterion=[
+        criterion1,
+        criterion2,
+        criterion3
+    ]
+)
+
+evaluation.run()
+```
+
+What's really weird about this is that it's completely dependent on a dataset of input-output pairs and it doesn't rerun on the same prompt, which is effectively the goal of evaluations in DSP.
+
+We could kind of re-envision this. If we think about one part of the OpenAI evals, you were allowed to generate a response on top of a dataset, and that's the kind of thing we'll put here. So the dataset will include all the output labels, and then we have a generate response function that takes in some data point and then generates responses as a result of that. But then the user has to index into what would be the correct input. By allowing datasets to have arbitrary data points in them, including the labels and arbitrary columns, just think about them as JSON objects. Then you can have criteria that fit all sorts of different settings, right? So I could have inputs, I could have 100 different labels, and I can assess the total criterion of everything. And then I can think about pass/fail in general. And that might actually be the right thing to do. So let's imagine now we have response generation as a key component.
+
+```python
+
+def criterion1(datapoint, output):
+    input = datapoint['input']
+    desired_output = datapoint['output']
+    desired_sentiment = datapoint['desired_sentiment']
+
+...
+
+
+evaluation = Evaluation(
+    name="cold-email-evaluation",
+    dataset=dataset, # pandas dataframe??
+    criterion=[
+        criterion1,
+        criterion2,
+        criterion3
+    ]
+)
+
+
+evaluation.run(
+    my_lmp
+)
+
+This works for criterion but itsn ot clear what input the LMP should take.
+We could seperate out input and output into two seperate columns.
+
+
+evaluation = Evaluation(
+    name="cold-email-evaluation",
+    dataset=dataset, # pandas dataframe??
+    labels=label_dataset,
+    criterion=[
+        criterion1,
+        criterion2,
+        criterion3
+    ]
+)
+
+@ell.simple(model="gpt-4o-mini")
+def my_lmp(datapoint):
+    # Columns of the input dataset are the args to mylmp?
+    # How would  would I  actually want this in practice ?
+    pass
+
+
+evaluation.run(
+    my_lmp 
+)
+```
+
+
+
+Weave does a much better job at orgnaizing this. There opinion is the following
+
+
+```python
+dataset = Dataset(
+    [
+        {"some_random_shit" : "some_value", "expected_output" : "some_value", "other_column" : "other_value"},
+        {"some_random_shit" : "some_value", "expected_output" : "some_value", "other_column" : "other_value"},
+        {"some_random_shit" : "some_value", "expected_output" : "some_value", "other_column" : "other_value"},
+    ]
+)
+
+```
+
+Now this data set automatically gets versioned.
+
+```python
+eval = Evaluation(
+    name="my_evaluation",
+    dataset=dataset,
+    scores=[
+        score1,
+        score2,
+    ]
+```
+
+
+So you basically define scorers, and they will automatically extract the relevant. columns from the data set based on the inspected parameter arguments.
+
+```python
+
+def score1(expected_output, output):
+    return np.mean(np.array(expected_output) == np.array(output))
+
+def score2(other_column, output):
+    return np.mean(np.array(expected_output) == np.array(output))
+
+args = inspect.signature(score1).parameters
+
+...
+
+class Evaluation:
+    def run():
+        results = {}
+        for datapoint in self.dataset:
+            for score in self.scores:
+                args = inspect.signature(score).parameters
+                datapoint_subset = {k : datapoint[k] for k in args}
+                score_output = score(**datapoint_subset)
+                results[score.__name__].append(score_output)
+
+```
+
+
+I do like the idea of being able to publish a dataset. I think we should have parity there. I do like that evaluations are automatically versioned in some sense. We should also have parity there.
+
+I'm not convinced that the shape of the evaluation function should look like Model output, etc. Also, the model evaluation itself doesn't seem very clean, right? If I'm developing an LMP that I'm going to use somewhere else in my software stack, and I want to evaluate it, now I have to wrap it in some additional function. This layer of indirection between me and the evaluation might cause failure later. The fundamental data shape of the evaluation should be kind of like whatever I'm always using in my LMPs plus labels. I don't want to think about inputs versus outputs in my criterion. The input data shape is holy, and in some sense, I don't want to have to change the LMP's source code just because my input data shape has changed. As for scoring functions, yeah, I think there's some convenience in being able to pull out from the rows of a dataset. In that way, it makes sense. Also, look how clean it is to specify datasets like that. It is beautiful what we've done there, though the Thursday AI guys are not going to like that I've changed this in the way that I have.
+
+Also, datasets fundamentally are very weird. If they only exist for the purpose of evals, then maybe the abstraction doesn't make any sense. We can do a lot of things with datasets, right? We can fine-tune on them. The traditional ML literature doesn't exactly make sense for the RL use case, which is where we want to head with this. So I think by developing a dataset abstraction now, we're going to cause problems later when we decide to do RL on prompts and things of this nature.
+
+So let's suppose we just ignore the traditional dataset abstraction for now, right? And so we ship evals as a feature. Evals as a feature just have inputs and outputs. Now, the problem with inputs and outputs, right? When I was actually doing stuff in production with these models, we would take in many times non-serializable objects. I don't want the user to have to think about whether or not their object is truly JSON serializable. But it's not clear exactly how we would define the dataset if it weren't just unpacking some sort of dictionary into the kwargs, right? The shape always has to be a dictionary, and the other convenience function of having datasets where the labels and the inputs and outputs are in line. People are very used to working that way. So if we had separate inputs and outputs, they would have to zip these together, which doesn't make a lot of sense. Okay, but we can be magical like Weaviate. 
+
+When you define the dataset, you do rows of dictionaries, where rows correspond to named kwargs of your LMP. Again, the named kwargs thing is actually bad because certain LMPs are also positional. So being able to swap in an LMP and another LMP, one that uses slightly different named kwargs, will totally break the process. So that's not acceptable. What we can do is serialize sort of positional and non-positional named kwargs in the dataset formulation. Each row can contain an input object, and that input object is either a list or a dictionary. You can name the kwargs or not. It's probably a bad idea to name the kwargs because then you can't swap in different LMPs. Then we always use the inputs here. And this is just typed dicts. I guess we have a type dictionary. And we always use that. Then the rest of the outputs, you can do whatever you want. Your score function will take in the row and the model output. What Weaviate did was they literally said, "Hey, your thing has to accept model output as a kwarg." So they validate the score functions by inspecting keyword arguments. Then everything's wrapped in a Weaviate op because that Weaviate ops automatically log to wandb. So they unify the interface of logging in that way.
+
+```python
+
+# Example implementation based on the ideas discussed
+
+from typing import List, Dict, Any, Union, Callable
+import inspect
+import numpy as np
+
+# Define a flexible Dataset type
+Dataset = List[Dict[str, Any]]
+
+# Example dataset
+dataset: Dataset = [
+    {"input": "What is the capital of France?", "expected_output": "Paris", "difficulty": "easy"},
+    {"input": "What is the square root of 144?", "expected_output": "12", "difficulty": "medium"},
+    # ... more data points
+]
+
+# Example LMP (Language Model Program)
+def my_lmp(input: str) -> str:
+    # This is a mock LMP that just returns the input
+    return input
+
+# Example score functions
+def accuracy_score(expected_output: str, output: str) -> float:
+    return float(expected_output.lower() == output.lower())
+
+def difficulty_weighted_score(difficulty: str, expected_output: str, output: str) -> float:
+    base_score = float(expected_output.lower() == output.lower())
+    difficulty_weight = {"easy": 1.0, "medium": 1.5, "hard": 2.0}
+    return base_score * difficulty_weight.get(difficulty, 1.0)
+
+class Evaluation:
+    def __init__(self, name: str, dataset: Dataset, lmp: Callable, scores: List[Callable]):
+        self.name = name
+        self.dataset = dataset
+        self.lmp = lmp
+        self.scores = scores
+
+    def run(self) -> Dict[str, List[float]]:
+        results = {score.__name__: [] for score in self.scores}
+        
+        for datapoint in self.dataset:
+            # Run the LMP
+            lmp_input = datapoint.get("input")
+            if isinstance(lmp_input, str):
+                output = self.lmp(lmp_input)
+            elif isinstance(lmp_input, dict):
+                output = self.lmp(**lmp_input)
+            elif isinstance(lmp_input, list):
+                output = self.lmp(*lmp_input)
+            else:
+                raise ValueError(f"Unsupported input type: {type(lmp_input)}")
+```
+Alright, so this part is a bit too magical. Essentially, what it's doing is taking the input object and, if it's a single object, passing it directly into the LMP. Otherwise, it destructures the arguments. I do appreciate the use of **kwargs versus list destructuring; it's quite elegant. We can think of it as handling both args and kwargs, which is fine. However, it's also quite clean to write your dataset as single input elements.
+
+```python
+            # Calculate scores
+            for score in self.scores:
+                args = inspect.signature(score).parameters
+                datapoint_subset = {k: datapoint.get(k) for k in args if k != 'output'}
+                score_output = score(**datapoint_subset, output=output)
+                results[score.__name__].append(score_output)
+
+        return results
+
+# Usage example
+eval = Evaluation(
+    name="my_evaluation",
+    dataset=dataset,
+    lmp=my_lmp,
+    scores=[accuracy_score, difficulty_weighted_score]
+)
+
+results = eval.run()
+print(results)
+
+# You could then add methods to analyze and visualize the results
+# For example:
+def analyze_results(results: Dict[str, List[float]]):
+    for score_name, scores in results.items():
+        print(f"{score_name}:")
+        print(f"  Mean: {np.mean(scores):.4f}")
+        print(f"  Median: {np.median(scores):.4f}")
+        print(f"  Min: {np.min(scores):.4f}")
+        print(f"  Max: {np.max(scores):.4f}")
+
+analyze_results(results)
+
+```
+
+So now let's consider The usability of these input shapes. If we're really going to accept that, there's like some special input data point arg.
+
+
+```python
+class DatapointPD(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    input : Dict[str, Any] | List[Any]
+    labels: Dict[str, Any]
+
+
+# or
+
+class DatapointTD(TypedDict, total=False):
+    input : Dict[str, Any] | List[Any]
+
+# finally
+Dataset = List[Datapoint]
+
+
+# This is actually quite in the style of ell where we have input and output in ell studio as either a list of arguments or a dictionary of kwargs.
+dataset = [
+    Datapoint(input=["What is the capital of France?"], labels={"expected_output": "Paris"}),
+]
+
+# or
+dataset = [
+    {"input" : {'question' : "What is the capital of France?"}, "answer" : "Paris"},
+]
+#/equivalently
+dataset = [
+    DatapointTD(input=["What is the capital of France?"], labels={"expected_output": "Paris"}),
+]
+
+```
+
+This approach is quite elegant. We need to use Pydantic models with `total=False` so we can validate that each entry has an input.
+
+Imagine defining a dataset in this structured way, where every entry must at least have the shape of an input. You can then add arbitrary fields to the dataset columns. This avoids the issue where the shape of the LMP function needs to be transformed.
 
