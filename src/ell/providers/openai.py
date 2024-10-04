@@ -39,7 +39,7 @@ try:
                 final_call_params.pop("stream_options", None)
             if ell_call.tools:
                 final_call_params.update(
-                    tool_choice="auto",
+                    tool_choice=final_call_params.get("tool_choice", "auto"),
                     tools=[  
                         dict(
                             type="function",
