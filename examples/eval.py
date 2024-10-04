@@ -146,30 +146,61 @@ def summarizer(text: str):
 
 
 ell.init(verbose=True, store='./logdir')
-result = eval.run(summarizer, samples_per_datapoint=4, n_workers=4)
+
+
+# Using GPT-4o
+print("EVAL WITH GPT-4o")
+result = eval.run(summarizer, samples_per_datapoint=1, n_workers=4, verbose=True)
 print(result.scores)
 print("Mean critic score:", np.mean(result.scores[:, 0]))
 print("Mean length of completions:", np.mean(result.scores[:, 1]))
-# print(result.outputs)
+
+# Using gpt-4o-mini
+print("EVAL WITH GPT-4o-mini")
+result = eval.run(summarizer, samples_per_datapoint=1, n_workers=1, 
+                  api_params={"model": "gpt-4o-mini"}, verbose=True)
+print(result.scores)
+print("Mean critic score:", np.mean(result.scores[:, 0]))
+print("Mean length of completions:", np.mean(result.scores[:, 1]))
+
 
 
 
 """
-UX Requriements:
-1. View an eval
-2. View different runs fo an eval
-3. Should some how show the source for various different evaluations and have the ability to grab evals by name
-4. Not clear whether or not we should show the evals in the computation graph on ell studio
-5. Would prefer to see the actual scores for a given input on ell studio as opposed to just the mean
+UX/IMPL TODOs
+- [ ] Database Schemas based on the evalsandmetrics.md 
+- [ ] View an eval
+- [ ] View different runs of an eval
+- [ ] Somehow show the source for various different evaluations and have the ability to grab evals by name
+- [ ] Clarify whether or not we should show the evals in the computation graph on ell studio
+- [ ] Show the actual scores for a given input on ell studio as opposed to just the mean
+- [ ] Easy comparison across many models
+- [ ] Easy to change parameters of individual models in a chain
+- [ ] UX for showing the model is different
+- [ ] UX for api params
+- [ ] Working verbose mode for @function
+- [ ] Fix ell.function in general
+- [ ] Support failure modes in metric computation
+- [ ] Implement parsers/structured outputs to make this cleaner
+- [ ] Group runs more cleanly so that they are a part of an eval in the invocation view
+- [ ] Full UX for comparing different evals across any arbitrary axis
+- [ ] Arbitrary support for failure mode in lmp invocations
+- [ ] Clarity into why a currently running invocation is working or not
 
+Next Step TODOS
+- [ ] Implement a bunch of standard criteria
+- [ ] Dataset construction needs to be easy and there should be libraries around this, also matching parity with OpenAI evals
+
+"""
+
+
+
+
+
+"""
 There are two components of eval creaiton:
 1. Does the eval align with human intuition about what hte score should be? (Prompt engineering the criterion)
 2. Prompt enigneering the result.
 
 We need a clean way of grouping runs in ell studio so it's clear that they are a part of an eval in the invocation view
-
 """
-
-
-
-
