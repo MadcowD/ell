@@ -1,34 +1,175 @@
-from typing import Any, Optional, Protocol
+from typing import Any, Optional, Protocol, List
 import ell
 import ell.evaluation
+import numpy as np
 
-dataset = [
-    ("What is the capital of france?", "Paris"),
-    ("What is the capital of italy?", "Rome"),
-    ("What is the capital of spain?", "Madrid"),
-    ("What is the capital of germany?", "Berlin"),
-    ("What is the capital of japan?", "Tokyo"),
-    ("What is the capital of china?", "Beijing"),
-    ("What is the capital of india?", "New Delhi"),
-    ("What is the capital of brazil?", "Brasília"),
-    ("What is the capital of argentina?", "Buenos Aires"),
-    ("Hotdog land", "Hotdog land"),
+
+def test_predictor_evaluation():
+    dataset: List[ell.evaluation.Datapoint] = [
+        {
+            "input": {"question": "What is the capital of france?"},
+            "expected_output": "Paris",
+        },
+        {
+            "input": {"question": "What is the capital of italy?"},
+            "expected_output": "Rome",
+        },
+        {
+            "input": {"question": "What is the capital of spain?"},
+            "expected_output": "Madrid",
+        },
+        {
+            "input": {"question": "What is the capital of germany?"},
+            "expected_output": "Berlin",
+        },
+        {
+            "input": {"question": "What is the capital of japan?"},
+            "expected_output": "Tokyo",
+        },
+        {
+            "input": {"question": "What is the capital of china?"},
+            "expected_output": "Beijing",
+        },
+        {
+            "input": {"question": "What is the capital of india?"},
+            "expected_output": "New Delhi",
+        },
+        {
+            "input": {"question": "What is the capital of brazil?"},
+            "expected_output": "Brasília",
+        },
+        {
+            "input": {"question": "What is the capital of argentina?"},
+            "expected_output": "Buenos Aires",
+        },
+        {"input": {"question": "Hotdog land"}, "expected_output": "Hotdog land"},
+    ]
+
+    def is_correct(datapoint, output):
+        label = datapoint["expected_output"]
+        return float(output.lower() == label.lower())
+
+    eval = ell.evaluation.Evaluation(
+        name="test", dataset=dataset, criterion=[is_correct]
+    )
+
+    # ell.init(verbose=True, store='./logdir')
+    @ell.simple(model="gpt-4o")
+    def predict_capital(question: str):
+        """
+        Answer only with the capital of the country. If hotdog land, answer hotdog land.
+        """
+        # print(question[0])
+        return f"Answer the following question. {question}"
+
+    result = eval.run(predict_capital, n_workers=4)
+    print(result.scores.mean())
+
+
+# def test_llm_critic_evaluation():
+dataset: List[ell.evaluation.Datapoint] = [
+    {
+        "input": { # I really don't like this. Forcing "input" without typing feels disgusting.
+            "text": "The Industrial Revolution was a period of major industrialization and innovation that took place during the late 1700s and early 1800s. It began in Great Britain and quickly spread throughout Western Europe and North America. This revolution saw a shift from an economy based on agriculture and handicrafts to one dominated by industry and machine manufacturing. Key technological advancements included the steam engine, which revolutionized transportation and manufacturing processes. The textile industry, in particular, saw significant changes with the invention of spinning jennies, water frames, and power looms. These innovations led to increased productivity and the rise of factories. The Industrial Revolution also brought about significant social changes, including urbanization, as people moved from rural areas to cities for factory work. While it led to economic growth and improved living standards for some, it also resulted in poor working conditions, child labor, and environmental pollution. The effects of this period continue to shape our modern world."
+        },
+        "expected_output": "A comprehensive summary of the Industrial Revolution",
+    },
+    {
+        "input": {
+            "text": "The human genome is the complete set of nucleic acid sequences for humans, encoded as DNA within the 23 chromosome pairs in cell nuclei and in a small DNA molecule found within individual mitochondria. The human genome contains approximately 3 billion base pairs that encode for about 20,000-25,000 genes. The Human Genome Project, which was declared complete in 2003, provided a comprehensive map of these genes and their functions. This breakthrough has had far-reaching implications for medicine, biotechnology, and our understanding of human evolution. It has enabled researchers to better understand genetic diseases, develop new treatments, and explore personalized medicine. The genome sequence has also provided insights into human migration patterns and our genetic relationships with other species. Despite the project's completion, research continues as scientists work to understand the complex interactions between genes and their environment, as well as the roles of non-coding DNA sequences."
+        },
+        "expected_output": "A detailed summary of the human genome and its significance",
+    },
+    {
+        "input": {
+            "text": "Climate change refers to long-term shifts in global weather patterns and average temperatures. Scientific evidence shows that the Earth's climate has been warming at an unprecedented rate since the mid-20th century, primarily due to human activities. The main driver of this change is the increased emission of greenhouse gases, particularly carbon dioxide, from burning fossil fuels, deforestation, and industrial processes. These gases trap heat in the Earth's atmosphere, leading to global warming. The effects of climate change are wide-ranging and include rising sea levels, more frequent and severe weather events (such as hurricanes, droughts, and heatwaves), changes in precipitation patterns, and disruptions to ecosystems. These changes pose significant threats to biodiversity, food security, water resources, and human health. Addressing climate change requires global cooperation to reduce greenhouse gas emissions through the adoption of clean energy technologies, sustainable land use practices, and changes in consumption patterns. Adaptation strategies are also necessary to help communities and ecosystems cope with the impacts that are already occurring or are inevitable."
+        },
+        "expected_output": "A comprehensive overview of climate change, its causes, effects, and potential solutions",
+    },
+    {
+        "input": {
+            "text": "Artificial Intelligence (AI) refers to the simulation of human intelligence in machines that are programmed to think and learn like humans. The field of AI research was founded on the assumption that human intelligence can be precisely described and simulated by a machine. This concept has evolved significantly since its inception in the 1950s. Modern AI encompasses a wide range of capabilities, including problem-solving, learning, planning, natural language processing, perception, and robotics. Machine Learning, a subset of AI, focuses on the development of algorithms that can learn from and make predictions or decisions based on data. Deep Learning, a further specialization, uses artificial neural networks inspired by the human brain to process data and create patterns for decision making. AI has applications across numerous fields, including healthcare (for diagnosis and treatment recommendations), finance (for fraud detection and algorithmic trading), transportation (in the development of self-driving cars), and personal assistance (like Siri or Alexa). As AI continues to advance, it raises important ethical and societal questions about privacy, job displacement, and the potential for AI to surpass human intelligence in certain domains."
+        },
+        "expected_output": "A comprehensive explanation of Artificial Intelligence, its subfields, applications, and implications",
+    },
 ]
 
-def is_correct(datapoint, output):
-    label = datapoint[1]
-    return output.lower() == label.lower()
 
-eval = ell.evaluation.Evaluation(name= "test",dataset=dataset, metric=is_correct)
-# ell.init(verbose=True, store='./logdir')
+@ell.simple(model="gpt-4o", temperature=0.1)
+def critic(text_to_summarize: str, ai_produced_summary: str):
+    """
+    You are a critic of summaries. You are given a text and a summary of that text. You should evaluate the summary for how well it captures the main points of the text.
+
+Criterion:
+- Summary should be shorter than the original text. Do not give it a score above 50 if it is longer.
+- The best scoring summaries should be one sentence.
+- Summary should capture the main points of the text
+- Summary should be accurate
+- Summary should be concise
+
+    Return a score between 0 and 100 for how well the summary captures the main points of the text. Your answer should be in the following format:
+    Analysis:\\n<analysis of quality>\\nScore:\\n<score>
+    """
+
+    return f"""Text to summarize:
+    {text_to_summarize}
+    
+    Summary:
+    {ai_produced_summary}
+    """
+
+# model output etc. is just the second argument
+# XXX: Need to support failure modes in metric computation...
+import ell.lmp.function 
+@ell.lmp.function.function()
+def score(datapoint, output, n_retries=3):
+    for _ in range(n_retries):
+        try:
+            critique = critic(datapoint['input']['text'], output)
+            # print(critique)
+            score = int(critique.split("Score:")[1].strip())
+            return score
+        except Exception as e:
+            print(f"Error: {e}")
+            continue
+    raise Exception("Failed to score")
+
+eval = ell.evaluation.Evaluation(
+    name="test", dataset=dataset, criterion=[score, lambda _, output: len(output)]
+)
+
+# Now we prompt shit
 @ell.simple(model="gpt-4o")
-def predict_capital(question: str):
-    """
-    Answer only with the capital of the country.
-    """
-    # print(question[0])
-    return f"Answer the following question. {question[0]}"
+def summarizer(text: str):
+    """You are a succinct summarizer. You are given a text and you should return a summary of the text. It should be no longer than 5 sentence. Focus on capturing the main points of the text as best as possible"""
+    return f"Summarize the following text. {text}"
 
-result = eval.run(predict_capital, n_workers=4)
-print(result.outputs)
+
+ell.init(verbose=True, store='./logdir')
+result = eval.run(summarizer, samples_per_datapoint=4, n_workers=4)
+print(result.scores)
+print("Mean critic score:", np.mean(result.scores[:, 0]))
+print("Mean length of completions:", np.mean(result.scores[:, 1]))
+# print(result.outputs)
+
+
+
+"""
+UX Requriements:
+1. View an eval
+2. View different runs fo an eval
+3. Should some how show the source for various different evaluations and have the ability to grab evals by name
+4. Not clear whether or not we should show the evals in the computation graph on ell studio
+5. Would prefer to see the actual scores for a given input on ell studio as opposed to just the mean
+
+There are two components of eval creaiton:
+1. Does the eval align with human intuition about what hte score should be? (Prompt engineering the criterion)
+2. Prompt enigneering the result.
+
+We need a clean way of grouping runs in ell studio so it's clear that they are a part of an eval in the invocation view
+
+"""
+
+
+
 

@@ -1,10 +1,10 @@
 from datetime import datetime
-from typing import Any, Callable, Iterable, Dict, List, Optional, cast
+from typing import Any, Callable, Iterable, Dict, List, Optional, Protocol, Tuple, TypedDict, Union, cast
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import uuid
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlmodel._compat import SQLModelConfig
 from ell.lmp._track import _track
 from ell.types.message import LMP
@@ -16,24 +16,17 @@ import dill
 import hashlib
 
 from ell.configurator import config
-from ell.types.studio import SerializedEvaluation
+# from ell.types.studio import SerializedEvaluation
 from ell.util.closure import lexical_closure, lexically_closured_source
 
 
 
-Metric = Callable[..., float]
 
+# Or we'll actually do a datamodel from pydanytic. Not sure I like this.
 
- #XXX: Seperate this into VersionedEvaluation and Evaluation because versioning is somewhat expensive if someone has a big eval Then perhaps we could default to VersionedEval in the docs or version=False. Not sure.
- # TODO: Datasets  and automatic metrics.
- # TODO: Link Invocations to EvalRuns
- # TODO: Link Invocations to INvocationScores.
- # TODO: Write to DB
- # TODO: Build UX for analyzing evals.
- # TODO: Solve (input, labels, score_fn) etc
- # TODO: What about automatic cross validation & splitting.
-
- # TODO: Consider wandb style metrics later.
+Datapoint = Dict[str, Any]
+Dataset = List[Dict[str, Any]]
+Criterion = Callable[[Datapoint, Any], float]
 
 
 class EvaluationRun(BaseModel):
@@ -46,54 +39,70 @@ class EvaluationRun(BaseModel):
     start_time: datetime = Field(default_factory=datetime.now)
     end_time: Optional[datetime] = None
 
-    def write(self, serialized_evaluation: SerializedEvaluation) -> None:
+    def write(self, serialized_evaluation) -> None:
         # To link!
 
         pass
 
-
 class Evaluation(BaseModel):
-    """Evals or optimizes LMPs over a dataset."""
-    model_config =  ConfigDict(arbitrary_types_allowed=True)
-    dataset : List[Any]
-    lmp : Optional[LMP] = Field(default=None)
-    metric : Optional[Metric] = Field(default=None)
-    default_api_params : Dict[str, Any] = Field(default=None)
-    name : str
-    written_evaluation : Optional[SerializedEvaluation] = Field(default=None)
+    """Simple evaluation for prompt engineering rigorously"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    name: str
+    dataset: Dataset
+    criterion: Optional[List[Criterion]] = Field(default_factory=list)
+    default_api_params: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 
-    def write(self) -> SerializedEvaluation:
-        if self.metric is not None:
-            src = lexical_closure(self.metric, initial_call=True)
-            metric_src, metric_dep_src = src[1]
-        else:
-            metric_src = None
-            metric_dep_src = None
+    @field_validator('dataset')
+    def validate_dataset(cls, dataset: Dataset) -> Dataset:
+        for datapoint in dataset:
+            if not isinstance(datapoint, dict):
+                raise ValueError(f"Each datapoint must be a dictionary, got {type(datapoint)}")
+            if "input" not in datapoint:
+                raise ValueError("Each datapoint must have an 'input' key", datapoint)
+            if not isinstance(datapoint["input"], (list, dict)):
+                raise ValueError(f"The 'input' value must be a list or dictionary, got {type(datapoint['input'])}", datapoint)
+            if not isinstance(datapoint["input"], (list, dict)):
+                raise ValueError(f"The 'input' value must be a list or dictionary, got {type(datapoint['input'])}", datapoint)
+        return dataset
 
-        datasetID = "TODO WRITE DATASET TO PICKLE DUMP"
-        dataset_pickle =dill.dumps(self.dataset)
-        dataset_id = hashlib.md5(dataset_pickle).hexdigest()
+    @field_validator('criterion')
+    def validate_criterion(cls, criterion: List[Criterion]) -> List[Criterion]:
+        for crit in criterion:
+            if not callable(crit):
+                raise ValueError(f"Each criterion must be a callable, got {type(crit)}")
+        return criterion
+    
+    # def write(self) -> SerializedEvaluation:
+    #     criterion_src = []
+    #     criterion_dep_src = []
+    #     for crit in self.criterion:
+    #         src = lexical_closure(crit, initial_call=True)
+    #         crit_src, crit_dep_src = src[1]
+    #         criterion_src.append(crit_src)
+    #         criterion_dep_src.append(crit_dep_src)
 
-        serialized_evaluation = SerializedEvaluation(
-            name=self.name,
-            metric_src=metric_src,
-            metric_dependencies_src=metric_dep_src,
-            default_api_params=self.default_api_params,
-            has_metric=self.metric is not None, num_datapoints=len(self.dataset), 
-            version_number=None,
-            created_at=datetime.now(),
-            id= "evaluation-" + hashlib.md5(
-            f"{metric_src}{metric_dep_src}{self.default_api_params}{dataset_id}".encode()
-        ).hexdigest()
-        )
+    #     dataset_pickle = dill.dumps(self.dataset)
+    #     dataset_id = hashlib.md5(dataset_pickle).hexdigest()
 
-        self.written_evaluation = serialized_evaluation
-        return serialized_evaluation
+    #     serialized_evaluation = SerializedEvaluation(
+    #         name=self.name,
+    #         criterion_src=criterion_src,
+    #         criterion_dependencies_src=criterion_dep_src,
+    #         default_api_params=self.default_api_params,
+    #         has_criterion=len(self.criterion) > 0,
+    #         num_datapoints=len(self.dataset), 
+    #         version_number=None,
+    #         created_at=datetime.now(),
+    #         id= "evaluation-" + hashlib.md5(
+    #         f"{criterion_src}{criterion_dep_src}{self.default_api_params}{dataset_id}".encode()
+    #     ).hexdigest()
+    #     )
+
+    #     self.written_evaluation = serialized_evaluation
+    #     return serialized_evaluation
         
-   
-
-    def run(self, lmp: Optional[LMP] = None,  *, n_workers: int = 1, api_params: Optional[Dict[str, Any]] = None, verbose: bool = False) -> EvaluationRun:
+    def run(self, lmp,  *, n_workers: int = 1, api_params: Optional[Dict[str, Any]] = None, verbose: bool = False, samples_per_datapoint: int = 1) -> EvaluationRun:
         """
         Run the evaluation or optimization using the specified number of workers.
         
@@ -102,12 +111,15 @@ class Evaluation(BaseModel):
             lmp (Optional[LMP]): LMP to use for this run. If None, uses the LMP set during initialization.
             api_params (Dict[str, Any]): API parameters to override defaults.
             verbose (bool): Whether to run in verbose mode. Default is False.
+            samples_per_datapoint (int): Number of samples to generate per datapoint. Default is 1.
         
         Returns:
             EvaluationRun: Object containing statistics about the evaluation or optimization outputs.
         """
         run_api_params = {**(self.default_api_params or {}), **(api_params or {})}
-        lmp_to_use = lmp or self.lmp
+        if samples_per_datapoint > 1:
+            run_api_params['n'] = samples_per_datapoint
+        lmp_to_use = lmp 
         
         evaluation_run = EvaluationRun(
             lmp=lmp_to_use,
@@ -122,65 +134,81 @@ class Evaluation(BaseModel):
             results = []
             outputs = []
             with ThreadPoolExecutor(max_workers=n_workers) as executor:
-                futures = [executor.submit(self._process_single, data_point, lmp_to_use, run_api_params) 
+                futures = [executor.submit(self._process_single, data_point, lmp_to_use, run_api_params, samples_per_datapoint) 
                            for data_point in self.dataset]
                 
                 desc = "Evaluating" 
                 with tqdm(total=len(self.dataset), desc=desc) as pbar:
                     for future in as_completed(futures):
                         output, result = future.result()
-                        results.append(result)
-                        outputs.append(output)
+                        results.extend(result)  # Extend with the 2D array of scores
+                        outputs.extend(output)  # Extend instead of append
                         pbar.update(1)
                         
-                        if self.metric:
+                        if self.criterion:
                             # Update moving statistics for evaluation
-                            current_mean = statistics.mean(results)
-                            current_median = statistics.median(results)
-                            current_min = min(results)
-                            current_max = max(results)
+                            num_criteria = len(self.criterion)
+                            flat_results = [score for sample_scores in results for score in sample_scores]
+                            current_means = [statistics.mean(flat_results[i::num_criteria]) for i in range(num_criteria)]
+                            current_medians = [statistics.median(flat_results[i::num_criteria]) for i in range(num_criteria)]
+                            current_mins = [min(flat_results[i::num_criteria]) for i in range(num_criteria)]
+                            current_maxs = [max(flat_results[i::num_criteria]) for i in range(num_criteria)]
                             
                             pbar.set_postfix({
-                                'mean': f'{current_mean:.4f}',
-                                'median': f'{current_median:.4f}',
-                                'min': f'{current_min:.4f}',
-                                'max': f'{current_max:.4f}',
-                                'most_recent_output': str(output)[:10]
+                                'means': [f'{m:.4f}' for m in current_means],
+                                'medians': [f'{m:.4f}' for m in current_medians],
+                                'mins': [f'{m:.4f}' for m in current_mins],
+                                'maxs': [f'{m:.4f}' for m in current_maxs],
+                                'most_recent_output': str(output[0])[:10]
                             })
                         else:
                             # Just show progress for optimization
-                            pbar.set_postfix({'processed': len(results), 'most_recent_output': str(output)[:10]})
+                            pbar.set_postfix({'processed': len(results), 'most_recent_output': str(output[0])[:10]})
             
             evaluation_run.outputs = outputs
-            if self.metric:
-                evaluation_run.scores = results
+            if self.criterion:
+                evaluation_run.scores = np.array(results)
             evaluation_run.end_time = datetime.now()
 
-            # Todo: 
-            if not self.written_evaluation: #and config.store is not None:
-                serialized_evaluation = self.write()
+            if not hasattr(self, 'written_evaluation'):
+                # serialized_evaluation = self.write()
+                pass
             else:
-                serialized_evaluation = self.written_evaluation
-            evaluation_run.write(serialized_evaluation)
+                # serialized_evaluation = self.written_evaluation
+                pass
+            # evaluation_run.write(serialized_evaluation)
             
             return evaluation_run
         finally:
             config.verbose = original_verbose
             
-
-    def _process_single(self, data_point: Any, lmp: LMP, api_params: Dict[str, Any]) -> Any:
+    def _process_single(self, data_point: Datapoint, lmp: LMP, api_params: Dict[str, Any], samples_per_datapoint: int) -> Tuple[List[Any], List[List[float]]]:
         """
-        Process a single data point using the LMP and optionally apply the metric.
+        Process a single data point using the LMP and apply all criteria.
         
         Args:
             data_point (Any): A single item from the dataset.
             lmp (LMP): The LMP to use for processing.
             api_params (Dict[str, Any]): API parameters for this run.
+            samples_per_datapoint (int): Number of samples to generate per datapoint.
         
         Returns:
-            Any: The metric score if metric is provided, otherwise the LMP output.
+            Tuple[List[Any], List[List[float]]]: The LMP outputs and a 2D array of scores from all criteria.
         """
-        lmp_output = lmp(data_point, api_params=api_params)
-        if self.metric:
-            return lmp_output, self.metric(data_point, lmp_output)
-        return lmp_output, 0
+        if isinstance(data_point['input'], list):
+            lmp_output = lmp(*data_point['input'], api_params=api_params)
+        elif isinstance(data_point['input'], dict):
+            lmp_output = lmp(**data_point['input'], api_params=api_params)
+        else:
+            raise ValueError(f"Invalid input type: {type(data_point['input'])}")
+        
+        if not isinstance(lmp_output, list):
+            lmp_output = [lmp_output]
+        
+        if self.criterion:
+            scores = [
+                [float(crit(data_point, output)) for crit in self.criterion]
+                for output in lmp_output
+            ]
+            return lmp_output, scores
+        return lmp_output, [[]] * len(lmp_output)  # Return empty scores if no criterion

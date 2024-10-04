@@ -5,7 +5,7 @@ from typing import Any, Optional, Dict, List, Set, Union
 from ell.types._lstr import _lstr
 from ell.types import SerializedLMP, Invocation
 from ell.types.message import InvocableLM
-from ell.types.studio import SerializedEvaluation, SerializedEvaluationRun
+# from ell.types.studio import SerializedEvaluation, SerializedEvaluationRun
 
 class BlobStore(ABC):
     @abstractmethod

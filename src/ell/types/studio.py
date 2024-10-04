@@ -121,7 +121,6 @@ class InvocationBase(SQLModel):
     state_cache_key: Optional[str] = Field(default=None)
     created_at: datetime = UTCTimestampField(default=func.now(), nullable=False)
     used_by_id: Optional[str] = Field(default=None, foreign_key="invocation.id", index=True)
-    evaluation_run_id: Optional[str] = Field(default=None, foreign_key="evaluationrun.id", index=True)
 
 class InvocationContentsBase(SQLModel):
     invocation_id: str = Field(foreign_key="invocation.id", index=True, primary_key=True)
@@ -180,48 +179,48 @@ class Invocation(InvocationBase, table=True):
         Index('ix_invocation_created_at_latency_ms', 'created_at', 'latency_ms'),
         Index('ix_invocation_created_at_tokens', 'created_at', 'prompt_tokens', 'completion_tokens'),
     )
-    evaluation_run: Optional["SerializedEvaluationRun"] = Relationship(back_populates="invocation")
+
 
 ##################
 ### Evaluation ###
 ##################
-class SerializedEvaluation(SQLModel):
-    id: str = Field(primary_key=True)
-    name: str
-    created_at: datetime = UTCTimestampField(index=True, nullable=False)
-    version_number: Optional[int] = Field(default=None)
-    has_metric: bool
-    metric_src: Optional[str]
-    metric_dependencies_src: Optional[str]
-    default_api_params: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
-    num_datapoints: Optional[int] = Field(default=None)
+# class SerializedEvaluation(SQLModel):
+#     id: str = Field(primary_key=True)
+#     name: str
+#     created_at: datetime = UTCTimestampField(index=True, nullable=False)
+#     version_number: Optional[int] = Field(default=None)
+#     has_metric: bool
+#     metric_src: Optional[str]
+#     metric_dependencies_src: Optional[str]
+#     default_api_params: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+#     num_datapoints: Optional[int] = Field(default=None)
 
 
-class SerializedEvaluationRun(SQLModel):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    evaluation_id: str = Field(foreign_key="evaluation.id", index=True, primary_key=True)
-    created_at: datetime = UTCTimestampField(index=True, nullable=False)
-    lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)
-    mean_score: float
-    median_score: float
-    stdev_score: float
-    min_score: float
-    max_score: float
+# class SerializedEvaluationRun(SQLModel):
+#     id: Optional[int] = Field(default=None, primary_key=True)
+#     evaluation_id: str = Field(foreign_key="evaluation.id", index=True, primary_key=True)
+#     created_at: datetime = UTCTimestampField(index=True, nullable=False)
+#     lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)
+#     mean_score: float
+#     median_score: float
+#     stdev_score: float
+#     min_score: float
+#     max_score: float
 
-    version_number: int
-    lmp: SerializedLMP = Relationship(back_populates="evaluation_runs")
-    evaluation: SerializedEvaluation = Relationship(back_populates="runs")
-    scores: List["InvocationScore"] = Relationship(back_populates="evaluation_run")
+#     version_number: int
+#     lmp: SerializedLMP = Relationship(back_populates="evaluation_runs")
+#     evaluation: SerializedEvaluation = Relationship(back_populates="runs")
+#     scores: List["InvocationScore"] = Relationship(back_populates="evaluation_run")
 
-# Could inherit from invocation.
-class InvocationScore(SQLModel, table=True):
-    # Links invocation id to scores. # Do we need htis I guess I could store an array in the eval run instead.. I think that makes the most sense tbh. And then jsut link LMP's to eval runs.
+# # Could inherit from invocation.
+# class InvocationScore(SQLModel, table=True):
+#     # Links invocation id to scores. # Do we need htis I guess I could store an array in the eval run instead.. I think that makes the most sense tbh. And then jsut link LMP's to eval runs.
 
-    invocation_id: str = Field(foreign_key="invocation.id", index=True, primary_key=True)
-    evaluation_run_id: int = Field(foreign_key="evaluationrun.id", index=True, primary_key=True)
-    score : Optional[float] = Field(default=None)
+#     invocation_id: str = Field(foreign_key="invocation.id", index=True, primary_key=True)
+#     evaluation_run_id: int = Field(foreign_key="evaluationrun.id", index=True, primary_key=True)
+#     score : Optional[float] = Field(default=None)
 
-    created_at: datetime = UTCTimestampField(index=True, nullable=False)
+#     created_at: datetime = UTCTimestampField(index=True, nullable=False)
 
-    evaluation_run: SerializedEvaluationRun = Relationship(back_populates="scores")
-    invocation: Invocation = Relationship(back_populates="score")
+#     evaluation_run: SerializedEvaluationRun = Relationship(back_populates="scores")
+#     invocation: Invocation = Relationship(back_populates="score")

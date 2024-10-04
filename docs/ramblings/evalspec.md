@@ -227,3 +227,52 @@ eval.run(write_a_poem)
 ```
 
 
+
+# Next up
+1. Implementing Evaluation
+2. Implement Studio schemas
+3. Implement Eval UX in studio
+
+
+An additional note we need to have within this spec is that there are going to be two different modes for evaluations. In particular, you may not specify evaluations at all. You just want to look at the outputs. And that's something that's really not thought about with these frameworks like DSPY, because they are really geared towards avoiding hand prompt engineering. But in an actual use case, like you're trying to tune some email generator in a startup, you do have to kind of engineer by vibes, maybe give feedback and try to reward the model at some point, but there's a lot of data points required to get to that point. And so in the first place, you may not specify criterion at all, and that's something that the OpenAI endpoints actually miss out on in their definition of metrics. So we'll add to the spec the following.
+
+
+```python
+
+
+@ell.simple(model="gpt-4o-mini")
+def write_cold_email(name :str, career_history :str, hobbies :str):
+    """You are an expert email writer. You write cold emails to people."""
+
+    return f"Write a cold email to {name}. Here is their career history: {career_history}. Here is their hobbies: {hobbies}."
+
+eval = Evaluation(
+    name="email-eval",
+    dataset=[
+        Datapoint(
+            input=dict(
+                name="jeff",
+                career_history="Jeff is a VP of marketing",
+                hobbies="Jeff likes to play the guitar",
+            )
+        ),
+        Datapoint(
+            input=dict(
+                name="george",
+                career_history="George is a software engineer",
+                hobbies="George enjoys hiking and photography",
+            )
+        ),
+    ],
+    # criterion=[]
+)
+
+# Passing no criterion
+result = eval.run(write_cold_email)
+
+print(result.outputs)
+#  print(result.scores?? ) # This doesn't actually make sense because when we pass criterion to the eval we don't name them...
+# What does weave do>
+```
+
+We'll have to resolve htis later but this spec isn't the worst.
