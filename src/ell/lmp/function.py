@@ -25,3 +25,4 @@ def function(*, exempt_from_tracking: bool = False, _exempt_from_logging: bool =
 
     return function_decorator
 
+# XXX: Fix wrapping of the wrong functional decorator.

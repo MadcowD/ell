@@ -1,4 +1,6 @@
-from typing import Any, Optional, Protocol, List
+from collections import UserDict
+from types import NoneType
+from typing import Any, Dict, Iterable, Optional, Protocol, List, Union
 import ell
 import ell.evaluation
 import numpy as np
@@ -50,7 +52,7 @@ def test_predictor_evaluation():
         return float(output.lower() == label.lower())
 
     eval = ell.evaluation.Evaluation(
-        name="test", dataset=dataset, criterion=[is_correct]
+        name="test", dataset=dataset, criteria={"score": score, "length": lambda _, output: len(output)}
     )
 
     # ell.init(verbose=True, store='./logdir')
@@ -69,7 +71,7 @@ def test_predictor_evaluation():
 # def test_llm_critic_evaluation():
 dataset: List[ell.evaluation.Datapoint] = [
     {
-        "input": { # I really don't like this. Forcing "input" without typing feels disgusting.
+        "input": {  # I really don't like this. Forcing "input" without typing feels disgusting.
             "text": "The Industrial Revolution was a period of major industrialization and innovation that took place during the late 1700s and early 1800s. It began in Great Britain and quickly spread throughout Western Europe and North America. This revolution saw a shift from an economy based on agriculture and handicrafts to one dominated by industry and machine manufacturing. Key technological advancements included the steam engine, which revolutionized transportation and manufacturing processes. The textile industry, in particular, saw significant changes with the invention of spinning jennies, water frames, and power looms. These innovations led to increased productivity and the rise of factories. The Industrial Revolution also brought about significant social changes, including urbanization, as people moved from rural areas to cities for factory work. While it led to economic growth and improved living standards for some, it also resulted in poor working conditions, child labor, and environmental pollution. The effects of this period continue to shape our modern world."
         },
         "expected_output": "A comprehensive summary of the Industrial Revolution",
@@ -98,17 +100,17 @@ dataset: List[ell.evaluation.Datapoint] = [
 @ell.simple(model="gpt-4o", temperature=0.1)
 def critic(text_to_summarize: str, ai_produced_summary: str):
     """
-    You are a critic of summaries. You are given a text and a summary of that text. You should evaluate the summary for how well it captures the main points of the text.
+        You are a critic of summaries. You are given a text and a summary of that text. You should evaluate the summary for how well it captures the main points of the text.
 
-Criterion:
-- Summary should be shorter than the original text. Do not give it a score above 50 if it is longer.
-- The best scoring summaries should be one sentence.
-- Summary should capture the main points of the text
-- Summary should be accurate
-- Summary should be concise
+    Criterion:
+    - Summary should be shorter than the original text. Do not give it a score above 50 if it is longer.
+    - The best scoring summaries should be one sentence.
+    - Summary should capture the main points of the text
+    - Summary should be accurate
+    - Summary should be concise
 
-    Return a score between 0 and 100 for how well the summary captures the main points of the text. Your answer should be in the following format:
-    Analysis:\\n<analysis of quality>\\nScore:\\n<score>
+        Return a score between 0 and 100 for how well the summary captures the main points of the text. Your answer should be in the following format:
+        Analysis:\\n<analysis of quality>\\nScore:\\n<score>
     """
 
     return f"""Text to summarize:
@@ -118,14 +120,17 @@ Criterion:
     {ai_produced_summary}
     """
 
+
 # model output etc. is just the second argument
 # XXX: Need to support failure modes in metric computation...
-import ell.lmp.function 
+import ell.lmp.function
+
+
 @ell.lmp.function.function()
 def score(datapoint, output, n_retries=3):
     for _ in range(n_retries):
         try:
-            critique = critic(datapoint['input']['text'], output)
+            critique = critic(datapoint["input"]["text"], output)
             # print(critique)
             score = int(critique.split("Score:")[1].strip())
             return score
@@ -134,9 +139,16 @@ def score(datapoint, output, n_retries=3):
             continue
     raise Exception("Failed to score")
 
+
+# named criteria are interesting, allows anonymous functions &  specific isntantiation of functional criteria (partial(...))
 eval = ell.evaluation.Evaluation(
-    name="test", dataset=dataset, criterion=[score, lambda _, output: len(output)]
+    name="test",
+    dataset=dataset,
+    criteria={"score": score, "length": lambda _, output: len(output)},
 )
+# this means
+# we get metrics like "test-score", test-length etc.
+
 
 # Now we prompt shit
 @ell.simple(model="gpt-4o")
@@ -145,22 +157,68 @@ def summarizer(text: str):
     return f"Summarize the following text. {text}"
 
 
-ell.init(verbose=True, store='./logdir')
+ell.init(verbose=True, store="./logdir")
 
 
 # Using GPT-4o
 print("EVAL WITH GPT-4o")
 result = eval.run(summarizer, samples_per_datapoint=1, n_workers=4, verbose=True)
 print(result.scores)
-print("Mean critic score:", np.mean(result.scores[:, 0]))
-print("Mean length of completions:", np.mean(result.scores[:, 1]))
+print("Mean critic score:", np.mean([s['score'] for s in result.scores]))
+print("Mean length of completions:", np.mean([s['length'] for s in result.scores]))
 
 # Using gpt-4o-mini
 print("EVAL WITH GPT-4o-mini")
-result = eval.run(summarizer, samples_per_datapoint=1, n_workers=1, 
-                  api_params={"model": "gpt-4o-mini"}, verbose=True)
+result = eval.run(
+    summarizer,
+    samples_per_datapoint=1,
+    n_workers=1,
+    api_params={"model": "gpt-4o-mini"},
+    verbose=False,
+)
 print(result.scores)
-print("Mean critic score:", np.mean(result.scores[:, 0]))
-print("Mean length of completions:", np.mean(result.scores[:, 1]))
+print("Mean critic score:", np.mean([s['score'] for s in result.scores]))
+print("Mean length of completions:", np.mean([s['length'] for s in result.scores]))
 
+# Define named functions for criteria
+def score_criterion(datapoint, output, n_retries=3):
+    for _ in range(n_retries):
+        try:
+            critique = critic(datapoint["input"]["text"], output)
+            score = int(critique.split("Score:")[1].strip())
+            return score
+        except Exception as e:
+            print(f"Error: {e}")
+            continue
+    raise Exception("Failed to score")
 
+def length_criterion(_, output):
+    return len(output)
+
+# Example using a list of criteria
+eval_list = ell.evaluation.Evaluation(
+    name="test_list",
+    dataset=dataset,
+    criteria=[score_criterion, length_criterion],
+)
+
+# Example using a dictionary of criteria (as before)
+eval_dict = ell.evaluation.Evaluation(
+    name="test_dict",
+    dataset=dataset,
+    criteria={"score": score_criterion, "length": length_criterion},
+)
+
+# Run evaluation with list-based criteria
+print("EVAL WITH GPT-4o (list-based criteria)")
+result_list = eval_list.run(summarizer, samples_per_datapoint=1, n_workers=4, verbose=False)
+print(result_list.scores)
+print("Mean critic score:", np.mean([s['score_criterion'] for s in result_list.scores]))
+print("Mean length of completions:", np.mean([s['length_criterion'] for s in result_list.scores]))
+
+# Run evaluation with dict-based criteria
+print("EVAL WITH GPT-4o (dict-based criteria)")
+result_dict = eval_dict.run(summarizer, samples_per_datapoint=1, n_workers=4, verbose=True)
+print(result_dict.scores)
+print("Mean critic score:", np.mean([s['score'] for s in result_dict.scores]))
+print("Mean length of completions:", np.mean([s['length'] for s in result_dict.scores]))
