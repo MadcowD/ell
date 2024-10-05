@@ -249,3 +249,20 @@ eval = Evaluation(name="my_eval", dataset=poem_prompt_dataset, criteria={
 
 eval.run(write_a_poem)
 ```
+s
+
+So are we really going to actually Turn the past criteria directly into. Language model programs. I feel like that would be a problem if I use some pre canned or massive criteria. But we have to serialize them anyway. So let's just say that we put it into the computation graph like this and then we have a nice clean separation. I'll keep track of all invocaitons of metrics (I would have anyway) BUT do we seperate them
+
+say for example
+```python
+eval= Evaluation(name="my_eval", dataset=poem_prompt_dataset, criteria={
+    "metric", np.equals
+})
+
+if not isinstance((metric := np.equals), ell.metric):
+    # This is so hacky, but it's waht wandb does.
+
+    metric = ell.metric(lambda x: x)
+```
+
+

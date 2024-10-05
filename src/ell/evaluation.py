@@ -168,7 +168,7 @@ class Evaluation(BaseModel):
             raise ValueError(f"Invalid input type: {type(data_point['input'])}")
         
         if not isinstance(lmp_output, list):
-            lmp_output = [lmp_output]
+            lmp_output = [cast(Any, lmp_output)]
         
         if self.criteria:
             scores = {
