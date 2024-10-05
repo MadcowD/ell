@@ -188,7 +188,7 @@ def _content_block_to_anthropic_format(content_block: ContentBlock):
         if (image := content_block.image): return serialize_image_for_anthropic(image)
         elif ((text := content_block.text) is not None): return dict(type="text", text=text)
         elif (parsed := content_block.parsed):
-            return dict(type="text", text=json.dumps(parsed.model_dump()))
+            return dict(type="text", text=json.dumps(parsed.model_dump(), ensure_ascii=False))
         elif (tool_call := content_block.tool_call):
             return dict(
                 type="tool_use",

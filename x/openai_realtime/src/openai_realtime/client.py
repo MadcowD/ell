@@ -243,7 +243,7 @@ class RealtimeClient(RealtimeEventHandler):
                 'item': {
                     'type': 'function_call_output',
                     'call_id': tool['call_id'],
-                    'output': json.dumps(result)
+                    'output': json.dumps(result, ensure_ascii=False)
                 }
             })
         except Exception as e:
@@ -251,7 +251,7 @@ class RealtimeClient(RealtimeEventHandler):
                 'item': {
                     'type': 'function_call_output',
                     'call_id': tool['call_id'],
-                    'output': json.dumps({'error': str(e)})
+                    'output': json.dumps({'error': str(e)}, ensure_ascii=False)
                 }
             })
         self.create_response()

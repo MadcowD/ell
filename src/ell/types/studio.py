@@ -139,7 +139,9 @@ class InvocationContentsBase(SQLModel):
         ]
         
         total_size = sum(
-            len(json.dumps(field, default=(lambda x: json.dumps(x.model_dump(), default=str) if isinstance(x, BaseModel) else str(x))).encode('utf-8')) for field in json_fields if field is not None
+            len(json.dumps(field, default=(lambda x: json.dumps(x.model_dump(), default=str, ensure_ascii=False)
+                                           if isinstance(x, BaseModel) else str(x)), ensure_ascii=False).encode('utf-8'))
+            for field in json_fields if field is not None
         )
         # print("total_size", total_size)
         

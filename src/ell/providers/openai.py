@@ -64,7 +64,7 @@ try:
                                 type="function",
                                 function=dict(
                                     name=tool_call.tool.__name__,
-                                    arguments=json.dumps(tool_call.params.model_dump())
+                                    arguments=json.dumps(tool_call.params.model_dump(), ensure_ascii=False)
                                 )
                             ) for tool_call in tool_calls ],
                         role="assistant",
