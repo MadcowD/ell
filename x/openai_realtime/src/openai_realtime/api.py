@@ -77,5 +77,5 @@ class RealtimeAPI(RealtimeEventHandler):
         self.dispatch("client.*", event)
         self.log("sent:", event_name, event)
         
-        asyncio.create_task(self.ws.send(json.dumps(event)))
+        asyncio.create_task(self.ws.send(json.dumps(event, ensure_ascii=False)))
         return True

@@ -219,7 +219,7 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         # Write to the blob store 
         blob_id = config.store.blob_store.store_blob(
             json.dumps(invocation_contents.model_dump(
-            ), default=str).encode('utf-8'),
+            ), default=str, ensure_ascii=False).encode('utf-8'),
             invocation_id
         )
         invocation_contents = InvocationContents(
