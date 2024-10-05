@@ -3,7 +3,7 @@ import { Store } from "./serialize/sql";
 import { Provider } from './provider' // Assuming you have a Provider interface/class
 
 class Config {
-  private registry: Map<string, OpenAI> = new Map()
+  public registry: Map<string, OpenAI> = new Map()
   public verbose: boolean = false
   public wrappedLogging: boolean = true
   public overrideWrappedLoggingWidth?: number
@@ -97,9 +97,9 @@ class Config {
     this.defaultClient = client
   }
 
-  registerProvider(providerClass: Provider): void {
+  registerProvider(providerClass: Provider,clientType:any): void {
     this.lock.acquire('providers', () => {
-      this.providers.set(providerClass.getClientType(), providerClass)
+      this.providers.set(clientType, providerClass)
     })
   }
 
@@ -146,9 +146,9 @@ export function init(options: {
     config.setDefaultClient(options.defaultOpenaiClient)
   }
 
-  if (options.providers) {
-    options.providers.forEach((provider) => config.registerProvider(provider))
-  }
+  // if (options.providers) {
+  //   options.providers.forEach((provider) => config.registerProvider(provider))
+  // }
 }
 
 // Helper functions
@@ -157,5 +157,5 @@ export const setStore = (store: Store | string, autocommit?: boolean): void => c
 export const setDefaultLmParams = (params: Record<string, any>): void => config.setDefaultLmParams(params)
 export const setDefaultSystemPrompt = (prompt: string): void => config.setDefaultSystemPrompt(prompt)
 
-export const registerProvider = (providerClass: Provider): void => config.registerProvider(providerClass)
+export const registerProvider = (providerClass: Provider, clientType: any): void => config.registerProvider(providerClass, clientType)
 export const getProviderFor = (client: any): Provider | undefined => config.getProviderFor(client)

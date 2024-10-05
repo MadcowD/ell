@@ -6,6 +6,7 @@ import * as logging from '../util/_logging'
 import { Kwargs } from './types'
 import { LMPDefinition, tsc } from '../util/tsc'
 import { generateFunctionHash } from '../util/hash'
+import { EllCallParams } from '../provider'
 
 const logger = logging.getLogger('ell')
 
@@ -60,9 +61,15 @@ export const simple = <F extends SimpleLMPInner>(a: Kwargs, f: F): SimpleLMP<F> 
       ...a,
       tools: undefined,
     }
-    const callResult = await provider.callModel(modelClient, a.model, messages, apiParams, a.tools)
-    const [trackedResults, metadata] = await provider.processResponse(callResult, 'todo')
-    const result = convertMultimodalResponseToString(trackedResults[0])
+    const ellCall: EllCallParams = {
+      model: a.model,
+      messages: messages,
+      client: modelClient,
+      tools: a.tools,
+      apiParams: apiParams,
+    }
+    const [providerResult, _finalApiParams, _metadata] = await provider.call(ellCall)
+    const result = convertMultimodalResponseToString(providerResult[0])
     return result
   }
 

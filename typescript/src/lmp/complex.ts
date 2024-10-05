@@ -7,6 +7,7 @@ import { APIParams, ResponseFormatSchema } from './types'
 import { ToolFunction } from '../types/tools'
 import { LMPDefinition, tsc } from '../util/tsc'
 import * as logging from '../util/_logging'
+import { EllCallParams } from '../provider'
 
 const logger = logging.getLogger('ell')
 
@@ -303,16 +304,16 @@ export const complex = <PromptFn extends ComplexLMPInner, ResponseFormat extends
     const apiParams = {
       ...a,
     }
-    const callResult = await provider.callModel(
-      modelClient,
-      a.model,
-      messages,
-      apiParams,
-      // @ts-ignore TODO.
-      a.tools
-    )
-    const [trackedResults, metadata] = await provider.processResponse(callResult, 'todo')
-    const result = trackedResults.length === 1 ? trackedResults[0] : trackedResults
+    const ellCall: EllCallParams = {
+      model: a.model,
+      messages: messages,
+      client: modelClient,
+      apiParams: apiParams,
+      // todo. decorate tool function with tool metadata
+      tools: a.tools,
+    }
+    const [providerResult, _finalApiParams, _metadata] = await provider.call(ellCall)
+    const result = providerResult.length === 1 ? providerResult[0] : providerResult
     return result
   }
 

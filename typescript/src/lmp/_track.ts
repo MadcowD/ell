@@ -22,6 +22,7 @@ import {
 import { config } from '../configurator'
 import { convertMultimodalResponseToString, getModelClient } from './utils'
 import { serializeInvocation, serializeLMP } from '../serialize'
+import { EllCallParams } from '../provider'
 
 const logger = new Logger('track')
 
@@ -323,20 +324,26 @@ export const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string },
         ...a,
         tools: undefined,
       }
+      const ellCall: EllCallParams = {
+        model: a.model,
+        messages: messages,
+        client: modelClient,
+        apiParams: apiParams,
+        tools: a.tools,
+      }
+
       if (config.verbose) {
         modelUsageLoggerPre({ ...lmp, name: lmp.lmpName }, args, apiParams, lmp.lmpId, messages)
+        modelUsageLoggerPostStart(lmp.lmpId, a.n)
       }
 
-      const callResult = await provider.callModel(modelClient, a.model, messages, apiParams, a.tools)
+      const [trackedResults, metadata] = await provider.call(
+        ellCall, 
+        'todo_orogin_id', 
+        config.verbose ? modelUsageLoggerPostIntermediate(lmp.lmpId, a.n): undefined
+      )
       const end = performance.now()
       const latency_ms = end - start
-      if (config.verbose) {
-        modelUsageLoggerPostStart(lmp.lmpId, callResult.actualN)
-      }
-
-      const postIntermediate = modelUsageLoggerPostIntermediate(lmp.lmpId, callResult.actualN)
-
-      const [trackedResults, metadata] = await provider.processResponse(callResult, 'todo', postIntermediate)
       if (config.verbose) {
         modelUsageLoggerPostEnd()
       }
