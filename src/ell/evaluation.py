@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -21,27 +22,28 @@ from ell.util.closure import lexical_closure, lexically_closured_source
 
 
 
-
-# Or we'll actually do a datamodel from pydanytic. Not sure I like this.
-
 Datapoint = Dict[str, Any]
 Dataset = List[Dict[str, Any]]
-Criteria = Union[Dict[str, Callable[[Datapoint, Any], float]], List[Callable[[Datapoint, Any], float]]]
-
+Criterion = Callable[[Datapoint, Any], float]
+Criteria = Dict[str, Criterion]
 
 class EvaluationRun(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    scores: List[Dict[str, float]] = Field(default_factory=list)
-    inputs: List[Any] = Field(default_factory=list)
+    scores: Dict[str, List[float]] = Field(default_factory=dict)
+    dataset : Dataset = Field(default_factory=list)
     lmp: Optional[LMP] = Field(default=None)
     outputs: List[Any] = Field(default_factory=list)
     api_params: Dict[str, Any] = Field(default_factory=dict)
     start_time: datetime = Field(default_factory=datetime.now)
     end_time: Optional[datetime] = None
 
-    def write(self, serialized_evaluation) -> None:
-        # To link!
+    @property
+    def inputs(self) -> List[Any]:
+        return [d['input'] for d in self.dataset]
+    
 
+    def write(self, serialized_evaluation_run) -> None:
+        # To link!
         pass
 
 class Evaluation(BaseModel):
@@ -53,8 +55,11 @@ class Evaluation(BaseModel):
     default_api_params: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 
+    def write(self, serialized_evaluation_run) -> None:
+        pass
+
     @field_validator('criteria')
-    def validate_criteria(cls, criteria: Criteria) -> Dict[str, Callable[[Datapoint, Any], float]]:
+    def validate_criteria(cls, criteria: Union[Criteria, List[Criterion]]) -> Criteria:
         if isinstance(criteria, list):
             criteria_dict = {}
             for crit in criteria:
@@ -101,7 +106,7 @@ class Evaluation(BaseModel):
         original_verbose = config.verbose
         config.verbose = verbose
         try:
-            results = []
+            scores : Dict[str, List[float]] = defaultdict(list)
             outputs = []
             with ThreadPoolExecutor(max_workers=n_workers) as executor:
                 futures = [executor.submit(self._process_single, data_point, lmp_to_use, run_api_params) 
@@ -111,31 +116,26 @@ class Evaluation(BaseModel):
                 with tqdm(total=len(self.dataset), desc=desc) as pbar:
                     for future in as_completed(futures):
                         output, result = future.result()
-                        results.extend(result)  # Extend with the list of score dictionaries
+                        for name, value in result.items():
+                            scores[name].extend(value)
                         outputs.extend(output)  # Extend instead of append
                         pbar.update(1)
                         
                         if self.criteria:
                             # Update moving statistics for evaluation
-                            current_means = {name: statistics.mean([r[name] for r in results]) for name in self.criteria}
-                            current_medians = {name: statistics.median([r[name] for r in results]) for name in self.criteria}
-                            current_mins = {name: min([r[name] for r in results]) for name in self.criteria}
-                            current_maxs = {name: max([r[name] for r in results]) for name in self.criteria}
+                            current_means = {name: statistics.mean(scores[name]) for name in self.criteria}
                             
                             pbar.set_postfix({
                                 'means': {name: f'{value:.4f}' for name, value in current_means.items()},
-                                'medians': {name: f'{value:.4f}' for name, value in current_medians.items()},
-                                'mins': {name: f'{value:.4f}' for name, value in current_mins.items()},
-                                'maxs': {name: f'{value:.4f}' for name, value in current_maxs.items()},
                                 'most_recent_output': str(output[0])[:10]
                             })
                         else:
                             # Just show progress for optimization
-                            pbar.set_postfix({'processed': len(results), 'most_recent_output': str(output[0])[:10]})
+                            pbar.set_postfix({'processed': len(outputs), 'most_recent_output': str(output[0])[:10]})
             
             evaluation_run.outputs = outputs
             if self.criteria:
-                evaluation_run.scores = results  # Store the list of score dictionaries directly
+                evaluation_run.scores = scores  # Store the list of score dictionaries directly
             evaluation_run.end_time = datetime.now()
 
             if not hasattr(self, 'written_evaluation'):
@@ -147,7 +147,7 @@ class Evaluation(BaseModel):
         finally:
             config.verbose = original_verbose
             
-    def _process_single(self, data_point: Datapoint, lmp: LMP, api_params: Dict[str, Any]) -> Tuple[List[Any], List[Dict[str, float]]]:
+    def _process_single(self, data_point: Datapoint, lmp: LMP, api_params: Dict[str, Any]) -> Tuple[List[Any], Dict[str, List[float]]]:
         """
         Process a single data point using the LMP and apply all criteria.
         
@@ -171,9 +171,11 @@ class Evaluation(BaseModel):
             lmp_output = [lmp_output]
         
         if self.criteria:
-            scores = [
-                {name: float(crit(data_point, output)) for name, crit in self.criteria.items()}
-                for output in lmp_output
-            ]
+            scores = {
+                name: [
+                    float(crit(data_point, output)) for output in lmp_output 
+                ] for name, crit in self.criteria.items()
+            }
             return lmp_output, scores
-        return lmp_output, [{}] * len(lmp_output)  # Return empty score dicts if no criteria
+        return lmp_output, {}  # Return empty score dicts if no criteria
+
