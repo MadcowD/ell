@@ -5,8 +5,10 @@ import './providers/openai'
 import './models/openai'
 
 import { init, config } from './configurator'
-import { system, user } from './types/message'
+import { system, user, ImageContent } from './types/message'
 import { simple } from './lmp/simple'
 import { complex } from './lmp/complex'
+import { Image } from './util/image'
 
+export { Image, ImageContent }
 export { init, config, system, user, simple, complex }

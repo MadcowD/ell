@@ -1,13 +1,55 @@
-import { z, ZodType } from 'zod'
 import { ResponseFormatSchema, ResponseFormatValue } from '../lmp/types'
+import { Image } from '../util/image'
 
 // Assuming _lstr is a string type for now
 type _lstr = string
 type _lstr_generic = _lstr | string
 
-// We'll need to implement or import a proper image handling library
+class ImageContent {
+  image?: Image
+  url?: string
+  detail?: string
 
-type Image = any
+  constructor(data: { image?: Image; url?: string; detail?: string }) {
+    this.image = data.image
+    this.url = data.url
+    this.detail = data.detail
+
+    if (this.image !== undefined && this.url !== undefined) {
+      throw new Error("Both 'image' and 'url' cannot be set simultaneously.")
+    }
+    if (this.image === undefined && this.url === undefined) {
+      throw new Error("Either 'image' or 'url' must be set.")
+    }
+  }
+
+  static coerce(value: string | Image | ImageContent): ImageContent {
+    if (value instanceof ImageContent) {
+      return value
+    }
+
+    if (typeof value === 'string') {
+      if (value.startsWith('http://') || value.startsWith('https://')) {
+        return new ImageContent({ url: value })
+      }
+      // Assume it's a base64 string or file path
+      return new ImageContent({ image: new Image(value) })
+    }
+
+    if (value instanceof Image) {
+      return new ImageContent({ image: value })
+    }
+
+    throw new Error(`Invalid image type: ${typeof value}`)
+  }
+
+  async serialize(): Promise<string> {
+    if (this.image) {
+      return this.image.base64()
+    }
+    return this.url || ''
+  }
+}
 
 // determine how base models are being used in python
 class BaseModel {}
@@ -51,9 +93,7 @@ class ToolCall {
 class ContentBlock {
   text?: _lstr_generic
 
-  image?: Image | string
-
-  image_detail?: string
+  image?: ImageContent
 
   audio?: number[] | Float32Array
 
@@ -94,13 +134,16 @@ class ContentBlock {
     return null
   }
 
-  static coerce(content: string | ToolCall | ToolResult | BaseModel | ContentBlock | Image): ContentBlock {
+  static coerce(
+    content: string | ToolCall | ToolResult | BaseModel | ContentBlock | Image | ImageContent
+  ): ContentBlock {
     if (content instanceof ContentBlock) return content
     if (typeof content === 'string') return new ContentBlock({ text: content })
     if (content instanceof ToolCall) return new ContentBlock({ tool_call: content })
     if (content instanceof ToolResult) return new ContentBlock({ tool_result: content })
     if (content instanceof BaseModel) return new ContentBlock({ parsed: content })
-    if (content instanceof Image) return new ContentBlock({ image: content })
+    if (content instanceof Image) return new ContentBlock({ image: new ImageContent({ image: content }) })
+    if (content instanceof ImageContent) return new ContentBlock({ image: content })
     throw new Error(`Invalid content type: ${typeof content}`)
   }
 
@@ -108,7 +151,12 @@ class ContentBlock {
 }
 
 function coerceContentList(
-  content?: string | ContentBlock[] | (string | ContentBlock | ToolCall | ToolResult | BaseModel)[],
+  content?:
+    | string
+    | Image
+    | ImageContent
+    | ContentBlock[]
+    | (string | ContentBlock | ToolCall | ToolResult | BaseModel)[],
   contentBlockKwargs: Partial<ContentBlock> = {}
 ): ContentBlock[] {
   if (!content) {
@@ -127,7 +175,12 @@ class Message<ResponseFormat extends ResponseFormatSchema | string | Image = str
 
   constructor(
     public role: string,
-    content: string | ContentBlock[] | Array<string | ContentBlock | ToolCall | ToolResult | BaseModel>,
+    content:
+      | string
+      | ContentBlock[]
+      | Image
+      | ImageContent
+      | Array<string | ContentBlock | ToolCall | ToolResult | BaseModel>,
     contentBlockKwargs: Partial<ContentBlock> = {}
   ) {
     super()
@@ -139,8 +192,8 @@ class Message<ResponseFormat extends ResponseFormatSchema | string | Image = str
     return this.content.map((c) => c.text || `<${c.type}>`).join('\n')
   }
 
-  get images(): Image[] | undefined {
-    const images = this.content.filter((c) => c.image).map((c) => c.image as Image)
+  get images(): ImageContent[] | undefined {
+    const images = this.content.filter((c) => c.image).map((c) => c.image as ImageContent)
     return images.length ? images : undefined
   }
 
@@ -190,7 +243,7 @@ export function system(content: string | ContentBlock[]): Message {
   return new Message('system', content)
 }
 
-export function user(content: string | ContentBlock[]): Message {
+export function user(content: string | Image | ImageContent | ContentBlock[]): Message {
   return new Message('user', content)
 }
 
@@ -208,4 +261,4 @@ export type ChatLMP = (chat: Chat, ...args: any[]) => Chat
 export type LMP = OneTurn | MultiTurnLMP | ChatLMP
 export type InvocableLM = (...args: any[]) => _lstr_generic
 
-export { Message, ContentBlock, ToolCall, ToolResult }
+export { Message, ContentBlock, ToolCall, ToolResult, ImageContent }

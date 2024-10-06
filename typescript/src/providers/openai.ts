@@ -266,17 +266,11 @@ export const contentBlockToOpenAIFormat = async (
   contentBlock: ContentBlock
 ): Promise<OpenAI.Chat.Completions.ChatCompletionContentPart> => {
   if (contentBlock.image) {
-    const base64Image = serializeImage(contentBlock.image)
-    const imageUrl: any = { url: base64Image }
-
-    if (contentBlock.image_detail) {
-      imageUrl.detail = contentBlock.image_detail
-    }
-
+    const base64Image = await contentBlock.image.serialize()
     return {
       type: 'image_url',
-      image_url: imageUrl,
-    }
+      image_url: { url: base64Image, detail: contentBlock.image.detail },
+    } as OpenAI.Chat.Completions.ChatCompletionContentPartImage
   } else if (contentBlock.text) {
     return {
       type: 'text',
