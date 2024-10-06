@@ -3,22 +3,13 @@ try {
 } catch (e) {
   console.error('OpenAI not found. Please install it to use the OpenAI provider.')
 }
-import { APICallResult, BaseProvider, EllCallParams, Metadata, Provider } from '../provider'
-import { Message, ContentBlock, ToolCall } from '../types'
-import { LMP } from '../types/message'
-// import { serializeImage } from "../util/serialization";
-import { config, registerProvider } from '../configurator'
 import OpenAI from 'openai'
-// TODO>
-const serializeImage = (image: any) => {
-  return image
-  // return `data:image/jpeg;base64,${image.data}`;
-}
-
-import { Stream as OpenAIStream } from 'openai/streaming'
 import { zodFunction, zodResponseFormat } from 'openai/helpers/zod'
+import { ZodType } from 'zod'
+import { BaseProvider, EllCallParams, Metadata, Provider } from '../provider'
+import { Message, ContentBlock, ToolCall } from '../types'
+import { registerProvider } from '../configurator'
 import { Tool } from '../types/tools'
-import { ZodAny, ZodType } from 'zod'
 import * as logging from '../util/_logging'
 
 const logger = logging.getLogger('openai-provider')
@@ -28,12 +19,6 @@ type OpenAIResponseFormat =
   | OpenAI.ResponseFormatJSONObject
   | OpenAI.ResponseFormatJSONSchema
 
-class _lstr {
-  constructor(
-    public value: string,
-    public _originTrace: string
-  ) {}
-}
 
 const mapResponseFormat = (responseFormat: unknown): OpenAIResponseFormat | undefined => {
   if (responseFormat instanceof ZodType) {
@@ -74,6 +59,7 @@ const getCanStream = (ellCall: EllCallParams) => {
   }
   return true
 }
+
 const mapToStreamingParams = async (
   ellCall: EllCallParams
 ): Promise<OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming> => {
@@ -266,6 +252,11 @@ export const contentBlockToOpenAIFormat = async (
   contentBlock: ContentBlock
 ): Promise<OpenAI.Chat.Completions.ChatCompletionContentPart> => {
   if (contentBlock.image) {
+    // TODO. image constraints are 5mb and limited to certain file formats
+    // should we try to help out here?
+    //
+    // The Image class has a maxSize method that will ensure we are within bounds
+    // Right now the image class is only used for non-url images in ell.
     const base64Image = await contentBlock.image.serialize()
     return {
       type: 'image_url',

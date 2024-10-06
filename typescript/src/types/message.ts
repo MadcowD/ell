@@ -21,6 +21,9 @@ class ImageContent {
     if (this.image === undefined && this.url === undefined) {
       throw new Error("Either 'image' or 'url' must be set.")
     }
+    if (this.url && !(this.url.startsWith('http://') || this.url.startsWith('https://'))) {
+      throw new Error('ImageContent url must start with http:// or https://')
+    }
   }
 
   static coerce(value: string | Image | ImageContent): ImageContent {
@@ -30,6 +33,12 @@ class ImageContent {
 
     if (typeof value === 'string') {
       if (value.startsWith('http://') || value.startsWith('https://')) {
+        // Preserve the image url
+        // This means the image will be serialized as a url
+        // It also means we will never have the bytes in memory
+        // and so we will not perform any automated resizing or format conversion
+        // All other code paths support this and providers can always new Image(url).maxSize(5)
+        // to handle cases where the image at the url may be too large
         return new ImageContent({ url: value })
       }
       // Assume it's a base64 string or file path
@@ -44,10 +53,10 @@ class ImageContent {
   }
 
   async serialize(): Promise<string> {
-    if (this.image) {
-      return this.image.base64()
+    if (this.url) {
+      return this.url
     }
-    return this.url || ''
+    return this.image!.base64()
   }
 }
 
@@ -143,7 +152,7 @@ class ContentBlock {
     if (content instanceof ToolResult) return new ContentBlock({ tool_result: content })
     if (content instanceof BaseModel) return new ContentBlock({ parsed: content })
     if (content instanceof Image) return new ContentBlock({ image: new ImageContent({ image: content }) })
-    if (content instanceof ImageContent) return new ContentBlock({ image: content })
+    if (content instanceof ImageContent) return new ContentBlock({ image: ImageContent.coerce(content) })
     throw new Error(`Invalid content type: ${typeof content}`)
   }
 

@@ -1,6 +1,7 @@
 import { Message } from './types'
 import { Tool } from './types/tools'
 
+// todo. remove
 export interface APICallResult {
   response: any
   actualStreaming: boolean
@@ -101,7 +102,7 @@ export class BaseProvider implements Provider {
     return Object.keys(api_call_params).filter((key) => !this.disallowedApiParams().has(key))
   }
 
-  translateToProvider(ell_call: any): Record<string, any> {
+  translateToProvider(ell_call: any): Promise<Record<string, any>> {
     throw new Error('Method not implemented.')
   }
 
