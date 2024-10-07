@@ -27,6 +27,8 @@ Dataset = List[Dict[str, Any]]
 Criterion = Callable[[Datapoint, Any], float]
 Criteria = Dict[str, Criterion]
 
+
+
 class EvaluationRun(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     scores: Dict[str, List[float]] = Field(default_factory=dict)

@@ -234,11 +234,13 @@ def test_poem_eval():
 
     @ell.simple(model="gpt-4o")
     def write_a_bad_poem():
+        """Your poem must no logner than 75 words."""
         return "Write a really poorly written poem."
 
 
     @ell.simple(model="gpt-4o")
     def write_a_good_poem():
+        """Your poem must no logner than 60 words. """
         return "Write a really well written poem."
 
     @ell.simple(model="gpt-4o", temperature=0.1)
@@ -252,13 +254,21 @@ def test_poem_eval():
 
     ell.init(verbose=True, store="./logdir")
 
-    eval=ell.evaluation.Evaluation(name="poem_eval", dataset=dataset, criteria={"is_good": score})
 
-    print("EVALUATING BAD POEM")
-    result = eval.run(write_a_bad_poem, n_workers=10)
+    eval = ell.evaluation.Evaluation(name="poem_eval", dataset=dataset, criteria=
+                                    {"is_good": score,
+                                    "length": lambda _, output: len(output) ,
+                                    "average_word_length": lambda _, output: sum(len(word) for word in output.split()) / len(output.split())})
+
+    # print("EVALUATING BAD POEM")
+    # result = eval.run(write_a_bad_poem, n_workers=10)
 
     print("EVALUATING GOOD POEM")
     result = eval.run(write_a_good_poem, n_workers=10)
 
+
+
+
 if __name__ == "__main__":
+    # ell.init(verbose=True, store="./logdir")
     test_poem_eval()

@@ -21,6 +21,7 @@ from sqlalchemy import Index, func
 
 from typing import TypeVar, Any
 
+
 def utc_now() -> datetime:
     """
     Returns the current UTC timestamp.
@@ -152,6 +153,7 @@ class InvocationContentsBase(SQLModel):
 
 class InvocationContents(InvocationContentsBase, table=True):
     invocation: "Invocation" = Relationship(back_populates="contents")
+
 
 class Invocation(InvocationBase, table=True):
     lmp: SerializedLMP = Relationship(back_populates="invocations")

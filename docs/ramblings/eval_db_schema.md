@@ -191,7 +191,7 @@ Evaluation Score:
 
 Criterion:
     id
-    lmp_id
+    optional_lmp_id
     name #as defined by the criteria.
     evaluation
 
@@ -262,7 +262,302 @@ eval= Evaluation(name="my_eval", dataset=poem_prompt_dataset, criteria={
 if not isinstance((metric := np.equals), ell.metric):
     # This is so hacky, but it's waht wandb does.
 
-    metric = ell.metric(lambda x: x)
+    metric = ell.metric(lambda x: metric(x))
+
+
 ```
 
 
+
+
+```
+Evaluation Run:
+    id
+    dataset
+    lmp_id
+    evaluation_id
+    outputs
+    api_params
+    start_time
+    end_time
+
+Evaluation Score:
+    id
+    criterion_lmp_id
+    evaluation_run_id
+    evaluation_id # redundant
+    value
+
+Criterion(LMP):
+    id
+    optional_lmp_id
+    name #as defined by the criteria.
+    evaluation
+
+    src 
+    dependencies
+
+Evaluation:
+    id
+    name
+    dataset
+    (criteria)
+    (runs)
+
+```
+
+We need criterion to be LMPs for verisoning sake because of freevars and so on..
+Okay what does it look like if we have vals in the ocmputation graph without being an LMP?
+
+If we really accept that it needs to be an LMP, lets call it a criterion LMP, what does the src of 
+
+lambda x: np.mean(x) look like?
+
+ it will actually get the line of defiition for the lambda..
+ this raises this issue. (https://github.com/MadcowD/ell/issues/288) but this is neither here nor there.
+
+ So what are we going to do here?
+
+
+If we actually do this Real situation is that everything gets wrapped in a metric Including metrics that get passed in unless they're actually explicitly metrics, and then we hide the metric type underneath. This lets you reuse criterion.
+
+```python
+
+
+
+
+class Evaluation(BaseModel):
+
+    def __init__(self, name: str, dataset: Dataset, criteria: Dict[str, Callable]):
+        wrapped_criteria = {
+            name: ell.metric(criterion) if not isinstance(criterion, ell.metric) else criterion for name, criterion in criteria.items()
+        }
+        self.criteria = wrapped_criteria
+
+@ell.simple(model="gpt-4o")
+def write_a_poem(topic : str):
+    response = yield f"Write a poem about {topic}"
+    return response
+
+
+# So let's say we want to track this... I see so we don't actually want to 
+@ell.lmp
+def is_good_poem(datapoint, output):
+    response = yield f"Is this a good poem? {output}"
+    return "yes" in response.lower()
+
+# I think it shouldn't appear in the computation graph unless a user specifies it! hence ell.metric shouldn't do anyhting and it hsould be @ell.function(_hidden=True) or something like that.
+```
+
+But then a criterion isn't exactly an LMP:
+
+
+Evaluation Run:
+    id
+    dataset
+    lmp_id
+    evaluation_id
+    outputs
+    api_params
+    start_time
+    end_time
+
+ This is a problem because these are just invocation ids.........
+**Evaluation Score:**
+    id
+    criterion_id
+    evaluation_run_id
+    evaluation_id # redundant
+    value
+
+**Criterion**:
+    id
+    lmp_id
+    name #as defined by the criteria.
+    evaluation
+
+Evaluation:
+    id
+    name
+    dataset
+    (criteria)
+    (runs)
+
+
+
+To visualize an invocation with all of its corresponding criterion scores. What would that look like :
+```python
+import sqlmodel
+from models import EvaluationRun, Evaluation, EvaluationCriterion, EvaluationScore, LMP, Invocation
+
+# Get all of the LMP's with their corresponding critterionscore
+def get_invocation_with_criterion_scores(invocation_id: str, session: sqlmodel.Session):
+    # Query the invocation
+    invocation = session.query(Invocation).filter(Invocation.id == invocation_id).first()
+    
+    if not invocation:
+        raise ValueError(f"No invocation found with id {invocation_id}")
+
+    # Query the evaluation run associated with this invocation
+    evaluation_run = session.query(EvaluationRun).filter(EvaluationRun.id == invocation.evaluation_run_id).first()
+    
+    if not evaluation_run:
+        raise ValueError(f"No evaluation run found for invocation {invocation_id}")
+
+    # Query the evaluation associated with this run
+    evaluation = session.query(Evaluation).filter(Evaluation.id == evaluation_run.evaluation_id).first()
+    
+    if not evaluation:
+        raise ValueError(f"No evaluation found for evaluation run {evaluation_run.id}")
+
+    # Query all criteria for this evaluation
+    criteria = session.query(EvaluationCriterion).filter(EvaluationCriterion.evaluation_id == evaluation.id).all()
+
+    # Query all scores for this invocation
+    scores = session.query(EvaluationScore).filter(
+        EvaluationScore.evaluation_run_id == evaluation_run.id,
+        EvaluationScore.invocation_id == invocation.id
+    ).all()
+
+    # Organize scores by criterion
+    score_by_criterion = {score.criterion_id: score.value for score in scores}
+
+    # Construct the result
+    result = {
+        "invocation_id": invocation.id,
+        "lmp_id": invocation.lmp_id,
+        "output": invocation.output,
+        "evaluation_run_id": evaluation_run.id,
+        "evaluation_id": evaluation.id,
+        "evaluation_name": evaluation.name,
+        "criteria_scores": [
+            {
+                "criterion_id": criterion.id,
+                "criterion_name": criterion.name,
+                "score": score_by_criterion.get(criterion.id, None)
+            }
+            for criterion in criteria
+        ]
+    }
+
+    return result
+
+```
+See that feels bad.. We could do something like 
+
+```python
+# Query all invocations of the criteria that are linked to this evaluation run
+criterion_invocations = session.query(Invocation).join(
+    InvocationTrace, Invocation.id == InvocationTrace.invocation_consuming_id
+).filter(
+    InvocationTrace.invocation_consumer_id == invocation.id,
+    Invocation.lmp_id.in_([criterion.lmp_id for criterion in criteria])
+).all()
+
+# Organize criterion invocations by criterion LMP ID
+criterion_invocations_by_lmp = {inv.lmp_id: inv for inv in criterion_invocations}
+
+# Update the result to include criterion invocations
+result["criteria_scores"] = [
+    {
+        "criterion_id": criterion.id,
+        "criterion_name": criterion.name,
+        "score": score_by_criterion.get(criterion.id, None),
+        "criterion_invocation": {
+            "id": criterion_invocations_by_lmp[criterion.lmp_id].id,
+            "output": criterion_invocations_by_lmp[criterion.lmp_id].output
+        } if criterion.lmp_id in criterion_invocations_by_lmp else None
+    }
+    for criterion in criteria
+]
+```
+
+Alternative fast API way of doing this is:
+
+```python
+from sqlmodel import SQLModel, Field, Relationship
+from typing import Optional, List
+from datetime import datetime
+class Invocation(InvocationBase, table=True):
+    lmp: SerializedLMP = Relationship(back_populates="invocations")
+    consumed_by: List["Invocation"] = Relationship(
+        back_populates="consumes",
+        link_model=InvocationTrace,
+        sa_relationship_kwargs=dict(
+            primaryjoin="Invocation.id==InvocationTrace.invocation_consumer_id",
+            secondaryjoin="Invocation.id==InvocationTrace.invocation_consuming_id",
+        ),
+    )
+    consumes: List["Invocation"] = Relationship(
+        back_populates="consumed_by",
+        link_model=InvocationTrace,
+        sa_relationship_kwargs=dict(
+            primaryjoin="Invocation.id==InvocationTrace.invocation_consuming_id",
+            secondaryjoin="Invocation.id==InvocationTrace.invocation_consumer_id",
+        ),
+    )
+    used_by: Optional["Invocation"] = Relationship(back_populates="uses", sa_relationship_kwargs={"remote_side": "Invocation.id"})
+    uses: List["Invocation"] = Relationship(back_populates="used_by")
+    contents: InvocationContents = Relationship(back_populates="invocation")
+    __table_args__ = (
+        Index('ix_invocation_lmp_id_created_at', 'lmp_id', 'created_at'),
+        Index('ix_invocation_created_at_latency_ms', 'created_at', 'latency_ms'),
+        Index('ix_invocation_created_at_tokens', 'created_at', 'prompt_tokens', 'completion_tokens'),
+    )
+
+
+
+class EvaluationRun(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    dataset: str
+    lmp_id: str = Field(foreign_key="serializedlmp.lmp_id")
+    evaluation_id: int = Field(foreign_key="evaluation.id")
+    
+    api_params: str
+    start_time: datetime
+    end_time: datetime
+
+    evaluation: "Evaluation" = Relationship(back_populates="runs")
+    outputs: List[EvaluationInvocation] = Relationship(back_populates="evaluation_run")
+    
+
+
+
+# this linkage is 'ok'
+
+class EvaluationInvocation(SQLModel, table=True):
+    evaluation_run_id : int = Field(foreign_key="evaluationrun.id", primary_key=True)
+    invocation_id : int = Field(foreign_key="invocation.id", primary_key=True)
+
+    evaluation_run : EvaluationRun = Relationship(back_populates="invocations")
+    invocation : Invocation = Relationship(back_populates="evaluation_invocations")
+    
+    # Something like this with no back population
+    criteria : List[Invocation] = Relationship(
+        link_model=EvaluationCriterionLink,
+        sa_relationship_kwargs=dict(
+            primaryjoin="EvaluationInvocation.invocation_id==Invocation.id")
+    )
+
+class EvaluationCriterionLink(SQLModel, table=True):
+    evaluation_invocation_id : int = Field(foreign_key="evaluationinvocation.id")
+    criterion_invocation_id : int = Field(foreign_key="invocation.id")
+
+
+class Criterion(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    lmp_id: str = Field(foreign_key="serializedlmp.lmp_id")
+    name: str
+    evaluation_id: int = Field(foreign_key="evaluation.id")
+
+    evaluation: "Evaluation" = Relationship(back_populates="criteria")
+    scores: List[EvaluationScore] = Relationship(back_populates="criterion")
+
+class Evaluation(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    dataset: str
+
+    criteria: List[Criterion] = Relationship(back_populates="evaluation")
+    runs: List[EvaluationRun] = Relationship(back_populates="evaluation")
+    
