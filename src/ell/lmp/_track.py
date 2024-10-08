@@ -166,6 +166,9 @@ def _serialize_lmp(func):
     fn_closure = func.__ell_closure__
     lmp_type = func.__ell_type__
     name = func.__qualname__
+    if "<lambda>" in name:
+        name = name.replace("<lambda>", f"<lambda@{func.__ell_hash__.replace("lmp-", "")[:6]}>")
+    # print(name)
     api_params = getattr(func, "__ell_api_params__", None)
 
     lmps = config.store.get_versions_by_fqn(fqn=name)

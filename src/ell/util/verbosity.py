@@ -170,7 +170,7 @@ def model_usage_logger_pre(
     print(f"{PIPE_COLOR}║ {BOLD}Prompt:{RESET}")
     print(f"{PIPE_COLOR}╟{'─' * (terminal_width - 2)}╢{RESET}")
 
-    max_role_length = max(len("assistant"), max(len(message.role) for message in messages))
+    max_role_length = max(len("assistant"), max(len(message.role) for message in messages) if len(messages) > 0 else 0)
     print_wrapped_messages(messages, max_role_length, color)
 
 def model_usage_logger_post_start(color: str = "", n: int = 1):

@@ -31,7 +31,7 @@ class MySink(voice_recv.AudioSink):
         return False
 
     def write(self, user, data):
-        # print()
+        # logger.info()
         # Convert PCM data to numpy array and resample from 48kHz to 24kHz
         # Play the audio data to verify it's correct
 
@@ -77,7 +77,9 @@ class DiscordRealtimeAssistant(commands.Cog):
         self.conversation_check_task = None
         self.backoff_exponent = 0
         self.base_check_interval = 60  # 1 minute
-
+        self.speaking_item_id = None
+        self.llm_speaking_start = None
+        
     async def initialize(self):
         self.client = RealtimeClient(api_key=self.api_key, debug=self.debug, instructions=self.instructions)
         self.client.update_session(
@@ -104,23 +106,40 @@ class DiscordRealtimeAssistant(commands.Cog):
 
         @self.client.realtime.on('server.response.text.delta')
         def handle_text_delta(event):
-            print(event['delta'], end='', flush=True)
+            logger.info(event['delta'])
 
         @self.client.realtime.on('server.input_audio_buffer.speech_started')
         def handle_speech_started(event):
             asyncio.create_task(self.clear_queue(self.audio_queue))
             if self.audio_source:
                 self.audio_source.clear_buffer()
-            print("\nUser is speaking...")
+            logger.info("\nUser is speaking...")
             self.last_voice_activity_time = time.time()
             self.backoff_exponent = 0  # Reset backoff when speech is detected
             logger.info("Speech detected, reset backoff")
+            
+            if self.speaking_item_id: 
+                # self.client.cancel_response(
+                #     id=self.speaking_item_id,
+                #     sample_count= int((time.time() - self.llm_speaking_start) * 24000)
+                # )
+                self.speaking_item_id = None
+                self.llm_speaking_start = None
+
+            
 
         @self.client.realtime.on('server.input_audio_buffer.speech_stopped')
         def handle_speech_stopped(event):
-            print("\nUser finished speaking.")
-            # self.client.create_response()
+            logger.info("\nUser finished speaking.")
+            self.client.create_response()
 
+        @self.client.realtime.on('server.conversation.item.created')
+        def handle_conversation_item_created(event):
+            logger.info(f"Conversation item created: {event}")
+            if event['item']['type'] == 'message' and event['item']['role'] == 'assistant' :
+                self.llm_speaking_start = time.time()
+                self.speaking_item_id =  event['item']['id']
+                # self.client.cancel_response()
   
 
     async def clear_queue(self, queue: asyncio.Queue):
@@ -144,7 +163,7 @@ class DiscordRealtimeAssistant(commands.Cog):
                 new_data = self.audio_queue.get_nowait()
                 current_time = time.time()
                 ms_since_last_data = (current_time - self.last_data_time) * 1000
-                print(f"Time since last new data: {ms_since_last_data:.2f} ms")
+                logger.info(f"Time since last new data: {ms_since_last_data:.2f} ms")
                 self.last_data_time = current_time
                 # Upsample from 24kHz to 48kHz
                 new_data = np.repeat(new_data, 2) 
@@ -154,7 +173,7 @@ class DiscordRealtimeAssistant(commands.Cog):
                 
             except asyncio.QueueEmpty:
                 pass
-            # print(len(self.buffer))
+            # logger.info(len(self.buffer))
 
             if len(self.buffer) >= self.packet_size:
                 chunk = self.buffer[:self.packet_size]
@@ -164,7 +183,7 @@ class DiscordRealtimeAssistant(commands.Cog):
                 # time.sleep(0.04)
                 return stereo_chunk.tobytes()
             else:
-                # print("not enough data")
+                # logger.info("not enough data")
                 return bytes(self.packet_size* 4)  # Return silence if not enough data
 
         def cleanup(self):
@@ -178,7 +197,7 @@ class DiscordRealtimeAssistant(commands.Cog):
         self.audio_source = self.PyAudioSource(self.audio_queue, self.sample_rate)
         
         if self.voice_client and self.voice_client.is_connected():
-            self.voice_client.play(self.audio_source, signal_type='voice', after=lambda e: print(f'Player error: {e}') if e else None)
+            self.voice_client.play(self.audio_source, signal_type='voice', after=lambda e: logger.info(f'Player error: {e}') if e else '')
             logger.info("Started audio playback")
 
         while not self.stop_event.is_set():
@@ -284,8 +303,8 @@ class DiscordRealtimeAssistant(commands.Cog):
 
         while not self.stop_event.is_set():
             item = await self.client.wait_for_next_completed_item()
-            # print(item)
-            print(item)
+            # logger.info(item)
+            logger.info(item)
             if item['item']['type'] == 'message' and item['item']['role'] == 'assistant':
                 transcript = ''.join([c['text'] for c in item['item']['content'] if c['type'] == 'text'])
                 logger.info(f"Assistant response: {transcript}")
