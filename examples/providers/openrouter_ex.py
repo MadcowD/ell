@@ -3,7 +3,7 @@ OpenRouter example using OpenAI client.
 """
 from os import getenv
 from openai import OpenAI
-import ell
+import ell2a
 
 # Initialize OpenAI client with OpenRouter's base URL and API key
 openrouter_client = OpenAI(
@@ -25,7 +25,7 @@ extra_body = {
     # "transforms": ["middle-out"]
 }
 
-@ell.simple(model="meta-llama/llama-3.1-8b-instruct", client=openrouter_client, extra_body=extra_body)
+@ell2a.simple(model="meta-llama/llama-3.1-8b-instruct", client=openrouter_client, extra_body=extra_body)
 def generate_greeting(name: str) -> str:
     """You are a friendly AI assistant."""
     return f"Generate a warm, concise greeting for {name}"

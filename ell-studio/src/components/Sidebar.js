@@ -34,7 +34,7 @@ const Sidebar = () => {
       className="bg-card border-r border-border h-screen py-6 flex flex-col"
     >
       <div className="flex justify-center items-center mb-8">
-        <img src="/gif.gif" alt="ell-studio Logo" className="h-4 invert" />
+        <img src="/gif.gif" alt="ell2a-studio Logo" className="h-4 invert" />
       </div>
       
       <nav className="flex-grow space-y-1 px-2">

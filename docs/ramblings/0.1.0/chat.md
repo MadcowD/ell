@@ -5,10 +5,10 @@ There needs to be a better way to do chat and message history than
 ```python
 
 
-@ell.complex(model="claude-3-5-sonnet-20240620", tools=[create_claim_draft, approve_claim], temperature=0.1, max_tokens=400)
+@ell2a.complex(model="claude-3-5-sonnet-20240620", tools=[create_claim_draft, approve_claim], temperature=0.1, max_tokens=400)
 def insurance_claim_chatbot(message_history: List[Message]) -> List[Message]:
     return [
-        ell.system( """You are a an insurance adjuster AI. You are given a dialogue with a user and have access to various tools to effectuate the insurance claim adjustment process. Ask question until you have enough information to create a claim draft. Then ask for approval."""),
+        ell2a.system( """You are a an insurance adjuster AI. You are given a dialogue with a user and have access to various tools to effectuate the insurance claim adjustment process. Ask question until you have enough information to create a claim draft. Then ask for approval."""),
     ] + message_history
  
 
@@ -20,22 +20,22 @@ okay here is what I think. we shouldnt fuck over the use case wher eyou want to 
 
 
 ```python
-@ell.function()
+@ell2a.function()
 ```
-when inside an ell function of any kind you are allowed to use, `ell.chat` and any of the other `ell` fns. `@ell.function` is a wrapper that enforces versioning on the function.
+when inside an ell2a function of any kind you are allowed to use, `ell2a.chat` and any of the other `ell2a` fns. `@ell2a.function` is a wrapper that enforces versioning on the function.
 
-1. `ell.chat`, a simple winterface for doing multistep:
+1. `ell2a.chat`, a simple winterface for doing multistep:
 ```python
-@ell.function()
+@ell2a.function()
 def my_multitern_cot(question : str) -> str:
-    with ell.chat(model="gpt-4o") as chat:
+    with ell2a.chat(model="gpt-4o") as chat:
         turn1 = chat.send("hey")
         # flush would allow you to not send yet
         turn2 = chat.send("oh cool")
         current_history = chat.history 
         print(current_history)
         # Can send a list of messages. 
-        turn3 = chat.send([ell.user("thats fine"), ell.assistant("im forcing you to say this"), ell.user("whoa"])
+        turn3 = chat.send([ell2a.user("thats fine"), ell2a.assistant("im forcing you to say this"), ell2a.user("whoa"])
 
         # can override history
         turn5 = chat.send(..., history=chat.history[1:] ) 
@@ -45,42 +45,42 @@ def my_multitern_cot(question : str) -> str:
     return turn3.content
 ```
 
-2. `ell.simple` and `ell.complex` can be used as stand alone lm calls if you want to bypass decorators **IF they are wrapped in an `ell.function`**
+2. `ell2a.simple` and `ell2a.complex` can be used as stand alone lm calls if you want to bypass decorators **IF they are wrapped in an `ell2a.function`**
 
 ```python
-@ell.function()
+@ell2a.function()
 def do_multiple_calls_without_decomposing():
-    str_respspone_1 = ell.simple(model="gpt-4o", messages=[
-        ell.system("You are a helpful assistant"),
-        ell.user("hi"),
+    str_respspone_1 = ell2a.simple(model="gpt-4o", messages=[
+        ell2a.system("You are a helpful assistant"),
+        ell2a.user("hi"),
     ]) 
 
-    str_respspone_2 = ell.simple(model="gpt-4o", "A user message by default") 
+    str_respspone_2 = ell2a.simple(model="gpt-4o", "A user message by default") 
 
-    message_response = ell.complex(model="gpt-4o", messages=[
-        ell.user("Please call this tool!")
+    message_response = ell2a.complex(model="gpt-4o", messages=[
+        ell2a.user("Please call this tool!")
     ], tools=[my_tool])
 
 ```
 this forces version history. Kind of like in pytorch how you have to wrap everything in a `Module` class.
 
 
-# Parsing w/ `ell.function()`
+# Parsing w/ `ell2a.function()`
 
-Say you want to parse the output fo an llm that doesnt supprot resposne format. You can use `ell.simple` & `ell.complex` as api calls inside an `ell.function` to accomplish this
+Say you want to parse the output fo an llm that doesnt supprot resposne format. You can use `ell2a.simple` & `ell2a.complex` as api calls inside an `ell2a.function` to accomplish this
 
 ```python
-@ell.function()
+@ell2a.function()
 def CoT(question :str): 
-     output = ell.simple(
+     output = ell2a.simple(
         messages=[
-            ell.system(f"""Your goal is to answer the question with a detailed response.
+            ell2a.system(f"""Your goal is to answer the question with a detailed response.
                 Question: {question}
                 Your answer must be in the format.
                 Rational: Let's think step by step in order to <..rest of your reasoning>
                 Answer: <..your answer>
                 """),
-            ell.user(f"Question: {question}"),
+            ell2a.user(f"Question: {question}"),
         ],
         model="gpt-4-turbo",
         temperature=0.1,
@@ -96,14 +96,14 @@ def CoT(question :str):
 You can also do retries if you want:
 
 ```python
-@ell.function(retries=3)
+@ell2a.function(retries=3)
 def CoT(question :str):
     ....
 ```
 
 You can also do it with traditional LMPs if you want to track the specific inputs and outptus of your API calls:
 ```python
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def cot_one_shot(question : str):
     """Your goal is to answer the question with a detailed response.
                 Question: {question}
@@ -112,7 +112,7 @@ def cot_one_shot(question : str):
                 Answer: <..your answer>"""
     return "Question {question}"
 
-@ell.function()
+@ell2a.function()
 def CoT(question : str):
     output = cot_one_shot(question)
     answer = output.split("Answer:")[1].strip()
@@ -121,12 +121,12 @@ def CoT(question : str):
 
 It's not a perfect solution but it does version your api calls.
 
-We can also do shit liek serialziign the code of an `ell.chat` context manager!!!!! Just fyi.
+We can also do shit liek serialziign the code of an `ell2a.chat` context manager!!!!! Just fyi.
 
 
 ```python
 
-with ell.chat(model="gpt-4o") as chat:
+with ell2a.chat(model="gpt-4o") as chat:
 
     chat.send(...)
 
@@ -147,7 +147,7 @@ class MyAgent():
         self.history = []
         pass
 
-    @ell.function()
+    @ell2a.function()
     def act(self, history : List[Message]):
         # This si is broken.
 

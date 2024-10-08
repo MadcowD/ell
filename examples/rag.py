@@ -1,8 +1,8 @@
-# you'll need to install sklearn as its not a dependency of ell
+# you'll need to install sklearn as its not a dependency of ell2a
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-from ell import ell
+from ell2a import ell2a
 
 
 class VectorStore:
@@ -27,7 +27,7 @@ class VectorStore:
         ]
 
 
-@ell.simple(model="gpt-4o-mini")
+@ell2a.simple(model="gpt-4o-mini")
 def rag(query: str, context: str) -> str:
     """You are an AI assistant using Retrieval-Augmented Generation (RAG).
     RAG enhances your responses by retrieving relevant information from a knowledge base.
@@ -51,15 +51,15 @@ if __name__ == "__main__":
     
 
     documents = [
-        "ell is a cool new framework written by will",
+        "ell2a is a cool new framework written by will",
         "will writes a lot of the code while on x.com the everything app",
-        "ell will someday be go-to tool for getting things done",
+        "ell2a will someday be go-to tool for getting things done",
         "george washington is the current president of the United states of America",
     ]
 
     vector_store = VectorStore.from_documents(documents)
 
-    query = "who created ell?"
+    query = "who created ell2a?"
     context = vector_store.search(query)
 
     question1 = rag(query, context)

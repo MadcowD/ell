@@ -140,16 +140,16 @@ class RealtimeClient(RealtimeEventHandler):
             raise ValueError("Missing tool name in definition")
         name = definition['name']
         if name in self.tools:
-            raise ValueError(f"Tool '{name}' already added. Please use .remove_tool('{name}') before trying to add again.")
+            raise ValueError(f"Agent '{name}' already added. Please use .remove_tool('{name}') before trying to add again.")
         if not callable(handler):
-            raise ValueError(f"Tool '{name}' handler must be a function")
+            raise ValueError(f"Agent '{name}' handler must be a function")
         self.tools[name] = {'definition': definition, 'handler': handler}
         self.update_session()
         return self.tools[name]
 
     def remove_tool(self, name):
         if name not in self.tools:
-            raise ValueError(f"Tool '{name}' does not exist, cannot be removed.")
+            raise ValueError(f"Agent '{name}' does not exist, cannot be removed.")
         del self.tools[name]
         return True
 
@@ -237,7 +237,7 @@ class RealtimeClient(RealtimeEventHandler):
             json_arguments = json.loads(tool['arguments'])
             tool_config = self.tools.get(tool['name'])
             if not tool_config:
-                raise ValueError(f"Tool '{tool['name']}' has not been added")
+                raise ValueError(f"Agent '{tool['name']}' has not been added")
             result = await tool_config['handler'](json_arguments)
             self.realtime.send('conversation.item.create', {
                 'item': {

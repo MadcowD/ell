@@ -2,7 +2,7 @@
 name = "openai-realtime"
 version = "0.0.1"
 description = "A real-time API client for OpenAI using websockets"
-authors = ["William Guss"]
+authors = ["Xingqiang Chen"]
 license = "MIT"
 readme = "README.md"
 packages = [{include = "openai_realtime", from = "src"}]

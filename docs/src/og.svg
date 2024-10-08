@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#50E3C2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Black background -->
+  <rect width="200" height="200" fill="black" />
+  
+  <!-- Main circle with gradient -->
+  <circle cx="100" cy="100" r="90" fill="none" stroke="url(#grad)" stroke-width="4" />
+  
+  <!-- Stylized "ell2a" text -->
+  <text x="100" y="145" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="url(#grad)">ell2a</text>
+  
+  <!-- Program/code representation -->
+  <g transform="translate(60, 50) scale(0.8)">
+    <path d="M0 0 H80 V15 H0 Z M0 25 H60 V40 H0 Z M0 50 H70 V65 H0 Z" fill="none" stroke="url(#grad)" stroke-width="2"/>
+  </g>
+  
+  <!-- Function symbol to represent functional nature -->
+  <text x="170" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="url(#grad)">ƒ</text>
+</svg>

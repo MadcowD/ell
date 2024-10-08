@@ -55,12 +55,12 @@ class KnowledgeGraph(BaseModel):
         dot.render(prefix, format="png", view=True)
 
 
-import ell
+import ell2a
 
-@ell.simple(model="o1-mini")
+@ell2a.simple(model="o1-mini")
 def update_knowledge_graph(cur_state: KnowledgeGraph, inp: str, i: int, num_iterations: int):
     return [
-        ell.user(f"""You are an iterative code base knowledge graph builder. You are trying to build the most useful represnetaiton about how thigns in the codebase interact with eachother.
+        ell2a.user(f"""You are an iterative code base knowledge graph builder. You are trying to build the most useful represnetaiton about how thigns in the codebase interact with eachother.
                 It is important that your graph is semantically meaningful The edges should not just be has method etc. A knowledge graph woild best convey that to someone learning the system for the first time & doesn't know programming.
 
                 You are given the current state of the graph, and you must append the nodes and edges   to it Do not procide any duplcates and try to reuse nodes as much as possible. Extract any new nodes and edges from the following:
@@ -72,7 +72,7 @@ def update_knowledge_graph(cur_state: KnowledgeGraph, inp: str, i: int, num_iter
                 Do not wrap your JSON update in back ticks (```)
                 Do not include any other text.
                 """),
-        ell.user(f"""
+        ell2a.user(f"""
         # Part {i}/{num_iterations} of the source code:
 
         {inp}"""),
@@ -95,7 +95,7 @@ def generate_graph(input: List[str]) -> KnowledgeGraph:
 
 
 if __name__ == "__main__":
-    ell.init(verbose=True, store='./logdir', autocommit=True)
+    ell2a.init(verbose=True, store='./logdir', autocommit=True)
     generate_graph([
         """
         class User:

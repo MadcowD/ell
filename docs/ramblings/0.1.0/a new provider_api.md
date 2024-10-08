@@ -15,7 +15,7 @@ def validate_call_params(self, model : str, client : Any, api_params : Dict[str,
 
 
 class ProviderCapabilities(BaseModel):
-    """The capabilities of a provider. This allowes ell to validate at compile time that a provider supports the features it needs."""
+    """The capabilities of a provider. This allowes ell2a to validate at compile time that a provider supports the features it needs."""
     supports_streaming : bool
     supports_structured_outputs : bool
     supports_function_calling : bool
@@ -84,7 +84,7 @@ def validate_provider_call_params(self, ell_call: EllCall, client: Any):
 # If we use response_format -> we sshould parse the resposne into the universal format.
 
 
-# i like that u can use your proviers params in your @ell.call
+# i like that u can use your proviers params in your @ell2a.call
 # alterntively we coudl do the vercel shit
 
 # universal params: subset of params
@@ -93,14 +93,14 @@ class UniversalParams(BaseModel):
     messages : List[Message]
     
 
-@ell.simple(openai("gpt-4", **openai params), tools=[], ell params.. )
+@ell2a.simple(openai("gpt-4", **openai params), tools=[], ell2a params.. )
 
 
 
 # Trying to currently solve hte params problem. I dont want you to have to learn a new set of params. You should be able to use your API params however you want.
 # Not even a universal set of params. But then we get ugly shit like
 
-@ell.simple("claude-3", system="hi")
+@ell2a.simple("claude-3", system="hi")
 
 
 # Process
@@ -122,7 +122,7 @@ class UniversalParams(BaseModel):
 
 
 # Params
-# eveyr api has their own set of params. the ell way right now is fine, but some should be prohibited and we want to know what params are available.
+# eveyr api has their own set of params. the ell2a way right now is fine, but some should be prohibited and we want to know what params are available.
 # can solve using 
 
 
@@ -138,7 +138,7 @@ class Provider2_0(ABC):
     @abstractmethod
     def disallowed_provider_params(self) -> List[str]:
         """
-        Returns a list of disallowed call params that ell will override.
+        Returns a list of disallowed call params that ell2a will override.
         """
         return {"system", "tools", "tool_choice", "stream", "functions", "function_call"}
     
@@ -168,7 +168,7 @@ class Provider2_0(ABC):
     
 
 class CallMetadata(BaseModel):
-    """A universal metadata format for ell studio?"""
+    """A universal metadata format for ell2a studio?"""
     usage : Optional[Usage] = None
     model : Optional[str] = None
     provider : Optional[str] = None
@@ -197,7 +197,7 @@ def translate_provider_to_ell(
 # We could force providers to extract toolcalls from the response and then we wouldnt have to do it for every provider. 
 
 
-@ell.simple(tools=[mytool], system="hi")
+@ell2a.simple(tools=[mytool], system="hi")
 def my_prompt(self, client, model, messages, tools, **api_params):
     return "usethist tool"
 

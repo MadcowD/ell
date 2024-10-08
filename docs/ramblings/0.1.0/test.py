@@ -39,4 +39,4 @@ class MyCallable:
     def __call__(self, *args, **kwargs):
         return self.fn(*args, **kwargs)
     
-# Oh so now ell.simples can actually be used as decorators on classes
+# Oh so now ell2a.simples can actually be used as decorators on classes

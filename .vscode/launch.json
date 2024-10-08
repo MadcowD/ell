@@ -4,7 +4,7 @@
             "name": "studio:server:dev",
             "type": "python",
             "request": "launch",
-            "module": "ell.studio",
+            "module": "ell2a.studio",
             "args": [
                 "--storage-dir",
                 "${workspaceFolder}/./logdir",
@@ -21,7 +21,7 @@
                 "run",
                 "start:dev"
             ],
-            "cwd": "${workspaceFolder}/ell-studio",
+            "cwd": "${workspaceFolder}/ell2a-studio",
             "console": "integratedTerminal"
         }
     ]

@@ -4,15 +4,15 @@ import pytest
 import math
 from typing import Set, Any
 import numpy as np
-from ell.util.closure import (
+from ell2a.util.closure import (
     lexical_closure,
     get_referenced_names,
     is_function_called,
 )
-import ell
-from ell.util.closure_util import get_referenced_names, should_import
-from ell.util.serialization import is_immutable_variable
-from ell.util.should_import import should_import
+import ell2a
+from ell2a.util.closure_util import get_referenced_names, should_import
+from ell2a.util.serialization import is_immutable_variable
+from ell2a.util.should_import import should_import
 
 
 def test_lexical_closure_simple_function():
@@ -115,13 +115,13 @@ def test_lexical_closure_uses_type():
 
 
 def test_lexical_closure_uses():
-    ell.config.lazy_versioning = False
-    @ell.simple(model="gpt-4")
+    ell2a.config.lazy_versioning = False
+    @ell2a.simple(model="gpt-4")
     def dependency_func():
         return "42"
     
 
-    @ell.simple(model="gpt-4")
+    @ell2a.simple(model="gpt-4")
     def main_func():
         return dependency_func() 
 
@@ -185,7 +185,7 @@ def test_lexical_closure_with_class_methods():
 # tests/test_closure.py
 
 import pytest
-from ell.util.closure import lexically_closured_source
+from ell2a.util.closure import lexically_closured_source
 
 # def test_lexical_closure_eliminates_redundant_dependencies():
 #     # Define a shared dependency function
@@ -385,22 +385,22 @@ def test_lexical_closure_with_async_function():
 #     assert isinstance(uses, Set)
 
 # def test_ell_uses_only_include_ell_decorated_functions():
-#     # Define an ell-decorated function
-#     @ell.simple(model="gpt-4o-mini")
+#     # Define an ell2a-decorated function
+#     @ell2a.simple(model="gpt-4o-mini")
 #     def do_nothing():
 #         pass
 
-#     # Define non-ell functions
+#     # Define non-ell2a functions
 #     def get_random_adjective():
 #         adjectives = ["enthusiastic", "cheerful", "warm", "friendly", "heartfelt", "sincere"]
-#         do_nothing()  # This is an ell-decorated function
+#         do_nothing()  # This is an ell2a-decorated function
 #         return random.choice(adjectives)
 
 #     def get_random_punctuation():
 #         return random.choice(["!", "!!", "!!!"])
 
-#     # Define an ell-decorated function that uses both ell and non-ell functions
-#     @ell.simple(model="gpt-4o-mini")
+#     # Define an ell2a-decorated function that uses both ell2a and non-ell2a functions
+#     @ell2a.simple(model="gpt-4o-mini")
 #     def hello(name: str):
 #         adjective = get_random_adjective()
 #         punctuation = get_random_punctuation()
@@ -430,7 +430,7 @@ def test_lexical_closure_with_async_function():
 #     assert get_random_punctuation_definitions == 1, "get_random_punctuation should be defined exactly once in the closure source"
 #     assert do_nothing_definitions == 1, "do_nothing should be defined exactly once in the closure source"
 
-#     # Ensure that __ell_uses__ contains only ell-decorated functions
+#     # Ensure that __ell_uses__ contains only ell2a-decorated functions
 #     # Retrieve the closure attributes from the original function
 #     closure_attributes = hello.__ell_closure__
 #     uses_set = hello.__ell_uses__
@@ -439,11 +439,11 @@ def test_lexical_closure_with_async_function():
 #     assert len(uses_set) == 1, "__ell_uses__ should contain exactly one function"
 #     assert do_nothing in uses_set, "__ell_uses__ should contain only do_nothing"
 
-#     # Additionally, ensure that non-ell functions are not in __ell_uses__
+#     # Additionally, ensure that non-ell2a functions are not in __ell_uses__
 #     assert get_random_adjective not in uses_set, "get_random_adjective should not be in __ell_uses__"
 #     assert get_random_punctuation not in uses_set, "get_random_punctuation should not be in __ell_uses__"
 
-#     # Ensure that dependencies include non-ell functions
+#     # Ensure that dependencies include non-ell2a functions
 #     # For simplicity, we'll check that get_random_punctuation is present as a dependency
 #     assert "def get_random_punctuation():" in closure_source, "get_random_punctuation should be included as a dependency"
 

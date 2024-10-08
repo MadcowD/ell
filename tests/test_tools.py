@@ -1,11 +1,11 @@
 
 from typing import Dict
 
-from ell.types.message import ContentBlock, ToolResult
+from ell2a.types.message import ContentBlock, ToolResult
 
 
 def test_tool_json_dumping_behavior():
-    from ell import tool
+    from ell2a import tool
     import json
 
     # Create a mock tool function

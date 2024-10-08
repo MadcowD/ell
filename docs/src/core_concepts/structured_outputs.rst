@@ -5,7 +5,7 @@ Structured Outputs
 
 Structured outputs are essential for ensuring that language model responses are both controlled and predictable. By defining a clear schema for the expected output, we can leverage the power of language models to generate responses that adhere to specific formats and constraints.
 
-Consider the following example, which demonstrates how to use Pydantic models to define structured outputs in ell:
+Consider the following example, which demonstrates how to use Pydantic models to define structured outputs in ell2a:
 
 .. code-block:: python
 
@@ -16,7 +16,7 @@ Consider the following example, which demonstrates how to use Pydantic models to
        rating: int = Field(description="The rating of the movie out of 10")
        summary: str = Field(description="A brief summary of the movie")
 
-   @ell.complex(model="gpt-4o-2024-08-06", response_format=MovieReview)
+   @ell2a.complex(model="gpt-4o-2024-08-06", response_format=MovieReview)
    def generate_movie_review(movie: str) -> MovieReview:
        """You are a movie review generator. Given the name of a movie, you need to return a structured review."""
        return f"generate a review for the movie {movie}"
@@ -53,15 +53,15 @@ In this example, we first generate a movie review using our `generate_movie_revi
           rating: int = Field(description="The rating of the movie out of 10")
           summary: str = Field(description="A brief summary of the movie")
 
-      @ell.simple(model="gpt-3.5-turbo")
+      @ell2a.simple(model="gpt-3.5-turbo")
       def generate_movie_review_manual(movie: str):
           return [
-              ell.system(f"""You are a movie review generator. Given the name of a movie, you need to return a structured review in JSON format.
+              ell2a.system(f"""You are a movie review generator. Given the name of a movie, you need to return a structured review in JSON format.
 
       You must absolutely respond in this format with no exceptions.
       {MovieReview.model_json_schema()}
       """),
-              ell.user("Review the movie: {movie}"),
+              ell2a.user("Review the movie: {movie}"),
           ]
 
       # parser support coming soon!

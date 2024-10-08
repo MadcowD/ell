@@ -3,9 +3,9 @@ from typing import Dict
 import pydantic
 import pytest
 from unittest.mock import MagicMock, patch
-from ell.providers.openai import OpenAIProvider, _content_block_to_openai_format
-from ell.provider import EllCallParams
-from ell.types import Message, ContentBlock, ToolCall, ToolResult
+from ell2a.providers.openai import OpenAIProvider, _content_block_to_openai_format
+from ell2a.provider import EllCallParams
+from ell2a.types import Message, ContentBlock, ToolCall, ToolResult
 from openai import Client
 from openai.types.chat import (
     ChatCompletion,
@@ -285,7 +285,7 @@ class TestOpenAIProvider:
         mock_stream = MagicMock(spec=Stream)
         mock_stream.__iter__.return_value = [stream_chunk]
 
-        with patch("ell.providers.openai.Stream", return_value=mock_stream):
+        with patch("ell2a.providers.openai.Stream", return_value=mock_stream):
             messages, metadata = provider.translate_from_provider(
                 provider_response=mock_stream,
                 ell_call=ell_call_params,
@@ -466,11 +466,11 @@ class TestOpenAIProvider:
 
     # Suggested Test for _content_block_to_openai_format
 def test_content_block_to_openai_format():
-    from ell.providers.openai import _content_block_to_openai_format
-    from ell.types import ContentBlock
-    from ell.util.serialization import serialize_image
+    from ell2a.providers.openai import _content_block_to_openai_format
+    from ell2a.types import ContentBlock
+    from ell2a.util.serialization import serialize_image
     from PIL import Image
-    from ell.types.message import ImageContent 
+    from ell2a.types.message import ImageContent 
     import numpy as np
 
     # Test text content

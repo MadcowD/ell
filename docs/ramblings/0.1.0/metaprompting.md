@@ -1,8 +1,8 @@
 
 ```python
-import ell
+import ell2a
 
-@ell.simple()
+@ell2a.simple()
 def chain_of_thought(question: str) -> str:
     return f"Reasoning: Let's think step by step in order to "
 ```
@@ -15,19 +15,19 @@ in practice i migth actually not do shit liek that at all like inside ghost it w
 
 ```python
 
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def generate_approaches_to_eamil_somone(linkedinprofile, aboutme):
     """ You are a helpful assistant that generates approaches to email someone based on their linkedin profile and your about me. """
 
     return f"Come up with one for: {linkedinprofile} given that I am {aboutme}" 
 
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def come_up_with_hook_subject_line(approaches, linkedinprofile):
     """ You are a helpful assistant that generates hook subject lines for emails based on approaches to emailing someone and their linkedin profile. """
 
     return f"Come up with a hook subject line for: {approaches} given that I am {linkedinprofile}"
 
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def write_email(hook_subject_line, linkedinprofile, aboutme):
     return f"Write an email based on the hook subject line: {hook_subject_line} and the approaches: {approaches}"
 
@@ -45,7 +45,7 @@ email = write_email(hook_subject_line, linkedinprofile, aboutme)
 what if we want to optimize this chain, or one dividiual prompt
 
 ```python
-optimizer = ell.FewShotFromLabels()
+optimizer = ell2a.FewShotFromLabels()
 better_email_generator =  optimizer.fit(generate_approaches_to_eamil_somone, X=profiles, y=correct_appraoches)
 
 fit: some_lmp -> a_new_lmp
@@ -63,7 +63,7 @@ def generate_approaches_to_eamil_somone(linkedinprofile, aboutme):
 
     return f"Come up with one for: {linkedinprofile} given that I am {aboutme}" 
 
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def better_email_generator(linkedinprofile, aboutme):
     message = generate_approaches_to_eamil_somone(linkedinprofile, aboutme)
     "prepend stuff to the messages!"
@@ -88,7 +88,7 @@ def get_random_adjective():
 def get_random_punctuation():
     return random.choice(["!", "!!", "!!!"])
 
-@ell.simple(model="o1-preview")
+@ell2a.simple(model="o1-preview")
 def hello(name: str):
     """You are a helpful and expressive assistant."""
     adjective = get_random_adjective()
@@ -146,7 +146,7 @@ use DSP to optimize these prompts.
     return f"Given the fields {inputs_}, produce the fields {outputs_}."
 ```
 
-In fact prompt templates dont really exist within ell and this a major flaw in some sense.
+In fact prompt templates dont really exist within ell2a and this a major flaw in some sense.
 
 Like if I want to do CoT waht do I do?
 But it's clear code like 
@@ -175,7 +175,7 @@ so recap DSP constructs promps via
     instructions
 ) -> "prompt"
 ```
-in ell we could theoretically infer those things
+in ell2a we could theoretically infer those things
 ```python
 def prompt(params : str):
     """Your a good guy"""  # system
@@ -188,15 +188,15 @@ well actually its their manifestation in the return cause we can have arbitrary 
 
 But DSP is fundamentally higher level.
 
-Dynamic prompt construciton in ell is also limited.
+Dynamic prompt construciton in ell2a is also limited.
 
 ```python
-@ell.simple()
+@ell2a.simple()
 def hello_with_kshot(name : str, examples : List[str]):
     return [
-        ell.system("You are a helpful assistant"),
+        ell2a.system("You are a helpful assistant"),
         *examples,
-        ell.user(f"Say hello to {name}")
+        ell2a.user(f"Say hello to {name}")
     ]
 
 ```
@@ -206,10 +206,10 @@ but if i wanted to mutate the prompt after creation i would have to do it manual
 so leads us to a prompt api
 
 ```python
-@ell.simple() : 
+@ell2a.simple() : 
     (lmp : Callable) -> 
 
-class LMP(ell.Module):
+class LMP(ell2a.Module):
     def __init__(self, lmp : Callable):
         pass
     def __call__(self, **kwargs):
@@ -225,7 +225,7 @@ and for dsp we could technically invert params using another llm as a part of op
     but that's also janky 
     but so is dpsy
 
-what would it look like also how should we do cot in ell
+what would it look like also how should we do cot in ell2a
 
 ```python
 def res(question : str) -> str:
@@ -233,13 +233,13 @@ def res(question : str) -> str:
     answer = thoughts.split("Answer:")[1]
     return answer
 
-@ell.simple()
+@ell2a.simple()
 def chain_of_thought(question : str) -> str:
     return f"Reasoning: Let's think step by step in order to {question}. "
 
 ```
 
-but if we rewrote dspy and forgot about @ell.simple because LMPs are just fucking like weights lol okay so
+but if we rewrote dspy and forgot about @ell2a.simple because LMPs are just fucking like weights lol okay so
 
 
 chain_of_thought =====  W^T (process_into_vector(x))
@@ -260,7 +260,7 @@ Let's consider CoT
 # Goal: Add "Let's think step by step in order to" to the beginning of the prompt
 
 
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def w_0(my_input : str, my_second_input : str) -> str:
     """You are a helpful assistant"""
 
@@ -270,10 +270,10 @@ def w_0(my_input : str, my_second_input : str) -> str:
 
 def cot(goal : str, n_steps : int, step_prefix : str) -> str:
     return [
-        ell.user(f"""Reasoning: Let's think step by step in order to {goal}.""")
+        ell2a.user(f"""Reasoning: Let's think step by step in order to {goal}.""")
     ]
 
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def w_0_my_input_modifier(x : str) -> str:
     """You are a good assistant"""
 
@@ -293,7 +293,7 @@ def w_0_my_input_modifier(x : str) -> str:
 
 # you could do something like
 
-@ell.simple()
+@ell2a.simple()
 def agent_step(x : str, previous_steps : str) -> str:
     return cot_prompt(
         goal="Make a poem about " + x,
@@ -418,7 +418,7 @@ run_agent(agent_step, x="roses are red")
 # In Ell this would be:
 
 # It's still meta programmign lol i can't get ath "updating the inpout fields like it's fucked.
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def code_generate(question :str ) -> str:
     return cot(
         goal="python code that answer the quesiton {question}",
@@ -426,7 +426,7 @@ def code_generate(question :str ) -> str:
         format=str
     )
 
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def code_regenerate(previous_code : str, error : str) -> str:
     return cot(
         goal="regenerate the code {previous_code} to fix the error {error}",
@@ -434,7 +434,7 @@ def code_regenerate(previous_code : str, error : str) -> str:
         format=str
     )
 
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def code_answer(final_generated_code : str, code_output : str) -> str:
     return cot(
         goal="given the final code {final_generated_code} and the output {code_output}, provide the answer",
@@ -442,7 +442,7 @@ def code_answer(final_generated_code : str, code_output : str) -> str:
         format=str
     )
 
-@ell.function()
+@ell2a.function()
 def program_of_though(question : str) -> str:
     input_kwargs = {"question": question}
     code_data = code_generate(**input_kwargs)
@@ -471,7 +471,7 @@ program_of_though("roses are red")
 # So I don't think we really are getting the 
 ``` 
 
-Well its clear that ell.function is a useful abstraciton so long as the return type is a trackable or serializable type. Perhaps that's not even necessary, but for reconstructing computation graphs it would be
+Well its clear that ell2a.function is a useful abstraciton so long as the return type is a trackable or serializable type. Perhaps that's not even necessary, but for reconstructing computation graphs it would be
 
 
 ```python
@@ -553,13 +553,13 @@ messages = adapter.format(signature, demos, inputs)
 Okay so let's now revisit meta prompting for a bit:
 
 
-In ell we build a good framework for engineering specific `W = [0, 1, 2, ...]`. In DSPy we have a framework for doing things like `W = th.zeros((a,b))` `y= W^Tx`.
+In ell2a we build a good framework for engineering specific `W = [0, 1, 2, ...]`. In DSPy we have a framework for doing things like `W = th.zeros((a,b))` `y= W^Tx`.
 
 So its like dynamic, but oppinionated prompt construction. How might this look. lets consider the idea that we start at `W = [0, 1, 2, ...]` and then we write `y =W^Tx`; that is we provide starting points for this optimization.
 This is less descirptive than DSPy.
 
 ```python
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def my_arbitrary_prompt(question :str, context : List[str]) -> str:
     return f"""
     You are a helpful assistant answer the following question about a given context. Do not use any other information.
@@ -572,14 +572,14 @@ How do we dynamically optimzie this?
 
 ```python
 >>> my_arbitrary_prompt(question="What is the capital of France?", context=["France is a country in Europe.", "Paris is the capital of France."])
- [ell.user("""You are a helpful assistant.
+ [ell2a.user("""You are a helpful assistant.
     Question: What is the capital of France?
     Context: France is a country in Europe. Paris is the capital of France.
     Do the following:
     <..your response>""")]
 
 
->>> optimizer = ell.BootstrapFewShotOptimizer(top_k=10)
+>>> optimizer = ell2a.BootstrapFewShotOptimizer(top_k=10)
 >>> x = [
     dict(
         question="What is the largest planet in our solar system?",
@@ -605,7 +605,7 @@ How do we dynamically optimzie this?
 >>> better_arbitrary_prompt(question="What is the capital of France?", context=["France is a country in Europe.", "Paris is the capital of France."])
 [
     # EXAMPLES: 
-    ell.user(
+    ell2a.user(
     """
     You are a helpful assistant.
     Question: What is the largest planet in our solar system?
@@ -614,12 +614,12 @@ How do we dynamically optimzie this?
     <..your response>
     """
     ),
-    ell.assistant(
+    ell2a.assistant(
         """
         Jupiter
         """
     ),
-    ell.user(
+    ell2a.user(
     """You are a helpful assistant.
     Question: Who painted the Mona Lisa?
     Context: Leonardo da Vinci was an Italian Renaissance polymath. The Mona Lisa is a famous Renaissance painting.
@@ -627,12 +627,12 @@ How do we dynamically optimzie this?
     <..your response>
     """
     ),
-    ell.assistant(
+    ell2a.assistant(
         """
         Leonardo da Vinci
         """
     ),
-    ell.user(
+    ell2a.user(
     """You are a helpful assistant.
     Question: What is the chemical symbol for gold?
     Context: Gold is a precious metal. The periodic table lists elements and their symbols.
@@ -640,13 +640,13 @@ How do we dynamically optimzie this?
     <..your response>
     """
     ),
-    ell.assistant(
+    ell2a.assistant(
         """
         Au
         """
     ),
     # Final user prompt.
-    ell.user(
+    ell2a.user(
         """
         You are a helpful assistant.
         Question: What is the capital of France?
@@ -699,12 +699,12 @@ The output key is the name of the function...
     fields = {}
 ```
 
-Inherently this isn't as expressive as their module class though. I am also unsure about oppinionating pro,pt consturciton, though I suppose you can optimize adapters in a way you wouldn't be able to do with ell
+Inherently this isn't as expressive as their module class though. I am also unsure about oppinionating pro,pt consturciton, though I suppose you can optimize adapters in a way you wouldn't be able to do with ell2a
 
 ```python
 # This is pytorch:
 # W = th.randn(10, 10)
-meta = ell.meta(
+meta = ell2a.meta(
     instructions="do this",
     inputs={
         x : str,
@@ -728,11 +728,11 @@ final = meta.compile()
 # In ML we have inptus and outputs hur dur
 
 
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def please_solve_my_problem(x : str) -> str:
     return f"Please solve my problem: {x}"
 
-(ell.metaprompt(
+(ell2a.metaprompt(
     instructions="do this",
     inputs={
         x : str,
@@ -746,12 +746,12 @@ def please_solve_my_problem(x : str) -> str:
 This SHIT FEELS LIKE LANGCHAIN what the FUCK.
 
 
-There are no rules we don't need parity, but waht about CoT and shit. i mean CoT is a meta prompt. the a variety of inptus and outputs, but i dont see why you can't just do it in ell with a cot function
+There are no rules we don't need parity, but waht about CoT and shit. i mean CoT is a meta prompt. the a variety of inptus and outputs, but i dont see why you can't just do it in ell2a with a cot function
 
 ```python
 
 
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def write_me_a_blog_post(topic : str) -> str:
     return cot_prompt(
         goal="write a blog post about " + topic,
@@ -762,28 +762,28 @@ def write_me_a_blog_post(topic : str) -> str:
 ```python
 
 
-# ell/primitives/cot.py
+# ell2a/primitives/cot.py
 class CoT(BaseModel):
     reasoning : List[str]
     answer : str
 
-with ell.context():
+with ell2a.context():
     pass
 
-# this forces the user to wrap their call of this in an @ell.function or ell.simple, or ell.complex etc.
+# this forces the user to wrap their call of this in an @ell2a.function or ell2a.simple, or ell2a.complex etc.
 # Or we can ommit this and just let them call it directly in which case we dont need the extra context. You can't just use CoT alone?
-@ell.function(require_ell_context=True)
+@ell2a.function(require_ell_context=True)
 def cot(instructions : str,  model : str,  **params) -> CoT:
-    output = ell.simple(
+    output = ell2a.simple(
         messages=[
-            ell.system(f"""
+            ell2a.system(f"""
             You are a helpful assistant.
             You must solve a problem using reasoning.
             Your output format should be:
             '''Rationale: Let's think step by step. <reasoning>
             Answer: <answer>'''
             """),
-            ell.user(instructions),
+            ell2a.user(instructions),
         ]
         model=model, 
         **params
@@ -796,9 +796,9 @@ def cot(instructions : str,  model : str,  **params) -> CoT:
 
 # some user shit
 
-@ell.function()
+@ell2a.function()
 def write_a_blog_post(problem : str) -> str:
-    result = ell.cot(
+    result = ell2a.cot(
         model="gpt-4o",
         instructions="solve the following math problem: " + solve_math_problem,
         step_prefix="Reasoning: "
@@ -807,12 +807,12 @@ def write_a_blog_post(problem : str) -> str:
 
 ```
 
-So now that we have a CoT implementation, we can imagine a meta prompting framework that constructs an ell.function automatically; this is a generic one-shot prompt that can be reused and it's format strings itself can be optimized a la MiPRo etc. 
+So now that we have a CoT implementation, we can imagine a meta prompting framework that constructs an ell2a.function automatically; this is a generic one-shot prompt that can be reused and it's format strings itself can be optimized a la MiPRo etc. 
 
 ```python
-@ell.function()
+@ell2a.function()
 def cot(instructions : str,  model : str,  **params) -> CoT:
-    output = ell.simple(
+    output = ell2a.simple(
         messages=parameterized_prompt(
             input(
                 instructions = Field(str, description="The instructions for the prompt")
@@ -875,7 +875,7 @@ Can't we use the AST to determine all of the variables going into a call to then
 
 So like
 
-ell.simple(model="gpt-4o", messages=[...])
+ell2a.simple(model="gpt-4o", messages=[...])
 
 Track messages back in the AST for this call then find all the format vars. Well what if it's a prompt, then there's nothign we can do. With aprameterized promtps you can not prompt at all.
 
@@ -891,7 +891,7 @@ If we can disambiguate reposne formats and all this then maybe this is fine.
 I guess if our library looks cleaner than DSPy ultimately with the same functionaltiy internally we are okay.
 
 Meta prompting = 
-construction of @ell.simple call + parsing dynamically from input outputs and instructions.
+construction of @ell2a.simple call + parsing dynamically from input outputs and instructions.
 
 
 I think this is the conclusion.
@@ -904,7 +904,7 @@ class Input(BaseModel):
 class Output(BaseModel):
     answer : Field(str, description="The answer to the prompt")
 
-meta_prompt = ell.meta(
+meta_prompt = ell2a.meta(
     name="blog_post",
     input={
         "instructions" : Field(str, description="The instructions for the prompt")
@@ -920,10 +920,10 @@ meta_prompt = ell.meta(
 
 Why DSPy requires compilation is that we can have mta promtps call one another but we shouldnt have  to compile before calling because the computatio ngraph is not known until runtime.
 
-I think the prolem with all this is that when i do th.randn(10,10) i can immediately use it i can imemdiately use the layer it might be garbage but i can. SO if I were to take this in ell I can imagine.
+I think the prolem with all this is that when i do th.randn(10,10) i can immediately use it i can imemdiately use the layer it might be garbage but i can. SO if I were to take this in ell2a I can imagine.
 
 ```python
-meta_prompt = ell.lmp(
+meta_prompt = ell2a.lmp(
     name = "blog_post",
     input={
         "instructions" : Field(str, description="The instructions for the prompt")
@@ -938,8 +938,8 @@ then I can just call meta_prompt() # and it will give me the prompt. the signatu
 compiling is uneccessary because we can access the parameterixaiton at runtime to optimize. This also allows the user to see what hhe fuck the thing is doing.
 ```python
 
-ell.meta.io_lmp(
-    ell.signature(
+ell2a.meta.io_lmp(
+    ell2a.signature(
         Input(instructions : str),
         Output(answer : str),
     instructions="write a blog post about the following topic",
@@ -947,8 +947,8 @@ ell.meta.io_lmp(
     model="gpt-4o",
 )
 
-cot_blog = ell.meta.cot_lmp(
-    ell.signature(
+cot_blog = ell2a.meta.cot_lmp(
+    ell2a.signature(
         Input(instructions : str),
         Output(title : str, content : str),
         instructions="write a blog post about the following topic",
@@ -957,7 +957,7 @@ cot_blog = ell.meta.cot_lmp(
 )
 
 
-@ell.function()
+@ell2a.function()
 def write_blog_post(instructions : str) -> str:
     blog = cot_blog(instructions)
     return f"# {blog.title}\n\n{blog.content}"
@@ -974,17 +974,17 @@ y = [
 ]
 
 
-optimized_blog_post = ell.FewShotOptimizer().fit(write_blog_post, x=x, y=y)
+optimized_blog_post = ell2a.FewShotOptimizer().fit(write_blog_post, x=x, y=y)
 ```
 so because this is functional is cot_blog now changed? this the reason for modules in dspy because if i want to see the updated params is it cot_blog? 
  NO so we need to specify it as learnable:
 
 
 ```python
-filters = ell.parameterized(ell.cot(
+filters = ell2a.parameterized(ell2a.cot(
     model="gpt-4o",
     instructions="write a blog post about the following topic",
-    signature=ell.signature(
+    signature=ell2a.signature(
         Input(instructions : str),
         Output(title : str, content : str),
     ),
@@ -996,16 +996,16 @@ filters = ell.parameterized(ell.cot(
  we could do shit like this
 
 ```python
- @ell.simple(model="gpt-4o")
+ @ell2a.simple(model="gpt-4o")
  def my_intial_prompt(instructions : str) -> str:
     return f"write a blog post about the following topic: {instructions}"
 
 
- >>> ell.FewShotOptimizer().fit(my_intial_prompt, x=x, y=y)
+ >>> ell2a.FewShotOptimizer().fit(my_intial_prompt, x=x, y=y)
  exception: NotLearnableError("my_intial_prompt is not learnable")
 
- learnable = ell.learnable(my_intial_prompt)
- final_prompt =ell.FewShotOptimizer().fit(learnable, x=x, y=y)
+ learnable = ell2a.learnable(my_intial_prompt)
+ final_prompt =ell2a.FewShotOptimizer().fit(learnable, x=x, y=y)
  >>> final_prompt("AI")
  "write a blog post about the following topic: AI"
 
@@ -1038,9 +1038,9 @@ print(weights)
 like:
 
 ```python
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def my_initial_prompt(instructions : str) -> str:
-    return f"{ell.learnable("You must write a blog post about the following topic:")} {instructions}"
+    return f"{ell2a.learnable("You must write a blog post about the following topic:")} {instructions}"
 
 ```
 
@@ -1051,30 +1051,30 @@ I dont think "few shot" is an optimizer though. I guess you could say if you wan
 learnable_prompt = th.learnable(my_initial_prompt)
 
 
-ell.FewShotOptimizer().fit(learnable_prompt, x=x, y=y)
+ell2a.FewShotOptimizer().fit(learnable_prompt, x=x, y=y)
 
 --> 
 
 def final_prompt(instructions : str) -> str:
     return [
-        ell.system("You are a helpful assistant."),
-        ell.user(x[0]),
-        ell.assistant(x[1]),
+        ell2a.system("You are a helpful assistant."),
+        ell2a.user(x[0]),
+        ell2a.assistant(x[1]),
         ...
-        ell.user("You must write a blog post about the following topic:")
-        ell.user(instructions)
+        ell2a.user("You must write a blog post about the following topic:")
+        ell2a.user(instructions)
     ]
 ```
 but how do we serialize this? do we mutate the code?  no. we just have it serialized like this 
 
 ```python
 def my_initial_prompt(instructions : str) -> str:
-    return f"{ell.learnable("You must write a blog post about the following topic:")} {instructions}"
+    return f"{ell2a.learnable("You must write a blog post about the following topic:")} {instructions}"
 
 my_intial_prompt_optimized=  fewhsot(my_intial_prompt, x=x, y=y)
 
 
-ell.simple(model="gpt-4o", messages=learnable_prompt.data)
+ell2a.simple(model="gpt-4o", messages=learnable_prompt.data)
 
 ```
 

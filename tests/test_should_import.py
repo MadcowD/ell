@@ -6,7 +6,7 @@ import sys
 import os
 
 # Import the function to be tested
-from src.ell.util.should_import import should_import
+from src.ell2a.util.should_import import should_import
 
 @pytest.fixture
 def mock_project_root(monkeypatch):
@@ -63,7 +63,7 @@ def mock_find_spec(module_name, raise_value):
         # Local module within project root
         (
             "local_module",
-            "/mock/project/root/ell/util/local_module.py",
+            "/mock/project/root/ell2a/util/local_module.py",
             True,
             False,
         ),
@@ -204,10 +204,10 @@ def test_should_import_additional_paths(
 @pytest.mark.parametrize(
     "module_name, spec_origin, spec_has_location, expected",
     [
-        # Local module with ELL prefix
+        # Local module with ELL2A prefix
         (
-            "ell.local_module",
-            "/mock/project/root/ell/local_module.py",
+            "ell2a.local_module",
+            "/mock/project/root/ell2a/local_module.py",
             True,
             True,
         ),
@@ -310,9 +310,9 @@ def test_should_import_third_party():
 def test_should_import_local_module():
     """
     Test importing a local module within the project without mocking.
-    Assumes that 'src.ell.util.local_module' exists.
+    Assumes that 'src.ell2a.util.local_module' exists.
     """
-    module_name = "src.ell.util.local_module"
+    module_name = "src.ell2a.util.local_module"
     result = should_import(module_name)
     assert result == False, f"Local module should not be imported: {module_name}"
 

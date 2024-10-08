@@ -1,15 +1,15 @@
 [tool.poetry]
-name = "ell-ai"
+name = "ell2a-ai"
 version = "0.0.13"
-description = "ell - the language model programming library"
-authors = ["William Guss <will@lrsys.xyz>"]
+description = "ell2a -  the language model programming library for AI Agents"
+authors = ["Xingqiang Chen <chen.xingqiang@iechor.com>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/MadcowD/ell"
+repository = "https://github.com/chenxingqiang/ell2a"
 packages = [
-    { include = "ell", from = "src" }
+    { include = "ell2a", from = "src" }
 ]
-homepage = "https://docs.ell.so"
+homepage = "https://docs.agentbase.space"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -20,9 +20,9 @@ classifiers = [
     "Programming Language :: Python :: 3.9"
 ]
 include = [
-    { path = "src/ell/studio/static", format = ["sdist", "wheel"] },
-    { path = "src/ell/studio/static/**/*", format = ["sdist", "wheel"] },
-    { path = "src/ell/util/char_bitmaps.npy", format = ["sdist", "wheel"] }
+    { path = "src/ell2a/studio/static", format = ["sdist", "wheel"] },
+    { path = "src/ell2a/studio/static/**/*", format = ["sdist", "wheel"] },
+    { path = "src/ell2a/util/char_bitmaps.npy", format = ["sdist", "wheel"] }
 ]
 
 [tool.poetry.dependencies]
@@ -59,7 +59,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-ell-studio = "ell.studio.__main__:main"
+ell2a-studio = "ell2a.studio.__main__:main"
 
 # [tool.poetry.build]
 # # script = "build.py"

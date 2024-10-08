@@ -1,5 +1,5 @@
 from typing import List, Optional
-import ell
+import ell2a
 from midiutil import MIDIFile
 import pygame
 import time
@@ -10,15 +10,15 @@ CHORD_FORMAT = "| Chord | Chord | ... |"
 
 
 
-@ell.simple(model="gpt-4o", temperature=0.5)
+@ell2a.simple(model="gpt-4o", temperature=0.5)
 def write_a_chord_progression_for_song(genre: Optional[str], key : Optional[str]) :
     return [
-        ell.system(f"You are a world class music theorist and composer. Your goal is to write chord progressions to songs given parameters. They should be fully featured and compositionally sound. Feel free to use advanced chords of your choosing. Only answer with the chord progression in {CHORD_FORMAT} format. Do not provide any additional text. Feel free to occaisonally use 13 chrods and complex chords if necessary etc."),
-        ell.user(f"Write a chord progression for a song {'in ' + genre if genre else ''} {'in the key of ' + key if key else ''}.")
+        ell2a.system(f"You are a world class music theorist and composer. Your goal is to write chord progressions to songs given parameters. They should be fully featured and compositionally sound. Feel free to use advanced chords of your choosing. Only answer with the chord progression in {CHORD_FORMAT} format. Do not provide any additional text. Feel free to occaisonally use 13 chrods and complex chords if necessary etc."),
+        ell2a.user(f"Write a chord progression for a song {'in ' + genre if genre else ''} {'in the key of ' + key if key else ''}.")
 
     ]
 
-@ell.simple(model="gpt-4o", temperature=0.0)
+@ell2a.simple(model="gpt-4o", temperature=0.0)
 def parse_chords_to_midi(chords : List[str]) -> str:
     """You are MusicGPT. You are extremely skilled at all music related tasks."""
 
@@ -54,10 +54,10 @@ def play_midi_file(file_path):
         time.sleep(1)
 
 
-from ell.stores.sql import SQLiteStore
+from ell2a.stores.sql import SQLiteStore
 
 if __name__ == "__main__":
-    ell.init(store='./logdir', autocommit=True, verbose=True)
+    ell2a.init(store='./logdir', autocommit=True, verbose=True)
     
     genre = input("Enter the genre of the song (or press Enter to skip): ").strip() or None
     key = input("Enter the key of the song (or press Enter to skip): ").strip() or None

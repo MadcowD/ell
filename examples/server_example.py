@@ -1,8 +1,8 @@
 from flask import Flask
 
-import ell
+import ell2a
 
-@ell.simple(model="gpt-4o-mini")
+@ell2a.simple(model="gpt-4o-mini")
 def hello(name: str):
     """You are a helpful assistant"""
     return f"Write a welcome message for {name}."

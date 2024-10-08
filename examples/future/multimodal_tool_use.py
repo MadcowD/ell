@@ -1,11 +1,11 @@
-import ell
+import ell2a
 
-from ell import ContentBlock
+from ell2a import ContentBlock
 from PIL import Image
 import numpy as np
-from ell.types.message import to_content_blocks
+from ell2a.types.message import to_content_blocks
 
-@ell.tool()
+@ell2a.tool()
 def get_user_name():
     """
     Return the user's name.
@@ -40,7 +40,7 @@ def generate_strawberry_image():
 
     return img
 
-@ell.tool()
+@ell2a.tool()
 def get_ice_cream_flavors():
     """
     Return a list of ice cream flavors.
@@ -49,18 +49,18 @@ def get_ice_cream_flavors():
     return to_content_blocks([("1. Vanilla"), "2.", (generate_strawberry_image()), ("3. Coconut")])
 
 
-@ell.complex(model="claude-3-5-sonnet-20240620", tools=[get_user_name, get_ice_cream_flavors], max_tokens=1000)
-def f(message_history: list[ell.Message]) -> list[ell.Message]:
+@ell2a.complex(model="claude-3-5-sonnet-20240620", tools=[get_user_name, get_ice_cream_flavors], max_tokens=1000)
+def f(message_history: list[ell2a.Message]) -> list[ell2a.Message]:
     return [
-        ell.system(
+        ell2a.system(
             "You are a helpful assistant that greets the user and asks them what ice cream flavor they want. Call both tools immediately and then greet the user. Some options will be images be sure to interperate them."
         ),
-        ell.user("Do it"),
+        ell2a.user("Do it"),
     ] + message_history
 
 
 if __name__ == "__main__":
-    ell.init(verbose=True)
+    ell2a.init(verbose=True)
     messages = []
     while True:
         message = f(messages)

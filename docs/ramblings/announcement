@@ -40,8 +40,8 @@ with a rich numpy style message api with multimodal type coercion, using images,
 
 𝚙𝚒𝚙 𝚒𝚗𝚜𝚝𝚊𝚕𝚕 𝚎𝚕𝚕-𝚊𝚒
 
-check out the source https://github.com/MadcowD/ell
-and read the docs https://docs.ell.so/
+check out the source https://github.com/chenxingqiang/ell2a
+and read the docs https://docs.agentbase.space/
 
 ⏰ new features soon, including SGD & RL on prompts and so much more!
 

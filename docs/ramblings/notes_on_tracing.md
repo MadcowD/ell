@@ -7,7 +7,7 @@ invocation -> lstrs <- another_invoke
          third invocation    (trace(3rd invocation) = [invocation, another_invocation]
                               
 
-orignators in ell will always be invocation ids.
+orignators in ell2a will always be invocation ids.
 
 when i get a new lstr from calling an LMP, i will get the id of the invocaiton that produced it as the sole originator
 

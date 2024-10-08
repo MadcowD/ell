@@ -1,7 +1,7 @@
 import pytest
 from pydantic import BaseModel
-import ell
-from src.ell.types.message import ContentBlock, ToolCall, ToolResult, Message
+import ell2a
+from src.ell2a.types.message import ContentBlock, ToolCall, ToolResult, Message
 import numpy as np
 from PIL import Image
 
@@ -32,7 +32,7 @@ def test_content_block_coerce_tool_call():
     assert result.type == "tool_call"
 
 def test_content_block_coerce_tool_result():
-    tool_result = ToolResult(tool_call_id="123", result=[ContentBlock(text="Tool result")])
+    tool_result = ToolResult(tool_call_id="123", result=[ContentBlock(text="Agent result")])
     result = ContentBlock.coerce(tool_result)
     assert isinstance(result, ContentBlock)
     assert result.tool_result == tool_result
@@ -68,7 +68,7 @@ def test_message_coercion():
     content = [
         "Text message",
         ToolCall(tool=dummy_tool, params=DummyParams(param1="test", param2=42)),
-        ToolResult(tool_call_id="123", result=[ContentBlock(text="Tool result")]),
+        ToolResult(tool_call_id="123", result=[ContentBlock(text="Agent result")]),
         DummyFormattedResponse(field1="test", field2=42),
         ContentBlock(text="Existing content block")
     ]
@@ -89,7 +89,7 @@ def test_content_block_single_non_null():
     ContentBlock.model_validate(ContentBlock(tool_call=ToolCall(tool=dummy_tool, 
                                     params=DummyParams(param1="test", param2=42))))
     ContentBlock.model_validate(ContentBlock(parsed=DummyFormattedResponse(field1="test", field2=42)))
-    ContentBlock.model_validate(ContentBlock(tool_result=ToolResult(tool_call_id="123", result=[ContentBlock(text="Tool result")])))
+    ContentBlock.model_validate(ContentBlock(tool_result=ToolResult(tool_call_id="123", result=[ContentBlock(text="Agent result")])))
 
     # New valid cases for image and audio
     dummy_image = Image.new('RGB', (100, 100))

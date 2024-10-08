@@ -1,8 +1,8 @@
 from typing import List
-import ell
+import ell2a
 
 
-@ell.simple(model="gpt-4o-2024-08-06", store=True)
+@ell2a.simple(model="gpt-4o-2024-08-06", store=True)
 def cached_chat(history : List[str], new_message : str) -> str:
     """You are a helpful assistant who chats with the user. 
         Your response should < 2 sentences."""
@@ -39,7 +39,7 @@ def cached_chat(history : List[str], new_message : str) -> str:
 
 
 
-ell.init(verbose=True, store='./logdir')
+ell2a.init(verbose=True, store='./logdir')
 
 
 if __name__ == "__main__":

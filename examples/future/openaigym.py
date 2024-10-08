@@ -14,7 +14,7 @@ There are four discrete actions available:
 from typing import List
 
 from pydantic import BaseModel, Field
-import ell
+import ell2a
 
 import numpy as np
 
@@ -23,10 +23,10 @@ class Action(BaseModel):
     action: int = Field(description="The action to take, must be 0 ( go down ), 1, 2 (left) (go up), or 3 (right)")
 
 x = Action(reasoning="", action=0)
-@ell.complex(model="gpt-4o-2024-08-06", temperature=0.1, response_format=Action)
+@ell2a.complex(model="gpt-4o-2024-08-06", temperature=0.1, response_format=Action)
 def control_game(prev_renders: List[np.ndarray], current_state : str):
     return [
-        ell.system("""You are an lunar landar. Youur goal is to land on the moon by getting y to 0.. RULES:
+        ell2a.system("""You are an lunar landar. Youur goal is to land on the moon by getting y to 0.. RULES:
                    
 Your goal is to go downwards.
 If you can't see your lunar landar, go down.
@@ -39,7 +39,7 @@ You will be given the following actions:
 {actions}
 Only return the action, do not include any other text.
         """.format(actions=ACTIONS)),
-        ell.user([
+        ell2a.user([
             f"Current state vector (8-dimensional):",
             f"1. x coordinate: {current_state[0]}",
             f"2. y coordinate: {current_state[1]}",
@@ -54,7 +54,7 @@ Only return the action, do not include any other text.
         ])
     ]    
 
-ell.init(verbose=True, store='./logdir')
+ell2a.init(verbose=True, store='./logdir')
 import gymnasium as gym
 env = gym.make("LunarLander-v2", render_mode="rgb_array")
 observation, info = env.reset(seed=42)

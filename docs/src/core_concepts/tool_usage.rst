@@ -1,35 +1,35 @@
 =========== 
-Tool Usage
+Agent Usage
 ===========
 
 
 .. warning::
-   Tool usage in ell is currently a beta feature and is highly underdeveloped. The API is likely to change significantly in future versions. Use with caution in production environments.
+   Agent usage in ell2a is currently a beta feature and is highly underdeveloped. The API is likely to change significantly in future versions. Use with caution in production environments.
 
-Tool usage is a powerful feature in ell that allows language models to interact with external functions and services. This capability enables the creation of more dynamic and interactive language model programs (LMPs) that can perform actions, retrieve information, and make decisions based on real-time data.
+Agent usage is a powerful feature in ell2a that allows language models to interact with external functions and services. This capability enables the creation of more dynamic and interactive language model programs (LMPs) that can perform actions, retrieve information, and make decisions based on real-time data.
 
-Defining Tools
+Defining Agents
 --------------
 
-In ell, tools are defined using the ``@ell.tool()`` decorator. This decorator transforms a regular Python function into a tool that can be used by language models. Here's an example of a simple tool definition:
+In ell2a, tools are defined using the ``@ell2a.tool()`` decorator. This decorator transforms a regular Python function into a tool that can be used by language models. Here's an example of a simple tool definition:
 
 .. code-block:: python
 
-    @ell.tool()
+    @ell2a.tool()
     def create_claim_draft(claim_details: str,
                            claim_type: str,
                            claim_amount: float,
                            claim_date: str = Field(description="The date of the claim in the format YYYY-MM-DD.")):
-        """Create a claim draft. Returns the claim id created.""" # Tool description
+        """Create a claim draft. Returns the claim id created.""" # Agent description
         print("Create claim draft", claim_details, claim_type, claim_amount, claim_date)
         return "claim_id-123234"
 
-The ``@ell.tool()`` decorator automatically generates a schema for the tool based on the function's signature, type annotations, and docstring. This schema is used to provide structured information about the tool to the language model.
+The ``@ell2a.tool()`` decorator automatically generates a schema for the tool based on the function's signature, type annotations, and docstring. This schema is used to provide structured information about the tool to the language model.
 
 Schema Generation
 -----------------
 
-ell uses a combination of function inspection and Pydantic models to generate the tool schema. The process involves:
+ell2a uses a combination of function inspection and Pydantic models to generate the tool schema. The process involves:
 
 - Extracting parameter information from the function signature.
 - Using type annotations to determine parameter types.
@@ -61,22 +61,22 @@ This generated schema is then converted into a format compatible with the OpenAI
         }
     }
 
-Using Tools in LMPs
+Using Agents in LMPs
 -------------------
 
-To use tools in a language model program, you need to specify them in the ``@ell.complex`` decorator:
+To use tools in a language model program, you need to specify them in the ``@ell2a.complex`` decorator:
 
 .. code-block:: python
 
-    @ell.complex(model="gpt-4o", tools=[create_claim_draft], temperature=0.1)
+    @ell2a.complex(model="gpt-4o", tools=[create_claim_draft], temperature=0.1)
     def insurance_claim_chatbot(message_history: List[Message]) -> List[Message]:
         return [
-            ell.system("""You are an insurance adjuster AI. You are given a dialogue with a user and have access to various tools to effectuate the insurance claim adjustment process. Ask questions until you have enough information to create a claim draft. Then ask for approval."""),
+            ell2a.system("""You are an insurance adjuster AI. You are given a dialogue with a user and have access to various tools to effectuate the insurance claim adjustment process. Ask questions until you have enough information to create a claim draft. Then ask for approval."""),
         ] + message_history
 
 This allows the language model to access and use the specified tools within the context of the LMP.
 
-Single-Step Tool Usage
+Single-Step Agent Usage
 ----------------------
 
 In single-step tool usage, the language model decides to use a tool once during its execution. The process typically involves the LMP receiving input, generating a response with a tool call. 
@@ -85,7 +85,7 @@ Here's an example where we want to take a natural language string for a website 
 
 .. code-block:: python
 
-    @ell.tool()
+    @ell2a.tool()
     def get_html_content(
         url: str = Field(description="The URL to get the HTML content of. Never include the protocol (like http:// or https://)"),
     ):
@@ -94,7 +94,7 @@ Here's an example where we want to take a natural language string for a website 
         soup = BeautifulSoup(response.text, 'html.parser')
         return soup.get_text()[:100]
 
-    @ell.complex(model="gpt-4o", tools=[get_html_content])
+    @ell2a.complex(model="gpt-4o", tools=[get_html_content])
     def get_website_content(website: str) -> str:
         """You are an agent that can summarize the contents of a website."""
         return f"Tell me what's on {website}"
@@ -117,7 +117,7 @@ We could also handle text based message Responses from the language model where 
     >>> if output.text_only: print(output.text_only)
     None
 
-Multi-Step Tool Usage
+Multi-Step Agent Usage
 ---------------------
 
 Multi-step tool usage involves a more complex interaction where the language model may use tools multiple times in a conversation or processing flow. This is particularly useful for chatbots or interactive systems. 
@@ -133,16 +133,16 @@ In a typical LLM API the flow for multi-step tool usage looks like this
     5. The LLM returns a message with it's final response
 
 This process can be error-prone and requires a lot of boilerplate code. 
-To simplify this process, ell provides a helper function ``call_tools_and_collect_as_message()``. This function executes all tool calls in a response and collects the results into a single message, which can then be easily added to the conversation history.
+To simplify this process, ell2a provides a helper function ``call_tools_and_collect_as_message()``. This function executes all tool calls in a response and collects the results into a single message, which can then be easily added to the conversation history.
 
 Here's an example of a multi-step interaction using the insurance claim chatbot:
 
 .. code-block:: python
 
-    @ell.complex(model="gpt-4o", tools=[create_claim_draft], temperature=0.1)
+    @ell2a.complex(model="gpt-4o", tools=[create_claim_draft], temperature=0.1)
     def insurance_claim_chatbot(message_history: List[Message]) -> List[Message]:
         return [
-            ell.system("""You are an insurance adjuster AI. You are given a dialogue with a user and have access to various tools to effectuate the insurance claim adjustment process. Ask questions until you have enough information to create a claim draft. Then ask for approval."""),
+            ell2a.system("""You are an insurance adjuster AI. You are given a dialogue with a user and have access to various tools to effectuate the insurance claim adjustment process. Ask questions until you have enough information to create a claim draft. Then ask for approval."""),
         ] + message_history
 
     message_history = []
@@ -153,7 +153,7 @@ Here's an example of a multi-step interaction using the insurance claim chatbot:
         'please file it.'
     ]
     for user_message in user_messages:
-        message_history.append(ell.user(user_message))
+        message_history.append(ell2a.user(user_message))
         response_message = insurance_claim_chatbot(message_history)
         message_history.append(response_message)
 
@@ -164,10 +164,10 @@ Here's an example of a multi-step interaction using the insurance claim chatbot:
 
 
 
-Parallel Tool Execution
+Parallel Agent Execution
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-For efficiency, ell supports parallel execution of multiple tool calls:
+For efficiency, ell2a supports parallel execution of multiple tool calls:
 
 .. code-block:: python
 
@@ -179,23 +179,23 @@ This can significantly speed up operations when multiple independent tool calls 
 Future Features: Eager Mode
 ---------------------------
 
-In the future, ell may introduce an "eager mode" for tool usage. This feature would automatically execute tool calls made by the language model, creating a multi-step interaction behind the scenes. This could streamline the development process by reducing the need for explicit tool call handling in the code.
+In the future, ell2a may introduce an "eager mode" for tool usage. This feature would automatically execute tool calls made by the language model, creating a multi-step interaction behind the scenes. This could streamline the development process by reducing the need for explicit tool call handling in the code.
 
 Eager mode could potentially work like this:
 
 - The LMP generates a response with a tool call.
-- ell automatically executes the tool and captures its result.
+- ell2a automatically executes the tool and captures its result.
 - The result is immediately fed back into the LMP for further processing.
 - This cycle continues until the LMP generates a final response without tool calls.
 
 This feature would make it easier to create complex, multi-step interactions without the need for explicit loop handling in the user code. It would be particularly useful for scenarios where the number of tool calls is not known in advance, such as in open-ended conversations or complex problem-solving tasks.
 
-Future Features: Tool Spec Autogeneration
+Future Features: Agent Spec Autogeneration
 -------------------------------------------
 
 .. note:: Thanks to `Aidan McLau <https://x.com/aidan_mclau>`_ for suggesting this feature.
 
-In an ideal world, a prompt engineering library would not require the user to meticulously specify the schema for a tool. Instead, a language model should be able to infer the tool specification directly from the source code of the tool. In ell, we can extract the lexically closed source of any Python function, enabling a feature where the schema is automatically generated by another language model when a tool is given to an ell decorator.
+In an ideal world, a prompt engineering library would not require the user to meticulously specify the schema for a tool. Instead, a language model should be able to infer the tool specification directly from the source code of the tool. In ell2a, we can extract the lexically closed source of any Python function, enabling a feature where the schema is automatically generated by another language model when a tool is given to an ell2a decorator.
 
 This approach eliminates the need for users to manually type every argument and provide a tool description, as the description becomes implicit from the source code.
 
@@ -236,7 +236,7 @@ With tool spec autogeneration, the user could wrap this search_twitter function 
 
 .. code-block:: python
 
-    @ell.tool(autogenerate=True)
+    @ell2a.tool(autogenerate=True)
     def search_twitter(query, n=7):
         ...
 
@@ -271,7 +271,7 @@ This is accomplished by a language model program that takes the source code of a
 
 .. code-block:: python
 
-    @ell.simple(model="claude-3-5-sonnet", temperature=0.0)
+    @ell2a.simple(model="claude-3-5-sonnet", temperature=0.0)
     def generate_tool_spec(tool_source: str):
         '''
         You are a helpful assistant that takes in source code for a python function and produces a JSON schema for the function.
@@ -301,38 +301,38 @@ This is accomplished by a language model program that takes the source code of a
     # When autogenerate is called.
     auto_tool_spec = json.loads(generate_tool_spec(search_twitter))
 
-For this approach to be effective, the generate tool spec calls should only be executed when the version of the tool source code changes. Refer to the versioning and tracing section for details on how this is computed. Additionally, the generated tool spec would need to be stored in a consistent and reusable ell store.
+For this approach to be effective, the generate tool spec calls should only be executed when the version of the tool source code changes. Refer to the versioning and tracing section for details on how this is computed. Additionally, the generated tool spec would need to be stored in a consistent and reusable ell2a store.
 
 This approach does present some potential challenges:
 
-1. It introduces opinions into ell as a library by including a specific prompt for automatically generating tool specs.
+1. It introduces opinions into ell2a as a library by including a specific prompt for automatically generating tool specs.
 2. It may compromise consistency regarding the reproducibility of prompts.
 
-To address the issue of opinionation, we could require users to implement their own prompt for automatically generating tool specs from source code. While ell could offer some pre-packaged options, it would require users to make a conscious decision to use this auto-generation function, as it has more significant consequences than, for example, auto-committing.
+To address the issue of opinionation, we could require users to implement their own prompt for automatically generating tool specs from source code. While ell2a could offer some pre-packaged options, it would require users to make a conscious decision to use this auto-generation function, as it has more significant consequences than, for example, auto-committing.
 
 .. code-block:: python
 
-    @ell.simple
+    @ell2a.simple
     def my_custom_tool_spec_generator(tool_source: str):
         # User implements this once in their code base or repo
         ...
 
-    @ell.tool(autogenerate=my_custom_tool_spec_generator)
+    @ell2a.tool(autogenerate=my_custom_tool_spec_generator)
     def search_twitter(query, n=7):
         ...
 
-    @ell.complex(model="gpt-4o", tools=[search_twitter])
+    @ell2a.complex(model="gpt-4o", tools=[search_twitter])
     def my_llm_program(message_history: List[Message]) -> List[Message]:
         ...
 
 
-The reproducibility aspect can be mitigated by serializing the generated tool specification along with its version in the ell store. This ensures that all invocations depend on the specific generated tool specification, maintaining consistency across different runs.
+The reproducibility aspect can be mitigated by serializing the generated tool specification along with its version in the ell2a store. This ensures that all invocations depend on the specific generated tool specification, maintaining consistency across different runs.
 
 .. code-block:: python
 
     >>> lexical_closure(search_twitter)
     """
-    @ell.simple
+    @ell2a.simple
     def my_custom_tool_spec_generator(tool_source: str):
         # User implements this
         ...
@@ -362,7 +362,7 @@ The reproducibility aspect can be mitigated by serializing the generated tool sp
     }
     '''
 
-    @ell.tool(toolspec=_generated_spec)
+    @ell2a.tool(toolspec=_generated_spec)
     def search_twitter(query, n=7):
         ...
 

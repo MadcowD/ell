@@ -1,8 +1,8 @@
 {
     "eslint.workingDirectories": [
-      "./ell-studio"
+      "./ell2a-studio"
     ],
-    "typescript.tsdk": "ell-studio/node_modules/typescript/lib",
+    "typescript.tsdk": "ell2a-studio/node_modules/typescript/lib",
     "javascript.preferences.importModuleSpecifier": "relative",
     "typescript.preferences.importModuleSpecifier": "relative",
     "search.exclude": {

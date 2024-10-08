@@ -42,7 +42,7 @@ function App() {
   useEffect(() => {
     const checkVersion = async () => {
       try {
-        const response = await fetch('https://version.ell.so/ell-ai/studio');
+        const response = await fetch('https://version.agentbase.space/ell2a-ai/studio');
         const latestVersion = await response.text();
 
         const currentVersion = process.env.REACT_APP_ELL_VERSION; // Assuming you have the current version in an environment variable
@@ -53,7 +53,7 @@ function App() {
             <div className="flex flex-col space-y-2">
               <span className="font-semibold">New version available: {latestVersion}</span>
               <span>To update, run:</span>
-              <code className="bg-gray-700 p-1 rounded-md">pip install --upgrade ell-ai</code>
+              <code className="bg-gray-700 p-1 rounded-md">pip install --upgrade ell2a-ai</code>
             </div>,
             {
             icon: '🚀',

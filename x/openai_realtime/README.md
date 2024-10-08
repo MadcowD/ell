@@ -1,23 +1,23 @@
 # OpenAI Realtime Python Client (Unofficial) 
 
-[![ell](https://img.shields.io/badge/ell-go)](https://docs.ell.so/) [![Discord](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb) [![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/wgussml)](https://x.com/wgussml)
+[![ell2a](https://img.shields.io/badge/ell2a-go)](https://docs.agentbase.space/) [![Discord](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb) [![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/wgussml)](https://x.com/wgussml)
 
 This is a Python port of the OpenAI Realtime Client, designed to interact with OpenAI's realtime API for advanced AI interactions.
 
-**Note:** This is a port of OpenAI's realtime client to Python by William Guss. For the original version, see [here](https://github.com/openai/openai-realtime-api-beta).
+**Note:** This is a port of OpenAI's realtime client to Python by Xingqiang Chen. For the original version, see [here](https://github.com/openai/openai-realtime-api-beta).
 
-**Note:** This client is designed to be a reference for how ell will implement realtime Python bindings. For more information on ell, see [ell documentation](https://docs.ell.so/). Discover the power of ell for advanced prompt engineering and seamless integration with OpenAI's realtime API.
+**Note:** This client is designed to be a reference for how ell2a will implement realtime Python bindings. For more information on ell2a, see [ell2a documentation](https://docs.agentbase.space/). Discover the power of ell2a for advanced prompt engineering and seamless integration with OpenAI's realtime API.
 ## Features
 
 - Realtime communication with OpenAI's API
 - Support for text and audio modalities
-- Tool integration for extended functionality
+- Agent integration for extended functionality
 - Conversation management and event handling
 - Asynchronous operations for improved performance
 
 ## Installation
 ```bash
-git clone https://github.com/MadcowD/ell.git
+git clone https://github.com/chenxingqiang/ell2a.git
 cd x/openai_realtime
 pip install -e .
 ```
@@ -51,11 +51,11 @@ if __name__ == "__main__":
 - **RealtimeUtils**: Utility functions for data conversion and manipulation.
 
 ## Advanced Usage
-### Adding Custom Tools
+### Adding Custom Agents
 ```python3
 def my_tool_handler(args):
     # Implement your tool logic here
-    return {"result": "Tool output"}
+    return {"result": "Agent output"}
 
 client.add_tool(
     {"name": "my_tool", "description": "A custom tool"},

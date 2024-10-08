@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from ell.types._lstr import _lstr
+from ell2a.types._lstr import _lstr
 
 
 class TestLstr:
@@ -47,7 +47,7 @@ class TestLstr:
             "hello",origin_trace="model4"
         )  # Removed logits parameter
         result = s[1:4]
-        assert str(result) == "ell"
+        assert str(result) == "ell2a"
         # assert result.logits is None
         assert result.origin_trace == frozenset({"model4"})
 

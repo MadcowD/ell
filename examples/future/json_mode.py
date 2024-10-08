@@ -1,10 +1,10 @@
 import json
 from typing import List, Optional
-import ell
+import ell2a
 from pydantic import BaseModel, Field
 import re
 
-@ell.simple(model="gpt-4-turbo-preview", response_format={"type": "json_object"})
+@ell2a.simple(model="gpt-4-turbo-preview", response_format={"type": "json_object"})
 def create_person_json(description: str):
     """
     Generate a JSON object describing a person based on the given description.
@@ -14,7 +14,7 @@ def create_person_json(description: str):
     )
 
 
-@ell.simple(
+@ell2a.simple(
     model="gpt-4o-2024-08-06",
     response_format={
     "type": "json_schema",
@@ -109,7 +109,7 @@ def print_ascii_ui(ui_component, indent=0, width=60):
     render_component(ui_component, 0, width)
     print(hr(width, '='))
 
-ell.init(verbose=True, store="./logdir")
+ell2a.init(verbose=True, store="./logdir")
 
 if __name__ == "__main__":
     description = "A 28-year-old named Alex who loves hiking and painting, with a preference for the color blue."

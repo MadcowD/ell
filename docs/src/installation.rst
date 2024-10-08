@@ -1,28 +1,28 @@
 Installation
 ============
 
-``ell`` and ``ell studio`` are both contained within the ``ell-ai`` python package available on PyPI. You simply need to install the package and set up your API keys.
+``ell2a`` and ``ell2a studio`` are both contained within the ``ell2a-ai`` python package available on PyPI. You simply need to install the package and set up your API keys.
 
-Installing ell
+Installing ell2a
 --------------
 
 1. Install using pip:
 
    .. code-block:: bash
 
-      pip install -U ell-ai
+      pip install -U ell2a-ai
 
    By default, this installs only the OpenAI client SDK. If you want to include the Anthropic client SDK, use the "anthropic" extra like so:
 
    .. code-block:: bash
 
-      pip install -U 'ell-ai[anthropic]'
+      pip install -U 'ell2a-ai[anthropic]'
 
 2. Verify installation:
 
    .. code-block:: bash
 
-      python -c "import ell; print(ell.__version__)"
+      python -c "import ell2a; print(ell2a.__version__)"
 
 API Key Setup
 -------------

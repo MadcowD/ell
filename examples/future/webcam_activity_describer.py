@@ -2,17 +2,17 @@ from typing import List
 import cv2
 import time
 from PIL import Image
-import ell
-from ell.types.message import ImageContent
-from ell.util.plot_ascii import plot_ascii
+import ell2a
+from ell2a.types.message import ImageContent
+from ell2a.util.plot_ascii import plot_ascii
 
-ell.init(verbose=True, store='./logdir', autocommit=True)
+ell2a.init(verbose=True, store='./logdir', autocommit=True)
 
-@ell.simple(model="gpt-4o", temperature=0.1)
+@ell2a.simple(model="gpt-4o", temperature=0.1)
 def describe_activity(image: Image.Image):
     return [
-        ell.system("You are VisionGPT. Answer <5 words all lower case."),
-        ell.user(["Describe what the person in the image is doing:", ImageContent(image=image, detail="low")])
+        ell2a.system("You are VisionGPT. Answer <5 words all lower case."),
+        ell2a.user(["Describe what the person in the image is doing:", ImageContent(image=image, detail="low")])
     ]
 
 

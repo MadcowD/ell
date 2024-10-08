@@ -1,5 +1,5 @@
 """
-This is the general spec we'd like to use for ell.
+This is the general spec we'd like to use for ell2a.
 Prompts should be functional: 
 
 write_a_story() -> "Some story from GPT4 etc."
@@ -14,10 +14,10 @@ Because prompts are model parameterizations of GPT, and the training process is 
 
 """
 
-import ell
+import ell2a
 
 
-@ell.simple(model="gpt-4-turbo", temperature=0.1)
+@ell2a.simple(model="gpt-4-turbo", temperature=0.1)
 def write_a_story(about: str) -> str:
     """You are an expert story writer who sounds like a human. Write a story about the given topic."""
 
@@ -28,11 +28,11 @@ def write_a_story(about: str) -> str:
 write_a_story("a cat and a dog", system_prompt)
 
 
-# I don't like this because the end-user has to recapitulate the chat prompt format if they are intereacting with the model repeatedly. I should be able to in some sense have a format where I don't need to track the history e.g. @ell.chatlm
+# I don't like this because the end-user has to recapitulate the chat prompt format if they are intereacting with the model repeatedly. I should be able to in some sense have a format where I don't need to track the history e.g. @ell2a.chatlm
 
 
 # we could force the chat components to take as input the history but this is an awkward interface imo.
-@ell.chat(model="gpt-4-turbo")
+@ell2a.chat(model="gpt-4-turbo")
 def chat_with_user(*, history: ChatPrompt, user_message): ...
 
 
@@ -56,7 +56,7 @@ with chat_with_user(
 
 
 # You can define two lmps
-@ell.simple(model="gpt-4-turbo", stop=["A", "B"], temperature=0.0)
+@ell2a.simple(model="gpt-4-turbo", stop=["A", "B"], temperature=0.0)
 def compare_stories(a: str, b: str):
     """You are an expert writing critic [...]"""  # <-- System prompt if using a chat type model.
 
@@ -67,13 +67,13 @@ def compare_stories(a: str, b: str):
 # Alternatively we can be granular about message specificaiton
 
 
-@ell.simple(model="gpt-4-turbo", stop=["A", "B"], temperature=0.0)
+@ell2a.simple(model="gpt-4-turbo", stop=["A", "B"], temperature=0.0)
 def compare_stories(a: str, b: str):
     return [
-        ell.Message(
+        ell2a.Message(
             role="system", content="""You are an expert writing critic [...]"""
         ),
-        ell.Message(
+        ell2a.Message(
             role="user",
             content=f"Which of the following stories is better (answer with A or B) followed by your reasoning.\n\nA: {a}\n\nB: {b}",
         ),

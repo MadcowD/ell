@@ -1,19 +1,19 @@
-import ell
+import ell2a
 import openai
 
-ell.init(verbose=True)
+ell2a.init(verbose=True)
 
 # custom client
 client = openai.Client()
 
-@ell.simple(model='gpt-4o', client=client)
+@ell2a.simple(model='gpt-4o', client=client)
 def chat(prompt: str) -> str:
     return prompt
 
 print(chat("Hello, how are you?"))
 
 # Models are automatically registered!
-@ell.simple(model='gpt-4o')
+@ell2a.simple(model='gpt-4o')
 def use_default_client(prompt: str) -> str:
     return prompt
 

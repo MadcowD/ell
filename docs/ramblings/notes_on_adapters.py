@@ -4,13 +4,13 @@
 # e.g.
 
 
-@ell.simple(model="gpt-4-turbo", temperature=0.1)
+@ell2a.simple(model="gpt-4-turbo", temperature=0.1)
 def blah():
     pass
 
 
 # Even then Azure is bullshit and doesn't use the same model names as oai so we cant really even have a registry. I guess we could do best effort and occasionally updat ehte lbirary when new models come out?
-@ell.simple(model="gpt-4-turbo", provider=AzureProvider, temperature=0.1)
+@ell2a.simple(model="gpt-4-turbo", provider=AzureProvider, temperature=0.1)
 def blah():
     pass
 
@@ -53,7 +53,7 @@ register('llama-70b-chat', groq_client)
 
 # some amount of initialization of the library needs to happen at the beginning.
 # this is a requirement in that while we could just default to oai models from oai and attempt to use the oai client on first invocation of an lmp
-ell.init(
+ell2a.init(
     oai_client=...,
 )
 
@@ -67,16 +67,16 @@ ell.init(
 # i really didnt want to make this my job but now it's my job.
 
 # ew
-"""ell.set_provider(
-    models=ell.providers.OpenAI.models,
-    provider=ell.providers.Azure
+"""ell2a.set_provider(
+    models=ell2a.providers.OpenAI.models,
+    provider=ell2a.providers.Azure
 )"""
 
 # or...
 # we could go entirely functional
 
 # fuck conflict resolution
-""ell.register('gpt-4-turbo', OpenAI.chat)
+""ell2a.register('gpt-4-turbo', OpenAI.chat)
 ""
 
 # inherently you just don't want to fuck around with
@@ -85,7 +85,7 @@ ell.init(
 ""
 # or even
 
-with ell.use_client(my_openai_client): #<-- well maybe actually i like this
+with ell2a.use_client(my_openai_client): #<-- well maybe actually i like this
     blah()
 
 # or even
@@ -141,7 +141,7 @@ response = client.chat.completions.create(
 class ProviderMeta():
 from typing import List, Type
 
-from ell.types.message import MessageOrDict
+from ell2a.types.message import MessageOrDict
 
 class ProviderMeta(type):
     def __init__(cls, name, bases, attrs):
@@ -175,7 +175,7 @@ OAIProvider = OAILikeProvider
 # For example we'd actually want the user to be able to easily switch to gpt-4-turbo without changing all their lmp code.
 AzureProvider(
     model_map = {
-        oai.GPT4Turbo: "ell-production-canada-west-gpt4-turbo"
+        oai.GPT4Turbo: "ell2a-production-canada-west-gpt4-turbo"
     }
 )
 

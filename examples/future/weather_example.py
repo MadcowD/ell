@@ -1,20 +1,20 @@
 from pydantic import Field
-import ell
+import ell2a
 
-ell.init()
+ell2a.init()
 
-@ell.tool()
+@ell2a.tool()
 def get_weather(location: str = Field(description="The full name of a city and country, e.g. San Francisco, CA, USA")):
     """Get the current weather for a given location."""
     # Simulated weather API call
     return f"The weather in {location} is sunny."
 
-@ell.complex(model="gpt-4-turbo", tools=[get_weather])
+@ell2a.complex(model="gpt-4-turbo", tools=[get_weather])
 def travel_planner(destination: str):
     """Plan a trip based on the destination and current weather."""
     return [
-        ell.system("You are a travel planner. Use the weather tool to provide relevant advice."),
-        ell.user(f"Plan a trip to {destination}")
+        ell2a.system("You are a travel planner. Use the weather tool to provide relevant advice."),
+        ell2a.user(f"Plan a trip to {destination}")
     ]
 
 result = travel_planner("Paris")

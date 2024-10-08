@@ -2,12 +2,12 @@
 Getting Started
 ===============
 
-Welcome to ell, the Language Model Programming Library. This guide will walk you through creating your first Language Model Program (LMP), exploring ell's unique features, and leveraging its powerful versioning and visualization capabilities.
+Welcome to ell2a,  the language model programming library for AI Agents. This guide will walk you through creating your first Language Model Program (LMP), exploring ell2a's unique features, and leveraging its powerful versioning and visualization capabilities.
 
-From Traditional API Calls to ell
+From Traditional API Calls to ell2a
 ---------------------------------
 
-Let's start by comparing a traditional API call to ell's approach. Here's a simple example using the OpenAI chat completions API:
+Let's start by comparing a traditional API call to ell2a's approach. Here's a simple example using the OpenAI chat completions API:
 
 .. code-block:: python
 
@@ -27,13 +27,13 @@ Let's start by comparing a traditional API call to ell's approach. Here's a simp
 
     print(response['choices'][0]['message']['content'])
 
-Now, let's see how we can achieve the same result using ell:
+Now, let's see how we can achieve the same result using ell2a:
 
 .. code-block:: python
 
-    import ell
+    import ell2a
 
-    @ell.simple(model="gpt-4o")
+    @ell2a.simple(model="gpt-4o")
     def hello(name: str):
         """You are a helpful assistant.""" # System prompt
         return f"Say hello to {name}!" # User prompt    
@@ -41,14 +41,14 @@ Now, let's see how we can achieve the same result using ell:
     greeting = hello("Sam Altman")
     print(greeting)
 
-``ell`` simplifies prompting by encouraging you to define prompts as functional units. In this example, the ``hello`` function defines a system prompt via the docstring and a user prompt via the return string. Users of your prompt can then simply call the function with the defined arguments, rather than manually constructing the messages. This approach makes prompts more readable, maintainable, and reusable.
+``ell2a`` simplifies prompting by encouraging you to define prompts as functional units. In this example, the ``hello`` function defines a system prompt via the docstring and a user prompt via the return string. Users of your prompt can then simply call the function with the defined arguments, rather than manually constructing the messages. This approach makes prompts more readable, maintainable, and reusable.
 
 
 
-Understanding ``@ell.simple``
+Understanding ``@ell2a.simple``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``@ell.simple`` decorator is a key concept in ell. It transforms a regular Python function into a **Language Model Program (LMP)**. Here's what's happening:
+The ``@ell2a.simple`` decorator is a key concept in ell2a. It transforms a regular Python function into a **Language Model Program (LMP)**. Here's what's happening:
 
 1. The function's **docstring** becomes the **system message**.
 2. The **return value** of the function becomes the **user message**.
@@ -65,13 +65,13 @@ To get more insight into what's happening behind the scenes, you can enable verb
 
 .. code-block:: python
 
-    ell.init(verbose=True)
+    ell2a.init(verbose=True)
 
 With verbose mode enabled, you'll see detailed information about the inputs and outputs of your language model calls.
 
 
 .. image:: _static/gif1.webp
-   :alt: ell demonstration
+   :alt: ell2a demonstration
    :class: rounded-image invertible-image
    :width: 100%
 
@@ -80,19 +80,19 @@ With verbose mode enabled, you'll see detailed information about the inputs and 
 Alternative Message Formats
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-While the previous example used the docstring for the system message and the return value for the user message, ell offers more flexibility. You can explicitly define messages using ``ell.system``, ``ell.user``, and ``ell.assistant``:
+While the previous example used the docstring for the system message and the return value for the user message, ell2a offers more flexibility. You can explicitly define messages using ``ell2a.system``, ``ell2a.user``, and ``ell2a.assistant``:
 
 .. code-block:: python
 
-    import ell
+    import ell2a
 
-    @ell.simple(model="gpt-4o")
+    @ell2a.simple(model="gpt-4o")
     def hello(name: str):
         return [
-            ell.system("You are a helpful assistant."),
-            ell.user(f"Say hello to {name}!"),
-            ell.assistant("Hello! I'd be happy to greet Sam Altman."),
-            ell.user("Great! Now do it more enthusiastically.")
+            ell2a.system("You are a helpful assistant."),
+            ell2a.user(f"Say hello to {name}!"),
+            ell2a.assistant("Hello! I'd be happy to greet Sam Altman."),
+            ell2a.user("Great! Now do it more enthusiastically.")
         ]
 
     greeting = hello("Sam Altman")
@@ -103,18 +103,18 @@ This approach allows you to construct more complex conversations within your LMP
 Prompting as Language Model Programming
 ----------------------------------------
 
-One of ell's most powerful features is its treatment of prompts as programs rather than simple strings. This approach allows you to leverage the full power of Python in your prompt engineering. Let's see how this works:
+One of ell2a's most powerful features is its treatment of prompts as programs rather than simple strings. This approach allows you to leverage the full power of Python in your prompt engineering. Let's see how this works:
 
 .. code-block:: python
 
-    import ell
+    import ell2a
     import random
 
     def get_random_adjective():
         adjectives = ["enthusiastic", "cheerful", "warm", "friendly"]
         return random.choice(adjectives)
 
-    @ell.simple(model="gpt-4o")
+    @ell2a.simple(model="gpt-4o")
     def hello(name: str):
         """You are a helpful assistant."""
         adjective = get_random_adjective()
@@ -130,7 +130,7 @@ Taking this concept further, LMPs can call other LMPs, allowing for more complex
 
 
 .. image:: _static/compositionality.webp
-   :alt: ell demonstration
+   :alt: ell2a demonstration
    :class: rounded-image invertible-image
    :width: 100%
 
@@ -138,28 +138,28 @@ Taking this concept further, LMPs can call other LMPs, allowing for more complex
 
 .. code-block:: python
 
-    import ell
+    import ell2a
     from typing import List
 
-    ell.init(verbose=True)
+    ell2a.init(verbose=True)
 
 
-    @ell.simple(model="gpt-4o-mini", temperature=1.0)
+    @ell2a.simple(model="gpt-4o-mini", temperature=1.0)
     def generate_story_ideas(about : str):
         """You are an expert story ideator. Only answer in a single sentence."""
         return f"Generate a story idea about {about}."
 
-    @ell.simple(model="gpt-4o-mini", temperature=1.0)
+    @ell2a.simple(model="gpt-4o-mini", temperature=1.0)
     def write_a_draft_of_a_story(idea : str):
         """You are an adept story writer. The story should only be 3 paragraphs."""
         return f"Write a story about {idea}."
 
-    @ell.simple(model="gpt-4o", temperature=0.1)
+    @ell2a.simple(model="gpt-4o", temperature=0.1)
     def choose_the_best_draft(drafts : List[str]):
         """You are an expert fiction editor."""
         return f"Choose the best draft from the following list: {'\n'.join(drafts)}."
 
-    @ell.simple(model="gpt-4-turbo", temperature=0.2)
+    @ell2a.simple(model="gpt-4-turbo", temperature=0.2)
     def write_a_really_good_story(about : str):
         """You are an expert novelist that writes in the style of Hemmingway. You write in lowercase."""
         # Note: You can pass in api_params to control the language model call
@@ -196,29 +196,29 @@ This compositional approach to prompt engineering enables us to break down compl
 Storing and Versioning Your Prompts
 -----------------------------------
 
-ell provides powerful versioning capabilities for your LMPs. To enable this feature, add the following line near the beginning of your script:
+ell2a provides powerful versioning capabilities for your LMPs. To enable this feature, add the following line near the beginning of your script:
 
 .. code-block:: python
 
-    ell.init(store='./logdir', autocommit=True, verbose=True)
+    ell2a.init(store='./logdir', autocommit=True, verbose=True)
 
-This line sets up a store in the ``./logdir`` directory and enables autocommit. ell will now store all your prompts and their versions in ``./logdir/ell.db``, along with a blob store for images.
+This line sets up a store in the ``./logdir`` directory and enables autocommit. ell2a will now store all your prompts and their versions in ``./logdir/ell2a.db``, along with a blob store for images.
 
 
-Exploring Your Prompts with ell-studio
+Exploring Your Prompts with ell2a-studio
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-After running your script with versioning enabled, you can explore your prompts using ell-studio. In your terminal, run:
+After running your script with versioning enabled, you can explore your prompts using ell2a-studio. In your terminal, run:
 
 .. code-block:: bash
 
-    ell-studio --storage ./logdir
+    ell2a-studio --storage ./logdir
 
-This command opens the ell-studio interface in your web browser. Here, you can visualize your LMPs, see their dependencies, and track changes over time.
+This command opens the ell2a-studio interface in your web browser. Here, you can visualize your LMPs, see their dependencies, and track changes over time.
 
 
 .. image:: _static/ell_studio_better.webp
-   :alt: ell demonstration
+   :alt: ell2a demonstration
    :class: rounded-image 
    :width: 100%
 
@@ -229,22 +229,22 @@ Iterating and Auto-Committing
 
 
 
-Let's see how ell's versioning works as we iterate on our ``hello`` LMP:
+Let's see how ell2a's versioning works as we iterate on our ``hello`` LMP:
 
 Version 1:
 
 .. code-block:: python
 
-    import ell
+    import ell2a
     import random
 
-    ell.init(store='./logdir', autocommit=True)
+    ell2a.init(store='./logdir', autocommit=True)
 
     def get_random_adjective():
         adjectives = ["enthusiastic", "cheerful", "warm", "friendly"]
         return random.choice(adjectives)
 
-    @ell.simple(model="gpt-4o")
+    @ell2a.simple(model="gpt-4o")
     def hello(name: str):
         """You are a helpful assistant."""
         adjective = get_random_adjective()
@@ -253,7 +253,7 @@ Version 1:
     greeting = hello("Sam Altman")
     print(greeting)
 
-After running this script, ell will generate an initial commit message like:
+After running this script, ell2a will generate an initial commit message like:
 
     "Initial version of hello LMP with random adjective selection."
 
@@ -263,10 +263,10 @@ Version 2:
 
 .. code-block:: python
 
-    import ell
+    import ell2a
     import random
 
-    ell.init(store='./logdir', autocommit=True)
+    ell2a.init(store='./logdir', autocommit=True)
 
     def get_random_adjective():
         adjectives = ["enthusiastic", "cheerful", "warm", "friendly", "heartfelt", "sincere"]
@@ -275,7 +275,7 @@ Version 2:
     def get_random_punctuation():
         return random.choice(["!", "!!", "!!!"])
 
-    @ell.simple(model="gpt-4o")
+    @ell2a.simple(model="gpt-4o")
     def hello(name: str):
         """You are a helpful and expressive assistant."""
         adjective = get_random_adjective()
@@ -289,11 +289,11 @@ Running this updated script will generate a new commit message:
 
     "Updated hello LMP: Added more adjectives, introduced random punctuation, and modified system prompt."
 
-ell's autocommit feature uses ``gpt-4o-mini`` to generate these commit messages automatically, providing a clear history of how your LMPs evolve.
+ell2a's autocommit feature uses ``gpt-4o-mini`` to generate these commit messages automatically, providing a clear history of how your LMPs evolve.
 
 
 .. image:: _static/auto_commit.png
-   :alt: ell demonstration
+   :alt: ell2a demonstration
    :class: rounded-image invertible-image
    :width: 100%
 
@@ -301,12 +301,12 @@ ell's autocommit feature uses ``gpt-4o-mini`` to generate these commit messages 
 Comparing Outputs Across Versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-One of the powerful features of ell-studio is the ability to compare outputs of your LMPs across different versions. This helps you understand how changes in your code affect the language model's responses.
+One of the powerful features of ell2a-studio is the ability to compare outputs of your LMPs across different versions. This helps you understand how changes in your code affect the language model's responses.
 
 For example, you can select the two versions of the ``hello`` LMP we created and compare their outputs:
 
 .. image:: _static/compare.png
-   :alt: ell demonstration
+   :alt: ell2a demonstration
    :class: rounded-image invertible-image
    :width: 100%
 
@@ -320,10 +320,10 @@ By visualizing these differences, you can quickly assess the impact of your chan
 What's Next?
 ------------
 
-Now that you've created your first LMP, explored versioning, and learned about ell-studio, there's much more to discover:
+Now that you've created your first LMP, explored versioning, and learned about ell2a-studio, there's much more to discover:
 
-- ``@ell.complex``: For advanced use cases involving tool usage, structured outputs, and the full message API.
+- ``@ell2a.complex``: For advanced use cases involving tool usage, structured outputs, and the full message API.
 - Multimodal inputs and outputs: Work with images, videos, and audio in your LMPs.
-- API clients and models: Explore various language models and APIs supported by ell.
+- API clients and models: Explore various language models and APIs supported by ell2a.
 - Designing effective Language Model Programs: Discover best practices for creating robust and efficient LMPs.
-- Tutorials: Check out in-depth tutorials for real-world applications of ell.
+- Tutorials: Check out in-depth tutorials for real-world applications of ell2a.

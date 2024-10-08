@@ -1,6 +1,6 @@
 import random
 from typing import List, Tuple
-import ell
+import ell2a
 
 
 
@@ -19,7 +19,7 @@ names_list = [
 
 
 
-@ell.simple(model="gpt-4o-2024-08-06", temperature=1.0)
+@ell2a.simple(model="gpt-4o-2024-08-06", temperature=1.0)
 def create_personality() -> str:
     """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.
 
@@ -34,22 +34,22 @@ def create_personality() -> str:
 def format_message_history(message_history : List[Tuple[str, str]]) -> str:
     return "\n".join([f"{name}: {message}" for name, message in message_history])
 
-@ell.simple(model="gpt-4o-2024-08-06", temperature=0.3, max_tokens=20)
+@ell2a.simple(model="gpt-4o-2024-08-06", temperature=0.3, max_tokens=20)
 def chat(message_history : List[Tuple[str, str]], *, personality : str):
 
         return [
-            ell.system(f"""Here is your description.
+            ell2a.system(f"""Here is your description.
                 {personality}. 
 
                 Your goal is to come up with a response to a chat. Only respond in one sentence (should be like a text message in informality.) Never use Emojis."""),
-            ell.user(format_message_history(message_history)),
+            ell2a.user(format_message_history(message_history)),
         ]
 
 
 
 if __name__ == "__main__":
-    from ell.stores.sql import SQLiteStore
-    ell.init(store='./logdir', autocommit=True, verbose=True)
+    from ell2a.stores.sql import SQLiteStore
+    ell2a.init(store='./logdir', autocommit=True, verbose=True)
 
     messages : List[Tuple[str, str]]= []
     personalities = [create_personality(), create_personality()]

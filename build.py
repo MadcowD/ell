@@ -10,15 +10,15 @@ def run_command(command, cwd=None):
 
 def npm_install():
     print("Running npm install")
-    run_command("npm install", cwd="ell-studio")
+    run_command("npm install", cwd="ell2a-studio")
 
 
 def npm_build():
     print("Running npm build")
-    run_command("npm run build", cwd="ell-studio")
+    run_command("npm run build", cwd="ell2a-studio")
     print("Copying static files")
-    source_dir = os.path.join("ell-studio", "build")
-    target_dir = os.path.join("src", "ell", "studio", "static")
+    source_dir = os.path.join("ell2a-studio", "build")
+    target_dir = os.path.join("src", "ell2a", "studio", "static")
     shutil.rmtree(target_dir, ignore_errors=True)
     shutil.copytree(source_dir, target_dir)
     print(f"Copied static files from {source_dir} to {target_dir}")

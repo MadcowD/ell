@@ -1,7 +1,7 @@
-import ell
+import ell2a
 import random
 
-ell.init(store='./logdir', autocommit=True, verbose=True)
+ell2a.init(store='./logdir', autocommit=True, verbose=True)
 
 def get_random_adjective():
     adjectives = ["enthusiastic", "cheerful", "warm", "friendly", "heartfelt", "sincere"]
@@ -10,7 +10,7 @@ def get_random_adjective():
 def get_random_punctuation():
     return random.choice(["!", "!!", "!!!"])
 
-@ell.simple(model="gpt-4o")
+@ell2a.simple(model="gpt-4o")
 def hello(name: str):
     # """You are a helpful and expressive assistant."""
     adjective = get_random_adjective()

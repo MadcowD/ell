@@ -2,7 +2,7 @@ import cv2
 import time
 from PIL import Image
 import os
-from ell.util.plot_ascii import plot_ascii
+from ell2a.util.plot_ascii import plot_ascii
 
 
 def clear_console():

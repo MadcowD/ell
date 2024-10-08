@@ -6,9 +6,9 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'ell'
-copyright = '2024, William Guss'
-author = 'William Guss'
+project = 'ell2a'
+copyright = '2024, Xingqiang Chen'
+author = 'Xingqiang Chen'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -34,7 +34,7 @@ html_theme_options = {
     "main_nav_links": {
         "Docs": "index",
         "API Reference": "reference/index",
-        "AI Jobs Board": "https://jobs.ell.so",
+        "AI Jobs Board": "https://jobs.agentbase.space",
     },
     "extra_header_link_icons": {
         "Discord": {
@@ -45,8 +45,8 @@ html_theme_options = {
         },
     },
 
-    "logo_light": "_static/ell-wide-light.png",
-    "logo_dark": "_static/ell-wide-dark.png",
+    "logo_light": "_static/ell2a-wide-light.png",
+    "logo_dark": "_static/ell2a-wide-dark.png",
     
 }
 

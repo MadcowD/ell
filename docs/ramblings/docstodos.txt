@@ -6,26 +6,26 @@ github icon
 core concepts:
 
 
-@ell.simple.rst
+@ell2a.simple.rst
 
 - autodoc doc string
 - usage (can be doc string or )
 
-@ell.complex.rst
+@ell2a.complex.rst
 
 - autodoc doc string
 - usage (can be doc string or )
 
 
-Tool Usage.rst
+Agent Usage.rst
 
 Models & API Clients .rst
 Configuration.rst
 
 
-@ell.complex .rst
+@ell2a.complex .rst
 
-Tool Usage .rst
+Agent Usage .rst
 
 
 

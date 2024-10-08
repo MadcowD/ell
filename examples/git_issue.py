@@ -1,32 +1,32 @@
-import ell
+import ell2a
 import os
 
-from ell.stores.sql import SQLiteStore
+from ell2a.stores.sql import SQLiteStore
 
 
 
-@ell.simple(model="gpt-4o-mini", temperature=0.1)
+@ell2a.simple(model="gpt-4o-mini", temperature=0.1)
 def generate_description(about : str):
     return [
-        ell.system(f"""Provide a clear and concise description of what the issue is. Include any relevant information that helps to explain the problem. 
+        ell2a.system(f"""Provide a clear and concise description of what the issue is. Include any relevant information that helps to explain the problem. 
                    This section should help the reader understand the context and the impact of the issue. 
                    Output only the description as a string and nothing else"""),
-        ell.user(f"Generate a issue description about {about}."),
+        ell2a.user(f"Generate a issue description about {about}."),
     ]
 
-@ell.simple(model="gpt-4o-mini", temperature=0.1)
+@ell2a.simple(model="gpt-4o-mini", temperature=0.1)
 def generate_python_code_for_A_output_B(A: str, B: str = 'nothing'):
     return [
-        ell.system(f"""You are a world-class python developer. Do not include code that can leak important privacy information that maybe of concern.
+        ell2a.system(f"""You are a world-class python developer. Do not include code that can leak important privacy information that maybe of concern.
                    Check the code carefully in terms of correctness, style and efficiency. 
                    Do not format in markdown. You are directly outputting python code. 
                    Do not include use code to get system information that is not important to github issue.
                    You can also do multiline code if you need ot import any dependency. Do not write wrap any code in functions.
                     """),
-        ell.user(f"Write the python code for {A} and the code should have a local 'OUTPUT' as {B}. Only output the code and nothing else."),
+        ell2a.user(f"Write the python code for {A} and the code should have a local 'OUTPUT' as {B}. Only output the code and nothing else."),
     ]
 
-@ell.simple(model="gpt-4o", temperature=0.1)
+@ell2a.simple(model="gpt-4o", temperature=0.1)
 def generate_issue(
                     error: str,
                    ):
@@ -49,17 +49,17 @@ def generate_issue(
         system_info.append(local_vars.get("OUTPUT"))
     
     return [
-        ell.system("You are an expert at Markdown and at writing git issues. Output Markdown and nothing else"),
-        ell.user(f"Write a git issue with the following description: {description}. Here is the system information: {system_info}"),
+        ell2a.system("You are an expert at Markdown and at writing git issues. Output Markdown and nothing else"),
+        ell2a.user(f"Write a git issue with the following description: {description}. Here is the system information: {system_info}"),
     ]
 
 if __name__ == "__main__":
 
-    ell.init(store='./logdir', autocommit=True, verbose=True)
+    ell2a.init(store='./logdir', autocommit=True, verbose=True)
 
-    # This is an example from ell's early day error
+    # This is an example from ell2a's early day error
     error_console_output = """
-    (ell_lab) D:\\dev\\ell>D:/anaconda/envs/ell_lab/python.exe d:/dev/ell/examples/multilmp.py
+    (ell_lab) D:\\dev\\ell2a>D:/anaconda/envs/ell_lab/python.exe d:/dev/ell2a/examples/multilmp.py
     before ideas 1232131
     ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║ generate_story_ideas(a dog) # (notimple...)
@@ -76,31 +76,31 @@ if __name__ == "__main__":
     │              loss of a loved one, leading them both on a journey of friendship and discovery.
     ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
     Traceback (most recent call last):
-    File "d:\\dev\\ell\\examples\\multilmp.py", line 53, in <module>
+    File "d:\\dev\\ell2a\\examples\\multilmp.py", line 53, in <module>
         story = write_a_really_good_story("a dog")
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "D:\\dev\\ell\\ell\\src\\ell\\decorators.py", line 207, in wrapper
+    File "D:\\dev\\ell2a\\ell2a\\src\\ell2a\\decorators.py", line 207, in wrapper
         else fn(*fn_args, _invocation_origin=invocation_id, **fn_kwargs, )
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "D:\\dev\\ell\\ell\\src\\ell\\decorators.py", line 150, in wrapper
+    File "D:\\dev\\ell2a\\ell2a\\src\\ell2a\\decorators.py", line 150, in wrapper
         res = fn(*fn_args, **fn_kwargs)
             ^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "d:\\dev\\ell\\examples\\multilmp.py", line 32, in write_a_really_good_story
+    File "d:\\dev\\ell2a\\examples\\multilmp.py", line 32, in write_a_really_good_story
         ideas = generate_story_ideas(about, api_params=(dict(n=4)))
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "D:\\dev\\ell\\ell\\src\\ell\\decorators.py", line 216, in wrapper
-        fn_closure, _uses = ell.util.closure.lexically_closured_source(func_to_track)
+    File "D:\\dev\\ell2a\\ell2a\\src\\ell2a\\decorators.py", line 216, in wrapper
+        fn_closure, _uses = ell2a.util.closure.lexically_closured_source(func_to_track)
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "D:\\dev\\ell\\ell\\src\\ell\\util\\closure.py", line 306, in lexically_closured_source
+    File "D:\\dev\\ell2a\\ell2a\\src\\ell2a\\util\\closure.py", line 306, in lexically_closured_source
         _, fnclosure, uses = lexical_closure(func, initial_call=True)
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "D:\\dev\\ell\\ell\\src\\ell\\util\\closure.py", line 250, in lexical_closure
+    File "D:\\dev\\ell2a\\ell2a\\src\\ell2a\\util\\closure.py", line 250, in lexical_closure
         dep, _,  dep_uses = lexical_closure(
                             ^^^^^^^^^^^^^^^^
-    File "D:\\dev\\ell\\ell\\src\\ell\\util\\closure.py", line 196, in lexical_closure
+    File "D:\\dev\\ell2a\\ell2a\\src\\ell2a\\util\\closure.py", line 196, in lexical_closure
         ret = lexical_closure(
             ^^^^^^^^^^^^^^^^
-    File "D:\\dev\\ell\\ell\\src\\ell\\util\\closure.py", line 140, in lexical_closure
+    File "D:\\dev\\ell2a\\ell2a\\src\\ell2a\\util\\closure.py", line 140, in lexical_closure
         source = getsource(func, lstrip=True)
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     File "D:\\anaconda\\envs\\ell_lab\\Lib\\site-packages\\dill\\source.py", line 374, in getsource

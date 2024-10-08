@@ -1,6 +1,6 @@
-import ell
+import ell2a
 
-@ell.simple(model="o1-preview")
+@ell2a.simple(model="o1-preview")
 def solve_complex_math_problem(equation: str, variables: dict, constraints: list, optimization_goal: str):
     return f"""You are an expert mathematician and problem solver. Please solve the following complex mathematical problem:
 
@@ -9,7 +9,7 @@ Variables: {variables}
 Constraints: {constraints}
 Optimization Goal: {optimization_goal}"""
 
-@ell.simple(model="o1-preview")
+@ell2a.simple(model="o1-preview")
 def write_plot_code_for_problem_and_solution(solution :str):
     return f"""You are an expert programmer and problem solver. 
 Please write code in python with matplotlib to plot the solution to the following problem: It should work in the terminal. Full script with imports.
@@ -26,7 +26,7 @@ def solve_and_plot(**kwargs):
 
 if __name__ == "__main__":
 
-    ell.init(store='./logdir', autocommit=True, verbose=True)
+    ell2a.init(store='./logdir', autocommit=True, verbose=True)
     result = solve_and_plot(
         equation="y = ax^2 + bx + c",
         variables={"a": 1, "b": -5, "c": 6},
