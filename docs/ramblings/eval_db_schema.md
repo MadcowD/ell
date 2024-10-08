@@ -518,9 +518,8 @@ class EvaluationRun(SQLModel, table=True):
     end_time: datetime
 
     evaluation: "Evaluation" = Relationship(back_populates="runs")
-    outputs: List[EvaluationInvocation] = Relationship(back_populates="evaluation_run")
+    results: List[EvaluationInvocation] = Relationship(back_populates="evaluation_run")
     
-
 
 
 # this linkage is 'ok'
@@ -533,7 +532,7 @@ class EvaluationInvocation(SQLModel, table=True):
     invocation : Invocation = Relationship(back_populates="evaluation_invocations")
     
     # Something like this with no back population
-    criteria : List[Invocation] = Relationship(
+    scores : List[Invocation] = Relationship(
         link_model=EvaluationCriterionLink,
         sa_relationship_kwargs=dict(
             primaryjoin="EvaluationInvocation.invocation_id==Invocation.id")
@@ -556,7 +555,8 @@ class Criterion(SQLModel, table=True):
 class Evaluation(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
-    dataset: str
+    dataset_hash: str
+    dataset_pickle : bytes
 
     criteria: List[Criterion] = Relationship(back_populates="evaluation")
     runs: List[EvaluationRun] = Relationship(back_populates="evaluation")

@@ -53,7 +53,7 @@ def test_predictor_evaluation():
         return float(output.lower() == label.lower())
 
     eval = ell.evaluation.Evaluation(
-        name="test", dataset=dataset, criteria={"score": score, "length": lambda _, output: len(output)}
+        name="test", dataset=dataset, metrics={"score": score, "length": lambda _, output: len(output)}
     )
 
     # ell.init(verbose=True, store='./logdir')
@@ -255,7 +255,7 @@ def test_poem_eval():
     ell.init(verbose=True, store="./logdir")
 
 
-    eval = ell.evaluation.Evaluation(name="poem_eval", dataset=dataset, criteria=
+    eval = ell.evaluation.Evaluation(name="poem_eval", dataset=dataset, metrics=
                                     {"is_good": score,
                                     "length": lambda _, output: len(output) ,
                                     "average_word_length": lambda _, output: sum(len(word) for word in output.split()) / len(output.split())})

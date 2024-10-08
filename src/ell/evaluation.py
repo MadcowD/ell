@@ -4,6 +4,8 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import uuid
 
+import openai
+
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlmodel._compat import SQLModelConfig
@@ -24,8 +26,11 @@ from ell.util.closure import lexical_closure, lexically_closured_source
 
 Datapoint = Dict[str, Any]
 Dataset = List[Dict[str, Any]]
-Criterion = Callable[[Datapoint, Any], float]
-Criteria = Dict[str, Criterion]
+Metrics = Callable[[Datapoint, Any], float]
+Metric = Dict[str, Metrics]
+Criterion = Callable[[Datapoint, Any], bool]
+Annotation = Callable[[Datapoint, Any], Any]
+Annotations = Dict[str, Annotation]
 
 
 
@@ -53,31 +58,24 @@ class Evaluation(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     name: str
     dataset: Dataset
-    criteria: Optional[Criteria] = Field(default_factory=dict)
+    metrics: Optional[Metric] = Field(default_factory=dict)
+    criterion: Optional[Criterion] = None
+    annotations : Optional[Annotations] = Field(default_factory=dict)
+
     default_api_params: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
 
     def write(self, serialized_evaluation_run) -> None:
         pass
+   
 
     @field_validator('criteria')
-    def validate_criteria(cls, criteria: Union[Criteria, List[Criterion]]) -> Criteria:
-        if isinstance(criteria, list):
-            criteria_dict = {}
-            for crit in criteria:
-                if not callable(crit):
-                    raise ValueError(f"Each criterion must be a callable, got {type(crit)}")
-                if not hasattr(crit, '__name__') or crit.__name__ == '<lambda>':
-                    raise ValueError(f"Each criterion in a list must have a name (not a lambda)")
-                criteria_dict[crit.__name__] = crit
-            return criteria_dict
-        elif isinstance(criteria, dict):
-            for name, crit in criteria.items():
-                if not callable(crit):
-                    raise ValueError(f"Criterion '{name}' must be a callable, got {type(crit)}")
-            return criteria
-        else:
-            raise ValueError(f"criteria must be either a list of callables or a dictionary, got {type(criteria)}")
+    def validate_criteria(cls, criteria: Union[Metric, List[Metrics]]) -> Metric:
+        return _validate_callable_dict(criteria, "criterion")
+
+    @field_validator('annotations')
+    def validate_annotations(cls, annotations: Union[Annotations, List[Annotation]]) -> Annotations:
+        return _validate_callable_dict(annotations, "annotation")
 
     def run(self, lmp,  *, n_workers: int = 1, api_params: Optional[Dict[str, Any]] = None, verbose: bool = False, samples_per_datapoint: int = 1) -> EvaluationRun:
         """
@@ -123,9 +121,9 @@ class Evaluation(BaseModel):
                         outputs.extend(output)  # Extend instead of append
                         pbar.update(1)
                         
-                        if self.criteria:
+                        if self.metrics:
                             # Update moving statistics for evaluation
-                            current_means = {name: statistics.mean(scores[name]) for name in self.criteria}
+                            current_means = {name: statistics.mean(scores[name]) for name in self.metrics}
                             
                             pbar.set_postfix({
                                 'means': {name: f'{value:.4f}' for name, value in current_means.items()},
@@ -136,7 +134,7 @@ class Evaluation(BaseModel):
                             pbar.set_postfix({'processed': len(outputs), 'most_recent_output': str(output[0])[:10]})
             
             evaluation_run.outputs = outputs
-            if self.criteria:
+            if self.metrics:
                 evaluation_run.scores = scores  # Store the list of score dictionaries directly
             evaluation_run.end_time = datetime.now()
 
@@ -172,12 +170,32 @@ class Evaluation(BaseModel):
         if not isinstance(lmp_output, list):
             lmp_output = [cast(Any, lmp_output)]
         
-        if self.criteria:
+        if self.metrics:
             scores = {
                 name: [
                     float(crit(data_point, output)) for output in lmp_output 
-                ] for name, crit in self.criteria.items()
+                ] for name, crit in self.metrics.items()
             }
             return lmp_output, scores
         return lmp_output, {}  # Return empty score dicts if no criteria
 
+
+
+
+def _validate_callable_dict(items: Union[Dict[str, Callable], List[Callable]], item_type: str) -> Dict[str, Callable]:
+    if isinstance(items, list):
+        items_dict = {}
+        for item in items:
+            if not callable(item):
+                raise ValueError(f"Each {item_type} must be a callable, got {type(item)}")
+            if not hasattr(item, '__name__') or item.__name__ == '<lambda>':
+                raise ValueError(f"Each {item_type} in a list must have a name (not a lambda)")
+            items_dict[item.__name__] = item
+        return items_dict
+    elif isinstance(items, dict):
+        for name, item in items.items():
+            if not callable(item):
+                raise ValueError(f"{item_type.capitalize()} '{name}' must be a callable, got {type(item)}")
+        return items
+    else:
+        raise ValueError(f"{item_type}s must be either a list of callables or a dictionary, got {type(items)}")
