@@ -58,6 +58,7 @@ class Evaluation(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     name: str
     dataset: Dataset
+    # I htink we should jsut basically have one field so as to not overload this
     metrics: Optional[Metric] = Field(default_factory=dict)
     criterion: Optional[Criterion] = None
     annotations : Optional[Annotations] = Field(default_factory=dict)
@@ -69,11 +70,13 @@ class Evaluation(BaseModel):
         pass
    
 
-    @field_validator('criteria')
+    @field_validator('criterion')
+    @classmethod
     def validate_criteria(cls, criteria: Union[Metric, List[Metrics]]) -> Metric:
         return _validate_callable_dict(criteria, "criterion")
 
     @field_validator('annotations')
+    @classmethod
     def validate_annotations(cls, annotations: Union[Annotations, List[Annotation]]) -> Annotations:
         return _validate_callable_dict(annotations, "annotation")
 
