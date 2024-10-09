@@ -6,6 +6,7 @@ import ell
 import ell.evaluation
 import numpy as np
 
+import ell.lmp.function
 
 def test_predictor_evaluation():
     dataset: List[ell.evaluation.Datapoint] = [
@@ -257,13 +258,39 @@ def test_poem_eval():
 
     eval = ell.evaluation.Evaluation(name="poem_eval", dataset=dataset, metrics=
                                     {
+                                    "critic_score": score,
                                     "length": lambda _, output: len(output) ,
                                     "average_word_length": lambda _, output: sum(len(word) for word in output.split()) / len(output.split())})
 
 
     print("EVALUATING GOOD POEM")
-    run = eval.run(write_a_good_poem, n_workers=10, verbose=True)
-    print(run.results.metrics['length'].mean())
+    run = eval.run(write_a_good_poem, n_workers=10, verbose=False)
+    print(f"Average length: {run.results.metrics['length'].mean():.2f}")
+    print(f"Average word length: {run.results.metrics['average_word_length'].mean():.2f}")
+    print(f"Average critic score: {run.results.metrics['critic_score'].mean():.2f}")
+
+    print("EVALUATING BAD POEM")
+    run = eval.run(write_a_bad_poem, n_workers=10, verbose=False)
+    print(f"Average length: {run.results.metrics['length'].mean():.2f}")
+    print(f"Average word length: {run.results.metrics['average_word_length'].mean():.2f}")
+    print(f"Average critic score: {run.results.metrics['critic_score'].mean():.2f}")
+
+    # Expensive but a proof point to this being meaningful. BoN sampling actualyl gets you a better poem and you can calibrate the return against the discirminator. Bo10 = 85% against our critic.
+    # @ell.lmp.function.function()
+    # def rejection_sample_bad_poems(n_samples: int = 4, api_params: Dict[str, Any] = {}):
+    #     bad_poems = write_a_bad_poem(api_params=dict(n=10))
+    #     for poem in bad_poems:
+    #         if score(None, poem) > 0:
+    #             return poem
+    #     else:
+    #         return bad_poems[0]
+
+    # print("REJECTION SAMPLE BAD POEMS")
+    # run = eval.run(rejection_sample_bad_poems, n_workers=10, verbose=False)
+    # print(run.results.outputs)
+    # print(f"Average length: {run.results.metrics['length'].mean():.2f}")
+    # print(f"Average word length: {run.results.metrics['average_word_length'].mean():.2f}")
+    # print(f"Average critic score: {run.results.metrics['critic_score'].mean():.2f}")
 
 
 

@@ -51,8 +51,10 @@ class EvaluationResults(BaseModel):
     annotations: Dict[str, List[Any]] = Field(default_factory=dict)
     criterion: Optional[np.ndarray[bool]] = Field(default=None)
 
-    def summarize(self) -> Dict[str, float]:
-        pass
+    # def summarize(self) -> Dict[str, float]:
+    #     Should return an objectl like the aggreagte summary we need to consturcti nthe database
+    
+    #     pass
 
 
 
