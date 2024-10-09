@@ -230,7 +230,7 @@ def test_poem_eval():
         { 
             "input": [],
         }
-    ]*1
+    ]*20
 
     @ell.simple(model="gpt-4o")
     def write_a_bad_poem():
@@ -256,14 +256,14 @@ def test_poem_eval():
 
 
     eval = ell.evaluation.Evaluation(name="poem_eval", dataset=dataset, metrics=
-                                    {"is_good": score,
+                                    {
                                     "length": lambda _, output: len(output) ,
                                     "average_word_length": lambda _, output: sum(len(word) for word in output.split()) / len(output.split())})
 
 
     print("EVALUATING GOOD POEM")
-    result = eval.run(write_a_good_poem, n_workers=1)
-
+    run = eval.run(write_a_good_poem, n_workers=10, verbose=True)
+    print(run.results)
 
 
 

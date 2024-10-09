@@ -109,6 +109,9 @@ class SerializedLMP(SerializedLMPBase, table=True):
         ),
     )
 
+    evaluation_runs : List["EvaluationRun"] = Relationship(back_populates="evaluated_lmp")
+
+
     class Config:
         table_name = "serializedlmp"
         unique_together = [("version_number", "name")]
@@ -156,6 +159,7 @@ class InvocationContentsBase(ExternalizeableModel):
     invocation_api_params: Optional[Dict[str, Any]] = Field(
         default=None, sa_column=Column(JSON)
     )
+
     global_vars: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     free_vars: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
 
@@ -229,3 +233,4 @@ class Invocation(InvocationBase, table=True):
             "completion_tokens",
         ),
     )
+    evaluation_result_datapoints : List["EvaluationResultDatapoint"] = Relationship(back_populates="invocation_being_labeled")

@@ -26,8 +26,8 @@ from ell.util.closure import lexical_closure, lexically_closured_source
 
 Datapoint = Dict[str, Any]
 Dataset = List[Dict[str, Any]]
-Metrics = Callable[[Datapoint, Any], float]
-Metric = Dict[str, Metrics]
+Metric = Callable[[Datapoint, Any], float]
+Metrics = Dict[str, Metric]
 Criterion = Callable[[Datapoint, Any], bool]
 Annotation = Callable[[Datapoint, Any], Any]
 Annotations = Dict[str, Annotation]
@@ -40,9 +40,19 @@ Annotations = Dict[str, Annotation]
 
 class EvaluationResults(BaseModel):
     outputs: List[Any] = Field(default_factory=list)
-    scores: Dict[str, List[float]] = Field(default_factory=dict)
+    metrics: Dict[str, List[float]] = Field(default_factory=dict)
     annotations: Dict[str, List[Any]] = Field(default_factory=dict)
-    criterion: List[bool] = Field(default_factory=list)
+    criterion: Optional[List[bool]] = Field(default=None)
+
+    def summarize(self) -> Dict[str, float]:
+        pass
+
+
+class _ResultDatapoint(BaseModel):
+    output: Any
+    metrics: Dict[str, float]
+    annotations: Dict[str, Any]
+    criterion: Optional[bool]
 
 
 class EvaluationRun(BaseModel):
@@ -56,7 +66,7 @@ class EvaluationRun(BaseModel):
 
     @property
     def inputs(self) -> List[Any]:
-        return [d['input'] for d in self.dataset]
+        return [d['input'] for d in self.dataset] if self.dataset else []
     
     @property
     def outputs(self) -> List[Any]:
@@ -72,13 +82,12 @@ class Evaluation(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     name: str
     dataset: Dataset
-    # I htink we should jsut basically have one field so as to not overload this
-    metrics: Optional[Metric] = Field(default_factory=dict)
+    metrics: Metrics = Field(default_factory=dict)
+    annotations: Annotations = Field(default_factory=dict)
     criterion: Optional[Criterion] = None
-    annotations : Optional[Annotations] = Field(default_factory=dict)
+    
 
     default_api_params: Optional[Dict[str, Any]] = Field(default_factory=dict)
-
 
     def write(self, serialized_evaluation_run) -> None:
         pass
@@ -123,36 +132,31 @@ class Evaluation(BaseModel):
         original_verbose = config.verbose
         config.verbose = verbose
         try:
-            results = EvaluationResults()
+            
             with ThreadPoolExecutor(max_workers=n_workers) as executor:
                 futures = [executor.submit(self._process_single, data_point, lmp_to_use, run_api_params) 
                            for data_point in self.dataset]
                 
                 desc = "Evaluating" 
+                rowar_results = []
                 with tqdm(total=len(self.dataset), desc=desc) as pbar:
                     for future in as_completed(futures):
-                        output, result = future.result()
-                        for name, value in result.items():
-                            scores[name].extend(value)
-                        outputs.extend(output)  # Extend instead of append
+                        result = future.result()
+                        rowar_results.extend(result)
                         pbar.update(1)
                         
-                        if self.metrics:
-                            # Update moving statistics for evaluation
-                            current_means = {name: statistics.mean(scores[name]) for name in self.metrics}
-                            
-                            pbar.set_postfix({
-                                'means': {name: f'{value:.4f}' for name, value in current_means.items()},
-                                'most_recent_output': str(output[0])[:10]
-                            })
-                        else:
-                            # Just show progress for optimization
-                            pbar.set_postfix({'processed': len(outputs), 'most_recent_output': str(output[0])[:10]})
+
+                        # Just show progress for optimization
+                        pbar.set_postfix({'processed': len(rowar_results), 'most_recent_output': str(rowar_results[-1].output)[:10]})
             
-            evaluation_run.outputs = outputs
-            if self.metrics:
-                evaluation_run.scores = scores  # Store the list of score dictionaries directly
             evaluation_run.end_time = datetime.now()
+            # convert rowar results to evaluation results
+            evaluation_run.results = EvaluationResults(
+                outputs=[result.output for result in rowar_results],
+                metrics={name: [result.metrics[name] for result in rowar_results] for name in self.metrics},
+                annotations={name: [result.annotations[name] for result in rowar_results] for name in self.annotations},
+                criterion=[result.criterion for result in rowar_results] if self.criterion else None
+            )
 
             if not hasattr(self, 'written_evaluation'):
                 pass
@@ -162,8 +166,8 @@ class Evaluation(BaseModel):
             return evaluation_run
         finally:
             config.verbose = original_verbose
-            
-    def _process_single(self, data_point: Datapoint, lmp: LMP, api_params: Dict[str, Any]) -> Tuple[List[Any], Dict[str, List[float]]]:
+
+    def _process_single(self, data_point: Datapoint, lmp: LMP, api_params: Dict[str, Any]) -> List[_ResultDatapoint]:
         """
         Process a single data point using the LMP and apply all criteria.
         
@@ -171,10 +175,9 @@ class Evaluation(BaseModel):
             data_point (Any): A single item from the dataset.
             lmp (LMP): The LMP to use for processing.
             api_params (Dict[str, Any]): API parameters for this run.
-            samples_per_datapoint (int): Number of samples to generate per datapoint.
         
         Returns:
-            Tuple[List[Any], List[Dict[str, float]]]: The LMP outputs and a 2D array of scores from all criteria.
+            Tuple[List[Any], Dict[str, List[float]]]: The LMP outputs and a dictionary of scores from all metrics.
         """
         if isinstance(data_point['input'], list):
             lmp_output = lmp(*data_point['input'], api_params=api_params)
@@ -186,14 +189,15 @@ class Evaluation(BaseModel):
         if not isinstance(lmp_output, list):
             lmp_output = [cast(Any, lmp_output)]
         
-        if self.metrics:
-            scores = {
-                name: [
-                    float(crit(data_point, output)) for output in lmp_output 
-                ] for name, crit in self.metrics.items()
-            }
-            return lmp_output, scores
-        return lmp_output, {}  # Return empty score dicts if no criteria
+        return [
+                _ResultDatapoint(
+                    output=output,
+                    metrics={name: float(metric(data_point, output)) for name, metric in self.metrics.items()},
+                    annotations={name: annotation(data_point, output) for name, annotation in self.annotations.items()},
+                    criterion=bool(self.criterion(data_point, output)) if self.criterion else None
+                )
+             for output in lmp_output]
+
 
 
 
