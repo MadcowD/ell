@@ -61,6 +61,7 @@ class StructuredPoem(BaseModel):
         return v
     notes : Optional[str] = Field(None, description="Any additional notes about the poem")
 
+
 @ell.human(response_format=StructuredPoem)
 def write_a_poem(topic):
     """You should write a poem about the topic keep all poems under 100 characters"""
@@ -69,7 +70,7 @@ def write_a_poem(topic):
 @ell.human():
 def write_a_poem_human(topic):
     """You are a human writing poems"""
-    
+    # no way with this syntax to request sturcutred out for one message. its gotta be yield ell.call or something. but in which case why yield at all?
     expert_poem_str = yield f"Write a poem about {topic}"
 
     return StructuredPoem(
@@ -170,11 +171,6 @@ x.mean() # would be None if its a type of string otherwise. no this isn't quite 
 
 FieldInfo(annotation=bool, default=None, description='If the poem is good enough to be approved')
 # its sad because effectively human feedback also matches 
-class EvaluationResults(BaseModel):
-    outputs: List[Any] = Field(default_factory=list)
-    scores: Dict[str, List[float]] = Field(default_factory=dict)
-    annotations: Dict[str, List[Any]] = Field(default_factory=dict)
-    criterion: List[bool] = Field(default_factory=list)
 
 # A problem here is that criterion is just like a final pass fail, but we might actually want to construct final. Scores that are a function of previous scores and so on. But this is just too much overloading of a feature where someone could implement such. A Functionality via. Inheritance. 
 

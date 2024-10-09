@@ -38,13 +38,18 @@ Annotations = Dict[str, Annotation]
 
 # XXX: Do we still include criterion?
 
+class EvaluationResults(BaseModel):
+    outputs: List[Any] = Field(default_factory=list)
+    scores: Dict[str, List[float]] = Field(default_factory=dict)
+    annotations: Dict[str, List[Any]] = Field(default_factory=dict)
+    criterion: List[bool] = Field(default_factory=list)
+
 
 class EvaluationRun(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    scores: Dict[str, List[float]] = Field(default_factory=dict)
-    dataset : Dataset = Field(default_factory=list)
+    results : EvaluationResults = Field(default_factory=EvaluationResults)
+    dataset : Optional[Dataset] = Field(default=None)
     lmp: Optional[LMP] = Field(default=None)
-    outputs: List[Any] = Field(default_factory=list)
     api_params: Dict[str, Any] = Field(default_factory=dict)
     start_time: datetime = Field(default_factory=datetime.now)
     end_time: Optional[datetime] = None
@@ -53,10 +58,14 @@ class EvaluationRun(BaseModel):
     def inputs(self) -> List[Any]:
         return [d['input'] for d in self.dataset]
     
+    @property
+    def outputs(self) -> List[Any]:
+        return self.results.outputs
+    
 
     def write(self, serialized_evaluation_run) -> None:
-        # To link!
-        pass
+        raise NotImplementedError("Not implemented")
+        
 
 class Evaluation(BaseModel):
     """Simple evaluation for prompt engineering rigorously"""
@@ -106,7 +115,7 @@ class Evaluation(BaseModel):
         
         evaluation_run = EvaluationRun(
             lmp=lmp_to_use,
-            inputs=self.dataset,
+            dataset=self.dataset,
             api_params=run_api_params,
             start_time=datetime.now()
         )
@@ -114,8 +123,7 @@ class Evaluation(BaseModel):
         original_verbose = config.verbose
         config.verbose = verbose
         try:
-            scores : Dict[str, List[float]] = defaultdict(list)
-            outputs = []
+            results = EvaluationResults()
             with ThreadPoolExecutor(max_workers=n_workers) as executor:
                 futures = [executor.submit(self._process_single, data_point, lmp_to_use, run_api_params) 
                            for data_point in self.dataset]

@@ -231,6 +231,21 @@ class Evaluation(SQLModel, table=True):
     runs: List["EvaluationRun"] = Relationship(back_populates="evaluation")
 
 
+# Last thing we need is like run group so that the invocations dont all show up in the ui without groupings..
+# class RunGroup(SQLModel, table=True):
+#     id: Optional[str] = Field(default=None, primary_key=True)
+#     name: str
+#     parent_id: Optional[str] = Field(default=None, foreign_key="rungroup.id")
+    
+#     # Relationships
+#     parent: Optional["RunGroup"] = Relationship(back_populates="children", sa_relationship_kwargs={"remote_side": [id]})
+#     children: List["RunGroup"] = Relationship(back_populates="parent")
+
+#     # Optional additional fields
+#     description: Optional[str] = Field(default=None)
+#     created_at: datetime = Field(default_factory=datetime.utcnow)
+#     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 
 # TODO: FUTURE GENERALOIZATION OF EVALUATION RESULTS
 

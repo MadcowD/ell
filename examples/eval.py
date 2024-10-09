@@ -230,7 +230,7 @@ def test_poem_eval():
         { 
             "input": [],
         }
-    ]*20
+    ]*1
 
     @ell.simple(model="gpt-4o")
     def write_a_bad_poem():
@@ -262,7 +262,7 @@ def test_poem_eval():
 
 
     print("EVALUATING GOOD POEM")
-    result = eval.run(write_a_good_poem, n_workers=10)
+    result = eval.run(write_a_good_poem, n_workers=1)
 
 
 
