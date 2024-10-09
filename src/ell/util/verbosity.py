@@ -85,6 +85,51 @@ def get_terminal_width() -> int:
         logger.warning("Unable to determine terminal size. Defaulting to 80 columns.")
         return 80
 
+import numpy as np
+def plot_ascii_waveform(audio_data: np.ndarray, width: int = 80) -> List[str]:
+    """
+    Plot an improved ASCII waveform of the given audio data with a height of 1.
+
+    Args:
+        audio_data (np.ndarray): The audio data to plot.
+        width (int): The width of the ASCII plot.
+
+    Returns:
+        List[str]: A list of strings representing the ASCII waveform.
+    """
+    if audio_data.ndim != 1:
+        raise ValueError("Audio data must be a 1D numpy array")
+
+    # Normalize audio data to fit within the range [0, 1]
+    normalized_data = (audio_data - np.min(audio_data)) / (np.max(audio_data) - np.min(audio_data))
+
+    # Create the ASCII waveform
+    step = max(1, len(audio_data) // width)
+    
+    # Characters for different amplitudes
+    chars = ' ▁▂▃▄▅▆▇█'
+
+    waveform = ''
+    for i in range(0, len(audio_data), step):
+        char_index = int(normalized_data[i] * (len(chars) - 1))
+        waveform += chars[char_index]
+
+    # Add top and bottom borders
+    border = '─' * width
+    waveform = [f'╭{border}╮', f'│{waveform}│', f'╰{border}╯']
+
+    # Add audio label
+    label = "Audio ContentBlock"
+    label_position = (width - len(label)) // 2
+    waveform[0] = (
+        waveform[0][:label_position] +
+        label +
+        waveform[0][label_position + len(label):]
+    )
+
+    return waveform
+
+
 def wrap_text_with_prefix(message, width: int, prefix: str, subsequent_prefix: str, text_color: str) -> List[str]:
     """Wrap text while preserving the prefix and color for each line."""
     result = []
@@ -102,6 +147,8 @@ def wrap_text_with_prefix(message, width: int, prefix: str, subsequent_prefix: s
             for c in contnets_to_wrap:
                 if c.image and c.image.image:
                     block_wrapped_lines = plot_ascii(c.image.image, min(80, width - len(prefix)))
+                elif c.audio is not None:
+                    block_wrapped_lines = plot_ascii_waveform(c.audio)
                 else:
                     text = _content_to_text([c])  
                     paragraphs = text.split('\n')
