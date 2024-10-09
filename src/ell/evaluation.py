@@ -32,6 +32,11 @@ Criterion = Callable[[Datapoint, Any], bool]
 Annotation = Callable[[Datapoint, Any], Any]
 Annotations = Dict[str, Annotation]
 
+# scores now doesn't make sense fulyl because of some other factors.
+# We can ignore human feedback for now even though it's the most interesting.
+
+
+# XXX: Do we still include criterion?
 
 
 class EvaluationRun(BaseModel):
@@ -202,3 +207,8 @@ def _validate_callable_dict(items: Union[Dict[str, Callable], List[Callable]], i
         return items
     else:
         raise ValueError(f"{item_type}s must be either a list of callables or a dictionary, got {type(items)}")
+    
+
+
+
+

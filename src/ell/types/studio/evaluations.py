@@ -1,122 +1,110 @@
-from datetime import datetime, timezone
-import enum
-from functools import cached_property
-from math import sqrt
-from types import NoneType
+from datetime import datetime
+from enum import Enum
 
 import numpy as np
-import sqlalchemy.types as types
 
-from ell.types.message import Any, Any, Field, Message, Optional
+from ell.types.message import Field, Message
 
-from sqlmodel import Column, Field, SQLModel
-from typing import Optional, cast
-from dataclasses import dataclass
-from typing import Dict, List, Literal, Union, Any, Optional
+from sqlmodel import Column, Field, SQLModel, Relationship, JSON
+from typing import Dict, List, Literal, Union, Any, Optional, cast
 
-from pydantic import BaseModel, field_validator
+from pydantic import field_validator
 
-from datetime import datetime
-from typing import Any, List, Optional
-from sqlmodel import Field, SQLModel, Relationship, JSON, Column
-from sqlalchemy import Index, func
-
-from typing import TypeVar, Any
+from sqlalchemy import func
 
 
 from .core import Invocation, SerializedLMP, UTCTimestampField
 
-#############################
+#############################1
 ### Evaluation & Labeling ###
 #############################
+class EvaluationLabelerType(str, Enum):
+    METRIC = "metric"
+    ANNOTATION = "annotation"
+    CRITERION = "criterion"
 
-
-class InvocationLabel(SQLModel, table=True):
+class EvaluationLabeler(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    labeler_id: str = Field(default=None, foreign_key="invocationlabeler.id")
-    labeled_invocation_id: str = Field(foreign_key="invocation.id")
-    # LABEL
-    lmp_label_invocation_id: Optional[str] = Field(
-        default=None, foreign_key="invocation.id"
-    )
-    # XXX: Human labeling and HP's in general should exist in a better schema eventually this would be the invocaiton contents of a human LMP which migth actually use an invocation as its core data type with an aggregate LMP | HFP as the generator of the invocation.
-    manual_label: Optional[Union[Dict[str, Any]]] = Field(
-        default=None, sa_column=Column(JSON)
-    )
-    deferred: bool = Field(default=False)  # for now = False
-
-    labeler: "InvocationLabeler" = Relationship(back_populates="labels")
-    labeled_invocation: Invocation = Relationship(
-        back_populates="labels",
-        sa_relationship_kwargs={"primaryjoin": "InvocationLabel.labeled_invocation_id == Invocation.id"},
-    )
-    lmp_label_invocation: Optional[Invocation] = Relationship(
-        back_populates="lmp_labels",
-        sa_relationship_kwargs={"primaryjoin": "InvocationLabel.lmp_label_invocation_id == Invocation.id"},
-    )
-
-
-class InvocationLabeler(SQLModel, table=True):
-    # many to many link between evaluation and labelers
-    id: Optional[str] = Field(default=None, primary_key=True)
     name: str
+    type: EvaluationLabelerType
 
-    # Automaticalyl generated label via an LMP
-    lmp_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id")
-
-    # XXX: Move evaluation rubric to a new table in the future with lexical closure of generating pydantic schemas and proper linkage as with LMP we could call it HumanProgram or somethign.
-    rubric_schema: Optional[Dict[str, Any]] = Field(
-        default=None, sa_column=Column(JSON)
-    )
-
-    evaluation_id: Optional[str] = Field(default=None, foreign_key="evaluation.id")
+    labeling_lmp_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id")
+    evaluation_id : str = Field(default=None, foreign_key="evaluation.id")
 
     
-    @field_validator("lmp_id", "rubric_schema")
+    # unused for now
+    labeling_rubric: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+      
+    @field_validator("labeling_lmp_id", "labeling_rubric")
     def validate_labeler_or_instructions(cls, v, values):
-        if "lmp_id" not in values and "rubric" not in values:
+        if "labeling_lmp_id" not in values and "labeling_rubric" not in values:
             raise ValueError("Either labeler_lmp_id or instructions must be set")
         return v
+    
+    evaluation : "Evaluation" = Relationship(back_populates="labelers")
+    labeling_lmp : Optional["SerializedLMP"] = Relationship(back_populates="labelers")
+    labels: List["EvaluationLabel"] = Relationship(back_populates="labeler")
+    evaluation_run_summaries: List["EvaluationRunLabelerSummary"] = Relationship(back_populates="evaluation_labeler")
 
-    labels: List["InvocationLabel"] = Relationship(back_populates="labeler")
-    lmp: Optional["SerializedLMP"] = Relationship(back_populates="labelers")
-    evaluation: Optional["Evaluation"] = Relationship(back_populates="labelers")
+class EvaluationLabel(SQLModel, table=True):
+    # one label per labled datappooint
+    labeled_datapoint_id: str = Field(default=None, foreign_key="evaluationresultdatapoint.id", primary_key=True)
+    labeler_id: str = Field(default=None, foreign_key="evaluationlabeler.id", primary_key=True)
 
+    # label.
+    label_invocation_id: Optional[str] = Field(default=None, foreign_key="invocation.id")
+    manual_label: Optional[Union[Dict[str, Any]]] = Field(
+            default=None, sa_column=Column(JSON)
+        ) # unused for now.
+    
+    # the invocaiton that was labeled.
+    labeled_datapoint: "EvaluationResultDatapoint" = Relationship(back_populates="labels")
+    labeler: "EvaluationLabeler" = Relationship(back_populates="labels")
+    # the label itself.
+    label_invocation: Optional[Invocation] = Relationship(back_populates="evaluation_labels")
 
-# per labeler result aggregate
-class EvaluationRunLabelerResult(SQLModel, table=True):
-    created_at: datetime = UTCTimestampField(default=func.now())
-    updated_at: datetime = UTCTimestampField(default=func.now())
-    finalized_at: datetime = UTCTimestampField(default=None)  # We have to
+class EvaluationResultDatapoint(SQLModel, table=True):
+    # input  cannot produce two resutls per run & invocation id.
+    invocation_being_labeled_id: str = Field(default=None, foreign_key="invocation.id", primary_key=True)
+    evaluation_run_id: str = Field(foreign_key="evaluationrun.id", primary_key=True)
+
+    invocation_being_labeled: Invocation = Relationship(back_populates="evaluation_result_datapoints")
+    evaluation_run : "EvaluationRun" = Relationship(back_populates="results")
+    labels: List[EvaluationLabel] = Relationship(back_populates="labeled_datapoint") # optional
+    
+
+# per labeler result aggregate should not be mutated, could be defiend as a true base to be reused within the use facing eval setup.
+# XXX: Rename this at some point
+class EvaluationRunLabelerSummary(SQLModel, table=True):
     evaluation_run_id: str = Field(default=None, foreign_key="evaluationrun.id", primary_key=True)
-    invocation_labeler_id: str = Field(default=None, foreign_key="invocationlabeler.id", primary_key=True)
+    evaluation_labeler_id: str = Field(default=None, foreign_key="evaluationlabeler.id", primary_key=True)
+
+    created_at: datetime = UTCTimestampField(default=func.now())
+    updated_at: Optional[datetime] = UTCTimestampField(default=None)
+    finalized_at: Optional[datetime] = UTCTimestampField(default=None)
 
     is_scalar: bool = Field(default=False)
     data: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     count: int = Field(default=0)
 
-    evaluation_run: "EvaluationRun" = Relationship(back_populates="results")
-    invocation_labeler: "InvocationLabeler" = Relationship(back_populates="results")
+    evaluation_run: "EvaluationRun" = Relationship(back_populates="labeler_summaries")
+    evaluation_labeler: "EvaluationLabeler" = Relationship(back_populates="evaluation_run_summaries")
 
-    @property
     def mean(
         self,
     ) -> Union[float, Dict[str, Any], List[Union[float, Dict[str, Any], None]], None]:
         return self._get_value_recursively("_mean")
 
-    @property
     def std(
         self,
     ) -> Union[float, Dict[str, Any], List[Union[float, Dict[str, Any], None]], None]:
         return self._get_value_recursively("_std")
 
-    @property
     def min(
         self,
     ) -> Union[float, Dict[str, Any], List[Union[float, Dict[str, Any], None]], None]:
         return self._get_value_recursively("_min")
 
-    @property
     def max(
         self,
     ) -> Union[float, Dict[str, Any], List[Union[float, Dict[str, Any], None]], None]:
@@ -127,7 +115,7 @@ class EvaluationRunLabelerResult(SQLModel, table=True):
         cls,
         data: Union[List[float], List[Dict[str, Any]]],
         **other_keys: Dict[str, Any],
-    ) -> "EvaluationRunLabelerResult":
+    ) -> "EvaluationRunLabelerSummary":
         if len(data) == 0:
             # XXXL revisit.
             raise ValueError(
@@ -208,11 +196,8 @@ class EvaluationRunLabelerResult(SQLModel, table=True):
         )
 
 
-# THis is a form of dataset that we should probably move to a more general form.
-
-
 class EvaluationRun(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: Optional[str] = Field(default=None, primary_key=True)
     evaluation_id: int = Field(foreign_key="evaluation.id")
     evaluated_lmp_id: str = Field(foreign_key="serializedlmp.lmp_id")
     api_params: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
@@ -220,32 +205,49 @@ class EvaluationRun(SQLModel, table=True):
     # we neeed to compute aggregatr statistics over the individual labels as a part of this run
     # Because of human labels these aggregates are now no longer considered finished until the end time and must be mutated by ell studio
 
-    start_time: datetime = Field(default_factory=datetime.now)
-    end_time: Optional[datetime] = None
+    start_time: datetime = UTCTimestampField(default=None)
+    end_time: Optional[datetime] = UTCTimestampField(default=None)
 
     # errors and success handling.
     success: bool = Field(default=False)
     error: Optional[str] = Field(default=None)
-
+    
     evaluation: "Evaluation" = Relationship(back_populates="runs")
     evaluated_lmp: "SerializedLMP" = Relationship(back_populates="evaluation_runs")
-    results: List[EvaluationRunLabelerResult] = Relationship(back_populates="evaluation_run")
+    
+    results: List[EvaluationResultDatapoint] = Relationship(back_populates="evaluation_run")
+    labeler_summaries: List["EvaluationRunLabelerSummary"] = Relationship(back_populates="evaluation_run")
 
 
 class Evaluation(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
+    name : str
+    dataset_hash :  str # The idea here is we have the same input dataset we will re run over and over gain.
+    n_evals : int 
 
-    # no ability for us to reconstitue the dataset from the store for now
-    dataset_hash: Optional[str] = Field(default=None)
-    n_evals: Optional[int] = Field(default=None)
+    version_number: int = Field(default=0)
+    commit_message: Optional[str] = Field(default=None)
 
-    @field_validator("dataset_hash", "n_evals")
-    def validate_dataset_or_n_evals(cls, v, values):
-        if "dataset_hash" not in values and "n_evals" not in values:
-            raise ValueError("Either dataset_hash or n_evals must be specified")
-        return v
+    labelers: List["EvaluationLabeler"] = Relationship(back_populates="evaluation")
+    runs: List["EvaluationRun"] = Relationship(back_populates="evaluation")
+
+
+
+# TODO: FUTURE GENERALOIZATION OF EVALUATION RESULTS
+
+# class _DatapointDatasetLink(SQLModel, table=True):
+#     label_datapoint_id: str = Field(default=None, foreign_key="labeldatapoint.id", primary_key=True)
+#     dataset_id: str = Field(default=None, foreign_key="multilabeldataset.id", primary_key=True)
+
+
+# class EvaluationResultDataset(SQLModel, table=True):
+#     id: Optional[int] = Field(default=None, primary_key=True)
+#     datapoints : List[EvaluationResultDatapoint] = Relationship(back_populates="dataset", link_model=_DatapointDatasetLink)
     
-    runs: List[EvaluationRun] = Relationship(back_populates="evaluation")
-    labelers: List[InvocationLabeler] = Relationship(back_populates="evaluation")
-    
+#     # Now this is redudnatn
+#     # two joins through evaluation
+#     evaluation_run_id: str = Field(default=None, foreign_key="evaluationrun.id")
+#     evaluation_run : "EvaluationRun" = Relationship(back_populates="results")
+
+# In the future use the geneirc datapoitn dataset link.
+# This migration will be so messy.
+# XXX: We jsut need to make really good migrations.

@@ -260,8 +260,6 @@ def test_poem_eval():
                                     "length": lambda _, output: len(output) ,
                                     "average_word_length": lambda _, output: sum(len(word) for word in output.split()) / len(output.split())})
 
-    # print("EVALUATING BAD POEM")
-    # result = eval.run(write_a_bad_poem, n_workers=10)
 
     print("EVALUATING GOOD POEM")
     result = eval.run(write_a_good_poem, n_workers=10)
