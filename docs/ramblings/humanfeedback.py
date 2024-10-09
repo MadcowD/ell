@@ -15,6 +15,7 @@ def write_a_poem(about : str) -> str:
     """You are poem GPT. Make it 3 sentences long at most."""
     return f"Write a poem about {about}"
 
+
 class PoemFeedback(BaseModel):
     """Please provide feedback on the poem."""
 
@@ -32,6 +33,59 @@ eval = Evaluation(
     }
 )
 eval.run(write_a_poem)
+
+def Dataset(*args, **kwargs):
+    return args[0]
+
+dataset = Dataset([
+    {"input": "roses"},
+    {"input": "violets"},
+    {"input": "sunflowers"},
+    {"input": "daisies"},
+])
+
+
+# SFT.
+
+class StructuredPoem(BaseModel):
+    poem: str = Field(..., description="The poem", max_length=100)
+
+    @field_validator("poem")
+    def poem_length(cls, v):
+        if len(v) > 100:
+            raise ValueError("Poem must be 100 characters or less")
+        # check punctuation
+        if not v.endswith("."):
+            raise ValueError("Poem must end with a period")
+        
+        return v
+    notes : Optional[str] = Field(None, description="Any additional notes about the poem")
+
+@ell.human(response_format=StructuredPoem)
+def write_a_poem(topic):
+    """You should write a poem about the topic keep all poems under 100 characters"""
+    return f"Write a poem about {topic}"
+
+@ell.human():
+def write_a_poem_human(topic):
+    """You are a human writing poems"""
+    
+    expert_poem_str = yield f"Write a poem about {topic}"
+
+    return StructuredPoem(
+        poem=expert_poem_str,
+        notes= yield "Please provide feedback on the poem."
+    )
+
+# Decide to do the structured poem response format for. Human sft data or something of this form. Then we need to inherently support structured outputs across the entire api in a meaningful way The yield format is quite interesting because it allows us to reconstitute the format of. sort of a dialog between the labeler and Data that is presented and present arbitrary data at any point in time during the human labeling process or human sft data generation process. But this also doesn't allow the dynamic generation of uis that are clean and beautiful in some sense. Of course, we could have markdown data and better renderers for raw data contained within, for example, write a poem about topic and things like this. But this isn't a fully. thought out solution. I do like that this is kind of consistent, right? So by using these resumable generators with async or not async, but just standard send. We're able to actually Ask for various different Structured data and reconstituted directly in python in a nice way, so that the final result is this structured poem. Therefore What we sft on is a multi message context, where you. Have it actually output, like the since ultimately we can only sft on strings at any given point in time. There's no magic occurring. And what we sft on is like this conversation thread here. So if this were like a multiple, like I could say, you know, something like The expert poemster is the first yield and then the additional notes or feedback is the 2nd sort of yield. This broader constitution of human feedback is actually kind of interesting
+
+dc = ell.DataCollection(
+    dataset=dataset,
+    number_examples_per_datapoint=10,
+)
+
+dc.run(write_a_poem)
+
 
 
 
