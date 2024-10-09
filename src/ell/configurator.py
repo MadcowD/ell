@@ -38,6 +38,7 @@ class Config(BaseModel):
     lazy_versioning: bool = Field(default=True, description="If True, enables lazy versioning for improved performance.")
     default_api_params: Dict[str, Any] = Field(default_factory=dict, description="Default parameters for language models.")
     default_client: Optional[openai.Client] = Field(default=None, description="The default OpenAI client used when a specific model client is not found.")
+    autocommit_model: str = Field(default="gpt-4o-mini", description="When set, changes the default autocommit model from GPT 4o mini.")
     providers: Dict[Type, Provider] = Field(default_factory=dict, description="A dictionary mapping client types to provider classes.")
     def __init__(self, **data):
         super().__init__(**data)
@@ -148,7 +149,8 @@ def init(
     autocommit: bool = True,
     lazy_versioning: bool = True,
     default_api_params: Optional[Dict[str, Any]] = None,
-    default_client: Optional[Any] = None
+    default_client: Optional[Any] = None,
+    autocommit_model: str = "gpt-4o-mini"
 ) -> None:
     """
     Initialize the ELL configuration with various settings.
@@ -165,6 +167,8 @@ def init(
     :type default_api_params: Dict[str, Any], optional
     :param default_openai_client: Set the default OpenAI client.
     :type default_openai_client: openai.Client, optional
+    :param autocommit_model: Set the model used for autocommitting.
+    :type autocommit_model: str
     """
     # XXX: prevent double init
     config.verbose = verbose
@@ -182,6 +186,9 @@ def init(
 
     if default_client is not None:
         config.default_client = default_client
+
+    if autocommit_model is not None:
+        config.autocommit_model = autocommit_model
 
 # Existing helper functions
 def get_store() -> Union[Store, None]:
