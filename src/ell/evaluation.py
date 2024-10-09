@@ -36,23 +36,25 @@ Annotations = Dict[str, Annotation]
 # We can ignore human feedback for now even though it's the most interesting.
 
 
-# XXX: Do we still include criterion?
-
-class EvaluationResults(BaseModel):
-    outputs: List[Any] = Field(default_factory=list)
-    metrics: Dict[str, List[float]] = Field(default_factory=dict)
-    annotations: Dict[str, List[Any]] = Field(default_factory=dict)
-    criterion: Optional[List[bool]] = Field(default=None)
-
-    def summarize(self) -> Dict[str, float]:
-        pass
-
-
 class _ResultDatapoint(BaseModel):
     output: Any
     metrics: Dict[str, float]
     annotations: Dict[str, Any]
     criterion: Optional[bool]
+
+
+
+class EvaluationResults(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    outputs: List[Any] = Field(default_factory=list)
+    metrics: Dict[str, np.ndarray[float]] = Field(default_factory=dict)
+    annotations: Dict[str, List[Any]] = Field(default_factory=dict)
+    criterion: Optional[np.ndarray[bool]] = Field(default=None)
+
+    def summarize(self) -> Dict[str, float]:
+        pass
+
+
 
 
 class EvaluationRun(BaseModel):
@@ -153,9 +155,9 @@ class Evaluation(BaseModel):
             # convert rowar results to evaluation results
             evaluation_run.results = EvaluationResults(
                 outputs=[result.output for result in rowar_results],
-                metrics={name: [result.metrics[name] for result in rowar_results] for name in self.metrics},
-                annotations={name: [result.annotations[name] for result in rowar_results] for name in self.annotations},
-                criterion=[result.criterion for result in rowar_results] if self.criterion else None
+                metrics={name: np.array([result.metrics[name] for result in rowar_results]) for name in self.metrics},
+                annotations={name: ([result.annotations[name] for result in rowar_results]) for name in self.annotations},
+                criterion=np.array([result.criterion for result in rowar_results]) if self.criterion else None
             )
 
             if not hasattr(self, 'written_evaluation'):
@@ -220,7 +222,5 @@ def _validate_callable_dict(items: Union[Dict[str, Callable], List[Callable]], i
     else:
         raise ValueError(f"{item_type}s must be either a list of callables or a dictionary, got {type(items)}")
     
-
-
 
 

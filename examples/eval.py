@@ -263,7 +263,7 @@ def test_poem_eval():
 
     print("EVALUATING GOOD POEM")
     run = eval.run(write_a_good_poem, n_workers=10, verbose=True)
-    print(run.results)
+    print(run.results.metrics['length'].mean())
 
 
 
