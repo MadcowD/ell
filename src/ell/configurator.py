@@ -16,9 +16,9 @@ class _Model:
     name: str
     default_client: Optional[Union[openai.Client, Any]] = None
     #XXX: Deprecation in 0.1.0
-    #XXX: We will depreciate this when streaming is implemented. 
+    #XXX: We will depreciate this when streaming is implemented.
     # Currently we stream by default for the verbose renderer,
-    # but in the future we will not support streaming by default 
+    # but in the future we will not support streaming by default
     # and stream=True must be passed which will then make API providers the
     # single source of truth for whether or not a model supports an api parameter.
     # This makes our implementation extremely light, only requiring us to provide
@@ -45,9 +45,9 @@ class Config(BaseModel):
         self._lock = threading.Lock()
         self._local = threading.local()
 
-    
+
     def register_model(
-        self, 
+        self,
         name: str,
         default_client: Optional[Union[openai.Client, Any]] = None,
         supports_streaming: Optional[bool] = None
@@ -75,12 +75,12 @@ class Config(BaseModel):
         """
         if not hasattr(self._local, 'stack'):
             self._local.stack = []
-        
+
         with self._lock:
             current_registry = self._local.stack[-1] if self._local.stack else self.registry
             new_registry = current_registry.copy()
             new_registry.update(overrides)
-        
+
         self._local.stack.append(new_registry)
         try:
             yield
@@ -194,7 +194,7 @@ def init(
 def get_store() -> Union[Store, None]:
     return config.store
 
-# Will be deprecated at 0.1.0 
+# Will be deprecated at 0.1.0
 
 # You can add more helper functions here if needed
 def register_provider(provider: Provider, client_type: Type[Any]) -> None:
