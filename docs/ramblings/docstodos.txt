@@ -1,10 +1,8 @@
-
 docs todo:
 
 github icon
 
 core concepts:
-
 
 @ell2a.simple.rst
 
@@ -16,19 +14,14 @@ core concepts:
 - autodoc doc string
 - usage (can be doc string or )
 
-
 Agent Usage.rst
 
 Models & API Clients .rst
 Configuration.rst
 
-
 @ell2a.complex .rst
 
 Agent Usage .rst
-
-
-
 
 API Clients & Models .rst
 
@@ -40,13 +33,10 @@ Related Work .rst
 
 * why this is better than langchain
 * why this is better than langsmith
-* why this is better than weave 
+* why this is better than weave
 * instructor
-* why not use the openai api directly? 
-    - u can definitely use numpy to do deep learning, but it's not advisable for large apps
-
-
-
+* why not use the openai api directly?
+- u can definitely use numpy to do deep learning, but it's not advisable for large apps
 
 Whole tutorials seciton:
 

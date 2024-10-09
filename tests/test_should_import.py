@@ -8,14 +8,16 @@ import os
 # Import the function to be tested
 from src.ell2a.util.should_import import should_import
 
+
 @pytest.fixture
 def mock_project_root(monkeypatch):
     """
-    Fixture to mock the ELL_PROJECT_ROOT environment variable.
+    Fixture to mock the ELL2A_PROJECT_ROOT environment variable.
     """
     project_root = Path("/mock/project/root").resolve()
-    monkeypatch.setenv("ELL_PROJECT_ROOT", str(project_root))
+    monkeypatch.setenv("ELL2A_PROJECT_ROOT", str(project_root))
     return project_root
+
 
 @pytest.fixture
 def mock_sysconfig_paths():
@@ -28,12 +30,14 @@ def mock_sysconfig_paths():
         "platlib": "/mock/python/lib/site-packages",
     }
 
+
 @pytest.fixture
 def mock_site_packages():
     """
     Fixture to mock site.getsitepackages() and site.getusersitepackages().
     """
     return ["/mock/python/lib/site-packages", "/mock/user/site-packages"]
+
 
 def mock_find_spec(module_name, raise_value):
     """
@@ -43,6 +47,8 @@ def mock_find_spec(module_name, raise_value):
     mock_spec.origin = raise_value["origin"]
     mock_spec.has_location = raise_value["has_location"]
     return mock_spec
+
+
 @pytest.mark.parametrize(
     "module_name, spec_origin, spec_has_location, expected",
     [
@@ -102,11 +108,11 @@ def test_should_import(
 ):
     additional_paths = ["/mock/other/path"]
     with patch("importlib.util.find_spec") as mock_find_spec_func, \
-         patch("site.getsitepackages", return_value=mock_site_packages), \
-         patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
-         patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
-         patch("os.environ.get", return_value=str(mock_project_root)), \
-         patch("sys.path", additional_paths + sys.path):
+            patch("site.getsitepackages", return_value=mock_site_packages), \
+            patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
+            patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
+            patch("os.environ.get", return_value=str(mock_project_root)), \
+            patch("sys.path", additional_paths + sys.path):
 
         if spec_origin is not None:
             mock_spec = MagicMock()
@@ -119,35 +125,39 @@ def test_should_import(
         result = should_import(module_name)
         assert result == expected, f"Failed for module: {module_name}"
 
+
 def test_should_import_exception_handling(mock_project_root, mock_sysconfig_paths, mock_site_packages, monkeypatch, capsys):
     """
     Test the function's behavior when importlib.util.find_spec raises an exception.
     """
     with patch("importlib.util.find_spec", side_effect=Exception("Test Exception")), \
-         patch("site.getsitepackages", return_value=mock_site_packages), \
-         patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
-         patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
-         patch("os.environ.get", return_value=str(mock_project_root)):
+            patch("site.getsitepackages", return_value=mock_site_packages), \
+            patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
+            patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
+            patch("os.environ.get", return_value=str(mock_project_root)):
 
         with pytest.raises(Exception) as exc_info:
             should_import("any_module", raise_on_error=True)
         assert "Test Exception" in str(exc_info.value)
 
-        assert should_import("any_module") == True, "Function should return True when an exception occurs and raise_on_error is False"
+        assert should_import(
+            "any_module") == True, "Function should return True when an exception occurs and raise_on_error is False"
+
 
 def test_should_import_raise_on_error(mock_project_root, mock_sysconfig_paths, mock_site_packages, monkeypatch):
     """
     Test the function's behavior when raise_on_error is True and an exception is raised.
     """
     with patch("importlib.util.find_spec", side_effect=Exception("Test Exception")), \
-         patch("site.getsitepackages", return_value=mock_site_packages), \
-         patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
-         patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
-         patch("os.environ.get", return_value=str(mock_project_root)):
+            patch("site.getsitepackages", return_value=mock_site_packages), \
+            patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
+            patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
+            patch("os.environ.get", return_value=str(mock_project_root)):
 
         with pytest.raises(Exception) as exc_info:
             should_import("any_module", raise_on_error=True)
         assert "Test Exception" in str(exc_info.value)
+
 
 @pytest.mark.parametrize(
     "module_name, spec_origin, spec_has_location, expected",
@@ -184,11 +194,11 @@ def test_should_import_additional_paths(
     ]
 
     with patch("importlib.util.find_spec") as mock_find_spec_func, \
-         patch("site.getsitepackages", return_value=mock_site_packages), \
-         patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
-         patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
-         patch("os.environ.get", return_value=str(mock_project_root)), \
-         patch("sys.path", new=[str(p) for p in additional_paths] + sys.path):
+            patch("site.getsitepackages", return_value=mock_site_packages), \
+            patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
+            patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
+            patch("os.environ.get", return_value=str(mock_project_root)), \
+            patch("sys.path", new=[str(p) for p in additional_paths] + sys.path):
 
         if spec_origin is not None:
             mock_spec = MagicMock()
@@ -201,10 +211,11 @@ def test_should_import_additional_paths(
         result = should_import(module_name)
         assert result == expected, f"Failed for module: {module_name}"
 
+
 @pytest.mark.parametrize(
     "module_name, spec_origin, spec_has_location, expected",
     [
-        # Local module with ELL2A prefix
+        # Local module with ELL2A2A prefix
         (
             "ell2a.local_module",
             "/mock/project/root/ell2a/local_module.py",
@@ -213,14 +224,14 @@ def test_should_import_additional_paths(
         ),
         # Third-party module with similar name but inside site-packages
         (
-            "ell_thirdparty",
-            "/mock/python/lib/site-packages/ell_thirdparty/__init__.py",
+            "ell2a_thirdparty",
+            "/mock/python/lib/site-packages/ell2a_thirdparty/__init__.py",
             True,
             True,
         ),
     ],
 )
-def test_should_import_ell_prefix(
+def test_should_import_ell2a_prefix(
     module_name,
     spec_origin,
     spec_has_location,
@@ -231,10 +242,10 @@ def test_should_import_ell_prefix(
     monkeypatch,
 ):
     with patch("importlib.util.find_spec") as mock_find_spec_func, \
-         patch("site.getsitepackages", return_value=mock_site_packages), \
-         patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
-         patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
-         patch("os.environ.get", return_value=str(mock_project_root)):
+            patch("site.getsitepackages", return_value=mock_site_packages), \
+            patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
+            patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
+            patch("os.environ.get", return_value=str(mock_project_root)):
 
         if spec_origin is not None:
             mock_spec = MagicMock()
@@ -247,16 +258,17 @@ def test_should_import_ell_prefix(
         result = should_import(module_name)
         assert result == expected, f"Failed for module: {module_name}"
 
+
 def test_should_import_without_origin(mock_project_root, mock_sysconfig_paths, mock_site_packages, monkeypatch):
     """
     Test behavior when the module spec exists but has no origin.
     Typically for built-in modules.
     """
     with patch("importlib.util.find_spec") as mock_find_spec_func, \
-         patch("site.getsitepackages", return_value=mock_site_packages), \
-         patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
-         patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
-         patch("os.environ.get", return_value=str(mock_project_root)):
+            patch("site.getsitepackages", return_value=mock_site_packages), \
+            patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
+            patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
+            patch("os.environ.get", return_value=str(mock_project_root)):
 
         mock_spec = MagicMock()
         mock_spec.origin = None
@@ -266,15 +278,16 @@ def test_should_import_without_origin(mock_project_root, mock_sysconfig_paths, m
         result = should_import("built_in_module")
         assert result == False, "Built-in modules should not be imported"
 
+
 def test_should_import_with_no_spec(mock_project_root, mock_sysconfig_paths, mock_site_packages, monkeypatch):
     """
     Test behavior when find_spec returns None, indicating the module cannot be found.
     """
     with patch("importlib.util.find_spec", return_value=None), \
-         patch("site.getsitepackages", return_value=mock_site_packages), \
-         patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
-         patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
-         patch("os.environ.get", return_value=str(mock_project_root)):
+            patch("site.getsitepackages", return_value=mock_site_packages), \
+            patch("site.getusersitepackages", return_value=mock_site_packages[-1:]), \
+            patch("sysconfig.get_paths", return_value=mock_sysconfig_paths), \
+            patch("os.environ.get", return_value=str(mock_project_root)):
 
         result = should_import("unknown_module")
         assert result == False, "Unknown modules should not be imported"

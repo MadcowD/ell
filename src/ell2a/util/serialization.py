@@ -13,6 +13,7 @@ from ell2a.types._lstr import _lstr
 
 pydantic_ltype_aware_cattr = cattrs.Converter()
 
+
 def serialize_image(img):
     buffer = BytesIO()
     img.save(buffer, format="PNG")
@@ -52,8 +53,10 @@ pydantic_ltype_aware_cattr.register_unstructure_hook(
     }
 )
 
+
 def unstructure_lstr(obj):
     return dict(content=str(obj), **obj.__dict__, __lstr=True)
+
 
 pydantic_ltype_aware_cattr.register_unstructure_hook(
     _lstr,
@@ -64,8 +67,6 @@ pydantic_ltype_aware_cattr.register_unstructure_hook(
     BaseModel,
     lambda obj: obj.model_dump(exclude_none=True, exclude_unset=True)
 )
-
-
 
 
 def get_immutable_vars(vars_dict):
@@ -100,19 +101,21 @@ def compute_state_cache_key(ipstr, fn_closure):
 def prepare_invocation_params(params):
     invocation_params = params
 
-    cleaned_invocation_params = pydantic_ltype_aware_cattr.unstructure(invocation_params)
-    
+    cleaned_invocation_params = pydantic_ltype_aware_cattr.unstructure(
+        invocation_params)
+
     # Thisis because we wneed the caching to work on the hash of a cleaned and serialized object.
-    jstr = json.dumps(cleaned_invocation_params, sort_keys=True, default=repr, ensure_ascii=False)
+    jstr = json.dumps(cleaned_invocation_params, sort_keys=True,
+                      default=repr, ensure_ascii=False)
 
     consumes = set()
     import re
     # XXX: Better than registering a hook in cattrs.
     pattern = r'"__origin_trace__":\s*"frozenset\({(.+?)}\)"'
-    
+
     # Find all matches in the jstr
     matches = re.findall(pattern, jstr)
-    
+
     # Process each match and add to consumes set
     for match in matches:
         # Remove quotes and spaces, then split by comma

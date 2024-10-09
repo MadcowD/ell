@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import sys
 import hashlib
 import shutil
@@ -18,7 +19,8 @@ from ell2a.util.plot_ascii import plot_ascii
 init(autoreset=True)
 
 # Define colors and styles
-ELL_COLORS = {k: v for k, v in vars(Fore).items() if k not in ['RESET', 'BLACK', 'LIGHTBLACK_EX']}
+ELL2A_COLORS = {k: v for k, v in vars(Fore).items() if k not in [
+    'RESET', 'BLACK', 'LIGHTBLACK_EX']}
 BOLD = Style.BRIGHT
 UNDERLINE = '\033[4m'
 RESET = Style.RESET_ALL
@@ -36,6 +38,7 @@ has_logged_version_statement = False
 _version_check_lock = threading.Lock()
 _has_logged_version_statement = False
 
+
 def check_version_and_log():
     global _has_logged_version_statement
     if _version_check_lock.acquire(blocking=False):
@@ -45,15 +48,17 @@ def check_version_and_log():
                 import ell2a
 
                 try:
-                    response = requests.get("https://version.agentbase.space/ell2a-ai/pypi", timeout=0.15)
+                    response = requests.get(
+                        "https://version.agentbase.space/ell2a-ai/pypi", timeout=0.15)
                     if response.status_code == 200:
                         latest_version = response.text.strip()
                         if latest_version != ell2a.__version__:
-                            print(f"{Fore.YELLOW}╔═════════════════════════════════════════════════════════════════╗")
-                            print(f"{Fore.YELLOW}║ {Fore.GREEN}A new version of ELL2A is available: {Fore.CYAN}{latest_version:<29}{Fore.YELLOW}║")
-                            print(f"{Fore.YELLOW}║ {Fore.GREEN}You can update by running:{Fore.YELLOW}                                      ║")
-                            print(f"{Fore.YELLOW}║ {Fore.CYAN}pip install --upgrade ell2a-ai{Fore.YELLOW}                                    ║")
-                            print(f"{Fore.YELLOW}╚═════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}")
+                            print(
+                                f"{Fore.YELL2AOW}╔═════════════════════════════════════════════════════════════════╗")
+                            print(f"{Fore.YELL2AOW}║ {Fore.GREEN}A new version of ELL2A2A is available: {Fore.CYAN}{latest_version:<29}{Fore.YELL2AOW}║")
+                            print(f"{Fore.YELL2AOW}║ {Fore.GREEN}You can update by running:{Fore.YELL2AOW}                                      ║")
+                            print(f"{Fore.YELL2AOW}║ {Fore.CYAN}pip install --upgrade ell2a-ai{Fore.YELL2AOW}                                    ║")
+                            print(f"{Fore.YELL2AOW}╚═════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}")
                 except requests.RequestException:
                     pass  # Silently handle any network-related errors
                 _has_logged_version_statement = True
@@ -65,25 +70,30 @@ def check_version_and_log():
 def compute_color(invoking_lmp: LMP) -> str:
     """Compute and cache a consistent color for a given LMP."""
     name_hash = hashlib.md5(invoking_lmp.__name__.encode()).hexdigest()
-    color_index = int(name_hash, 16) % len(ELL_COLORS)
-    return list(ELL_COLORS.values())[color_index]
+    color_index = int(name_hash, 16) % len(ELL2A_COLORS)
+    return list(ELL2A_COLORS.values())[color_index]
+
 
 def format_arg(arg: Any, max_length: int = 8) -> str:
     """Format an argument for display with customizable max length."""
     str_arg = str(arg)
     return f"{Fore.MAGENTA}{str_arg[:max_length]}..{Style.RESET_ALL}" if len(str_arg) > max_length else f"{Fore.MAGENTA}{str_arg}{Style.RESET_ALL}"
 
+
 def format_kwarg(key: str, value: Any, max_length: int = 8) -> str:
     """Format a keyword argument for display with customizable max length."""
     return f"{Style.DIM}{key}{Style.RESET_ALL}={Fore.MAGENTA}{str(value)[:max_length]}..{Style.RESET_ALL}"
+
 
 def get_terminal_width() -> int:
     """Get the terminal width, defaulting to 80 if it can't be determined."""
     try:
         return shutil.get_terminal_size((80, 20)).columns
     except Exception:
-        logger.warning("Unable to determine terminal size. Defaulting to 80 columns.")
+        logger.warning(
+            "Unable to determine terminal size. Defaulting to 80 columns.")
         return 80
+
 
 def wrap_text_with_prefix(message, width: int, prefix: str, subsequent_prefix: str, text_color: str) -> List[str]:
     """Wrap text while preserving the prefix and color for each line."""
@@ -91,22 +101,26 @@ def wrap_text_with_prefix(message, width: int, prefix: str, subsequent_prefix: s
     for i, content in enumerate(message.content):
         wrapped_lines = []
         if content.image and content.image.image:
-            wrapped_lines = plot_ascii(content.image.image, min(80, width - len(prefix)))
+            wrapped_lines = plot_ascii(
+                content.image.image, min(80, width - len(prefix)))
         else:
-            if content.tool_result:
-                contnets_to_wrap = [ContentBlock(text=f"ToolResult(tool_call_id={content.tool_result.tool_call_id}):"), *content.tool_result.result]
+            if content.agent_result:
+                contnets_to_wrap = [ContentBlock(text=f"AgentResult(agent_call_id={content.agent_result.agent_call_id}):"), *content.agent_result.result]
             else:
                 contnets_to_wrap = [content]
 
             wrapped_lines = []
             for c in contnets_to_wrap:
                 if c.image and c.image.image:
-                    block_wrapped_lines = plot_ascii(c.image.image, min(80, width - len(prefix)))
+                    block_wrapped_lines = plot_ascii(
+                        c.image.image, min(80, width - len(prefix)))
                 else:
-                    text = _content_to_text([c])  
+                    text = _content_to_text([c])
                     paragraphs = text.split('\n')
-                    wrapped_paragraphs = [textwrap.wrap(p, width=width - len(prefix)) for p in paragraphs]
-                    block_wrapped_lines = [line for paragraph in wrapped_paragraphs for line in paragraph]
+                    wrapped_paragraphs = [textwrap.wrap(
+                        p, width=width - len(prefix)) for p in paragraphs]
+                    block_wrapped_lines = [
+                        line for paragraph in wrapped_paragraphs for line in paragraph]
                 wrapped_lines.extend(block_wrapped_lines)
         if i == 0:
             if wrapped_lines:
@@ -117,6 +131,7 @@ def wrap_text_with_prefix(message, width: int, prefix: str, subsequent_prefix: s
             result.append(f"{subsequent_prefix}{text_color}{wrapped_lines[0]}{RESET}")
         result.extend([f"{subsequent_prefix}{text_color}{line}{RESET}" for line in wrapped_lines[1:]])
     return result
+
 
 def print_wrapped_messages(messages: List[Message], max_role_length: int, color: str, wrap_width: Optional[int] = None):
     """Print wrapped messages with proper indentation, customizable wrap width, and consistent ASCII piping."""
@@ -129,17 +144,17 @@ def print_wrapped_messages(messages: List[Message], max_role_length: int, color:
     for i, message in enumerate(messages):
         role = message.role
         m = message.content[0]
-        
-        
+
         role_color = SYSTEM_COLOR if role == "system" else USER_COLOR if role == "user" else ASSISTANT_COLOR
-        
+
         role_line = f"{prefix}{role_color}{role.rjust(max_role_length)}: {RESET}"
-        wrapped_lines = wrap_text_with_prefix(message, wrapping_width - len(role_prefix), '', subsequent_prefix, role_color)
-        
+        wrapped_lines = wrap_text_with_prefix(
+            message, wrapping_width - len(role_prefix), '', subsequent_prefix, role_color)
+
         print(f"{role_line}{wrapped_lines[0]}")
         for line in wrapped_lines[1:]:
             print(line)
-        
+
         if i < len(messages) - 1:
             print(f"{PIPE_COLOR}│{RESET}")
 
@@ -153,25 +168,28 @@ def model_usage_logger_pre(
     arg_max_length: int = 8
 ):
     """Log model usage before execution with customizable argument display length and ASCII box."""
-    color =  compute_color(invoking_lmp)
+    color = compute_color(invoking_lmp)
     formatted_args = [format_arg(arg, arg_max_length) for arg in lmp_args]
-    formatted_kwargs = [format_kwarg(key, lmp_kwargs[key], arg_max_length) for key in lmp_kwargs]
+    formatted_kwargs = [format_kwarg(
+        key, lmp_kwargs[key], arg_max_length) for key in lmp_kwargs]
     formatted_params = ', '.join(formatted_args + formatted_kwargs)
 
     check_version_and_log()
 
     terminal_width = get_terminal_width()
-    
+
     logger.info(f"Invoking LMP: {invoking_lmp.__name__} (hash: {lmp_hash[:8]})")
-    
+
     print(f"{PIPE_COLOR}╔{'═' * (terminal_width - 2)}╗{RESET}")
     print(f"{PIPE_COLOR}║ {color}{BOLD}{UNDERLINE}{invoking_lmp.__name__}{RESET}{color}({formatted_params}){RESET}")
     print(f"{PIPE_COLOR}╠{'═' * (terminal_width - 2)}╣{RESET}")
     print(f"{PIPE_COLOR}║ {BOLD}Prompt:{RESET}")
     print(f"{PIPE_COLOR}╟{'─' * (terminal_width - 2)}╢{RESET}")
 
-    max_role_length = max(len("assistant"), max(len(message.role) for message in messages))
+    max_role_length = max(len("assistant"), max(
+        len(message.role) for message in messages))
     print_wrapped_messages(messages, max_role_length, color)
+
 
 def model_usage_logger_post_start(color: str = "", n: int = 1):
     """Log the start of model output with ASCII box."""
@@ -182,17 +200,16 @@ def model_usage_logger_post_start(color: str = "", n: int = 1):
     print(f"{PIPE_COLOR}│   {ASSISTANT_COLOR}assistant: {RESET}", end='')
     sys.stdout.flush()
 
-from contextlib import contextmanager
 
 @contextmanager
-def model_usage_logger_post_intermediate( n: int = 1):
+def model_usage_logger_post_intermediate(n: int = 1):
     """Context manager to log intermediate model output without wrapping, only indenting if necessary."""
     terminal_width = get_terminal_width()
     prefix = f"{PIPE_COLOR}│   "
     subsequent_prefix = f"{PIPE_COLOR}│   {' ' * (len('assistant: '))}"
     chars_printed = len(subsequent_prefix)
 
-    def log_stream_chunk(stream_chunk: str , is_refusal: bool = False):
+    def log_stream_chunk(stream_chunk: str, is_refusal: bool = False):
         nonlocal chars_printed
         if stream_chunk:
             lines = stream_chunk.split('\n')
@@ -213,17 +230,21 @@ def model_usage_logger_post_intermediate( n: int = 1):
                 if i < len(lines) - 1:
                     print()
                     print(subsequent_prefix, end='')
-                    chars_printed = len(subsequent_prefix)  # Reset for new line
+                    # Reset for new line
+                    chars_printed = len(subsequent_prefix)
             sys.stdout.flush()
 
     try:
         yield log_stream_chunk
     finally:
         pass
+
+
 def model_usage_logger_post_end():
     """Log the end of model output with ASCII box closure."""
     terminal_width = get_terminal_width()
     print(f"\n{PIPE_COLOR}╚{'═' * (terminal_width - 2)}╝{RESET}")
+
 
 def set_log_level(level: str):
     """Set the logging level."""

@@ -9,5 +9,6 @@ class Test(TypedDict):
 def test(**t: Test):
     print(t)
 
+
 # no type hinting like ts thats unfortunate.
-test( )
+test()

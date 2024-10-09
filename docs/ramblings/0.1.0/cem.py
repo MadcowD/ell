@@ -23,6 +23,8 @@ MAX_STEPS = 500                # Max steps per trajectory
 ENV_NAME = 'CartPole-v1'       # Gym environment
 
 # Define the Policy Network
+
+
 class PolicyNetwork(nn.Module):
     def __init__(self, state_dim, action_dim, hidden_dim=128):
         super(PolicyNetwork, self).__init__()
@@ -33,11 +35,11 @@ class PolicyNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_dim, action_dim)
         )
-        
+
     def forward(self, state):
         logits = self.fc(state)
         return logits
-        
+
     def get_action(self, state):
         logits = self.forward(state)
         action_probs = torch.softmax(logits, dim=-1)
@@ -45,11 +47,14 @@ class PolicyNetwork(nn.Module):
         return action.squeeze(-1)
 
 # Function to create multiple environments
+
+
 def make_env(env_name, seed):
     def _init():
         env = gym.make(env_name)
         return env
     return _init
+
 
 def collect_trajectories(envs, policy, num_trajectories, max_steps):
     trajectories = []
@@ -82,9 +87,11 @@ def collect_trajectories(envs, policy, num_trajectories, max_steps):
             # Convert observations to tensor using from_numpy for efficiency
             obs_tensor = torch.from_numpy(obs).float()
             # Ensure the observation dimension matches expected
-            assert obs_tensor.shape[1] == 4, f"Expected observation dimension 4, got {obs_tensor.shape[1]}"
+            assert obs_tensor.shape[1] == 4, f"Expected observation dimension 4, got {
+                obs_tensor.shape[1]}"
         except Exception as e:
-            print(f"Error converting observations to tensor at step {steps}: {e}")
+            print(f"Error converting observations to tensor at step {
+                  steps}: {e}")
             print(f"Observations: {obs}")
             raise e
 
@@ -98,7 +105,8 @@ def collect_trajectories(envs, policy, num_trajectories, max_steps):
         except ValueError:
             # For older Gym versions, step returns four values
             next_obs, rewards, dones, infos = envs.step(actions)
-            truncs = [False] * len(dones)  # Assume no truncations if not provided
+            # Assume no truncations if not provided
+            truncs = [False] * len(dones)
 
         # Handle the reset output of step()
         if isinstance(next_obs, tuple) or isinstance(next_obs, list):
@@ -112,7 +120,8 @@ def collect_trajectories(envs, policy, num_trajectories, max_steps):
             if not done_envs[i]:
                 # Check if obs[i] has the correct shape
                 if len(obs[i]) != 4:
-                    print(f"Unexpected observation shape for env {i}: {obs[i]}")
+                    print(f"Unexpected observation shape for env {
+                          i}: {obs[i]}")
                     continue  # Skip this step for the problematic environment
 
                 env_states[i].append(obs[i])
@@ -122,11 +131,13 @@ def collect_trajectories(envs, policy, num_trajectories, max_steps):
                     # Extract reward from infos
                     if isinstance(infos[i], dict):
                         episode_info = infos[i].get('episode', {})
-                        traj_reward = episode_info.get('r') if 'r' in episode_info else env_rewards[i]
+                        traj_reward = episode_info.get(
+                            'r') if 'r' in episode_info else env_rewards[i]
                     else:
                         # Handle cases where infos[i] is not a dict
                         traj_reward = env_rewards[i]
-                        print(f"Warning: infos[{i}] is not a dict. Received type: {type(infos[i])}")
+                        print(f"Warning: infos[{i}] is not a dict. Received type: {
+                              type(infos[i])}")
 
                     trajectories.append({
                         'states': env_states[i],
@@ -170,10 +181,13 @@ def select_elite(trajectories, percentile=ELITE_PERCENT):
     if not rewards:
         return []
     reward_threshold = np.percentile(rewards, 100 - percentile)
-    elite_trajectories = [traj for traj in trajectories if traj['reward'] >= reward_threshold]
+    elite_trajectories = [
+        traj for traj in trajectories if traj['reward'] >= reward_threshold]
     return elite_trajectories
 
 # Function to create training dataset from elite trajectories
+
+
 def create_training_data(elite_trajectories):
     states = []
     actions = []
@@ -189,6 +203,7 @@ def create_training_data(elite_trajectories):
     states = torch.from_numpy(states)
     actions = torch.from_numpy(actions)
     return states, actions
+
 
 # Main execution code
 if __name__ == '__main__':
@@ -211,23 +226,27 @@ if __name__ == '__main__':
     for iteration in range(1, NUM_ITERATIONS + 1):
         try:
             # Step 1: Collect Trajectories
-            trajectories = collect_trajectories(envs, policy, TRAJECTORIES_PER_ITER, MAX_STEPS)
+            trajectories = collect_trajectories(
+                envs, policy, TRAJECTORIES_PER_ITER, MAX_STEPS)
         except Exception as e:
-            print(f"Error during trajectory collection at iteration {iteration}: {e}")
+            print(f"Error during trajectory collection at iteration {
+                  iteration}: {e}")
             break
 
         # Step 2: Select Elite Trajectories
         elite_trajectories = select_elite(trajectories, ELITE_PERCENT)
 
         if len(elite_trajectories) == 0:
-            print(f"Iteration {iteration}: No elite trajectories found. Skipping update.")
+            print(f"Iteration {
+                  iteration}: No elite trajectories found. Skipping update.")
             continue
 
         # Step 3: Create Training Data
         states, actions = create_training_data(elite_trajectories)
 
         if states is None or actions is None:
-            print(f"Iteration {iteration}: No training data available. Skipping update.")
+            print(f"Iteration {
+                  iteration}: No training data available. Skipping update.")
             continue
 
         # Step 4: Behavioral Cloning (Policy Update)
@@ -249,7 +268,8 @@ if __name__ == '__main__':
 
         # Step 5: Evaluate Current Policy
         avg_reward = np.mean([traj['reward'] for traj in elite_trajectories])
-        print(f"Iteration {iteration}: Elite Trajectories: {len(elite_trajectories)}, Average Reward: {avg_reward:.2f}")
+        print(f"Iteration {iteration}: Elite Trajectories: {
+              len(elite_trajectories)}, Average Reward: {avg_reward:.2f}")
 
     # Close environments
     envs.close()
@@ -273,7 +293,8 @@ if __name__ == '__main__':
             total_rewards.append(episode_reward)
             print(f"Test Episode {episode + 1}: Reward: {episode_reward}")
         env.close()
-        print(f"Average Test Reward over {episodes} episodes: {np.mean(total_rewards):.2f}")
+        print(f"Average Test Reward over {episodes} episodes: {
+              np.mean(total_rewards):.2f}")
 
     # Run the test
     test_policy(policy)

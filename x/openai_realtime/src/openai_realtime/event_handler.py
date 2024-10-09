@@ -1,6 +1,7 @@
 import asyncio
 from typing import Callable, Dict, List, Any
 
+
 class RealtimeEventHandler:
     def __init__(self):
         self.event_handlers: Dict[str, List[Callable]] = {}
@@ -46,27 +47,28 @@ class RealtimeEventHandler:
 
     async def wait_for_next(self, event_name: str, timeout: float = None):
         next_event = None
+
         def set_next_event(event):
             nonlocal next_event
             next_event = event
-        
+
         self.on_next(event_name, set_next_event)
-        
+
         start_time = asyncio.get_event_loop().time()
         while not next_event:
             if timeout and asyncio.get_event_loop().time() - start_time > timeout:
                 return None
             await asyncio.sleep(0.001)
-        
+
         return next_event
 
     def dispatch(self, event_name: str, event: Any):
         handlers = self.event_handlers.get(event_name, []).copy()
         for handler in handlers:
             handler(event)
-        
+
         next_handlers = self.next_event_handlers.pop(event_name, [])
         for next_handler in next_handlers:
             next_handler(event)
-        
+
         return True

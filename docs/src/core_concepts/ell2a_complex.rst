@@ -1,10 +1,10 @@
-============
+==============
 @ell2a.complex
-============
+==============
 
 While ``@ell2a.simple`` provides a straightforward way to work with language models that return text, modern language models are increasingly capable of handling and generating multimodal content, structured outputs, and complex interactions. This is where ``@ell2a.complex`` comes into play.
 
-The ``@ell2a.complex`` decorator is designed to handle sophisticated interactions with language models, including multimodal inputs/outputs, structured data, and tool usage. It extends ``@ell2a.simple``'s capabilities to address the evolving nature of language models, which can now process images, generate structured data, make function calls, and engage in multi-turn conversations. By returning rich ``Message`` objects instead of simple strings, ``@ell2a.complex`` enables more nuanced and powerful interactions, overcoming the limitations of traditional string-based interfaces in these advanced scenarios.
+The ``@ell2a.complex`` decorator is designed to handle sophisticated interactions with language models, including multimodal inputs/outputs, structured data, and agent usage. It extends ``@ell2a.simple``'s capabilities to address the evolving nature of language models, which can now process images, generate structured data, make function calls, and engage in multi-turn conversations. By returning rich ``Message`` objects instead of simple strings, ``@ell2a.complex`` enables more nuanced and powerful interactions, overcoming the limitations of traditional string-based interfaces in these advanced scenarios.
 
 
 .. note:: Messages in ell2a are not the same as the dictionary messages used in the OpenAI API. ell2a's Message API provides a more intuitive and flexible way to construct and manipulate messages. You can read more about ell2a's Message API and type coercion in the :doc:`message_api` page.
@@ -99,32 +99,32 @@ Key Features
         message_history.append(response)
 
 4. Agent Usage
-^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
-``@ell2a.complex`` supports tool usage, allowing language models to make function calls:
+``@ell2a.complex`` supports agent usage, allowing language models to make function calls:
 
 .. code-block:: python
 
-    @ell2a.tool()
+    @ell2a.agent()
     def get_weather(location: str = Field(description="The full name of a city and country, e.g. San Francisco, CA, USA")):
         """Get the current weather for a given location."""
         # Simulated weather API call
         return f"The weather in {location} is sunny."
 
-    @ell2a.complex(model="gpt-4-turbo", tools=[get_weather])
+    @ell2a.complex(model="gpt-4-turbo", agents=[get_weather])
     def travel_planner(destination: str):
         """Plan a trip based on the destination and current weather."""
         return [
-            ell2a.system("You are a travel planner. Use the weather tool to provide relevant advice."),
+            ell2a.system("You are a travel planner. Use the weather agent to provide relevant advice."),
             ell2a.user(f"Plan a trip to {destination}")
         ]
 
     result = travel_planner("Paris")
     print(result.text)  # Prints travel advice
-    if result.tool_calls:
-        # This is done so that we can pass the tool calls to the language model
-        result_message = result.call_tools_and_collect_as_message()
-        print("Weather info:", result_message.tool_results[0].text) # Raw text of the tool call.
+    if result.agent_calls:
+        # This is done so that we can pass the agent calls to the language model
+        result_message = result.call_agents_and_collect_as_message()
+        print("Weather info:", result_message.agent_results[0].text) # Raw text of the agent call.
         print("Message to be sent to the LLM:", result_message.text) # Representation of the message to be sent to the LLM.
 
 

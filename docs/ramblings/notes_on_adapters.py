@@ -4,6 +4,10 @@
 # e.g.
 
 
+from typing import List, Type
+from ell2a.types.message import MessageOrDict
+
+
 @ell2a.simple(model="gpt-4-turbo", temperature=0.1)
 def blah():
     pass
@@ -13,7 +17,6 @@ def blah():
 @ell2a.simple(model="gpt-4-turbo", provider=AzureProvider, temperature=0.1)
 def blah():
     pass
-
 
 
 # Do we make each provider implement several types of supported interfaces?
@@ -27,29 +30,24 @@ class Provider(abc.ABC):
 # I mean OAI has basically set the standard for how all providers in teract.
 class OAILikeProvider(abc.ABC):
 
+    # Also do we care about tracking embeddings?
+    # no not yet lol, but we clearly nee a generic invocation stack.
 
-# Also do we care about tracking embeddings?
-# no not yet lol, but we clearly nee a generic invocation stack.
+    # We can just focus on text output models for now and revisit later if necessary.
 
-# We can just focus on text output models for now and revisit later if necessary.
+    # Wow that was ass
 
-# Wow that was ass 
+    # Am I really going to expect my users to pass around the same 'client' class to all the models.. Also since this is inthe decorartor they'd have to define this client globally. I also want thigns to be mostly static; there's not really a reason to reinstantiate these providers. Except for changing the 'client'
 
+    # the only reaosn for the client is to enable switching between different model infra bakcends for oai lol rather than hard coding ours.
+    # we could also jsut adopt oai's philosophy on this and just use their cliejts as our providers class. but i hate the idea that i have to pass clients around all the time for different mdoe lclasses.
 
-# Am I really going to expect my users to pass around the same 'client' class to all the models.. Also since this is inthe decorartor they'd have to define this client globally. I also want thigns to be mostly static; there's not really a reason to reinstantiate these providers. Except for changing the 'client'
-
-
-# the only reaosn for the client is to enable switching between different model infra bakcends for oai lol rather than hard coding ours.
-# we could also jsut adopt oai's philosophy on this and just use their cliejts as our providers class. but i hate the idea that i have to pass clients around all the time for different mdoe lclasses.
-
-
-
-# this is very much a user decision and in fact you might even want to load balance (a la azure not implementing this..)
+    # this is very much a user decision and in fact you might even want to load balance (a la azure not implementing this..)
 register('gpt-4-turbo', oai_client)
 register('llama-70b-chat', groq_client)
 
 
-# how to balance this with low barrirer to entry. env vars didnt' work last time. 
+# how to balance this with low barrirer to entry. env vars didnt' work last time.
 
 # some amount of initialization of the library needs to happen at the beginning.
 # this is a requirement in that while we could just default to oai models from oai and attempt to use the oai client on first invocation of an lmp
@@ -85,7 +83,7 @@ ell2a.init(
 ""
 # or even
 
-with ell2a.use_client(my_openai_client): #<-- well maybe actually i like this
+with ell2a.use_client(my_openai_client):  # <-- well maybe actually i like this
     blah()
 
 # or even
@@ -137,11 +135,8 @@ response = client.chat.completions.create(
 # We could get django about htis shit
 
 
-
 class ProviderMeta():
-from typing import List, Type
 
-from ell2a.types.message import MessageOrDict
 
 class ProviderMeta(type):
     def __init__(cls, name, bases, attrs):
@@ -155,32 +150,31 @@ class ProviderMeta(type):
             print(f"Registering model: {model}")
 
 
-
-
-
 class OAILikeProvider(Provider):
     models = [
         "gpt-4-turbo"
     ]
+
     @staticmethod
-    def chat_completions(client, model, messages : List[MessageOrDict]):
+    def chat_completions(client, model, messages: List[MessageOrDict]):
         client.chat.completions.create(
             model=model,
             messages=messages
         )
 
+
 OAIProvider = OAILikeProvider
-# Ah so this is weird: We actually might have providers with different model classes that we want to specify  for example, azure doesn't have defualt names for these models and they are in the user namespace... So literally when we want to use an azure provier we have 'isntantiate it'. That's fucking annoying lol. 
+# Ah so this is weird: We actually might have providers with different model classes that we want to specify  for example, azure doesn't have defualt names for these models and they are in the user namespace... So literally when we want to use an azure provier we have 'isntantiate it'. That's fucking annoying lol.
 
 # For example we'd actually want the user to be able to easily switch to gpt-4-turbo without changing all their lmp code.
 AzureProvider(
-    model_map = {
+    model_map={
         oai.GPT4Turbo: "ell2a-production-canada-west-gpt4-turbo"
     }
 )
 
 # and azure is so fucked that i'm pretty sure you need to specify different clients for different regions..
-# :( 
+# :(
 
 # just adopt the oai standard :\ please. this hurts.
 # Like the model map is per client. So now we can't even disambiguate providers and model maps.
@@ -194,9 +188,9 @@ class MistralProvider(Provider):
 
     def chat(client, model, message):
         chat_response = client.chat(
-        model=model,
-        messages=messages,
-    )
+            model=model,
+            messages=messages,
+        )
 
 
 # then we handle conflict resolution:

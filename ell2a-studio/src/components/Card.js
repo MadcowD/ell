@@ -1,12 +1,13 @@
-import React from "react";
+import React from 'react'
 
 export function Card({ children, title, noMinW, ...rest }) {
-  return (
-    <div
-      className={`relative rounded-lg border border-gray-700 text-white inline-block ${noMinW ? '' : 'min-w-[150px]'}`}
-      {...rest}
-    >
-        {children}
-    </div>
-  );
+    return (
+        <div
+            className={`relative rounded-lg border border-gray-700 text-white inline-block ${
+                noMinW ? '' : 'min-w-[150px]'
+            }`}
+            {...rest}>
+            {children}
+        </div>
+    )
 }

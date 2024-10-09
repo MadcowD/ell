@@ -1,4 +1,6 @@
-from functools import wraps
+import asyncio
+from ell2a.util.closure import lexically_closured_source
+from functools  import wraps
 import random
 import pytest
 import math
@@ -24,14 +26,17 @@ def test_lexical_closure_simple_function():
     assert "return x * 2" in result
     assert isinstance(uses, Set)
 
+
 def test_lexical_closure_with_global():
     global_var = 10
+
     def func_with_global():
         return global_var
 
     result, _, _ = lexical_closure(func_with_global)
     assert "global_var = 10" in result
     assert "def func_with_global():" in result
+
 
 def test_lexical_closure_with_nested_function():
     def outer():
@@ -44,14 +49,16 @@ def test_lexical_closure_with_nested_function():
     assert "def inner():" in result
     assert "return 42" in result
 
+
 def test_lexical_closure_with_default_args():
     def func_with_default(x=10):
         return x
 
     result, _, _ = lexical_closure(func_with_default)
     print(result)
-    
+
     assert "def func_with_default(x=10):" in result
+
 
 @pytest.mark.parametrize("value, expected", [
     (42, True),
@@ -63,14 +70,16 @@ def test_lexical_closure_with_default_args():
 def test_is_immutable_variable(value, expected):
     assert is_immutable_variable(value) == expected
 
+
 def test_should_import():
     import os
     assert should_import(os.__name__)
-    
+
     class DummyModule:
         __name__ = "dummy"
     dummy = DummyModule()
     assert not should_import(dummy.__name__)
+
 
 def test_get_referenced_names():
     code = """
@@ -97,13 +106,17 @@ result = math.sin(x) + math.cos(y)
 #     assert not is_function_called("nonexistent", code)
 
 # Addressing linter errors
+
+
 def test_lexical_closure_signature():
     def dummy_func():
         pass
 
     # Test that the function accepts None for these arguments
-    result, _, _ = lexical_closure(dummy_func, already_closed=None, recursion_stack=None)
+    result, _, _ = lexical_closure(
+        dummy_func, already_closed=None, recursion_stack=None)
     assert result  # Just check that it doesn't raise an exception
+
 
 def test_lexical_closure_uses_type():
     def dummy_func():
@@ -116,36 +129,39 @@ def test_lexical_closure_uses_type():
 
 def test_lexical_closure_uses():
     ell2a.config.lazy_versioning = False
+
     @ell2a.simple(model="gpt-4")
     def dependency_func():
         return "42"
-    
 
     @ell2a.simple(model="gpt-4")
     def main_func():
-        return dependency_func() 
+        return dependency_func()
 
-    
-    # print(main_func.__ell_uses__)
-    assert isinstance(main_func.__ell_uses__, set)
-    
-    assert  dependency_func.__ell_hash__ in list(map(lambda x: x.__ell_hash__, main_func.__ell_uses__))
-    assert len(main_func.__ell_uses__) == 1
+    # print(main_func.__ell2a_uses__)
+    assert isinstance(main_func.__ell2a_uses__, set)
+
+    assert dependency_func.__ell2a_hash__ in list(
+        map(lambda x: x.__ell2a_hash__, main_func.__ell2a_uses__))
+    assert len(main_func.__ell2a_uses__) == 1
     # Check that the item in the set starts with 'lmp-'
-    assert all(hash.startswith('lmp-') for hash in map(lambda x: x.__ell_hash__, main_func.__ell_uses__))
-    assert len(dependency_func.__ell_uses__) == 0
-    
+    assert all(hash.startswith('lmp-')
+               for hash in map(lambda x: x.__ell2a_hash__, main_func.__ell2a_uses__))
+    assert len(dependency_func.__ell2a_uses__) == 0
+
 
 def test_lexical_closure_with_multiple_nested_functions():
     def outer():
         a = 1
+
         def middle():
             b = 2
+
             def inner():
                 return a + b
             return inner()
         return middle()
-    
+
     closure, (_, _), uses = lexical_closure(outer)
     assert "def outer():" in closure
     assert "def middle():" in closure
@@ -155,79 +171,80 @@ def test_lexical_closure_with_multiple_nested_functions():
     assert "return a + b" in closure
     assert isinstance(uses, Set)
 
+
 def test_lexical_closure_with_class_methods():
     class MyClass:
         class_var = 10
-        
+
         def method(self, x):
             return self.class_var + x
-        
+
         @classmethod
         def class_method(cls, y):
             return cls.class_var + y
-        
+
         @staticmethod
         def static_method(z):
             return z * 2
-    
+
     closure_method, (_, _), uses_method = lexical_closure(MyClass.method)
     # assert "class MyClass" in closure_method # We don't want ot serialize the class.
     assert "def method(self, x):" in closure_method
     assert "self.class_var + x" in closure_method
-    
-    closure_class_method, (_, _), uses_class_method = lexical_closure(MyClass.class_method)
+
+    closure_class_method, (_, _), uses_class_method = lexical_closure(
+        MyClass.class_method)
     assert "def class_method(cls, y):" in closure_class_method
     assert "cls.class_var + y" in closure_class_method
-    
-    closure_static_method, (_, _), uses_static_method = lexical_closure(MyClass.static_method)
+
+    closure_static_method, (_, _), uses_static_method = lexical_closure(
+        MyClass.static_method)
     assert "def static_method(z):" in closure_static_method
     assert "z * 2" in closure_static_method
 # tests/test_closure.py
 
-import pytest
-from ell2a.util.closure import lexically_closured_source
 
 # def test_lexical_closure_eliminates_redundant_dependencies():
 #     # Define a shared dependency function
 #     def dependency_func():
 #         return "I am a shared dependency"
-    
+
 #     # Define two functions that both depend on dependency_func
 #     def func_a():
 #         return dependency_func()
-    
+
 #     def func_b():
 #         return dependency_func()
-    
+
 #     # Define a top-level function that depends on func_a and func_b
 #     def func_c():
 #         return func_a() + func_b()
-    
+
 #     # Generate the lexically closured source for func_c
 #     x = lexically_closured_source(func_c)
 #     closure_source = x[0]
-    
+
 #     # Debugging output (optional)
 #     print("Closure Source:\n", closure_source)
-    
+
 #     # Assertions to ensure each function definition appears only once
 #     assert "def func_c():" in closure_source, "func_c definition should be in the closure source"
 #     assert "def func_a():" in closure_source, "func_a definition should be in the closure source"
 #     assert "def func_b():" in closure_source, "func_b definition should be in the closure source"
 #     assert "def dependency_func():" in closure_source, "dependency_func definition should be in the closure source"
-    
+
 #     # Count the number of times each function is defined in the closure source
 #     func_c_definitions = closure_source.count("def func_c():")
 #     func_a_definitions = closure_source.count("def func_a():")
 #     func_b_definitions = closure_source.count("def func_b():")
 #     dependency_func_definitions = closure_source.count("def dependency_func():")
-    
+
 #     # Assert that each function is defined only once
 #     assert func_c_definitions == 1, "func_c should be defined exactly once in the closure source"
 #     assert func_a_definitions == 1, "func_a should be defined exactly once in the closure source"
 #     assert func_b_definitions == 1, "func_b should be defined exactly once in the closure source"
 #     assert dependency_func_definitions == 1, "dependency_func should be defined exactly once in the closure source"
-    
+
 #     # Additionally, ensure that there are no duplicate imports or dependencies
 #     # (Assuming no imports are needed in this simple example)
 #     # If imports exist, similar counts can be performed
@@ -248,7 +265,7 @@ from ell2a.util.closure import lexically_closured_source
 #             return 1
 #         else:
 #             return n * factorial(n - 1)
-    
+
 #     closure, (_, _), uses = lexical_closure(factorial)
 #     assert "def factorial(n):" in closure
 #     assert "return n * factorial(n - 1)" in closure
@@ -256,11 +273,11 @@ from ell2a.util.closure import lexically_closured_source
 
 # def test_lexical_closure_with_mutable_free_variable():
 #     data = {"count": 0}
-    
+
 #     def increment():
 #         data["count"] += 1
 #         return data["count"]
-    
+
 #     closure, (_, _), uses = lexical_closure(increment)
 #     # assert "'count': 0" in closure
 #     assert "<dict object>" in closure
@@ -272,47 +289,49 @@ from ell2a.util.closure import lexically_closured_source
 def test_lexical_closure_with_error_in_function():
     def faulty_func():
         return undefined_variable + 1  # This will raise NameError
-    
+
     # with pytest.raises(Exception) as exc_info:
     lexical_closure(faulty_func)
-    
+
     # assert "Failed to capture the lexical closure" in str(exc_info.value)
     # assert "NameError" in str(exc_info.value)
+
 
 def test_lexical_closure_with_multiple_decorators():
     def decorator_one(func):
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
         return wrapper
-    
+
     def decorator_two(func):
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
         return wrapper
-    
+
     @decorator_one
     @decorator_two
     def decorated_func(x):
         return x * 2
-    
+
     closure, (_, _), uses = lexical_closure(decorated_func)
     assert "def decorated_func(x):" in closure
     assert "return x * 2" in closure
     assert isinstance(uses, Set)
 
+
 def test_lexical_closure_with_class_and_imported_function():
     from math import sqrt
-    
+
     class Helper:
         def help(self, y):
             return sqrt(y)
-    
+
     # Todo: Currently we don't supprot type closuring. This needs to be fixed.
     helper = Helper()
-    
+
     def compute(x):
         return helper.help(x) + sqrt(x)
-    
+
     closure, (_, _), uses = lexical_closure(compute)
     assert "from math import sqrt" in closure
     # assert "class Helper:" in closure
@@ -326,13 +345,13 @@ def test_lexical_closure_with_class_and_imported_function():
 #     # Simulate circular dependencies by defining two functions that reference each other
 #     def func_a():
 #         return func_b() + 1
-    
+
 #     def func_b():
 #         return func_a() + 1
-    
+
 #     closure_a, (_, _), uses_a = lexical_closure(func_a)
 #     closure_b, (_, _), uses_b = lexical_closure(func_b)
-    
+
 #     assert "def func_a():" in closure_a
 #     assert "return func_b() + 1" in closure_a
 #     assert "def func_b():" in closure_b
@@ -340,25 +359,25 @@ def test_lexical_closure_with_class_and_imported_function():
 #     assert isinstance(uses_a, Set)
 #     assert isinstance(uses_b, Set)
 
+
 def test_lexical_closure_with_import_aliases():
     import math as m
-    
+
     def compute_circle_area(radius):
         return m.pi * radius ** 2
-    
+
     closure, (_, _), uses = lexical_closure(compute_circle_area)
     assert "import math as m" in closure
     assert "def compute_circle_area(radius):" in closure
     assert "return m.pi * radius ** 2" in closure
     assert isinstance(uses, Set)
 
-import asyncio
 
 def test_lexical_closure_with_async_function():
     async def async_func(x):
         await asyncio.sleep(1)
         return x * 2
-    
+
     closure, (_, _), uses = lexical_closure(async_func)
     assert "async def async_func(x):" in closure
     assert "await asyncio.sleep(1)" in closure
@@ -371,20 +390,20 @@ def test_lexical_closure_with_async_function():
 #     import math
 #     def func_a():
 #         return math.sqrt(16)
-    
+
 #     # module_b.py
 #     from module_a import func_a
-    
+
 #     def func_b():
 #         return func_a()
-    
+
 #     closure, (_, _), uses = lexical_closure(func_b)
 #     assert "from module_a import func_a" in closure
 #     assert "def func_b():" in closure
 #     assert "return func_a()" in closure
 #     assert isinstance(uses, Set)
 
-# def test_ell_uses_only_include_ell_decorated_functions():
+# def test_ell2a_uses_only_include_ell2a_decorated_functions():
 #     # Define an ell2a-decorated function
 #     @ell2a.simple(model="gpt-4o-mini")
 #     def do_nothing():
@@ -430,18 +449,18 @@ def test_lexical_closure_with_async_function():
 #     assert get_random_punctuation_definitions == 1, "get_random_punctuation should be defined exactly once in the closure source"
 #     assert do_nothing_definitions == 1, "do_nothing should be defined exactly once in the closure source"
 
-#     # Ensure that __ell_uses__ contains only ell2a-decorated functions
+#     # Ensure that __ell2a_uses__ contains only ell2a-decorated functions
 #     # Retrieve the closure attributes from the original function
-#     closure_attributes = hello.__ell_closure__
-#     uses_set = hello.__ell_uses__
+#     closure_attributes = hello.__ell2a_closure__
+#     uses_set = hello.__ell2a_uses__
 
 #     # Assert that uses_set contains only do_nothing
-#     assert len(uses_set) == 1, "__ell_uses__ should contain exactly one function"
-#     assert do_nothing in uses_set, "__ell_uses__ should contain only do_nothing"
+#     assert len(uses_set) == 1, "__ell2a_uses__ should contain exactly one function"
+#     assert do_nothing in uses_set, "__ell2a_uses__ should contain only do_nothing"
 
-#     # Additionally, ensure that non-ell2a functions are not in __ell_uses__
-#     assert get_random_adjective not in uses_set, "get_random_adjective should not be in __ell_uses__"
-#     assert get_random_punctuation not in uses_set, "get_random_punctuation should not be in __ell_uses__"
+#     # Additionally, ensure that non-ell2a functions are not in __ell2a_uses__
+#     assert get_random_adjective not in uses_set, "get_random_adjective should not be in __ell2a_uses__"
+#     assert get_random_punctuation not in uses_set, "get_random_punctuation should not be in __ell2a_uses__"
 
 #     # Ensure that dependencies include non-ell2a functions
 #     # For simplicity, we'll check that get_random_punctuation is present as a dependency
@@ -458,6 +477,7 @@ def test_lexical_closure_with_async_function():
 #         if stripped_line:  # Ignore empty lines
 #             assert stripped_line not in unique_lines, f"Duplicate line found in closure source: {stripped_line}"
 #             unique_lines.add(stripped_line)
+
 
 if __name__ == "__main__":
     test_lexical_closure_uses()

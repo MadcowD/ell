@@ -5,7 +5,7 @@ Getting Started
 Welcome to ell2a,  the language model programming library for AI Agents. This guide will walk you through creating your first Language Model Program (LMP), exploring ell2a's unique features, and leveraging its powerful versioning and visualization capabilities.
 
 From Traditional API Calls to ell2a
----------------------------------
+------------------------------------
 
 Let's start by comparing a traditional API call to ell2a's approach. Here's a simple example using the OpenAI chat completions API:
 
@@ -46,7 +46,7 @@ Now, let's see how we can achieve the same result using ell2a:
 
 
 Understanding ``@ell2a.simple``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``@ell2a.simple`` decorator is a key concept in ell2a. It transforms a regular Python function into a **Language Model Program (LMP)**. Here's what's happening:
 
@@ -217,7 +217,7 @@ After running your script with versioning enabled, you can explore your prompts 
 This command opens the ell2a-studio interface in your web browser. Here, you can visualize your LMPs, see their dependencies, and track changes over time.
 
 
-.. image:: _static/ell_studio_better.webp
+.. image:: _static/ell2a_studio_better.webp
    :alt: ell2a demonstration
    :class: rounded-image 
    :width: 100%
@@ -322,7 +322,7 @@ What's Next?
 
 Now that you've created your first LMP, explored versioning, and learned about ell2a-studio, there's much more to discover:
 
-- ``@ell2a.complex``: For advanced use cases involving tool usage, structured outputs, and the full message API.
+- ``@ell2a.complex``: For advanced use cases involving agent usage, structured outputs, and the full message API.
 - Multimodal inputs and outputs: Work with images, videos, and audio in your LMPs.
 - API clients and models: Explore various language models and APIs supported by ell2a.
 - Designing effective Language Model Programs: Discover best practices for creating robust and efficient LMPs.

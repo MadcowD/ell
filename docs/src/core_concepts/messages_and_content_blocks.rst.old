@@ -62,7 +62,7 @@ Here are examples of creating different types of ContentBlocks:
     image_block = ContentBlock(image=image)
 
     # Agent call content block
-    tool_call_block = ContentBlock(tool_call=some_tool_call)
+    agent_call_block = ContentBlock(agent_call=some_agent_call)
 
     # Parsed content block (structured data)
     from pydantic import BaseModel
@@ -115,8 +115,8 @@ You can access the content of a Message in different ways:
     text_only = message.text_only
 
     # Access specific content types
-    tool_calls = message.tool_calls
-    tool_results = message.tool_results
+    agent_calls = message.agent_calls
+    agent_results = message.agent_results
     structured = message.structured
 
 Best Practices

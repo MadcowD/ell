@@ -5,12 +5,10 @@ import ell2a
 from ell2a.types._lstr import _lstr
 
 
-
-
 # Option 0 (pythonic.)
 # This going to be NON Native to ell2a
 
-def parse_outputs(result : _lstr) -> str:
+def parse_outputs(result: _lstr) -> str:
     name = result.split(":")[0]
     backstory = result.split(":")[1]
     return Personality(name, backstory)
@@ -21,9 +19,10 @@ def create_random_personality():
     """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.
 
 Name: <name>
-Backstory: <3 sentence backstory>'""" # System prompt
+Backstory: <3 sentence backstory>'"""  # System prompt
 
-    return "Come up with a backstory about " + random.choice(names_list) # User prompt
+    # User prompt
+    return "Come up with a backstory about " + random.choice(names_list)
 
 
 def get_personality():
@@ -31,7 +30,8 @@ def get_personality():
 
 # Option 1.
 
-def parse_outputs(result : _lstr) -> str:
+
+def parse_outputs(result: _lstr) -> str:
     name = result.split(":")[0]
     backstory = result.split(":")[1]
     return Personality(name, backstory)
@@ -42,41 +42,44 @@ def create_random_personality():
     """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.
 
 Name: <name>
-Backstory: <3 sentence backstory>'""" # System prompt
+Backstory: <3 sentence backstory>'"""  # System prompt
 
-    return "Come up with a backstory about " + random.choice(names_list) # User prompt
+    # User prompt
+    return "Come up with a backstory about " + random.choice(names_list)
 
 
-
-## Option 2.
+# Option 2.
 
 @dataclasses.dataclass
 class Personality:
-    name : str
-    backstory : str
+    name: str
+    backstory: str
 
     @staticmethod
-    def parse_outputs(result : _lstr) -> str:
+    def parse_outputs(result: _lstr) -> str:
         name = result.split(":")[0]
         backstory = result.split(":")[1]
         return Personality(name, backstory)
+
 
 @ell2a.simple(model="gpt-4o-mini", temperature=1.0, output_parser=Personality.parse_outputs)
 def create_random_personality():
     """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.
 
 Name: <name>
-Backstory: <3 sentence backstory>'""" # System prompt
+Backstory: <3 sentence backstory>'"""  # System prompt
 
-    return "Come up with a backstory about " + random.choice(names_list) # User prompt
+    # User prompt
+    return "Come up with a backstory about " + random.choice(names_list)
 
 
 # Option 3. Another decorator
 
-def parse_outputs(result : _lstr) -> str:
+def parse_outputs(result: _lstr) -> str:
     name = result.split(":")[0]
     backstory = result.split(":")[1]
     return Personality(name, backstory)
+
 
 @ell2a.structure(parser=parse_outputs, retries=3)
 @ell2a.simple(model="gpt-4o-mini", temperature=1.0)
@@ -84,10 +87,10 @@ def create_random_personality():
     """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.
 
 Name: <name>
-Backstory: <3 sentence backstory>'""" # System prompt
+Backstory: <3 sentence backstory>'"""  # System prompt
 
-    return "Come up with a backstory about " + random.choice(names_list) # User prompt
-
+    # User prompt
+    return "Come up with a backstory about " + random.choice(names_list)
 
 
 create_random_personality: Callable[..., Personality]
@@ -100,13 +103,14 @@ create_random_personality: Callable[..., Personality]
 # if we say that it also provides high level functionality:
 
 class PersonalitySchema(ell2a.Schema):
-    name : str
-    backstory : str
+    name: str
+    backstory: str
 
-    def parse_outputs(result : _lstr) -> str:
+    def parse_outputs(result: _lstr) -> str:
         name = result.split(":")[0]
         backstory = result.split(":")[1]
         return Personality(name, backstory)
+
 
 @ell2a.structured_lm(
     schema=PersonalitySchema,
@@ -114,9 +118,10 @@ class PersonalitySchema(ell2a.Schema):
     temperature=1.0,
 )
 def create_random_personality():
-    """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.""" # System prompt
+    """You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows."""  # System prompt
 
-    return "Come up with a backstory about " + random.choice(names_list) # User prompt
+    # User prompt
+    return "Come up with a backstory about " + random.choice(names_list)
 
 # under the hood this mutates the system promtp of create random.
 
@@ -125,8 +130,8 @@ def create_random_personality():
 # Optiona 5. Langchain verison of this with ell2a
 
 
-# or 
-def parser(result : _lstr) -> OutputFormat:
+# or
+def parser(result: _lstr) -> OutputFormat:
     name = result.split(":")[0]
     backstory = result.split(":")[1]
     return OutputFormat(name, backstory)
@@ -141,7 +146,7 @@ def create_random_personality():
     return "Come up with a backstory about " + random.choice(names_list)
 
 
-def f(arg = None, * , lol=3, **kwargs):
+def f(arg=None, *, lol=3, **kwargs):
     print(arg, lol, kwargs)
     pass
 
@@ -157,6 +162,7 @@ def parser(pstr):
     backstory = pstr.split("backstory:")[1].split("\n")[0].strip()
 
     return name, backstory
+
 
 @ell2a.structure(parserer=parser, retries=3)
 @ell2a.simple(model="gpt-4o-mini", temperature=1.0)
@@ -183,7 +189,6 @@ def get_random_personality():
     name = pstr.split("name:")[1].split("\n")[0].strip()
     backstory = pstr.split("backstory:")[1].split("\n")[0].strip()
 
-
     return pstr
 
 
@@ -197,14 +202,12 @@ def parser(pstr):
 
     return name, backstory
 
+
 @ell2a.simple(model="gpt-4o-mini", temperature=1.0, parser=parser)
 def create_random_personality():
     f"""Answer in the format {format}"""
 
     return "Come up with a backstory about " + random.choice(names_list)
-
-
-
 
 
 """
@@ -224,18 +227,23 @@ The whole conversation ultimatels boils down to if we decide to store strucutred
 
 If I have
 """
+
+
 @ell2a.simple(model="gpt-4o-mini", temperature=1.0, parser=parser)
 def create_random_personality():
     f"""Answer in the format {format}"""
 
     return "Come up with a backstory about " + random.choice(names_list)
 
+
 """
 And now I wrap it in my parser:
 """
 
+
 def parse_to_my_fucked_up_unserializable_format(pstr):
     return MyFuckedUpObject(pstr)
+
 
 @ell2a.structure(parser=parse_to_my_fucked_up_unserializable_format, retries=3)
 @ell2a.simple(model="gpt-4o-mini", temperature=1.0)
@@ -243,6 +251,7 @@ def create_random_personality():
     f"""Answer in the format {format}"""
 
     return "Come up with a backstory about " + random.choice(names_list)
+
 
 """
 Now when I run this program what appears in the database? Do we attempt to store the MyFuckedObject instance in the ell2a.db as a result of the invocation of the LMP.
@@ -255,9 +264,12 @@ Is there a utility to doing so. Do we have two types of invocations
 
 This is equivalent to the following
 """
+
+
 @ell2a.simple(model="gpt-4o-mini", temperature=1.0)
 def create_random_personality():
     return "Come up with a backstory about " + random.choice(names_list)
+
 
 @ell2a.track
 @retry(tries=3)
@@ -269,8 +281,10 @@ def parse_to_my_fucked_up_unserializable_format(pstr):
 def get_fucked_up_llm_object():
     return parse_to_my_fucked_up_unserializable_format(create_random_personality())
 
+
 # Lol langchain is the following:
-get_fucked_up_llm_object = ell2a.track(create_random_personality | parse_to_my_fucked_up_unserializable_format)
+get_fucked_up_llm_object = ell2a.track(
+    create_random_personality | parse_to_my_fucked_up_unserializable_format)
 
 """
 What hapopens when we can't serialize MyFuckedUpObject. We build the best dill dumper into our db of these objects.
@@ -288,48 +302,54 @@ cot_llm = ell2a.cot(
 """
 
 # base prompt override!
+
+
 @structured_lm.json(RPGSchema, model='gpt-4o-mini', temperature=1.0):
-def make_a_rpg_character(name : str):
+def make_a_rpg_character(name: str):
     return f"Make a rpg character that slaps. They should be called {name}"
+
 
 """
 What the this does is:
 """
 # structured_lm.py
-def json(schema : ell2a.Schema,**api_params):
+
+
+def json(schema: ell2a.Schema, **api_params):
     def decorator(func):
         def converted_lm_func():
-            system_prompt, user_prompt =  func()
+            system_prompt, user_prompt = func()
             new_system_prompt = [
-                system_prompt + " You must respond only in JSON in the following format: " + schema.get_format_prompt(),
+                system_prompt + " You must respond only in JSON in the following format: " +
+                schema.get_format_prompt(),
                 user_prompt
             ]
             return new_system_prompt, user_prompt
 
         return retry(schema.parse(
             ell2a.simple(**api_params)(converted_lm_func)), tries=3)
-        
+
     return decorator
 
 # This does this:
 
+
 @ell2a.simple(model="gpt-4o-mini", temperature=1.0)
-def internal_make_a_rpg_character(name : str):
+def internal_make_a_rpg_character(name: str):
     return [
-        ell2a.system("You are a rpg character creator. You create rpg characters. You must respond only in JSON in the following format: " + {RPGSchema.get_format_prompt()}),
-        ell2a.user(f"Make a rpg character that slaps. They should be called {name}")
+        ell2a.system("You are a rpg character creator. You create rpg characters. You must respond only in JSON in the following format: " +
+                     {RPGSchema.get_format_prompt()}),
+        ell2a.user(
+            f"Make a rpg character that slaps. They should be called {name}")
     ]
 
 
 @ell2a.track
 @retry(tries=3)
-def parse(result : _lstr):
+def parse(result: _lstr):
     return json.parse(result)
 
 
 @ell2a.track
-def make_a_rpg_character(name : str):
+def make_a_rpg_character(name: str):
     return result(internal_make_a_rpg_character(name))
-
-
-

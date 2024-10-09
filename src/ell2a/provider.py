@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from functools import lru_cache
+from functools  import lru_cache
 import inspect
 from types import MappingProxyType
 from typing import (
@@ -18,7 +18,7 @@ from typing import (
 )
 
 from pydantic import BaseModel, ConfigDict, Field
-from ell2a.types import Message, ContentBlock, ToolCall
+from ell2a.types import Message, ContentBlock, AgentCall
 from ell2a.types._lstr import _lstr
 import json
 from dataclasses import dataclass
@@ -27,32 +27,35 @@ from ell2a.types.message import LMP
 
 # XXX: Might leave this internal to providers so that the complex code is simpler &
 # we can literally jsut call provider.call like any openai fn.
-class EllCallParams(BaseModel):
+class Ell2aCallParams(BaseModel):
     model: str = Field(..., description="Model identifier")
     messages: List[Message] = Field(..., description="Conversation context")
     client: Any = Field(..., description="API client")
-    tools: List[LMP] = Field(default_factory=list, description="Available tools")
+    agents: List[LMP] = Field(default_factory=list,
+                             description="Available agents")
     api_params: Dict[str, Any] = Field(
         default_factory=dict, description="API parameters"
     )
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    def get_tool_by_name(self, name: str) -> Optional[LMP]:
-        """Get a tool by name."""
+    def get_agent_by_name(self, name: str) -> Optional[LMP]:
+        """Get a agent by name."""
         return next(
-            (tool for tool in (self.tools or [])  if tool.__name__ == name), None
+            (agent for agent in (self.agents or []) if agent.__name__ == name), None
         )
 
 
 Metadata = Dict[str, Any]
 
 # XXX: Needs a better name.
+
+
 class Provider(ABC):
     """
     Abstract base class for all providers. Providers are API interfaces to language models, not necessarily API providers.
     For example, the OpenAI provider is an API interface to OpenAI's API but also to Ollama and Azure OpenAI.
-    In Ell. We hate abstractions. The only reason this exists is to force implementers to implement their own provider correctly -_-.
+    In Ell2a. We hate abstractions. The only reason this exists is to force implementers to implement their own provider correctly -_-.
     """
     dangerous_disable_validation = False
 
@@ -73,7 +76,7 @@ class Provider(ABC):
         """
         Returns a list of disallowed call params that ell2a will override.
         """
-        return frozenset({"messages", "tools", "model", "stream", "stream_options"})
+        return frozenset({"messages", "agents", "model", "stream", "stream_options"})
 
     def available_api_params(self, client: Any, api_params: Optional[Dict[str, Any]] = None):
         params = _call_params(self.provider_call_function(client, api_params))
@@ -83,7 +86,7 @@ class Provider(ABC):
     ### TRANSLATION ###############
     ################################
     @abstractmethod
-    def translate_to_provider(self, ell_call: EllCallParams) -> Dict[str, Any]:
+    def translate_to_provider(self, ell2a_call: Ell2aCallParams) -> Dict[str, Any]:
         """Converts an ell2a call to provider call params!"""
         return NotImplemented
 
@@ -91,7 +94,7 @@ class Provider(ABC):
     def translate_from_provider(
         self,
         provider_response: Any,
-        ell_call: EllCallParams,
+        ell2a_call: Ell2aCallParams,
         provider_call_params: Dict[str, Any],
         origin_id: Optional[str] = None,
         logger: Optional[Callable[..., None]] = None,
@@ -105,30 +108,33 @@ class Provider(ABC):
     # Be careful to override this method in your provider.
     def call(
         self,
-        #XXX: In future refactors, we can fully enumerate the args and make ell_call's internal to the _provider implementer interface.
+        # XXX: In future refactors, we can fully enumerate the args and make ell2a_call's internal to the _provider implementer interface.
         # This gives us a litellm style interface for free.
-        ell_call: EllCallParams,
+        ell2a_call: Ell2aCallParams,
         origin_id: Optional[str] = None,
         logger: Optional[Any] = None,
     ) -> Tuple[List[Message], Dict[str, Any], Metadata]:
         # Automatic validation of params
         assert (
-            not set(ell_call.api_params.keys()).intersection(self.disallowed_api_params()) 
-        ), f"Disallowed api parameters: {ell_call.api_params}"
+            not set(ell2a_call.api_params.keys()).intersection(
+                self.disallowed_api_params())
+        ), f"Disallowed api parameters: {ell2a_call.api_params}"
 
-        final_api_call_params = self.translate_to_provider(ell_call)
+        final_api_call_params = self.translate_to_provider(ell2a_call)
 
-        call = self.provider_call_function(ell_call.client, final_api_call_params)
-        assert self.dangerous_disable_validation or _validate_provider_call_params(final_api_call_params, call)
-        
-        
+        call = self.provider_call_function(
+            ell2a_call.client, final_api_call_params)
+        assert self.dangerous_disable_validation or _validate_provider_call_params(
+            final_api_call_params, call)
+
         provider_resp = call(**final_api_call_params)
 
         messages, metadata = self.translate_from_provider(
-            provider_resp, ell_call, final_api_call_params, origin_id, logger
+            provider_resp, ell2a_call, final_api_call_params, origin_id, logger
         )
         assert "choices" not in metadata, "choices should be in the metadata."
-        assert self.dangerous_disable_validation or _validate_messages_are_tracked(messages, origin_id)
+        assert self.dangerous_disable_validation or _validate_messages_are_tracked(
+            messages, origin_id)
 
         return messages, final_api_call_params, metadata
 
@@ -159,8 +165,9 @@ def _validate_provider_call_params(
         assert (
             param_name in provider_call_params
         ), f"Provider implementation error: Unexpected parameter '{param_name}' in the converted call parameters."
-    
+
     return True
+
 
 def _validate_messages_are_tracked(
     messages: List[Message], origin_id: Optional[str] = None

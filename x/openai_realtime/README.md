@@ -1,4 +1,4 @@
-# OpenAI Realtime Python Client (Unofficial) 
+# OpenAI Realtime Python Client (Unofficial)
 
 [![ell2a](https://img.shields.io/badge/ell2a-go)](https://docs.agentbase.space/) [![Discord](https://dcbadge.limes.pink/api/server/vWntgU52Xb?style=flat)](https://discord.gg/vWntgU52Xb) [![X (formerly Twitter) Follow](https://img.shields.io/twitter/follow/wgussml)](https://x.com/wgussml)
 
@@ -7,6 +7,7 @@ This is a Python port of the OpenAI Realtime Client, designed to interact with O
 **Note:** This is a port of OpenAI's realtime client to Python by Xingqiang Chen. For the original version, see [here](https://github.com/openai/openai-realtime-api-beta).
 
 **Note:** This client is designed to be a reference for how ell2a will implement realtime Python bindings. For more information on ell2a, see [ell2a documentation](https://docs.agentbase.space/). Discover the power of ell2a for advanced prompt engineering and seamless integration with OpenAI's realtime API.
+
 ## Features
 
 - Realtime communication with OpenAI's API
@@ -16,12 +17,15 @@ This is a Python port of the OpenAI Realtime Client, designed to interact with O
 - Asynchronous operations for improved performance
 
 ## Installation
+
 ```bash
 git clone https://github.com/chenxingqiang/ell2a.git
 cd x/openai_realtime
 pip install -e .
 ```
+
 ## Quick Start
+
 ```python
 from openai_realtime import RealtimeClient
 
@@ -44,6 +48,7 @@ if __name__ == "__main__":
 ```
 
 ## Key Components
+
 - **RealtimeClient**: The main client for interacting with the OpenAI Realtime API.
 - **RealtimeAPI**: Handles the WebSocket connection and low-level communication.
 - **RealtimeConversation**: Manages the conversation state and message processing.
@@ -51,19 +56,22 @@ if __name__ == "__main__":
 - **RealtimeUtils**: Utility functions for data conversion and manipulation.
 
 ## Advanced Usage
+
 ### Adding Custom Agents
+
 ```python3
-def my_tool_handler(args):
-    # Implement your tool logic here
+def my_agent_handler(args):
+    # Implement your agent logic here
     return {"result": "Agent output"}
 
-client.add_tool(
-    {"name": "my_tool", "description": "A custom tool"},
-    my_tool_handler
+client.add_agent(
+    {"name": "my_agent", "description": "A custom agent"},
+    my_agent_handler
 )
 ```
 
 ### Handling Audio
+
 ```
 import numpy as np
 
@@ -74,11 +82,15 @@ client.append_input_audio(audio_data)
 # Create a response (including audio if available)
 client.create_response()
 ```
+
 ## Documentation
+
 For more detailed documentation, please refer to the [API Reference](https://github.com/openai/openai-realtime-api-beta/blob/main/README.md).
 
 ## Contributing
+
 Contributions are welcome! This project is a port of the OpenAI Realtime API to Python. Please feel free to submit a Pull Request.
 
 ## License and Attribution
+
 This project is licensed under the MIT License, respecting the original license of the OpenAI Realtime API. The original JavaScript implementation can be found at the [OpenAI Realtime API GitHub repository](https://github.com/openai/openai-realtime-api-beta). Special thanks to the OpenAI Realtime API team for their work on the original implementation. For more details, see the LICENSE file.

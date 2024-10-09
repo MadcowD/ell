@@ -4,6 +4,7 @@ import websockets
 from .event_handler import RealtimeEventHandler
 from .utils import RealtimeUtils
 
+
 class RealtimeAPI(RealtimeEventHandler):
     def __init__(self, url=None, api_key=None, dangerously_allow_api_key_in_browser=False, debug=False):
         super().__init__()
@@ -29,13 +30,13 @@ class RealtimeAPI(RealtimeEventHandler):
             'Authorization': f'Bearer {self.api_key}',
             'OpenAI-Beta': 'realtime=v1'
         }
-        
+
         self.ws = await websockets.connect(f"{self.url}?model={model}", extra_headers=headers)
-        
+
         self.log(f"Connected to {self.url}")
-        
+
         asyncio.create_task(self._message_handler())
-        
+
         return True
 
     async def _message_handler(self):
@@ -62,20 +63,21 @@ class RealtimeAPI(RealtimeEventHandler):
     def send(self, event_name, data=None):
         if not self.is_connected():
             raise Exception("RealtimeAPI is not connected")
-        
+
         data = data or {}
         if not isinstance(data, dict):
             raise ValueError("data must be a dictionary")
-        
+
         event = {
             "event_id": RealtimeUtils.generate_id("evt_"),
             "type": event_name,
             **data
         }
-        
+
         self.dispatch(f"client.{event_name}", event)
         self.dispatch("client.*", event)
         self.log("sent:", event_name, event)
-        
-        asyncio.create_task(self.ws.send(json.dumps(event, ensure_ascii=False)))
+
+        asyncio.create_task(self.ws.send(
+            json.dumps(event, ensure_ascii=False)))
         return True

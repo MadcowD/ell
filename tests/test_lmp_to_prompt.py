@@ -9,8 +9,6 @@
 # from ell2a.types import Message, LMPParams
 
 
-
-
 # @lm(model="gpt-4-turbo", temperature=0.1, max_tokens=5)
 # def lmp_with_docstring_system_prompt(*args, **kwargs):
 #     """Test system prompt"""  # I personally prefer this sysntax but it's nto formattable so I'm not sure if it's the best approach. I think we can leave this in as a legacy feature but the default docs should be using the ell2a.system, ell2a.user, ...
@@ -37,7 +35,7 @@
 
 # def test_lm_decorator_with_params(mock_run_lm):
 #     result = lmp_with_default_system_prompt("input", api_params=dict(temperature=0.5))
-    
+
 #     mock_run_lm.assert_called_once_with(
 #         model="gpt-4-turbo",
 #         messages=[
@@ -56,7 +54,7 @@
 # def test_lm_decorator_with_docstring_system_prompt(mock_run_lm):
 #     mock_run_lm.return_value = ("Mocked content", None)
 #     result = lmp_with_docstring_system_prompt("input", api_params=dict(temperature=0.5))
-    
+
 #     mock_run_lm.assert_called_once_with(
 #         model="gpt-4-turbo",
 #         messages=[
@@ -75,7 +73,7 @@
 # def test_lm_decorator_with_msg_fmt_system_prompt(mock_run_lm):
 #     mock_run_lm.return_value = ("Mocked content from msg fmt", None)
 #     result = lmp_with_message_fmt("input", api_params=dict(temperature=0.5))
-    
+
 #     mock_run_lm.assert_called_once_with(
 #         model="gpt-4-turbo",
 #         messages=[

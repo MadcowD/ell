@@ -53,14 +53,14 @@ Key Points
 @ell2a.complex Decorator
 ----------------------
 
-The ``@ell2a.complex`` decorator is used for more advanced scenarios, including multi-turn conversations, tool usage, and structured outputs.
+The ``@ell2a.complex`` decorator is used for more advanced scenarios, including multi-turn conversations, agent usage, and structured outputs.
 
 Syntax
 ^^^^^^
 
 .. code-block:: python
 
-    @ell2a.complex(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=False, tools: Optional[List[Callable]] = None, **api_params)
+    @ell2a.complex(model: str, client: Optional[openai.Client] = None, exempt_from_tracking=False, agents: Optional[List[Callable]] = None, **api_params)
     def my_complex_lmp(message_history: List[ell2a.Message]) -> List[ell2a.Message]:
         return [
             ell2a.system("System message here"),
@@ -73,7 +73,7 @@ Parameters
 - ``model``: The name or identifier of the language model to use.
 - ``client``: An optional OpenAI client instance.
 - ``exempt_from_tracking``: If True, the LMP usage won't be tracked.
-- ``tools``: A list of tool functions that can be used by the LLM.
+- ``agents``: A list of agent functions that can be used by the LLM.
 - ``**api_params``: Additional API parameters.
 
 Usage
@@ -81,7 +81,7 @@ Usage
 
 .. code-block:: python
 
-    @ell2a.complex(model="gpt-4", tools=[get_weather])
+    @ell2a.complex(model="gpt-4", agents=[get_weather])
     def weather_assistant(message_history: List[ell2a.Message]) -> List[ell2a.Message]:
         return [
             ell2a.system("You are a weather assistant with access to real-time weather data."),
@@ -91,16 +91,16 @@ Usage
     response = weather_assistant([ell2a.user("What's the weather like in New York?")])
     print(response.text)
 
-    if response.tool_calls:
-        tool_results = response.call_tools_and_collect_as_message()
-        final_response = weather_assistant(message_history + [response, tool_results])
+    if response.agent_calls:
+        agent_results = response.call_agents_and_collect_as_message()
+        final_response = weather_assistant(message_history + [response, agent_results])
         print(final_response.text)
 
 Key Points
 ^^^^^^^^^^
 
 1. Works with lists of ``ell2a.Message`` objects for more complex interactions.
-2. Supports tool integration for expanded capabilities.
+2. Supports agent integration for expanded capabilities.
 3. Can handle multi-turn conversations and maintain context.
 4. Allows for structured inputs and outputs using Pydantic models.
 5. Supports multimodal inputs and outputs.
@@ -111,11 +111,11 @@ Choosing Between Simple and Complex
 - Use ``@ell2a.simple`` for:
     - Single-turn, text-in-text-out interactions
     - Quick prototyping and simple use cases
-    - When you don't need tool integration or structured outputs
+    - When you don't need agent integration or structured outputs
 
 - Use ``@ell2a.complex`` for:
     - Multi-turn conversations
-    - Integrating tools or external data sources
+    - Integrating agents or external data sources
     - Working with structured data (using Pydantic models)
     - Multimodal inputs or outputs
     - Advanced control over the interaction flow

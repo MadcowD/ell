@@ -1,13 +1,11 @@
-
-import { useBlob } from '../../hooks/useBackend';
-import IORenderer from '../IORenderer';
+import IORenderer from '../IORenderer'
 
 export function ContentsRenderer({ item, field, ...rest }) {
-    const contents = item.contents;
+    const contents = item.contents
 
     if (contents.is_external && !contents.is_external_loaded) {
-      return <div>Loading...</div>;
+        return <div>Loading...</div>
     } else {
-      return <IORenderer content={contents[field]} {...rest} />;
+        return <IORenderer content={contents[field]} {...rest} />
     }
 }

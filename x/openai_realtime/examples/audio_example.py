@@ -1,3 +1,4 @@
+import atexit
 import asyncio
 import base64
 import os
@@ -9,12 +10,16 @@ import queue
 from openai_realtime import RealtimeClient, RealtimeUtils
 
 # Helper function to load and convert audio files
+
+
 def load_audio_sample(file_path):
     audio = AudioSegment.from_file(file_path)
     samples = np.array(audio.get_array_of_samples())
     return RealtimeUtils.array_buffer_to_base64(samples)
 
 # Function to play audio with buffering
+
+
 def play_audio(audio_data, sample_rate=24000):
     audio_queue.put(audio_data)
 
@@ -28,6 +33,7 @@ def audio_playback_worker():
             except queue.Empty:
                 continue
 
+
 # Initialize buffer and threading components
 audio_queue = queue.Queue()
 stop_event = threading.Event()
@@ -38,12 +44,15 @@ playback_thread = threading.Thread(target=audio_playback_worker, daemon=True)
 playback_thread.start()
 
 # Ensure to stop the thread gracefully on exit
-import atexit
+
+
 def cleanup():
     stop_event.set()
     playback_thread.join()
 
+
 atexit.register(cleanup)
+
 
 async def main():
     # Initialize the RealtimeClient
@@ -63,7 +72,8 @@ async def main():
     # Set up event handler for audio playback
     @client.realtime.on('server.response.audio.delta')
     def handle_audio_delta(event):
-        audio_data = np.frombuffer(base64.b64decode(event['delta']), dtype=np.int16)
+        audio_data = np.frombuffer(
+            base64.b64decode(event['delta']), dtype=np.int16)
         audio_queue.put(audio_data)
 
     @client.realtime.on('server.response.text.delta')
@@ -86,7 +96,6 @@ async def main():
     content = [{'type': 'input_audio', 'audio': audio_sample}]
     client.send_user_message_content(content)
     print("Audio sent")
-
 
     # Wait for and print the assistant's response transcript which happens a bit after the audio is played
     assistant_item = await client.wait_for_next_completed_item()

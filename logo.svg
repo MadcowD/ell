@@ -1,44 +1,51 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
-  <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#2a2a2a;stop-opacity:1" />
-    </linearGradient>
-    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#50E3C2;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  
-  <!-- Background -->
-  <rect width="800" height="400" fill="url(#bgGrad)" />
-  
-  <!-- Main title -->
-  <text x="400" y="100" font-family="Arial, sans-serif" font-size="72" font-weight="bold" text-anchor="middle" fill="url(#textGrad)">ell2a</text>
-  
-  <!-- Subtitle -->
-  <text x="400" y="150" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="#ffffff">Lightweight Functional Prompt Engineering Framework</text>
-  
-  <!-- Key features -->
-  <g transform="translate(100, 200)">
-    <rect width="180" height="120" rx="10" ry="10" fill="rgba(255,255,255,0.1)" />
-    <text x="90" y="40" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">Prompts as Programs</text>
-    <path d="M30 60 H150 M30 80 H130 M30 100 H140" stroke="#50E3C2" stroke-width="2" />
-  </g>
-  
-  <g transform="translate(310, 200)">
-    <rect width="180" height="120" rx="10" ry="10" fill="rgba(255,255,255,0.1)" />
-    <text x="90" y="40" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">Functional Approach</text>
-    <text x="90" y="80" font-family="Arial, sans-serif" font-size="36" text-anchor="middle" fill="#4A90E2">ƒ(x)</text>
-  </g>
-  
-  <g transform="translate(520, 200)">
-    <rect width="180" height="120" rx="10" ry="10" fill="rgba(255,255,255,0.1)" />
-    <text x="90" y="40" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">Lightweight Design</text>
-    <circle cx="90" cy="80" r="30" fill="none" stroke="#50E3C2" stroke-width="2" />
-    <path d="M90 50 V110 M70 80 H110" stroke="#50E3C2" stroke-width="2" />
-  </g>
-  
-  <!-- Bottom text -->
-  <text x="400" y="370" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">Empowering AI Agents with Efficient Language Model Programming</text>
+    <defs>
+        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#2a2a2a;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#50E3C2;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+
+    <!-- Background -->
+    <rect width="800" height="400" fill="url(#bgGrad)" />
+
+    <!-- Main title -->
+    <text x="400" y="100" font-family="Arial, sans-serif" font-size="72" font-weight="bold" text-anchor="middle"
+        fill="url(#textGrad)">ell2a</text>
+
+    <!-- Subtitle -->
+    <text x="400" y="150" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="#ffffff">Lightweight
+        Functional Prompt Engineering Framework</text>
+
+    <!-- Key features -->
+    <g transform="translate(100, 200)">
+        <rect width="180" height="120" rx="10" ry="10" fill="rgba(255,255,255,0.1)" />
+        <text x="90" y="40" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">Prompts
+            as Programs</text>
+        <path d="M30 60 H150 M30 80 H130 M30 100 H140" stroke="#50E3C2" stroke-width="2" />
+    </g>
+
+    <g transform="translate(310, 200)">
+        <rect width="180" height="120" rx="10" ry="10" fill="rgba(255,255,255,0.1)" />
+        <text x="90" y="40" font-family="Arial, sans-serif" font-size="18" text-anchor="middle"
+            fill="#ffffff">Functional Approach</text>
+        <text x="90" y="80" font-family="Arial, sans-serif" font-size="36" text-anchor="middle"
+            fill="#4A90E2">ƒ(x)</text>
+    </g>
+
+    <g transform="translate(520, 200)">
+        <rect width="180" height="120" rx="10" ry="10" fill="rgba(255,255,255,0.1)" />
+        <text x="90" y="40" font-family="Arial, sans-serif" font-size="18" text-anchor="middle"
+            fill="#ffffff">Lightweight Design</text>
+        <circle cx="90" cy="80" r="30" fill="none" stroke="#50E3C2" stroke-width="2" />
+        <path d="M90 50 V110 M70 80 H110" stroke="#50E3C2" stroke-width="2" />
+    </g>
+
+    <!-- Bottom text -->
+    <text x="400" y="370" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#ffffff">Empowering
+        AI Agents with Efficient Language Model Programming</text>
 </svg>

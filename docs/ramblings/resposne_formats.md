@@ -3,6 +3,7 @@
 ## Chat Completions
 
 ## Log Probs
+
 ```
 {
     "id": "chatcmpl-123",
@@ -190,13 +191,15 @@
   }
 
   ```
+
 ## Sturcutred Chat Completions
 
 ## Image Inputs
 
-## Function Calling 
+## Function Calling
 
 ### Groq/OpenAI
+
 ```json
 {
   "id": "chatcmpl-abc123",
@@ -209,7 +212,7 @@
       "message": {
         "role": "assistant",
         "content": null,
-        "tool_calls": [
+        "agent_calls": [
           {
             "id": "call_abc123",
             "type": "function",
@@ -221,7 +224,7 @@
         ]
       },
       "logprobs": null,
-      "finish_reason": "tool_calls"
+      "finish_reason": "agent_calls"
     }
   ],
   "usage": {
@@ -232,8 +235,8 @@
 }
 ```
 
-
 ### Ollama
+
 ```json
 {
   "model": "llama3.1",
@@ -241,7 +244,7 @@
   "message": {
     "role": "assistant",
     "content": "",
-    "tool_calls": [
+    "agent_calls": [
       {
         "function": {
           "name": "get_current_weather",

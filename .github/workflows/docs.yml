@@ -40,7 +40,7 @@ jobs:
           cd docs
           rm -rf _build  # Remove existing build directory
           poetry run make html  # Use poetry run to ensure the correct environment is used
-          poetry run python -c "import ell2a; version = ell2a.__version__; print(version); open('_build/html/_static/ell_version.txt', 'w').write(version)"
+          poetry run python -c "import ell2a; version = ell2a.__version__; print(version); open('_build/html/_static/ell2a_version.txt', 'w').write(version)"
 
         # env:
           # SPHINXOPTS: "-W"  # Treat warnings as errors

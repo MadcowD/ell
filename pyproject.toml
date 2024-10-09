@@ -6,10 +6,8 @@ authors = ["Xingqiang Chen <chen.xingqiang@iechor.com>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/chenxingqiang/ell2a"
-packages = [
-    { include = "ell2a", from = "src" }
-]
-homepage = "https://docs.agentbase.space"
+packages = [{ include = "ell2a", from = "src" }]
+homepage = "https://docs.toolbase.space"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -17,12 +15,21 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9"
+    "Programming Language :: Python :: 3.9",
 ]
 include = [
-    { path = "src/ell2a/studio/static", format = ["sdist", "wheel"] },
-    { path = "src/ell2a/studio/static/**/*", format = ["sdist", "wheel"] },
-    { path = "src/ell2a/util/char_bitmaps.npy", format = ["sdist", "wheel"] }
+    { path = "src/ell2a/studio/static", format = [
+        "sdist",
+        "wheel",
+    ] },
+    { path = "src/ell2a/studio/static/**/*", format = [
+        "sdist",
+        "wheel",
+    ] },
+    { path = "src/ell2a/util/char_bitmaps.npy", format = [
+        "sdist",
+        "wheel",
+    ] },
 ]
 
 [tool.poetry.dependencies]

@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
     # This is an example from ell2a's early day error
     error_console_output = """
-    (ell_lab) D:\\dev\\ell2a>D:/anaconda/envs/ell_lab/python.exe d:/dev/ell2a/examples/multilmp.py
+    (ell2a_lab) D:\\dev\\ell2a>D:/anaconda/envs/ell2a_lab/python.exe d:/dev/ell2a/examples/multilmp.py
     before ideas 1232131
     ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║ generate_story_ideas(a dog) # (notimple...)
@@ -103,16 +103,16 @@ if __name__ == "__main__":
     File "D:\\dev\\ell2a\\ell2a\\src\\ell2a\\util\\closure.py", line 140, in lexical_closure
         source = getsource(func, lstrip=True)
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "D:\\anaconda\\envs\\ell_lab\\Lib\\site-packages\\dill\\source.py", line 374, in getsource
+    File "D:\\anaconda\\envs\\ell2a_lab\\Lib\\site-packages\\dill\\source.py", line 374, in getsource
         lines, lnum = getsourcelines(object, enclosing=enclosing)
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "D:\\anaconda\\envs\\ell_lab\\Lib\\site-packages\\dill\\source.py", line 345, in getsourcelines
+    File "D:\\anaconda\\envs\\ell2a_lab\\Lib\\site-packages\\dill\\source.py", line 345, in getsourcelines
         code, n = getblocks(object, lstrip=lstrip, enclosing=enclosing, locate=True)
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "D:\\anaconda\\envs\\ell_lab\\Lib\\site-packages\\dill\\source.py", line 271, in getblocks
+    File "D:\\anaconda\\envs\\ell2a_lab\\Lib\\site-packages\\dill\\source.py", line 271, in getblocks
         lines, lnum = findsource(object)
                     ^^^^^^^^^^^^^^^^^^
-    File "D:\\anaconda\\envs\\ell_lab\\Lib\\site-packages\\dill\\source.py", line 215, in findsource
+    File "D:\\anaconda\\envs\\ell2a_lab\\Lib\\site-packages\\dill\\source.py", line 215, in findsource
         line = lines[lnum]
             ~~~~~^^^^^^
     IndexError: list index out of range

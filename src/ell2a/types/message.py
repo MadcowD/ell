@@ -1,7 +1,7 @@
 # todo: implement tracing for structured outs. this a v2 feature.
 import json
 from ell2a.types._lstr import _lstr
-from functools import cached_property
+from functools  import cached_property
 import numpy as np
 import base64
 from io import BytesIO
@@ -16,61 +16,66 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 from ell2a.util.serialization import serialize_image
 _lstr_generic = Union[_lstr, str]
-InvocableTool = Callable[..., Union["ToolResult", _lstr_generic, List["ContentBlock"], ]]
+InvocableAgent = Callable[..., Union["AgentResult",
+                                    _lstr_generic, List["ContentBlock"], ]]
 
 # AnyContent represents any type that can be passed to Message.
-AnyContent = Union["ContentBlock", str, "ToolCall", "ToolResult", "ImageContent", np.ndarray, PILImage.Image, BaseModel]
+AnyContent = Union["ContentBlock", str, "AgentCall", "AgentResult",
+                   "ImageContent", np.ndarray, PILImage.Image, BaseModel]
 
 
-class ToolResult(BaseModel):
-    tool_call_id: _lstr_generic
+class AgentResult(BaseModel):
+    agent_call_id: _lstr_generic
     result: List["ContentBlock"]
 
     @property
     def text(self) -> str:
         return _content_to_text(self.result)
-    
+
     @property
     def text_only(self) -> str:
         return _content_to_text_only(self.result)
-    
+
     # # XXX: Possibly deprecate
     # def readable_repr(self) -> str:
-    #     return f"ToolResult(tool_call_id={self.tool_call_id}, result={_content_to_text(self.result)})"
-    
+    #     return f"AgentResult(agent_call_id={self.agent_call_id}, result={_content_to_text(self.result)})"
+
     def __repr__(self):
-        return f"{self.__class__.__name__}(tool_call_id={self.tool_call_id}, result={_content_to_text(self.result)})"
+        return f"{self.__class__.__name__}(agent_call_id={self.agent_call_id}, result={_content_to_text(self.result)})"
 
-class ToolCall(BaseModel):
-    tool : InvocableTool
-    tool_call_id : Optional[_lstr_generic] = Field(default=None)
-    params : BaseModel
 
-    def __init__(self, tool, params : Union[BaseModel, Dict[str, Any]],  tool_call_id=None):
+class AgentCall(BaseModel):
+    agent: InvocableAgent
+    agent_call_id: Optional[_lstr_generic] = Field(default=None)
+    params: BaseModel
+
+    def __init__(self, agent, params: Union[BaseModel, Dict[str, Any]],  agent_call_id=None):
         if not isinstance(params, BaseModel):
-            params = tool.__ell_params_model__(**params) #convenience.
-        super().__init__(tool=tool, tool_call_id=tool_call_id, params=params)
+            params = agent.__ell2a_params_model__(**params)  # convenience.
+        super().__init__(agent=agent, agent_call_id=agent_call_id, params=params)
 
     def __call__(self, **kwargs):
-        assert not kwargs, "Unexpected arguments provided. Calling a tool uses the params provided in the ToolCall."
+        assert not kwargs, "Unexpected arguments provided. Calling a agent uses the params provided in the AgentCall."
 
         # XXX: TODO: MOVE TRACKING CODE TO _TRACK AND OUT OF HERE AND API.
-        return self.tool(**self.params.model_dump())
-    
+        return self.agent(**self.params.model_dump())
+
     # XXX: Deprecate in 0.1.0
     def call_and_collect_as_message_block(self):
-        raise DeprecationWarning("call_and_collect_as_message_block is deprecated. Use collect_as_content_block instead.")
-    
+        raise DeprecationWarning(
+            "call_and_collect_as_message_block is deprecated. Use collect_as_content_block instead.")
+
     def call_and_collect_as_content_block(self):
-        res = self.tool(**self.params.model_dump(), _tool_call_id=self.tool_call_id)
-        return ContentBlock(tool_result=res)
+        res = self.agent(**self.params.model_dump(),
+                        _agent_call_id=self.agent_call_id)
+        return ContentBlock(agent_result=res)
 
     def call_and_collect_as_message(self):
         return Message(role="user", content=[self.call_and_collect_as_message_block()])
-    
+
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.tool.__name__}({self.params}), tool_call_id='{self.tool_call_id}')"
-    
+        return f"{self.__class__.__name__}({self.agent.__name__}({self.params}), agent_call_id='{self.agent_call_id}')"
+
 
 class ImageContent(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -82,7 +87,8 @@ class ImageContent(BaseModel):
     @model_validator(mode='after')
     def check_image_or_url(self):
         if self.image is not None and self.url is not None:
-            raise ValueError("Both 'image' and 'url' cannot be set simultaneously.")
+            raise ValueError(
+                "Both 'image' and 'url' cannot be set simultaneously.")
         if self.image is None and self.url is None:
             raise ValueError("Either 'image' or 'url' must be set.")
         return self
@@ -91,7 +97,7 @@ class ImageContent(BaseModel):
     def coerce(cls, value: Union[str, np.ndarray, PILImage.Image, "ImageContent"]):
         if isinstance(value, cls):
             return value
-        
+
         if isinstance(value, str):
             if value.startswith('http://') or value.startswith('https://'):
                 return cls(url=value)
@@ -102,19 +108,19 @@ class ImageContent(BaseModel):
                     return cls(image=img.convert('RGB'))
             except:
                 raise ValueError("Invalid base64 string or URL for image")
-        
+
         if isinstance(value, np.ndarray):
             if value.ndim == 3 and value.shape[2] in (3, 4):
                 mode = 'RGB' if value.shape[2] == 3 else 'RGBA'
                 return cls(image=PILImage.fromarray(value, mode=mode))
             else:
                 raise ValueError(f"Invalid numpy array shape for image: {value.shape}. Expected 3D array with 3 or 4 channels.")
-        
+
         if isinstance(value, PILImage.Image):
             if value.mode not in ('L', 'RGB', 'RGBA'):
                 value = value.convert('RGB')
             return cls(image=value)
-        
+
         raise ValueError(f"Invalid image type: {type(value)}")
 
     @field_serializer('image')
@@ -123,15 +129,16 @@ class ImageContent(BaseModel):
             return None
         return serialize_image(image)
 
-class ContentBlock(BaseModel):    
+
+class ContentBlock(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     text: Optional[_lstr_generic] = Field(default=None)
     image: Optional[ImageContent] = Field(default=None)
     audio: Optional[Union[np.ndarray, List[float]]] = Field(default=None)
-    tool_call: Optional[ToolCall] = Field(default=None)
+    agent_call: Optional[AgentCall] = Field(default=None)
     parsed: Optional[BaseModel] = Field(default=None)
-    tool_result: Optional[ToolResult] = Field(default=None)
+    agent_result: Optional[AgentResult] = Field(default=None)
     # TODO: Add a JSON type? This would be nice for response_format. This is different than resposne_format = model. Or we could be opinionated and automatically parse the json response. That might be nice.
     # This breaks us maintaing parity with the openai python client in some sen but so does image.
 
@@ -139,23 +146,26 @@ class ContentBlock(BaseModel):
         if "image" in kwargs and not isinstance(kwargs["image"], ImageContent):
             im = kwargs["image"] = ImageContent.coerce(kwargs["image"])
             # XXX: Backwards compatibility, Deprecate.
-            if (d := kwargs.get("image_detail", None)): im.detail = d
+            if (d := kwargs.get("image_detail", None)):
+                im.detail = d
 
         super().__init__(*args, **kwargs)
 
-
     @model_validator(mode='after')
     def check_single_non_null(self):
-        non_null_fields = [field for field, value in self.__dict__.items() if value is not None]
+        non_null_fields = [field for field,
+                           value in self.__dict__.items() if value is not None]
         if len(non_null_fields) > 1:
-            raise ValueError(f"Only one field can be non-null. Found: {', '.join(non_null_fields)}")
+            raise ValueError(
+                f"Only one field can be non-null. Found: {', '.join(non_null_fields)}")
         return self
-    
+
     def __str__(self):
         return repr(self)
 
     def __repr__(self):
-        non_null_fields = [f"{field}={value}" for field, value in self.__dict__.items() if value is not None]
+        non_null_fields = [f"{field}={value}" for field,
+                           value in self.__dict__.items() if value is not None]
         return f"ContentBlock({', '.join(non_null_fields)})"
 
     @property
@@ -166,14 +176,14 @@ class ContentBlock(BaseModel):
             return "image"
         if self.audio is not None:
             return "audio"
-        if self.tool_call is not None:
-            return "tool_call"
+        if self.agent_call is not None:
+            return "agent_call"
         if self.parsed is not None:
             return "parsed"
-        if self.tool_result is not None:
-            return "tool_result"
+        if self.agent_result is not None:
+            return "agent_result"
         return None
-    
+
     @property
     def content(self):
         return getattr(self, self.type)
@@ -188,8 +198,8 @@ class ContentBlock(BaseModel):
         Args:
         content: The content to be coerced into a ContentBlock. Can be one of the following types:
         - str: Will be converted to a text ContentBlock.
-        - ToolCall: Will be converted to a tool_call ContentBlock.
-        - ToolResult: Will be converted to a tool_result ContentBlock.
+        - AgentCall: Will be converted to a agent_call ContentBlock.
+        - AgentResult: Will be converted to a agent_result ContentBlock.
         - BaseModel: Will be converted to a parsed ContentBlock.
         - ContentBlock: Will be returned as-is.
         - Image: Will be converted to an image ContentBlock.
@@ -206,13 +216,13 @@ class ContentBlock(BaseModel):
         >>> ContentBlock.coerce("Hello, world!")
         ContentBlock(text="Hello, world!")
 
-        >>> tool_call = ToolCall(...)
-        >>> ContentBlock.coerce(tool_call)
-        ContentBlock(tool_call=tool_call)
+        >>> agent_call = AgentCall(...)
+        >>> ContentBlock.coerce(agent_call)
+        ContentBlock(agent_call=agent_call)
 
-        >>> tool_result = ToolResult(...)
-        >>> ContentBlock.coerce(tool_result)
-        ContentBlock(tool_result=tool_result)
+        >>> agent_result = AgentResult(...)
+        >>> ContentBlock.coerce(agent_result)
+        ContentBlock(agent_result=agent_result)
 
         >>> class MyModel(BaseModel):
         ...     field: str
@@ -248,23 +258,23 @@ class ContentBlock(BaseModel):
             return content
         if isinstance(content, str):
             return cls(text=content)
-        if isinstance(content, ToolCall):
-            return cls(tool_call=content)
-        if isinstance(content, ToolResult):
-            return cls(tool_result=content)
+        if isinstance(content, AgentCall):
+            return cls(agent_call=content)
+        if isinstance(content, AgentResult):
+            return cls(agent_result=content)
         if isinstance(content, (ImageContent, np.ndarray, PILImage.Image)):
             return cls(image=ImageContent.coerce(content))
         if isinstance(content, BaseModel):
             return cls(parsed=content)
 
         raise ValueError(f"Invalid content type: {type(content)}")
-    
+
     @field_serializer('parsed')
     def serialize_parsed(self, value: Optional[BaseModel], _info):
         if value is None:
             return None
         return value.model_dump(exclude_none=True, exclude_unset=True)
-    
+
 
 def to_content_blocks(
     content: Optional[Union[AnyContent, List[AnyContent]]] = None,
@@ -275,7 +285,7 @@ def to_content_blocks(
 
     Args:
     content: The content to be coerced. Can be a single item or a list of items.
-             Supported types include str, ContentBlock, ToolCall, ToolResult, BaseModel, Image, np.ndarray, and PILImage.Image.
+             Supported types include str, ContentBlock, AgentCall, AgentResult, BaseModel, Image, np.ndarray, and PILImage.Image.
     **content_block_kwargs: Additional keyword arguments to pass to ContentBlock creation if content is None.
 
     Returns:
@@ -304,19 +314,17 @@ def to_content_blocks(
 
     if not isinstance(content, list):
         content = [content]
-    
-    return [ContentBlock.model_validate(ContentBlock.coerce(c)) for c in content]
 
+    return [ContentBlock.model_validate(ContentBlock.coerce(c)) for c in content]
 
 
 class Message(BaseModel):
     role: str
     content: List[ContentBlock]
-    
 
     def __init__(self, role: str, content: Union[AnyContent, List[AnyContent], None] = None, **content_block_kwargs):
         content_blocks = to_content_blocks(content, **content_block_kwargs)
-        
+
         super().__init__(role=role, content=content_blocks)
 
     # XXX: This choice of naming is unfortunate, but it is what it is.
@@ -330,7 +338,7 @@ class Message(BaseModel):
             'Hello\\n<PilImage>\\nWorld'
         """
         return _content_to_text(self.content)
-    
+
     @property
     def images(self) -> List[ImageContent]:
         """Returns a list of all image content.
@@ -350,7 +358,7 @@ class Message(BaseModel):
             True
         """
         return [c.image for c in self.content if c.image]
-    
+
     @property
     def audios(self) -> List[Union[np.ndarray, List[float]]]:
         """Returns a list of all audio content.
@@ -376,28 +384,28 @@ class Message(BaseModel):
         return _content_to_text_only(self.content)
 
     @cached_property
-    def tool_calls(self) -> List[ToolCall]:
-        """Returns a list of all tool calls.
+    def agent_calls(self) -> List[AgentCall]:
+        """Returns a list of all agent calls.
 
         Example:
-            >>> tool_call = ToolCall(tool=lambda x: x, params=BaseModel())
-            >>> message = Message(role="user", content=["Text", tool_call])
-            >>> len(message.tool_calls)
+            >>> agent_call = AgentCall(agent=lambda x: x, params=BaseModel())
+            >>> message = Message(role="user", content=["Text", agent_call])
+            >>> len(message.agent_calls)
             1
         """
-        return [c.tool_call for c in self.content if c.tool_call is not None]
-    
+        return [c.agent_call for c in self.content if c.agent_call is not None]
+
     @property
-    def tool_results(self) -> List[ToolResult]:
-        """Returns a list of all tool results.
+    def agent_results(self) -> List[AgentResult]:
+        """Returns a list of all agent results.
 
         Example:
-            >>> tool_result = ToolResult(tool_call_id="123", result=[ContentBlock(text="Result")])
-            >>> message = Message(role="user", content=["Text", tool_result])
-            >>> len(message.tool_results)
+            >>> agent_result = AgentResult(agent_call_id="123", result=[ContentBlock(text="Result")])
+            >>> message = Message(role="user", content=["Text", agent_result])
+            >>> len(message.agent_results)
             1
         """
-        return [c.tool_result for c in self.content if c.tool_result is not None]
+        return [c.agent_result for c in self.content if c.agent_result is not None]
 
     @property
     def parsed(self) -> Union[BaseModel, List[BaseModel]]:
@@ -411,19 +419,24 @@ class Message(BaseModel):
             >>> len(message.parsed)
             1
         """
-        parsed_content = [c.parsed for c in self.content if c.parsed is not None]
+        parsed_content = [
+            c.parsed for c in self.content if c.parsed is not None]
         return parsed_content[0] if len(parsed_content) == 1 else parsed_content
-    
-    def call_tools_and_collect_as_message(self, parallel=False, max_workers=None):
+
+    def call_agents_and_collect_as_message(self, parallel=False, max_workers=None):
         if parallel:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = [executor.submit(c.tool_call.call_and_collect_as_content_block) for c in self.content if c.tool_call]
+                futures = [executor.submit(
+                    c.agent_call.call_and_collect_as_content_block) for c in self.content if c.agent_call]
                 content = [future.result() for future in as_completed(futures)]
         else:
-            content = [c.tool_call.call_and_collect_as_content_block() for c in self.content if c.tool_call]
+            content = [c.agent_call.call_and_collect_as_content_block()
+                       for c in self.content if c.agent_call]
         return Message(role="user", content=content)
 
-# HELPERS 
+# HELPERS
+
+
 def system(content: Union[AnyContent, List[AnyContent]]) -> Message:
     """
     Create a system message with the given content.
@@ -462,22 +475,26 @@ def assistant(content: Union[AnyContent, List[AnyContent]]) -> Message:
     """
     return Message(role="assistant", content=content)
 
-#XXX: Make a mixi for these properties.
+# XXX: Make a mixi for these properties.
+
+
 def _content_to_text_only(content: List[ContentBlock]) -> str:
     return _lstr("\n").join(
-            available_text
-            for c in content
-            if (available_text := (c.tool_result.text_only if c.tool_result else c.text))
-        )
+        available_text
+        for c in content
+        if (available_text := (c.agent_result.text_only if c.agent_result else c.text))
+    )
 
-# Do we include the .text of a tool result? or its repr as in the current implementaiton?
-# What is the user using .text for? I just want to see the result of the tools. text_only should get us the text of the tool results; the tool_call_id is irrelevant.
+# Do we include the .text of a agent result? or its repr as in the current implementaiton?
+# What is the user using .text for? I just want to see the result of the agents. text_only should get us the text of the agent results; the agent_call_id is irrelevant.
+
+
 def _content_to_text(content: List[ContentBlock]) -> str:
     return _lstr("\n").join(
-            available_text
-            for c in content
-            if (available_text :=  c.text or repr(c.content))
-        )
+        available_text
+        for c in content
+        if (available_text := c.text or repr(c.content))
+    )
 
 
 # want to enable a use case where the user can actually return a standrd oai chat format
@@ -495,5 +512,3 @@ OneTurn = Callable[..., _lstr_generic]
 ChatLMP = Callable[[Chat, Any], Chat]
 LMP = Union[OneTurn, MultiTurnLMP, ChatLMP]
 InvocableLM = Callable[..., _lstr_generic]
-
-

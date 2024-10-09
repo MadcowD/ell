@@ -1,7 +1,9 @@
 
+from context_versioning import context
 import inspect
 import ast
 from contextlib import contextmanager
+
 
 @contextmanager
 def context():
@@ -22,6 +24,7 @@ def context():
         parsed = ast.parse(source, filename)
         # print(source)
         # Find the 'with' statement at the given line number
+
         class WithVisitor(ast.NodeVisitor):
             def __init__(self, target_lineno):
                 self.target_lineno = target_lineno
@@ -52,11 +55,10 @@ def context():
         # Any cleanup can be done here
         pass
 
-from context_versioning import context
+
 # Example usage
 if __name__ == "__main__":
     with context():
         x = 10
         y = x * 2
         print(y)
-

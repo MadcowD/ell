@@ -1,70 +1,73 @@
-{% extends "!layout.html" %}
-
-{% block extrahead %}
-  {{ super() }}
+{% extends "!layout.html" %} {% block extrahead %} {{ super() }}
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-220ZB10X27"></script>
 <script>
-  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        window.dataLayer = window.dataLayer || []
+        function gtag() {
+            dataLayer.push(arguments)
+        }
+        gtag('js', new Date())
 
-    gtag('config', 'G-220ZB10X27');
-  }
+        gtag('config', 'G-220ZB10X27')
+    }
 </script>
-
 
 <style>
     .rounded-image {
         border-radius: 10px;
         overflow: hidden;
     }
-
 </style>
 
 <script>
-function invertImage(dark) {
-    var images = document.querySelectorAll('.invertible-image img');
-    var htmlElement = document.documentElement;
-    images.forEach(function(image) {
-        if (!dark) {
-            image.style.filter = 'invert(100%) hue-rotate(160deg)';
-        } else {
-            image.style.filter = 'none';
-        }
-    });
-}
+    function invertImage(dark) {
+        var images = document.querySelectorAll('.invertible-image img')
+        var htmlElement = document.documentElement
+        images.forEach(function (image) {
+            if (!dark) {
+                image.style.filter = 'invert(100%) hue-rotate(160deg)'
+            } else {
+                image.style.filter = 'none'
+            }
+        })
+    }
 
+    // Run when the 'dark' class is added or removed from the <html> element
+    const htmlElement = document.documentElement
 
+    // Use MutationObserver to detect changes in the class attribute
+    const observer = new MutationObserver((mutations) => {
+        console.log(document.documentElement.classList)
+        mutations.forEach((mutation) => {
+            invertImage(document.documentElement.classList.contains('dark'))
+        })
+    })
 
-// Run when the 'dark' class is added or removed from the <html> element
-const htmlElement = document.documentElement;
-
-// Use MutationObserver to detect changes in the class attribute
-const observer = new MutationObserver((mutations) => {
-console.log(document.documentElement.classList)
-    mutations.forEach((mutation) => {
-            invertImage(document.documentElement.classList.contains('dark'));
-
-    });
-});
-
-observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
+    observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] })
 </script>
 
 <!-- Open Graph / Facebook -->
-<meta property="og:url" content="https://docs.agentbase.space/">
-<meta property="og:description" content="ell2a is a lightweight prompt engineering library treating prompts as functions. It provides tools for versioning, monitoring, and visualization of language model programs.">
-<meta property="og:image" content="https://docs.agentbase.space/_static/og2.png">
+<meta property="og:url" content="https://docs.agentbase.space/" />
+<meta
+    property="og:description"
+    content="ell2a is a lightweight prompt engineering library treating prompts as functions. It provides agents for versioning, monitoring, and visualization of language model programs."
+/>
+<meta property="og:image" content="https://docs.agentbase.space/_static/og2.png" />
 
 <!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:description" content="ell2a is a lightweight prompt engineering library treating prompts as functions. It provides tools for versioning, monitoring, and visualization of language model programs.">
+<meta property="twitter:card" content="summary_large_image" />
+<meta
+    property="twitter:description"
+    content="ell2a is a lightweight prompt engineering library treating prompts as functions. It provides agents for versioning, monitoring, and visualization of language model programs."
+/>
 
 <!-- Additional SEO tags -->
-<meta name="description" content="ell2a is a lightweight prompt engineering library treating prompts as functions. It provides tools for versioning, monitoring, and visualization of language model programs.">
-<meta name="keywords" content="ell2a, language model programming, prompt engineering, LLM, AI, machine learning, GPT">
-<meta name="author" content="Xingqiang Chen">
+<meta
+    name="description"
+    content="ell2a is a lightweight prompt engineering library treating prompts as functions. It provides agents for versioning, monitoring, and visualization of language model programs."
+/>
+<meta name="keywords" content="ell2a, language model programming, prompt engineering, LLM, AI, machine learning, GPT" />
+<meta name="author" content="Xingqiang Chen" />
 
 {% endblock extrahead %}

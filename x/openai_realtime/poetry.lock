@@ -215,7 +215,7 @@ uvloop = ["uvloop (>=0.15.2)"]
 [[package]]
 name = "click"
 version = "8.1.7"
-description = "Composable command line interface toolkit"
+description = "Composable command line interface agentkit"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -556,7 +556,7 @@ packaging = "*"
 pluggy = ">=0.12,<2.0"
 
 [package.extras]
-testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
+testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setupagents", "xmlschema"]
 
 [[package]]
 name = "pytest-asyncio"

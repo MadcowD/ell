@@ -1,23 +1,23 @@
-from functools import wraps
+from functools  import wraps
 from typing import Any, Optional
 
 from ell2a.lmp.complex import complex
 
 
 def simple(model: str, client: Optional[Any] = None,  exempt_from_tracking=False, **api_params):
-    assert 'tools' not in api_params, "tools are not supported in lm decorator, use multimodal decorator instead"
-    assert 'tool_choice' not in api_params, "tool_choice is not supported in lm decorator, use multimodal decorator instead"
-    assert 'response_format' not in api_params or isinstance(api_params.get('response_format', None), dict), "response_format is not supported in lm decorator, use multimodal decorator instead"
+    assert 'agents' not in api_params, "agents are not supported in lm decorator, use multimodal decorator instead"
+    assert 'agent_choice' not in api_params, "agent_choice is not supported in lm decorator, use multimodal decorator instead"
+    assert 'response_format' not in api_params or isinstance(api_params.get(
+        'response_format', None), dict), "response_format is not supported in lm decorator, use multimodal decorator instead"
 
     def convert_multimodal_response_to_lstr(response):
         return [x.content[0].text for x in response] if isinstance(response, list) else response.content[0].text
     return complex(model, client,  exempt_from_tracking=exempt_from_tracking, **api_params, post_callback=convert_multimodal_response_to_lstr)
 
 
-
 simple.__doc__ = """The fundamental unit of language model programming in ell2a.
 
-  This decorator simplifies the process of creating Language Model Programs (LMPs) 
+  This decorator simplifies the process of creating Language Model Programs (LMPs)
   that return text-only outputs from language models, while supporting multimodal inputs.
   It wraps the more complex 'complex' decorator, providing a streamlined interface for common use cases.
 
@@ -53,7 +53,7 @@ simple.__doc__ = """The fundamental unit of language model programming in ell2a.
 
 
       image_description = describe_image(PIL.Image.open("https://example.com/image.jpg"))
-      print(image_description) 
+      print(image_description)
       # Output will be a string text-only description of the image
 
       summary = summarize_text("Long text to summarize...")
@@ -63,11 +63,11 @@ simple.__doc__ = """The fundamental unit of language model programming in ell2a.
   Notes:
 
   - This decorator is designed for text-only model outputs, but supports multimodal inputs.
-  - It simplifies complex responses from language models to text-only format, regardless of 
+  - It simplifies complex responses from language models to text-only format, regardless of
     the model's capability for structured outputs, function calling, or multimodal outputs.
-  - For preserving complex model outputs (e.g., structured data, function calls, or multimodal 
+  - For preserving complex model outputs (e.g., structured data, function calls, or multimodal
     outputs), use the @ell2a.complex decorator instead. @ell2a.complex returns a Message object (role='assistant')
-  - The decorated function can return a string or a list of ell2a.Message objects for more 
+  - The decorated function can return a string or a list of ell2a.Message objects for more
     complex prompts, including multimodal inputs.
   - If called with n > 1 in api_params, the wrapped LMP will return a list of strings for the n parallel outputs
     of the model instead of just one string. Otherwise, it will return a single string.
@@ -91,6 +91,6 @@ simple.__doc__ = """The fundamental unit of language model programming in ell2a.
   See Also:
 
   - :func:`ell2a.complex`: For LMPs that preserve full structure of model responses, including multimodal outputs.
-  - :func:`ell2a.tool`: For defining tools that can be used within complex LMPs.
+  - :func:`ell2a.agent`: For defining agents that can be used within complex LMPs.
   - :mod:`ell2a.studio`: For visualizing and analyzing LMP executions.
     """

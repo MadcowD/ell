@@ -1,6 +1,6 @@
 from ell2a.configurator import config
 from ell2a.lmp._track import _track
-from ell2a.provider import EllCallParams
+from ell2a.provider import Ell2aCallParams
 from ell2a.types._lstr import _lstr
 from ell2a.types import Message, ContentBlock
 from ell2a.types.message import LMP, InvocableLM, LMPParams, MessageOrDict, _lstr_generic
@@ -10,13 +10,15 @@ from ell2a.util.verbosity import compute_color, model_usage_logger_pre
 
 from ell2a.util.verbosity import model_usage_logger_post_end, model_usage_logger_post_intermediate, model_usage_logger_post_start
 
-from functools import wraps
+from functools  import wraps
 from typing import Any, Dict, Optional, List, Callable, Tuple, Union
 
-def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Callable]] = None, exempt_from_tracking=False, post_callback: Optional[Callable] = None, **api_params):
+
+def complex(model: str, client: Optional[Any] = None, agents: Optional[List[Callable]] = None, exempt_from_tracking=False, post_callback: Optional[Callable] = None, **api_params):
     default_client_from_decorator = client
     default_model_from_decorator = model
     default_api_params_from_decorator = api_params
+
     def parameterized_lm_decorator(
         prompt: LMP,
     ) -> Callable[..., Union[List[Message], Message]]:
@@ -25,7 +27,7 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
         @wraps(prompt)
         def model_call(
             *prompt_args,
-            _invocation_origin : Optional[str] = None,
+            _invocation_origin: Optional[str] = None,
             client: Optional[Any] = None,
             api_params: Optional[Dict[str, Any]] = None,
             lm_params: Optional[DeprecationWarning] = None,
@@ -33,64 +35,68 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
         ) -> Tuple[Any, Any, Any]:
             # XXX: Deprecation in 0.1.0
             if lm_params:
-                raise DeprecationWarning("lm_params is deprecated. Use api_params instead.")
-        
+                raise DeprecationWarning(
+                    "lm_params is deprecated. Use api_params instead.")
+
             # promt -> str
             res = prompt(*prompt_args, **prompt_kwargs)
             # Convert prompt into ell2a messages
-            messages = _get_messages(res, prompt) 
-            
+            messages = _get_messages(res, prompt)
+
             # XXX: move should log to a logger.
             should_log = not exempt_from_tracking and config.verbose
             # Cute verbose logging.
-            if should_log: model_usage_logger_pre(prompt, prompt_args, prompt_kwargs, "[]", messages) #type: ignore
+            if should_log:
+                model_usage_logger_pre(
+                    prompt, prompt_args, prompt_kwargs, "[]", messages)  # type: ignore
 
             # Call the model.
             # Merge API params
-            merged_api_params = {**config.default_api_params, **default_api_params_from_decorator, **(api_params or {})}
+            merged_api_params = {**config.default_api_params, **
+                                 default_api_params_from_decorator, **(api_params or {})}
             n = merged_api_params.get("n", 1)
             # Merge client overrides & client registry
-            merged_client = _client_for_model(model, client or default_client_from_decorator)
-            ell_call = EllCallParams(
-                # XXX: Could change behaviour of overriding ell2a params for dyanmic tool calls.
-                model=merged_api_params.pop("model", default_model_from_decorator),
+            merged_client = _client_for_model(
+                model, client or default_client_from_decorator)
+            ell2a_call = Ell2aCallParams(
+                # XXX: Could change behaviour of overriding ell2a params for dyanmic agent calls.
+                model=merged_api_params.pop(
+                    "model", default_model_from_decorator),
                 messages=messages,
-                client = merged_client,
+                client=merged_client,
                 api_params=merged_api_params,
-                tools=tools or [],
+                agents=agents or [],
             )
             # Get the provider for the model
-            provider = config.get_provider_for(ell_call.client)
-            assert provider is not None, f"No provider found for client {ell_call.client}."
+            provider = config.get_provider_for(ell2a_call.client)
+            assert provider is not None, f"No provider found for client {ell2a_call.client}."
 
-            if should_log: model_usage_logger_post_start(n)
+            if should_log:
+                model_usage_logger_post_start(n)
             with model_usage_logger_post_intermediate(n) as _logger:
-                (result, final_api_params, metadata) = provider.call(ell_call, origin_id=_invocation_origin, logger=_logger if should_log else None)
+                (result, final_api_params, metadata) = provider.call(
+                    ell2a_call, origin_id=_invocation_origin, logger=_logger if should_log else None)
                 if isinstance(result, list) and len(result) == 1:
                     result = result[0]
-                
+
             result = post_callback(result) if post_callback else result
             if should_log:
                 model_usage_logger_post_end()
             #
-            #  These get sent to track. This is wack.           
+            #  These get sent to track. This is wack.
             return result, final_api_params, metadata
 
-
-  
-        model_call.__ell_api_params__ = default_api_params_from_decorator #type: ignore
-        model_call.__ell_func__ = prompt #type: ignore
-        model_call.__ell_type__ = LMPType.LM #type: ignore
-        model_call.__ell_exempt_from_tracking = exempt_from_tracking #type: ignore
- 
+        model_call.__ell2a_api_params__ = default_api_params_from_decorator  # type: ignore
+        model_call.__ell2a_func__ = prompt  # type: ignore
+        model_call.__ell2a_type__ = LMPType.LM  # type: ignore
+        model_call.__ell2a_exempt_from_tracking = exempt_from_tracking  # type: ignore
 
         if exempt_from_tracking:
             return model_call
         else:
             # XXX: Analyze decorators with AST instead.
-            return _track(model_call, forced_dependencies=dict(tools=tools, response_format=api_params.get("response_format", {})))
+            return _track(model_call, forced_dependencies=dict(agents=agents, response_format=api_params.get("response_format", {})))
     return parameterized_lm_decorator
-
 
 
 def _get_messages(prompt_ret: Union[str, list[MessageOrDict]], prompt: LMP) -> list[Message]:
@@ -99,7 +105,8 @@ def _get_messages(prompt_ret: Union[str, list[MessageOrDict]], prompt: LMP) -> l
     """
     if isinstance(prompt_ret, str):
         has_system_prompt = prompt.__doc__ is not None and prompt.__doc__.strip() != ""
-        messages =     [Message(role="system", content=[ContentBlock(text=_lstr(prompt.__doc__ ) )])] if has_system_prompt else []
+        messages = [Message(role="system", content=[ContentBlock(
+            text=_lstr(prompt.__doc__))])] if has_system_prompt else []
         return messages + [
             Message(role="user", content=[ContentBlock(text=prompt_ret)])
         ]
@@ -109,6 +116,7 @@ def _get_messages(prompt_ret: Union[str, list[MessageOrDict]], prompt: LMP) -> l
         ), "Need to pass a list of Messages to the language model"
         return prompt_ret
 
+
 def _client_for_model(
     model: str,
     client: Optional[Any] = None,
@@ -117,11 +125,12 @@ def _client_for_model(
     # XXX: Move to config to centralize api keys etc.
     if not client:
         client, was_fallback = config.get_client_for(model)
-        
+
         # XXX: Wrong.
         if not client and not was_fallback:
-            raise RuntimeError(_no_api_key_warning(model, _name, '', long=True, error=True))
-    
+            raise RuntimeError(_no_api_key_warning(
+                model, _name, '', long=True, error=True))
+
     if client is None:
         raise ValueError(f"No client found for model '{model}'. Ensure the model is registered using 'register_model' in 'config.py' or specify a client directly using the 'client' argument in the decorator or function call.")
     return client
@@ -130,15 +139,15 @@ def _client_for_model(
 complex.__doc__ = """A sophisticated language model programming decorator for complex LLM interactions.
 
 This decorator transforms a function into a Language Model Program (LMP) capable of handling
-multi-turn conversations, tool usage, and various output formats. It's designed for advanced
+multi-turn conversations, agent usage, and various output formats. It's designed for advanced
 use cases where full control over the LLM's capabilities is needed.
 
 :param model: The name or identifier of the language model to use.
 :type model: str
 :param client: An optional OpenAI client instance. If not provided, a default client will be used.
 :type client: Optional[openai.Client]
-:param tools: A list of tool functions that can be used by the LLM. Only available for certain models.
-:type tools: Optional[List[Callable]]
+:param agents: A list of agent functions that can be used by the LLM. Only available for certain models.
+:type agents: Optional[List[Callable]]
 :param response_format: The response format for the LLM. Only available for certain models.
 :type response_format: Optional[Dict[str, Any]]
 :param n: The number of responses to generate for the LLM. Only available for certain models.
@@ -169,7 +178,7 @@ Functionality:
 
 1. Advanced LMP Creation:
     - Supports multi-turn conversations and stateful interactions.
-    - Enables tool usage within the LLM context.
+    - Enables agent usage within the LLM context.
     - Allows for various output formats, including structured data and function calls.
 
 2. Flexible Input Handling:
@@ -182,7 +191,7 @@ Functionality:
 
 4. Output Processing:
     - Can return raw LLM outputs or process them through a post-callback function.
-    - Supports returning multiple message types (e.g., text, function calls, tool results).
+    - Supports returning multiple message types (e.g., text, function calls, agent results).
 
 Usage Modes and Examples:
 
@@ -222,15 +231,15 @@ Usage Modes and Examples:
 
 .. code-block:: python
 
-    @ell2a.tool()
+    @ell2a.agent()
     def get_weather(location: str) -> str:
         # Implementation to fetch weather
         return f"The weather in {location} is sunny."
 
-    @ell2a.complex(model="gpt-4", tools=[get_weather])
+    @ell2a.complex(model="gpt-4", agents=[get_weather])
     def weather_assistant(message_history: List[Message]) -> List[Message]:
         return [
-            ell2a.system("You are a weather assistant. Use the get_weather tool when needed."),
+            ell2a.system("You are a weather assistant. Use the get_weather agent when needed."),
         ] + message_history
 
     conversation = [
@@ -238,12 +247,12 @@ Usage Modes and Examples:
     ]
     response : ell2a.Message = weather_assistant(conversation)
     
-    if response.tool_calls:
-        tool_results = response.call_tools_and_collect_as_message()
-        print("Agent results:", tool_results.text)
+    if response.agent_calls:
+        agent_results = response.call_agents_and_collect_as_message()
+        print("Agent results:", agent_results.text)
         
-        # Continue the conversation with tool results
-        final_response = weather_assistant(conversation + [response, tool_results])
+        # Continue the conversation with agent results
+        final_response = weather_assistant(conversation + [response, agent_results])
         print("Final response:", final_response.text)
 
 4. Structured Output:
@@ -290,31 +299,31 @@ Usage Modes and Examples:
 
 .. code-block:: python
 
-    @ell2a.complex(model="gpt-4", tools=[tool1, tool2, tool3])
+    @ell2a.complex(model="gpt-4", agents=[agent1, agent2, agent3])
     def parallel_assistant(message_history: List[Message]) -> List[Message]:
         return [
-            ell2a.system("You can use multiple tools in parallel."),
+            ell2a.system("You can use multiple agents in parallel."),
         ] + message_history
 
     response = parallel_assistant([ell2a.user("Perform tasks A, B, and C simultaneously.")])
-    if response.tool_calls:
-        tool_results : ell2a.Message = response.call_tools_and_collect_as_message(parallel=True, max_workers=3)
-        print("Parallel tool results:", tool_results.text)
+    if response.agent_calls:
+        agent_results : ell2a.Message = response.call_agents_and_collect_as_message(parallel=True, max_workers=3)
+        print("Parallel agent results:", agent_results.text)
 
 Helper Functions for Output Processing:
 
 - response.text: Get the full text content of the last message.
 - response.text_only: Get only the text content, excluding non-text elements.
-- response.tool_calls: Access the list of tool calls in the message.
-- response.tool_results: Access the list of tool results in the message.
+- response.agent_calls: Access the list of agent calls in the message.
+- response.agent_results: Access the list of agent results in the message.
 - response.structured: Access structured data outputs.
-- response.call_tools_and_collect_as_message(): Execute tool calls and collect results.
+- response.call_agents_and_collect_as_message(): Execute agent calls and collect results.
 - Message(role="user", content=[...]).to_openai_message(): Convert to OpenAI API format.
 
 Notes:
 
 - The decorated function should return a list of Message objects.
-- For tool usage, ensure that tools are properly decorated with @ell2a.tool().
+- For agent usage, ensure that agents are properly decorated with @ell2a.agent().
 - When using structured outputs, specify the response_format in the decorator.
 - The complex decorator supports all features of simpler decorators like @ell2a.simple.
 - Use helper functions and properties to easily access and process different types of outputs.
@@ -322,6 +331,6 @@ Notes:
 See Also:
 
 - ell2a.simple: For simpler text-only LMP interactions.
-- ell2a.tool: For defining tools that can be used within complex LMPs.
+- ell2a.agent: For defining agents that can be used within complex LMPs.
 - ell2a.studio: For visualizing and analyzing LMP executions.
     """

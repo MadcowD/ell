@@ -2,18 +2,18 @@
 Studio
 =================================================
 
-In the previous chapter, we explored ell2a's powerful versioning and tracing capabilities. These features provide a solid foundation for managing and analyzing your Language Model Programs (LMPs). However, to truly leverage the full potential of this data, we need a tool that can visualize and interpret it effectively. This is where Studio comes in.
+In the previous chapter, we explored ell2a's powerful versioning and tracing capabilities. These features provide a solid foundation for managing and analyzing your Language Model Programs (LMPs). However, to truly leverage the full potential of this data, we need a agent that can visualize and interpret it effectively. This is where Studio comes in.
 
 
 
-.. image:: ../_static/ell_studio_better.webp
+.. image:: ../_static/ell2a_studio_better.webp
    :alt: ell2a demonstration
    :class: rounded-image 
    :width: 100%
 
 
 
-Studio is a powerful, open-source visualization and analysis tool that complements ell2a's versioning and tracing capabilities. It runs locally on your machine, ensuring data privacy and security. Studio provides an intuitive interface for exploring LMPs, their versions, and interactions, transforming the abstract data collected by ell2a into actionable insights.
+Studio is a powerful, open-source visualization and analysis agent that complements ell2a's versioning and tracing capabilities. It runs locally on your machine, ensuring data privacy and security. Studio provides an intuitive interface for exploring LMPs, their versions, and interactions, transforming the abstract data collected by ell2a into actionable insights.
 
 With Studio, you can visualize the evolution of your LMPs over time, analyze the performance and behavior of your prompts, debug complex interactions between multiple LMPs, and collaborate more effectively with your team on prompt engineering tasks. In essence, Studio turns the wealth of data collected by ell2a's versioning and tracing systems into a powerful asset for prompt engineering, all while keeping your data local and under your control.
 
@@ -104,12 +104,12 @@ Studio includes a built-in code viewer that allows you to examine the source cod
 .. Integration with External Agents
 .. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. Studio can be integrated with other development tools, allowing you to export data for further analysis in other platforms and import external metrics or annotations to enrich your LMP analysis. This integration capability ensures that Studio can fit seamlessly into your existing development workflow.
+.. Studio can be integrated with other development agents, allowing you to export data for further analysis in other platforms and import external metrics or annotations to enrich your LMP analysis. This integration capability ensures that Studio can fit seamlessly into your existing development workflow.
 
 .. Conclusion
 .. ----------
 
-.. Studio is a powerful tool that brings transparency and insight to the prompt engineering process. By providing deep insights into your LMPs, their versions, and their performance, Studio empowers you to create more effective, efficient, and reliable language model programs.
+.. Studio is a powerful agent that brings transparency and insight to the prompt engineering process. By providing deep insights into your LMPs, their versions, and their performance, Studio empowers you to create more effective, efficient, and reliable language model programs.
 
 .. As you continue to work with ell2a, integrating Studio into your workflow can significantly enhance your prompt engineering capabilities. Its comprehensive features will help you navigate the complexities of prompt engineering, leading to better outcomes and a deeper understanding of your language model interactions.
 

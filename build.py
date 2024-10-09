@@ -8,6 +8,7 @@ def run_command(command, cwd=None):
     result = subprocess.run(command, shell=True, cwd=cwd, check=True)
     return result
 
+
 def npm_install():
     print("Running npm install")
     run_command("npm install", cwd="ell2a-studio")
@@ -24,7 +25,7 @@ def npm_build():
     print(f"Copied static files from {source_dir} to {target_dir}")
 
 
-def get_ell_version():
+def get_ell2a_version():
     pyproject_path = "pyproject.toml"
     pyproject_data = toml.load(pyproject_path)
     return pyproject_data["tool"]["poetry"]["version"]
@@ -52,8 +53,8 @@ def run_all_examples():
 
 
 def main():
-    ell_version = get_ell_version()
-    os.environ['REACT_APP_ELL_VERSION'] = ell_version
+    ell2a_version = get_ell2a_version()
+    os.environ['REACT_APP_ELL2A_VERSION'] = ell2a_version
     npm_install()
     npm_build()
     run_pytest()

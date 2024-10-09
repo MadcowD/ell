@@ -9,7 +9,7 @@ import instructor
 from openai import OpenAI
 from pydantic import BaseModel
 
-from ell2a.provider import EllCallParams, Metadata, Provider
+from ell2a.provider import Ell2aCallParams, Metadata, Provider
 from ell2a.providers.openai import OpenAIProvider
 from ell2a.types.message import ContentBlock, Message
 
@@ -29,7 +29,7 @@ class InstructorProvider(OpenAIProvider):
         return api_params
     
     def translate_from_provider(self,provider_response,
-            ell_call : EllCallParams,
+            ell2a_call : Ell2aCallParams,
             provider_call_params : Dict[str, Any],
             origin_id : str, 
             logger : Optional[Callable] = None) -> Tuple[Message, Metadata]:

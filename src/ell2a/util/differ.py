@@ -3,8 +3,10 @@ from ell2a.lmp.simple import simple
 import difflib
 
 # Todo: update this for single change stuff so that it doesn't summarize small chage but says it specifically.
+
+
 @simple("gpt-4o-mini", temperature=0.2, exempt_from_tracking=True)
-def write_commit_message_for_diff(old : str, new : str) -> str:
+def write_commit_message_for_diff(old: str, new: str) -> str:
     """You are an expert programmer who's goal is to write commit messages based on diffs. 
 
 You will be given two version of source code. 
@@ -19,11 +21,13 @@ Consider all changes ot the program including the globals and free variables
 Respond in the following format:
 <commit_message summarizing all changes with specificity>:
 <* bulleted list of all changes>."""
-    clean_program_of_all_bv_tags = lambda program : program.replace("#<BV>", "").replace("#</BV>", "").replace("#<BmV>", "").replace("#</BmV>", "")
+    def clean_program_of_all_bv_tags(program): return program.replace(
+        "#<BV>", "").replace("#</BV>", "").replace("#<BmV>", "").replace("#</BmV>", "")
     old_clean = clean_program_of_all_bv_tags(old)
     new_clean = clean_program_of_all_bv_tags(new)
 
-    diff = difflib.unified_diff(old_clean.splitlines(), new_clean.splitlines(), lineterm='')
+    diff = difflib.unified_diff(
+        old_clean.splitlines(), new_clean.splitlines(), lineterm='')
 
     return f"""Write a commit message succinctly and specifically describing the changes between these two versions of a program.
 OLD VERISON:
@@ -39,6 +43,7 @@ NEW VERSION:
 DIFF:
 {diff}
 """
+
 
 if __name__ == "__main__":
 

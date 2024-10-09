@@ -102,7 +102,8 @@ class _lstr(str):
             instance.__origin_trace__ = frozenset({origin_trace})
         else:
             instance.__origin_trace__ = (
-                frozenset(origin_trace) if origin_trace is not None else frozenset()
+                frozenset(
+                    origin_trace) if origin_trace is not None else frozenset()
             )
         return instance
 
@@ -138,7 +139,8 @@ class _lstr(str):
             python_schema=core_schema.union_schema(
                 [
                     core_schema.is_instance_schema(cls),
-                    core_schema.no_info_plain_validator_function(validate_lstr),
+                    core_schema.no_info_plain_validator_function(
+                        validate_lstr),
                 ]
             ),
             serialization=core_schema.plain_serializer_function_ser_schema(
@@ -208,7 +210,8 @@ class _lstr(str):
         """
         # If 'other' is a tuple, we need to handle each element
         if isinstance(other, tuple):
-            result_content = super(_lstr, self).__mod__(tuple(str(o) for o in other))
+            result_content = super(_lstr, self).__mod__(
+                tuple(str(o) for o in other))
             new__origin_trace__s = set(self.__origin_trace__)
             for item in other:
                 if isinstance(item, _lstr):
@@ -305,10 +308,12 @@ class _lstr(str):
                     origin_traces = self.__origin_trace__
                     for arg in args:
                         if isinstance(arg, _lstr):
-                            origin_traces = origin_traces.union(arg.__origin_trace__)
+                            origin_traces = origin_traces.union(
+                                arg.__origin_trace__)
                     for key, value in kwargs.items():
                         if isinstance(value, _lstr):
-                            origin_traces = origin_traces.union(value.__origin_trace__)
+                            origin_traces = origin_traces.union(
+                                value.__origin_trace__)
                     return _lstr(result, None, origin_traces)
 
                 return result
@@ -332,10 +337,11 @@ class _lstr(str):
         parts = []
         for item in iterable:
             if isinstance(item, _lstr):
-                new__origin_trace__ = new__origin_trace__.union(item.__origin_trace__)
+                new__origin_trace__ = new__origin_trace__.union(
+                    item.__origin_trace__)
             parts.append(item)
         new_content = super(_lstr, self).join(parts)
-        
+
         return _lstr(new_content, None, new__origin_trace__)
 
     @override

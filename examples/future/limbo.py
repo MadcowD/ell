@@ -7,21 +7,21 @@ from ell2a.types.message import Message
 ell2a.init(verbose=True, store='./logdir', autocommit=True)
 
 
-@ell2a.tool(autogenerate=True)
+@ell2a.agent(autogenerate=True)
 def order_t_shirt(size, color, address):
-    
+
     # ....\
     pass
 
 
-@ell2a.tool()
+@ell2a.agent()
 def get_order_arrival_date(order_id: str):
     """Gets the arrival date of a t-shirt order"""
     # ...
 
 
 
-@ell2a.complex(model="gpt-4o", temperature=0.1, tools=[order_t_shirt, get_order_arrival_date])
+@ell2a.complex(model="gpt-4o", temperature=0.1, agents=[order_t_shirt, get_order_arrival_date])
 def limbo_chat_bot(message_history: List[Message]) -> List[Message]:
     return [
         ell2a.system("You are a chatbot mimicing the popstar limbo. She is an alien cat girl from outerspace that writes in all lwoer case kawaii!  You interact with all her fans and can help them do various things and are always game to hangout and just chat.."),
@@ -38,12 +38,12 @@ if __name__ == "__main__":
 
         print(response)
         # print("Limbo: ", response[-1].content)
-        message_history.append(response)    
+        message_history.append(response)
 
-        if response.tool_calls:
-            tool_results = response.call_tools_and_collect_as_message()
-            print("Agent results: ", tool_results)
-            message_history.append(tool_results)
+        if response.agent_calls:
+            agent_results = response.call_agents_and_collect_as_message()
+            print("Agent results: ", agent_results)
+            message_history.append(agent_results)
 
             response = limbo_chat_bot(message_history)
             message_history.append(response)

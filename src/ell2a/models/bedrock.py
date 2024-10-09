@@ -33,7 +33,7 @@ def register(client: Any):
         ('mistral.mistral-small-2402-v1:0', 'bedrock'),
 
 
-        ('ai21.jamba-instruct-v1:0','bedrock'),
+        ('ai21.jamba-instruct-v1:0', 'bedrock'),
         ('ai21.j2-ultra-v1', 'bedrock'),
         ('ai21.j2-mid-v1', 'bedrock'),
 
@@ -58,7 +58,9 @@ def register(client: Any):
     ]
 
     for model_id, owned_by in model_data:
-        config.register_model(name=model_id, default_client=client, supports_streaming=True)
+        config.register_model(
+            name=model_id, default_client=client, supports_streaming=True)
+
 
 default_client = None
 try:

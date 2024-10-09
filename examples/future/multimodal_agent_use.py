@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 from ell2a.types.message import to_content_blocks
 
-@ell2a.tool()
+@ell2a.agent()
 def get_user_name():
     """
     Return the user's name.
@@ -40,7 +40,7 @@ def generate_strawberry_image():
 
     return img
 
-@ell2a.tool()
+@ell2a.agent()
 def get_ice_cream_flavors():
     """
     Return a list of ice cream flavors.
@@ -49,11 +49,11 @@ def get_ice_cream_flavors():
     return to_content_blocks([("1. Vanilla"), "2.", (generate_strawberry_image()), ("3. Coconut")])
 
 
-@ell2a.complex(model="claude-3-5-sonnet-20240620", tools=[get_user_name, get_ice_cream_flavors], max_tokens=1000)
+@ell2a.complex(model="claude-3-5-sonnet-20240620", agents=[get_user_name, get_ice_cream_flavors], max_tokens=1000)
 def f(message_history: list[ell2a.Message]) -> list[ell2a.Message]:
     return [
         ell2a.system(
-            "You are a helpful assistant that greets the user and asks them what ice cream flavor they want. Call both tools immediately and then greet the user. Some options will be images be sure to interperate them."
+            "You are a helpful assistant that greets the user and asks them what ice cream flavor they want. Call both agents immediately and then greet the user. Some options will be images be sure to interperate them."
         ),
         ell2a.user("Do it"),
     ] + message_history
@@ -66,11 +66,11 @@ if __name__ == "__main__":
         message = f(messages)
         messages.append(message)
 
-        if message.tool_calls:
-            tool_call_response = message.call_tools_and_collect_as_message(
+        if message.agent_calls:
+            agent_call_response = message.call_agents_and_collect_as_message(
                 parallel=True, max_workers=2
             )
-            messages.append(tool_call_response)
+            messages.append(agent_call_response)
         else:
             break
 

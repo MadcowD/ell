@@ -6,6 +6,7 @@ import sounddevice as sd
 from openai_realtime import RealtimeClient, RealtimeUtils
 from typing import Optional, Callable
 
+
 class RealtimeAssistant:
     def __init__(self, api_key: str, instructions: str, debug: bool = False):
         self.api_key = api_key
@@ -38,7 +39,8 @@ class RealtimeAssistant:
     def _setup_event_handlers(self):
         @self.client.realtime.on('server.response.audio.delta')
         def handle_audio_delta(event):
-            audio_data = np.frombuffer(base64.b64decode(event['delta']), dtype=np.int16)
+            audio_data = np.frombuffer(
+                base64.b64decode(event['delta']), dtype=np.int16)
             asyncio.create_task(self.audio_queue.put(audio_data))
 
         @self.client.realtime.on('server.response.text.delta')
@@ -67,7 +69,8 @@ class RealtimeAssistant:
         if status:
             print(status, flush=True)
         if self.main_event_loop is not None:
-            asyncio.run_coroutine_threadsafe(self.input_audio_queue.put(indata.copy()), self.main_event_loop)
+            asyncio.run_coroutine_threadsafe(
+                self.input_audio_queue.put(indata.copy()), self.main_event_loop)
         else:
             print("Main event loop is not set. Cannot enqueue audio data.", flush=True)
 
@@ -95,14 +98,15 @@ class RealtimeAssistant:
     def select_microphone():
         devices = sd.query_devices()
         input_devices = [d for d in devices if d['max_input_channels'] > 0]
-        
+
         print("Available input devices:")
         for i, device in enumerate(input_devices):
             print(f"{i}: {device['name']}")
-        
+
         while True:
             try:
-                selection = int(input("Select the number of the microphone you want to use: "))
+                selection = int(
+                    input("Select the number of the microphone you want to use: "))
                 if 0 <= selection < len(input_devices):
                     return input_devices[selection]['index']
                 else:
@@ -124,15 +128,18 @@ class RealtimeAssistant:
         selected_device = self.select_microphone()
 
         with sd.InputStream(callback=self.audio_callback, device=selected_device, channels=self.channels, samplerate=self.sample_rate, dtype='int16'):
-            print(f"Listening... (Say '{stop_phrase}' to end the conversation)")
+            print(f"Listening... (Say '{
+                  stop_phrase}' to end the conversation)")
 
             while not self.stop_event.is_set():
                 item = await self.client.wait_for_next_completed_item()
                 print(item)
                 if item['item']['type'] == 'message' and item['item']['role'] == 'assistant':
-                    transcript = ''.join([c['text'] for c in item['item']['content'] if c['type'] == 'text'])
+                    transcript = ''.join(
+                        [c['text'] for c in item['item']['content'] if c['type'] == 'text'])
                     if stop_phrase.lower() in transcript.lower():
-                        print(f"\nAssistant acknowledged {stop_phrase} command. Ending conversation.")
+                        print(f"\nAssistant acknowledged {
+                              stop_phrase} command. Ending conversation.")
                         self.stop_event.set()
 
         await self.client.disconnect()
@@ -142,6 +149,7 @@ class RealtimeAssistant:
         input_task.cancel()
 
         await asyncio.gather(playback_task, input_task, return_exceptions=True)
+
 
 async def main():
     assistant = RealtimeAssistant(

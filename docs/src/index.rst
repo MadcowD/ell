@@ -1,13 +1,13 @@
 
 
 
-===========================================
+=============================================================
 ell2a:  the language model programming library for AI Agents
-===========================================
+=============================================================
 
 
 .. raw:: html
-   
+
    <div style="display: flex; gap: 10px;">
    <a href="https://docs.agentbase.space/installation" target="_blank">
        <img src="https://img.shields.io/badge/get_started-blue" alt="Install">
@@ -61,7 +61,7 @@ LMPs are fully encapsulated functions that produce either a string prompt or a l
 Prompt engineering is an optimization process
 ------------------------------------------------
 
-The process of prompt engineering involves many iterations, similar to the optimization processes in machine learning. Because LMPs are just functions, ``ell2a`` provides rich tooling for this process.
+The process of prompt engineering involves many iterations, similar to the optimization processes in machine learning. Because LMPs are just functions, ``ell2a`` provides rich agenting for this process.
 
 .. image:: _static/versions_small.webp
    :alt: ell2a demonstration
@@ -81,25 +81,25 @@ The process of prompt engineering involves many iterations, similar to the optim
     # ... define your lmps
 
     hello("strawberry") # the source code of the LMP the call is saved to the store
-   
 
 
-Tools for monitoring, versioning, and visualization
+
+Agents for monitoring, versioning, and visualization
 -----------------------------------------------------------
 
 
 
-.. image:: _static/ell_studio_better.webp
+.. image:: _static/ell2a_studio_better.webp
    :alt: ell2a demonstration
-   :class: rounded-image 
+   :class: rounded-image
    :width: 100%
 
 
 .. code-block:: bash
 
-   ell2a-studio --storage ./logdir 
+   ell2a-studio --storage ./logdir
 
-Prompt engineering goes from a dark art to a science with the right tools. **Ell Studio is a local, open source tool for prompt version control, monitoring, visualization**. With Ell Studio you can empiricize your prompt optimziation process over time and catch regressions before its too late. 
+Prompt engineering goes from a dark art to a science with the right agents. **Ell2a Studio is a local, open source agent for prompt version control, monitoring, visualization**. With Ell2a Studio you can empiricize your prompt optimziation process over time and catch regressions before its too late.
 
 
 
@@ -125,7 +125,7 @@ By forcing a functional decomposition of the problem, ``ell2a`` makes it **easy 
 
    import ell2a
    from typing import List
-   
+
    @ell2a.simple(model="gpt-4o-mini", temperature=1.0, n=10)
    def write_ten_drafts(idea : str):
       """You are an adept story writer. The story should only be 3 paragraphs"""
@@ -140,7 +140,7 @@ By forcing a functional decomposition of the problem, ``ell2a`` makes it **easy 
 
    best_draft = choose_the_best_draft(drafts) # Best of 10 sampling.
 
-   
+
 
 
 
@@ -170,20 +170,20 @@ Using language models is **just passing strings around, except when it's not.**
 
    import ell2a
 
-   @ell2a.tool()
+   @ell2a.agent()
    def scrape_website(url : str):
       return requests.get(url).text
 
-   @ell2a.complex(model="gpt-5-omni", tools=[scrape_website])
+   @ell2a.complex(model="gpt-5-omni", agents=[scrape_website])
    def get_news_story(topic : str):
       return [
          ell2a.system("""Use the web to find a news story about the topic"""),
          ell2a.user(f"Find a news story about {topic}.")
       ]
 
-   message_response = get_news_story("stock market") 
-   if message_response.tool_calls:
-      for tool_call in message_response.tool_calls:
+   message_response = get_news_story("stock market")
+   if message_response.agent_calls:
+      for agent_call in message_response.agent_calls:
          #...
    if message_response.text:
       print(message_response.text)
@@ -231,11 +231,11 @@ LLMs can process and generate various types of content, including text, images, 
 Prompt engineering libraries shouldn't interfere with your workflow
 --------------------------------------------------------------------
 
-``ell2a`` is designed to be a lightweight and unobtrusive library. It doesn't require you to change your coding style or use special editors. 
+``ell2a`` is designed to be a lightweight and unobtrusive library. It doesn't require you to change your coding style or use special editors.
 
 .. image:: _static/useitanywhere_compressed.webp
    :alt: ell2a demonstration
-   :class: rounded-image 
+   :class: rounded-image
    :width: 100%
 
 You can continue to use regular Python code in your IDE to define and modify your prompts, while leveraging ell2a's features to visualize and analyze your prompts. Migrate from langchain to ``ell2a`` one function at a time.
@@ -253,7 +253,7 @@ To get started with ``ell2a``, see the :doc:`Getting Started <getting_started>` 
    :hidden:
 
    Introduction <self>
-   
+
    installation
    getting_started
 
@@ -262,20 +262,20 @@ To get started with ``ell2a``, see the :doc:`Getting Started <getting_started>` 
    :caption: Core Concepts:
    :hidden:
 
-   core_concepts/ell_simple
+   core_concepts/ell2a_simple
    core_concepts/versioning_and_storage
-   core_concepts/ell_studio
+   core_concepts/ell2a_studio
 
    core_concepts/message_api
-   core_concepts/ell_complex
-   core_concepts/tool_usage
+   core_concepts/ell2a_complex
+   core_concepts/agent_usage
    core_concepts/structured_outputs
    core_concepts/multimodality
    core_concepts/models_and_api_clients
    core_concepts/configuration
 
 
-   
+
 .. toctree::
    :maxdepth: 1
    :caption: API Reference

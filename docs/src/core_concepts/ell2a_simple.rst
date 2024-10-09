@@ -1,6 +1,6 @@
-===========
+=============
 @ell2a.simple
-===========
+=============
 
 
 The core unit of prompt engineering in ell2a is the ``@ell2a.simple`` decorator. This decorator transforms a function that provides system and user prompts into a callable object. When invoked, this callable sends the provided prompts to a language model and returns the model's response. 
@@ -55,7 +55,7 @@ Therefore, we have two decorators within the ell2a framework:
 
 1. ``@ell2a.simple``: Returns simple strings, as shown here.
 
-2. ``@ell2a.complex``: Returns message objects containing all of the typical message API metadata and additional helper functions for interacting with multimodal output data. You can read more about this in the :doc:`ell_complex` page.
+2. ``@ell2a.complex``: Returns message objects containing all of the typical message API metadata and additional helper functions for interacting with multimodal output data. You can read more about this in the :doc:`ell2a_complex` page.
 
 
 Variable system prompts
@@ -182,18 +182,18 @@ This approach simplifies working with multimodal inputs, allowing you to focus o
 
 .. note:: Not all language model providers support image URLs. For example, as of the current version, Anthropic's models do not support image URLs. Always check the capabilities and requirements of your chosen language model provider when working with multimodal inputs.
 
-.. warning:: While ``@ell2a.simple`` supports multimodal inputs, it is designed to return text-only outputs. For handling multimodal outputs (such as generated images or audio), you need to use ``@ell2a.complex``. Please refer to the :doc:`ell_complex` documentation for more information on working with multimodal outputs.
+.. warning:: While ``@ell2a.simple`` supports multimodal inputs, it is designed to return text-only outputs. For handling multimodal outputs (such as generated images or audio), you need to use ``@ell2a.complex``. Please refer to the :doc:`ell2a_complex` documentation for more information on working with multimodal outputs.
 
 
 
-What about multiturn conversations, tools, structured outputs, and other features?
-----------------------------------------------------------------------------------
+What about multiturn conversations, agents, structured outputs, and other features?
+------------------------------------------------------------------------------------
 
-While ``@ell2a.simple`` is great for straightforward text-based interactions with language models, there are scenarios where you might need more complex functionality. For instance, you may want to work with multiturn conversations, utilize tools, generate structured outputs, or handle multimodal content beyond just text.
+While ``@ell2a.simple`` is great for straightforward text-based interactions with language models, there are scenarios where you might need more complex functionality. For instance, you may want to work with multiturn conversations, utilize agents, generate structured outputs, or handle multimodal content beyond just text.
 
 In such cases, you'll need an LMP that can return rich ``Message`` objects instead of just strings. This is where ``@ell2a.complex`` comes into play. The ``@ell2a.complex`` decorator provides enhanced capabilities for more sophisticated interactions with language models.
 
-For more information on how to use ``@ell2a.complex`` and its advanced features, please refer to the :doc:`ell_complex` documentation.
+For more information on how to use ``@ell2a.complex`` and its advanced features, please refer to the :doc:`ell2a_complex` documentation.
 
 
 Reference

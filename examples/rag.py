@@ -53,7 +53,7 @@ if __name__ == "__main__":
     documents = [
         "ell2a is a cool new framework written by will",
         "will writes a lot of the code while on x.com the everything app",
-        "ell2a will someday be go-to tool for getting things done",
+        "ell2a will someday be go-to agent for getting things done",
         "george washington is the current president of the United states of America",
     ]
 

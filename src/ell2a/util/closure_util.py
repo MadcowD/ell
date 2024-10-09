@@ -18,15 +18,18 @@ import inspect
 #  - https://github.com/uqfoundation/dill/blob/master/LICENSE
 
 # XXX: This is a mess. COuld probably be about 100 lines of code max.
+
+
 def globalvars(func, recurse=True, builtin=False):
     """get objects defined in global scope that are referred to by func
 
     return a dict of {name:object}"""
-    while hasattr(func, "__ell_func__"):
-        func = func.__ell_func__
-    if inspect.ismethod(func): func = func.__func__
-    while hasattr(func, "__ell_func__"):
-        func = func.__ell_func__
+    while hasattr(func, "__ell2a_func__"):
+        func = func.__ell2a_func__
+    if inspect.ismethod(func):
+        func = func.__func__
+    while hasattr(func, "__ell2a_func__"):
+        func = func.__ell2a_func__
     if inspect.isfunction(func):
         globs = vars(inspect.getmodule(sum)).copy() if builtin else {}
         # get references from within closure
@@ -34,11 +37,12 @@ def globalvars(func, recurse=True, builtin=False):
         for obj in orig_func.__closure__ or {}:
             try:
                 cell_contents = obj.cell_contents
-            except ValueError: # cell is empty
+            except ValueError:  # cell is empty
                 pass
             else:
                 _vars = globalvars(cell_contents, recurse, builtin) or {}
-                func.update(_vars) #XXX: (above) be wary of infinte recursion?
+                # XXX: (above) be wary of infinte recursion?
+                func.update(_vars)
                 globs.update(_vars)
         # get globals
         globs.update(orig_func.__globals__ or {})
@@ -48,31 +52,31 @@ def globalvars(func, recurse=True, builtin=False):
         else:
             func.update(nestedglobals(orig_func.__code__))
             # find globals for all entries of func
-            for key in func.copy(): #XXX: unnecessary...?
+            for key in func.copy():  # XXX: unnecessary...?
                 nested_func = globs.get(key)
                 if nested_func is orig_func:
-                   #func.remove(key) if key in func else None
-                    continue  #XXX: globalvars(func, False)?
+                   # func.remove(key) if key in func else None
+                    continue  # XXX: globalvars(func, False)?
                 func.update(globalvars(nested_func, True, builtin))
     elif inspect.iscode(func):
         globs = vars(inspect.getmodule(sum)).copy() if builtin else {}
-       #globs.update(globals())
+       # globs.update(globals())
         if not recurse:
-            func = func.co_names # get names
+            func = func.co_names  # get names
         else:
-            orig_func = func.co_name # to stop infinite recursion
+            orig_func = func.co_name  # to stop infinite recursion
             func = set(nestedglobals(func))
             # find globals for all entries of func
-            for key in func.copy(): #XXX: unnecessary...?
+            for key in func.copy():  # XXX: unnecessary...?
                 if key is orig_func:
-                   #func.remove(key) if key in func else None
-                    continue  #XXX: globalvars(func, False)?
+                   # func.remove(key) if key in func else None
+                    continue  # XXX: globalvars(func, False)?
                 nested_func = globs.get(key)
                 func.update(globalvars(nested_func, True, builtin))
     else:
         return {}
-    #NOTE: if name not in __globals__, then we skip it...
-    return dict((name,globs[name]) for name in func if name in globs)
+    # NOTE: if name not in __globals__, then we skip it...
+    return dict((name, globs[name]) for name in func if name in globs)
 
 
 def is_function_called(func_name, source_code):
@@ -124,7 +128,7 @@ def get_referenced_names(code: str, module_name: str):
     return referenced_names
 
 
-def should_import(module_name : str):
+def should_import(module_name: str):
     """
     This function checks if a module should be imported based on its origin.
     It returns False if the module is in the local directory or if the module's spec is None.

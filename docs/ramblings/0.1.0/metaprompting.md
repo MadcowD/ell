@@ -1,4 +1,3 @@
-
 ```python
 import ell2a
 
@@ -19,7 +18,7 @@ in practice i migth actually not do shit liek that at all like inside ghost it w
 def generate_approaches_to_eamil_somone(linkedinprofile, aboutme):
     """ You are a helpful assistant that generates approaches to email someone based on their linkedin profile and your about me. """
 
-    return f"Come up with one for: {linkedinprofile} given that I am {aboutme}" 
+    return f"Come up with one for: {linkedinprofile} given that I am {aboutme}"
 
 @ell2a.simple(model="gpt-4o")
 def come_up_with_hook_subject_line(approaches, linkedinprofile):
@@ -51,17 +50,19 @@ better_email_generator =  optimizer.fit(generate_approaches_to_eamil_somone, X=p
 fit: some_lmp -> a_new_lmp
 ```
 
-# an lmp is a function that takes an input and returns the output of an lm. 
+# an lmp is a function that takes an input and returns the output of an lm
+
 # when u FewShotFromLabels you prepend shit into the system prompt
 
+# so this type of optimizaiton would happen after production of the prompt
 
-# so this type of optimizaiton would happen after production of the prompt..
 # it could serialize as
+
 ```python
 def generate_approaches_to_eamil_somone(linkedinprofile, aboutme):
     """ You are a helpful assistant that generates approaches to email someone based on their linkedin profile and your about me. """
 
-    return f"Come up with one for: {linkedinprofile} given that I am {aboutme}" 
+    return f"Come up with one for: {linkedinprofile} given that I am {aboutme}"
 
 @ell2a.simple(model="gpt-4o")
 def better_email_generator(linkedinprofile, aboutme):
@@ -69,14 +70,12 @@ def better_email_generator(linkedinprofile, aboutme):
     "prepend stuff to the messages!"
     return message
 ```
+
 So it could be that we want to preserve hte programmatic structure of the code... so that inputs are processed in as imilar way. But also we want to allow for variation in the prompt program string so its a double edged sword.
 
 actually if we introduce a new technique for optimizing LMPs then it doesnt matter..
 
-
 also what if we want to encourage people to use chain of thought.
-
-
 
 like take a complicated lmp
 
@@ -102,18 +101,18 @@ print(greeting)
 What does it mean to optimize this? Do we want it to preserve the random adjective and punctuation code.?
 
 Optimizing this module is optimizinf the fn
+
 ```
-hello : (name: str) -> str 
+hello : (name: str) -> str
 min_µ ∑ L(hello(x),y)
 
 hello =  [lm : (prompt : msgs) -> str]
- • [hello_prompt_µ: (name :str ) ->  prompt] 
+ • [hello_prompt_µ: (name :str ) ->  prompt]
 ```
 
 In DSP we "optimize µ by forward composing it. I think we dynamically construct
 hello prompt from a "signature" so that the dynamic construct can bem utated.
 
-    
 Consider Predict:
 
 ```
@@ -149,8 +148,9 @@ use DSP to optimize these prompts.
 In fact prompt templates dont really exist within ell2a and this a major flaw in some sense.
 
 Like if I want to do CoT waht do I do?
-But it's clear code like 
-```python 
+But it's clear code like
+
+```python
    prefix = "Reasoning: Let's think step by step in order to"
         if dspy.settings.experimental:
             desc = "${produce the output fields}. We ..."
@@ -159,23 +159,26 @@ But it's clear code like
 
         rationale_type = rationale_type or dspy.OutputField(prefix=prefix, desc=desc)
         # Add "rationale" field to the output si
-``` 
+```
+
 is very bad..
 
+so recap DSP constructs promps via
 
-so recap DSP constructs promps via 
 ```
 (
     signature = (
         inputs fields (
             desc,name),
         output fields (
-            desc, name) 
-        ), 
+            desc, name)
+        ),
     instructions
 ) -> "prompt"
 ```
+
 in ell2a we could theoretically infer those things
+
 ```python
 def prompt(params : str):
     """Your a good guy"""  # system
@@ -206,8 +209,8 @@ but if i wanted to mutate the prompt after creation i would have to do it manual
 so leads us to a prompt api
 
 ```python
-@ell2a.simple() : 
-    (lmp : Callable) -> 
+@ell2a.simple() :
+    (lmp : Callable) ->
 
 class LMP(ell2a.Module):
     def __init__(self, lmp : Callable):
@@ -221,8 +224,8 @@ class LMP(ell2a.Module):
 
 ```
 
-and for dsp we could technically invert params using another llm as a part of optimization 
-    but that's also janky 
+and for dsp we could technically invert params using another llm as a part of optimization
+    but that's also janky
     but so is dpsy
 
 what would it look like also how should we do cot in ell2a
@@ -241,17 +244,15 @@ def chain_of_thought(question : str) -> str:
 
 but if we rewrote dspy and forgot about @ell2a.simple because LMPs are just fucking like weights lol okay so
 
-
 chain_of_thought =====  W^T (process_into_vector(x))
 
-but like W^T is like a bunch of format strings and arbitrary instructions so then what the fuck is optimizing CoT cause in Ell we've basically merged data parsing and instruction formattging into one big ass thring
+but like W^T is like a bunch of format strings and arbitrary instructions so then what the fuck is optimizing CoT cause in Ell2a we've basically merged data parsing and instruction formattging into one big ass thring
 
 nah this is bad.
 
-
 ## Meta Prompting
 
-Okay so if prompting is manually setting the W^T of a matrix then we can think of meta prompting as creating programs that generate W (This is what DSPy is doing.) Maybe DSPy (with some modifications) is the right way to go cause it is basically doing. 
+Okay so if prompting is manually setting the W^T of a matrix then we can think of meta prompting as creating programs that generate W (This is what DSPy is doing.) Maybe DSPy (with some modifications) is the right way to go cause it is basically doing.
 
 Let's consider CoT
 
@@ -397,7 +398,7 @@ run_agent(agent_step, x="roses are red")
             },
         }
         signature_dict.update(fields_for_mode[mode])
-        return dspy.Signature(signature_dict    
+        return dspy.Signature(signature_dict
 
         self.code_generate = dspy.ChainOfThought(
             dspy.Signature(
@@ -415,7 +416,7 @@ run_agent(agent_step, x="roses are red")
             dspy.Signature(
                 self._generate_signature("answer").fields,
                 self._generate_instruction("answer"),
-# In Ell this would be:
+# In Ell2a this would be:
 
 # It's still meta programmign lol i can't get ath "updating the inpout fields like it's fucked.
 @ell2a.simple(model="gpt-4o")
@@ -463,23 +464,22 @@ def program_of_though(question : str) -> str:
     input_kwargs.update({"final_generated_code": code, "code_output": output})
     answer_gen_result = code_answer(**input_kwargs)
     return answer_gen_result
-    
+
 
 
 program_of_though("roses are red")
 
-# So I don't think we really are getting the 
-``` 
+# So I don't think we really are getting the
+```
 
 Well its clear that ell2a.function is a useful abstraciton so long as the return type is a trackable or serializable type. Perhaps that's not even necessary, but for reconstructing computation graphs it would be
-
 
 ```python
 
 # This is what is really going on, but there can be many adapters in dspy
 cot = ChainOfThought(signature, activated=True)
 
-# 
+#
 adapter = ChatAdapter()
 messages = adapter.format(signature, demos, inputs)
 
@@ -549,9 +549,7 @@ messages = adapter.format(signature, demos, inputs)
 
 ```
 
-
 Okay so let's now revisit meta prompting for a bit:
-
 
 In ell2a we build a good framework for engineering specific `W = [0, 1, 2, ...]`. In DSPy we have a framework for doing things like `W = th.zeros((a,b))` `y= W^Tx`.
 
@@ -568,7 +566,7 @@ def my_arbitrary_prompt(question :str, context : List[str]) -> str:
     """
 ```
 
-How do we dynamically optimzie this? 
+How do we dynamically optimzie this?
 
 ```python
 >>> my_arbitrary_prompt(question="What is the capital of France?", context=["France is a country in Europe.", "Paris is the capital of France."])
@@ -604,7 +602,7 @@ How do we dynamically optimzie this?
 
 >>> better_arbitrary_prompt(question="What is the capital of France?", context=["France is a country in Europe.", "Paris is the capital of France."])
 [
-    # EXAMPLES: 
+    # EXAMPLES:
     ell2a.user(
     """
     You are a helpful assistant.
@@ -657,19 +655,19 @@ How do we dynamically optimzie this?
     )
 ]
 ```
+
 The problem with this mechanism is that it will duplicate bad prompting in the examples rather than being a generic metaprompt that can be reused.
 
+This leads us to an idea
 
-This leads us to an idea 
-
-> Prompt optimizers are independent of meta prompts. 
+> Prompt optimizers are independent of meta prompts.
 
 DSPy is a DSL for prompting basically lol you define shit in maybe a "BAML" type way and then you can do optimizations much more easily be for you realize a prompt.
-
 
 You could sovle the problem of going from a specific `W` to a generic `th.randn(W.shape)` and then you could do DSPy on that shit. You would be inferring signatures. Also no problem just copying the DSPy functional API...
 
 Consider:
+
 ```python
 import dspy
 
@@ -683,6 +681,7 @@ def generate_answer(self, context: list[str], question) -> str:
 ```
 
 So they are able to specify a signature and then mutate it from here.  Another example:
+
 ```python
 @dspy.predictor
 def generate_answer(self, context: list[str], question) -> str:
@@ -691,6 +690,7 @@ def generate_answer(self, context: list[str], question) -> str:
 ```
 
 The output key is the name of the function...
+
 ```
     sig = inspect.signature(func)
     annotations = typing.get_type_hints(func, include_extras=True)
@@ -718,10 +718,9 @@ meta = ell2a.meta(
 final = meta.compile()
 # But then we have to go to the dsp shit because we want prompts to call other prompts and interact hierarchically like dsp.
 # But this creates such an obfuscated view of prompt construction you don't know how the fuck this is happenign udner the hood.
-# It's much heasier to udnerstand th.randn(10,10) 
+# It's much heasier to udnerstand th.randn(10,10)
 # than meta.compile(myadapte)
 ```
-
 
 ```python
 # I am an ML researcher I don't understand how prompting works lol I know how mdoels works and I want to make a model that solves my problem
@@ -743,8 +742,8 @@ def please_solve_my_problem(x : str) -> str:
     }
 ))
 ```
-This SHIT FEELS LIKE LANGCHAIN what the FUCK.
 
+This SHIT FEELS LIKE LANGCHAIN what the FUCK.
 
 There are no rules we don't need parity, but waht about CoT and shit. i mean CoT is a meta prompt. the a variety of inptus and outputs, but i dont see why you can't just do it in ell2a with a cot function
 
@@ -772,7 +771,7 @@ with ell2a.context():
 
 # this forces the user to wrap their call of this in an @ell2a.function or ell2a.simple, or ell2a.complex etc.
 # Or we can ommit this and just let them call it directly in which case we dont need the extra context. You can't just use CoT alone?
-@ell2a.function(require_ell_context=True)
+@ell2a.function(require_ell2a_context=True)
 def cot(instructions : str,  model : str,  **params) -> CoT:
     output = ell2a.simple(
         messages=[
@@ -785,7 +784,7 @@ def cot(instructions : str,  model : str,  **params) -> CoT:
             """),
             ell2a.user(instructions),
         ]
-        model=model, 
+        model=model,
         **params
     )
     assert "Rationale:" in output and "Answer:" in output, "Output does not contain Rationale: or Answer:"
@@ -807,7 +806,7 @@ def write_a_blog_post(problem : str) -> str:
 
 ```
 
-So now that we have a CoT implementation, we can imagine a meta prompting framework that constructs an ell2a.function automatically; this is a generic one-shot prompt that can be reused and it's format strings itself can be optimized a la MiPRo etc. 
+So now that we have a CoT implementation, we can imagine a meta prompting framework that constructs an ell2a.function automatically; this is a generic one-shot prompt that can be reused and it's format strings itself can be optimized a la MiPRo etc.
 
 ```python
 @ell2a.function()
@@ -823,7 +822,7 @@ def cot(instructions : str,  model : str,  **params) -> CoT:
             ),
             task="Think step by step and provide the answer",
         )
-        model=model, 
+        model=model,
         **params
     )
     assert "Rationale:" in output and "Answer:" in output, "Output does not contain Rationale: or Answer:"
@@ -833,9 +832,6 @@ def cot(instructions : str,  model : str,  **params) -> CoT:
     )
 ```
 
-
-
-
 This is back to that bullshit soft prompt idea god damnit which is just signatures. mother fucker
 and why do i even need your dogshit function shit anyway.
  Fuck me.
@@ -843,7 +839,6 @@ and why do i even need your dogshit function shit anyway.
  Ew
  Ew
   EEWWW
-
 
 The whole reason for prameterizing the prompt is also getting structured outputs, but this is really overfit to the no structured output case.
 Also output doesnt need to be parsed in this case So it would have to look like
@@ -868,7 +863,6 @@ output = parameterized_lmp(
 )
 ```
 
-
 Should we not be able to infer all of this from the actual LMP itself. But I guess in DSPy, you dont have to start with your prompt.
 
 Can't we use the AST to determine all of the variables going into a call to then infer the signature of the prompt?
@@ -879,24 +873,22 @@ ell2a.simple(model="gpt-4o", messages=[...])
 
 Track messages back in the AST for this call then find all the format vars. Well what if it's a prompt, then there's nothign we can do. With aprameterized promtps you can not prompt at all.
 
-
 Don't want to prompt? Try meta prompting.
 
-Specify your inputs and outputs and what you want the model to do. Ell will figure out the prompt for you.
+Specify your inputs and outputs and what you want the model to do. Ell2a will figure out the prompt for you.
 There's no real problem with DSPy to this extent except its so obfuscated as to what's going on if you don't understand it you're fucked.
-
 
 If we can disambiguate reposne formats and all this then maybe this is fine.
 
 I guess if our library looks cleaner than DSPy ultimately with the same functionaltiy internally we are okay.
 
-Meta prompting = 
+Meta prompting =
 construction of @ell2a.simple call + parsing dynamically from input outputs and instructions.
-
 
 I think this is the conclusion.
 
 Take the best of DSPy and clean it up.
+
 ```python
 class Input(BaseModel):
     instructions : Field(str, description="The instructions for the prompt")
@@ -916,6 +908,7 @@ meta_prompt = ell2a.meta(
 ) -> str
 
 ```
+
  Meta prompts are signatures.
 
 Why DSPy requires compilation is that we can have mta promtps call one another but we shouldnt have  to compile before calling because the computatio ngraph is not known until runtime.
@@ -934,8 +927,10 @@ meta_prompt = ell2a.lmp(
     instructions="write a blog post about the following topic",
 )
 ```
-then I can just call meta_prompt() # and it will give me the prompt. the signature is the parameter but we can have different "initializations" instead of jsut LMP 
+
+then I can just call meta_prompt() # and it will give me the prompt. the signature is the parameter but we can have different "initializations" instead of jsut LMP
 compiling is uneccessary because we can access the parameterixaiton at runtime to optimize. This also allows the user to see what hhe fuck the thing is doing.
+
 ```python
 
 ell2a.meta.io_lmp(
@@ -976,9 +971,9 @@ y = [
 
 optimized_blog_post = ell2a.FewShotOptimizer().fit(write_blog_post, x=x, y=y)
 ```
-so because this is functional is cot_blog now changed? this the reason for modules in dspy because if i want to see the updated params is it cot_blog? 
- NO so we need to specify it as learnable:
 
+so because this is functional is cot_blog now changed? this the reason for modules in dspy because if i want to see the updated params is it cot_blog?
+ NO so we need to specify it as learnable:
 
 ```python
 filters = ell2a.parameterized(ell2a.cot(
@@ -1012,7 +1007,6 @@ filters = ell2a.parameterized(ell2a.cot(
  learnable.data # This is the final prompt
 
  ```
-
 
  ```python
 
@@ -1053,7 +1047,7 @@ learnable_prompt = th.learnable(my_initial_prompt)
 
 ell2a.FewShotOptimizer().fit(learnable_prompt, x=x, y=y)
 
---> 
+-->
 
 def final_prompt(instructions : str) -> str:
     return [
@@ -1065,7 +1059,8 @@ def final_prompt(instructions : str) -> str:
         ell2a.user(instructions)
     ]
 ```
-but how do we serialize this? do we mutate the code?  no. we just have it serialized like this 
+
+but how do we serialize this? do we mutate the code?  no. we just have it serialized like this
 
 ```python
 def my_initial_prompt(instructions : str) -> str:
@@ -1079,5 +1074,3 @@ ell2a.simple(model="gpt-4o", messages=learnable_prompt.data)
 ```
 
 ew no. I guess I thought it was cool to have strings be parameters. in arbitrary ways.
-
-

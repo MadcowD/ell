@@ -1,156 +1,151 @@
 .source-code-wrapper {
-  height: 70vh;
-  overflow: auto;
+    height: 70vh;
+    overflow: auto;
 }
 
 .source-code-container {
-  height: 100%;
-  max-width: 100%;
-  overflow-x: auto;
+    height: 100%;
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 .source-code-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
 }
 
 .source-code-header h2 {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
 }
 
 .source-code-header button {
-  background-color: #4CAF50;
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+    background-color: #4caf50;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 .source-code-header button:hover {
-  background-color: #3e8e41;
+    background-color: #3e8e41;
 }
 
 .source-code-header button:active {
-  background-color: #3e8e41;
-  transform: scale(0.98);
+    background-color: #3e8e41;
+    transform: scale(0.98);
 }
 
 .source-code-header button:focus {
-  outline: none;
+    outline: none;
 }
 
 .source-code-header button svg {
-  margin-left: 0.5rem;
+    margin-left: 0.5rem;
 }
 
 .source-code-body {
-  background-color: #1a1d23;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  max-width: 800px;
-  margin: 2rem auto;
+    background-color: #1a1d23;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    max-width: 800px;
+    margin: 2rem auto;
 }
 
 .source-code-body pre {
-  background-color: #1a1d23;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  max-width: 800px;
-  margin: 2rem auto;
+    background-color: #1a1d23;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    max-width: 800px;
+    margin: 2rem auto;
 }
 
 .source-code-body code {
-  background-color: #1a1d23;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  max-width: 800px;
-  margin: 2rem auto;
+    background-color: #1a1d23;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    max-width: 800px;
+    margin: 2rem auto;
 }
 
-
 .dependencies-container {
-  position: relative;
-  transition: max-height 0.3s ease-out;
-  overflow: hidden;
+    position: relative;
+    transition: max-height 0.3s ease-out;
+    overflow: hidden;
 }
 
 .dependencies-container.expanded {
-  max-height: none;
+    max-height: none;
 }
 
 .code-container {
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
 }
 
 .gradient-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100px;
-  z-index: 2;
-  background: linear-gradient(to bottom, 
-  rgba(30, 30, 30, 0) 0%,
-  rgba(30, 30, 30, 0.8) 50%,
-  rgba(30, 30, 30, 1) 100%
-  );
-  display: flex;
-  justify-content: center;
-  align-items: center;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    z-index: 2;
+    background: linear-gradient(to bottom, rgba(30, 30, 30, 0) 0%, rgba(30, 30, 30, 0.8) 50%, rgba(30, 30, 30, 1) 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .show-more-button {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
 
-  background-color: rgba(255, 255, 255, 0.2);
-  transition: background-color 0.2s;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: background-color 0.2s;
 }
 
 /* Ensure code blocks take full width */
 pre {
-  width: 100%;
-  box-sizing: border-box;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Adjust line numbers to align properly */
 .linenumber {
-  min-width: 2em;
-  padding-right: 1em;
-  text-align: right;
-  user-select: none;
+    min-width: 2em;
+    padding-right: 1em;
+    text-align: right;
+    user-select: none;
 }
 
 /* New styles for BoundVariable component */
 .bound-variable {
-  margin: 0.5em 0;
+    margin: 0.5em 0;
 }
 
 .bound-variable-toggle {
-  background-color: #2a2a2a;
-  color: #ddd;
-  border: none;
-  padding: 0.25em 0.5em;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: monospace;
+    background-color: #2a2a2a;
+    color: #ddd;
+    border: none;
+    padding: 0.25em 0.5em;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: monospace;
 }
 
 .bound-variable-toggle:hover {
-  background-color: #3a3a3a;
+    background-color: #3a3a3a;
 }

@@ -6,6 +6,7 @@ from .conversation import RealtimeConversation
 from .utils import RealtimeUtils
 import json
 
+
 class RealtimeClient(RealtimeEventHandler):
     def __init__(self, url=None, api_key=None, instructions='', dangerously_allow_api_key_in_browser=False, debug=False):
         super().__init__()
@@ -17,8 +18,8 @@ class RealtimeClient(RealtimeEventHandler):
             'output_audio_format': 'pcm16',
             'input_audio_transcription': None,
             'turn_detection': None,
-            'tools': [],
-            'tool_choice': 'auto',
+            'agents': [],
+            'agent_choice': 'auto',
             'temperature': 0.8,
             'max_response_output_tokens': 4096,
         }
@@ -30,14 +31,15 @@ class RealtimeClient(RealtimeEventHandler):
             'prefix_padding_ms': 300,
             'silence_duration_ms': 200,
         }
-        self.realtime = RealtimeAPI(url, api_key, dangerously_allow_api_key_in_browser, debug)
+        self.realtime = RealtimeAPI(
+            url, api_key, dangerously_allow_api_key_in_browser, debug)
         self.conversation = RealtimeConversation()
         self._reset_config()
         self._add_api_event_handlers()
 
     def _reset_config(self):
         self.session_created = False
-        self.tools = {}
+        self.agents = {}
         self.session_config = self.default_session_config.copy()
         self.input_audio_buffer = np.array([], dtype=np.int16)
         return True
@@ -53,8 +55,9 @@ class RealtimeClient(RealtimeEventHandler):
             'source': 'server',
             'event': event
         }))
-        self.realtime.on('server.session.created', lambda _: setattr(self, 'session_created', True))
-        
+        self.realtime.on('server.session.created',
+                         lambda _: setattr(self, 'session_created', True))
+
         def handle_conversation_event(event, *args):
             result = self.conversation.process_event(event, *args)
             if result['item']:
@@ -62,41 +65,53 @@ class RealtimeClient(RealtimeEventHandler):
             return result
 
         self.realtime.on('server.response.created', handle_conversation_event)
-        self.realtime.on('server.response.output_item.added', handle_conversation_event)
-        self.realtime.on('server.response.content_part.added', handle_conversation_event)
+        self.realtime.on('server.response.output_item.added',
+                         handle_conversation_event)
+        self.realtime.on('server.response.content_part.added',
+                         handle_conversation_event)
         self.realtime.on('server.input_audio_buffer.speech_started', lambda event: (
             handle_conversation_event(event),
             self.dispatch('conversation.interrupted', event)
         ))
-        self.realtime.on('server.input_audio_buffer.speech_stopped', lambda event: 
-            handle_conversation_event(event, self.input_audio_buffer)
-        )
+        self.realtime.on('server.input_audio_buffer.speech_stopped', lambda event:
+                         handle_conversation_event(
+                             event, self.input_audio_buffer)
+                         )
         self.realtime.on('server.conversation.item.created', lambda event: (
             handle_conversation_event(event),
-            self.dispatch('conversation.item.appended', {'item': event['item']})
+            self.dispatch('conversation.item.appended',
+                          {'item': event['item']})
         ))
-        self.realtime.on('server.conversation.item.truncated', handle_conversation_event)
-        self.realtime.on('server.conversation.item.deleted', handle_conversation_event)
-        self.realtime.on('server.conversation.item.input_audio_transcription.completed', handle_conversation_event)
-        self.realtime.on('server.response.audio_transcript.delta', handle_conversation_event)
-        self.realtime.on('server.response.audio.delta', handle_conversation_event)
-        self.realtime.on('server.response.text.delta', handle_conversation_event)
-        self.realtime.on('server.response.function_call_arguments.delta', handle_conversation_event)
-        def handle_output_item_done( event):
+        self.realtime.on('server.conversation.item.truncated',
+                         handle_conversation_event)
+        self.realtime.on('server.conversation.item.deleted',
+                         handle_conversation_event)
+        self.realtime.on(
+            'server.conversation.item.input_audio_transcription.completed', handle_conversation_event)
+        self.realtime.on('server.response.audio_transcript.delta',
+                         handle_conversation_event)
+        self.realtime.on('server.response.audio.delta',
+                         handle_conversation_event)
+        self.realtime.on('server.response.text.delta',
+                         handle_conversation_event)
+        self.realtime.on(
+            'server.response.function_call_arguments.delta', handle_conversation_event)
+
+        def handle_output_item_done(event):
             handle_conversation_event(event)
             item = event.get('item', {})
-            
+
             if item.get('status') == 'completed':
                 self.dispatch('conversation.item.completed', {'item': item})
-            
-            formatted = item.get('formatted', {})
-            tool = formatted.get('tool') if isinstance(formatted, dict) else None
-            
-            if tool:
-                asyncio.create_task(self._call_tool(tool))
-        self.realtime.on('server.response.output_item.done', handle_output_item_done)
 
-  
+            formatted = item.get('formatted', {})
+            agent = formatted.get('agent') if isinstance(
+                formatted, dict) else None
+
+            if agent:
+                asyncio.create_task(self._call_agent(agent))
+        self.realtime.on('server.response.output_item.done',
+                         handle_output_item_done)
 
     def is_connected(self):
         return self.realtime.is_connected() and self.session_created
@@ -135,22 +150,23 @@ class RealtimeClient(RealtimeEventHandler):
             return turn_detection.get('type')
         return None
 
-    def add_tool(self, definition, handler):
+    def add_agent(self, definition, handler):
         if not definition.get('name'):
-            raise ValueError("Missing tool name in definition")
+            raise ValueError("Missing agent name in definition")
         name = definition['name']
-        if name in self.tools:
-            raise ValueError(f"Agent '{name}' already added. Please use .remove_tool('{name}') before trying to add again.")
+        if name in self.agents:
+            raise ValueError(f"Agent '{name}' already added. Please use .remove_agent('{name}') before trying to add again.")
         if not callable(handler):
             raise ValueError(f"Agent '{name}' handler must be a function")
-        self.tools[name] = {'definition': definition, 'handler': handler}
+        self.agents[name] = {'definition': definition, 'handler': handler}
         self.update_session()
-        return self.tools[name]
+        return self.agents[name]
 
-    def remove_tool(self, name):
-        if name not in self.tools:
-            raise ValueError(f"Agent '{name}' does not exist, cannot be removed.")
-        del self.tools[name]
+    def remove_agent(self, name):
+        if name not in self.agents:
+            raise ValueError(
+                f"Agent '{name}' does not exist, cannot be removed.")
+        del self.agents[name]
         return True
 
     def delete_item(self, id):
@@ -159,11 +175,11 @@ class RealtimeClient(RealtimeEventHandler):
 
     def update_session(self, **kwargs):
         self.session_config.update(kwargs)
-        use_tools = [
-            {**tool.get('definition', {}), 'type': 'function'}
-            for tool in self.tools.values()
+        use_agents = [
+            {**agent.get('definition', {}), 'type': 'function'}
+            for agent in self.agents.values()
         ]
-        session = {**self.session_config, 'tools': use_tools}
+        session = {**self.session_config, 'agents': use_agents}
         if self.realtime.is_connected():
             self.realtime.send('session.update', {'session': session})
         return True
@@ -173,7 +189,8 @@ class RealtimeClient(RealtimeEventHandler):
         for c in content:
             if c['type'] == 'input_audio':
                 if isinstance(c['audio'], (np.ndarray, bytes)):
-                    c['audio'] = RealtimeUtils.array_buffer_to_base64(c['audio'])
+                    c['audio'] = RealtimeUtils.array_buffer_to_base64(
+                        c['audio'])
         if content:
             self.realtime.send('conversation.item.create', {
                 'item': {
@@ -212,9 +229,11 @@ class RealtimeClient(RealtimeEventHandler):
         if not item:
             raise ValueError(f"Could not find item '{id}'")
         if item['type'] != 'message' or item['role'] != 'assistant':
-            raise ValueError("Can only cancel response messages with type 'message' and role 'assistant'")
+            raise ValueError(
+                "Can only cancel response messages with type 'message' and role 'assistant'")
         self.realtime.send('response.cancel')
-        audio_index = next((i for i, c in enumerate(item['content']) if c['type'] == 'audio'), -1)
+        audio_index = next((i for i, c in enumerate(
+            item['content']) if c['type'] == 'audio'), -1)
         if audio_index == -1:
             raise ValueError("Could not find audio on item to cancel")
         self.realtime.send('conversation.item.truncate', {
@@ -232,17 +251,17 @@ class RealtimeClient(RealtimeEventHandler):
         event = await self.wait_for_next('conversation.item.completed')
         return {'item': event['item']}
 
-    async def _call_tool(self, tool):
+    async def _call_agent(self, agent):
         try:
-            json_arguments = json.loads(tool['arguments'])
-            tool_config = self.tools.get(tool['name'])
-            if not tool_config:
-                raise ValueError(f"Agent '{tool['name']}' has not been added")
-            result = await tool_config['handler'](json_arguments)
+            json_arguments = json.loads(agent['arguments'])
+            agent_config = self.agents.get(agent['name'])
+            if not agent_config:
+                raise ValueError(f"Agent '{agent['name']}' has not been added")
+            result = await agent_config['handler'](json_arguments)
             self.realtime.send('conversation.item.create', {
                 'item': {
                     'type': 'function_call_output',
-                    'call_id': tool['call_id'],
+                    'call_id': agent['call_id'],
                     'output': json.dumps(result, ensure_ascii=False)
                 }
             })
@@ -250,7 +269,7 @@ class RealtimeClient(RealtimeEventHandler):
             self.realtime.send('conversation.item.create', {
                 'item': {
                     'type': 'function_call_output',
-                    'call_id': tool['call_id'],
+                    'call_id': agent['call_id'],
                     'output': json.dumps({'error': str(e)}, ensure_ascii=False)
                 }
             })

@@ -6,9 +6,10 @@ from ell2a.types._lstr import _lstr
 from ell2a.types import SerializedLMP, Invocation
 from ell2a.types.message import InvocableLM
 
+
 class BlobStore(ABC):
     @abstractmethod
-    def store_blob(self, blob: bytes, blob_id  : str) -> str:
+    def store_blob(self, blob: bytes, blob_id: str) -> str:
         """Store a blob and return its identifier."""
         pass
 
@@ -16,6 +17,7 @@ class BlobStore(ABC):
     def retrieve_blob(self, blob_id: str) -> bytes:
         """Retrieve a blob by its identifier."""
         pass
+
 
 class Store(ABC):
     """
@@ -53,19 +55,18 @@ class Store(ABC):
         pass
 
     @abstractmethod
-    def get_cached_invocations(self, lmp_id :str, state_cache_key :str) -> List[Invocation]:
+    def get_cached_invocations(self, lmp_id: str, state_cache_key: str) -> List[Invocation]:
         """
         Get cached invocations for a given LMP and state cache key.
         """
         pass
 
     @abstractmethod
-    def get_versions_by_fqn(self, fqn :str) -> List[SerializedLMP]:
+    def get_versions_by_fqn(self, fqn: str) -> List[SerializedLMP]:
         """
         Get all versions of an LMP by its fully qualified name.
         """
         pass
-
 
     @contextmanager
     def freeze(self, *lmps: InvocableLM):
@@ -81,13 +82,13 @@ class Store(ABC):
         old_cache_values = {}
         try:
             for lmp in lmps:
-                old_cache_values[lmp] = getattr(lmp, '__ell_use_cache__', None)
-                setattr(lmp, '__ell_use_cache__', self)
+                old_cache_values[lmp] = getattr(lmp, '__ell2a_use_cache__', None)
+                setattr(lmp, '__ell2a_use_cache__', self)
             yield
         finally:
             # TODO: Implement cache storage logic here
             for lmp in lmps:
                 if lmp in old_cache_values:
-                    setattr(lmp, '__ell_use_cache__', old_cache_values[lmp])
+                    setattr(lmp, '__ell2a_use_cache__', old_cache_values[lmp])
                 else:
-                    delattr(lmp, '__ell_use_cache__')
+                    delattr(lmp, '__ell2a_use_cache__')

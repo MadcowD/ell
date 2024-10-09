@@ -7,9 +7,11 @@ from sqlalchemy import Engine, create_engine, func
 from ell2a.types.studio import LMPType
 from ell2a.types.studio import utc_now
 
+
 @pytest.fixture
 def in_memory_db():
     return create_engine("sqlite:///:memory:")
+
 
 @pytest.fixture
 def sql_store(in_memory_db: Engine) -> SQLStore:
@@ -17,6 +19,7 @@ def sql_store(in_memory_db: Engine) -> SQLStore:
     store.engine = in_memory_db
     SerializedLMP.metadata.create_all(in_memory_db)
     return store
+
 
 def test_write_lmp(sql_store: SQLStore):
     # Arrange
@@ -49,14 +52,14 @@ def test_write_lmp(sql_store: SQLStore):
         created_at=created_at
     )
 
-
     # Act
     sql_store.write_lmp(serialized_lmp, uses)
 
     # Assert
     with Session(sql_store.engine) as session:
-        result = session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == lmp_id)).first()
-        
+        result = session.exec(select(SerializedLMP).where(
+            SerializedLMP.lmp_id == lmp_id)).first()
+
         assert result is not None
         assert result.lmp_id == lmp_id
         assert result.name == name
@@ -73,7 +76,9 @@ def test_write_lmp(sql_store: SQLStore):
 
     # Test that writing the same LMP again doesn't create a duplicate
 
-    sql_store.write_lmp(SerializedLMP(lmp_id=lmp_id, name=name, source=source, dependencies=dependencies, lmp_type=LMPType.LM, api_params=api_params, version_number=version_number, initial_global_vars=global_vars, initial_free_vars=free_vars, commit_message=commit_message, created_at=created_at), uses)
+    sql_store.write_lmp(SerializedLMP(lmp_id=lmp_id, name=name, source=source, dependencies=dependencies, lmp_type=LMPType.LM, api_params=api_params,
+                        version_number=version_number, initial_global_vars=global_vars, initial_free_vars=free_vars, commit_message=commit_message, created_at=created_at), uses)
     with Session(sql_store.engine) as session:
-        count = session.exec(select(func.count()).where(SerializedLMP.lmp_id == lmp_id)).one()
+        count = session.exec(select(func.count()).where(
+            SerializedLMP.lmp_id == lmp_id)).one()
         assert count == 1

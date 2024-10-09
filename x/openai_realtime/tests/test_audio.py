@@ -8,21 +8,26 @@ import numpy as np
 from openai_realtime import RealtimeClient, RealtimeUtils
 
 # Helper function to load and convert audio files
+
+
 def load_audio_sample(file_path):
     audio = AudioSegment.from_file(file_path)
     samples = np.array(audio.get_array_of_samples())
     return RealtimeUtils.array_buffer_to_base64(samples)
+
 
 # Sample audio files
 samples = {
     'toronto-mp3': './tests/samples/toronto.mp3',
 }
 
+
 @pytest.fixture(scope="module")
 def event_loop():
     loop = asyncio.get_event_loop()
     yield loop
     loop.close()
+
 
 @pytest.fixture(scope="module")
 async def client():
@@ -39,6 +44,7 @@ async def client():
     yield client
     client.disconnect()
 
+
 async def test_audio_samples(client):
     realtime_events = []
     client.on('realtime.event', lambda event: realtime_events.append(event))
@@ -46,7 +52,8 @@ async def test_audio_samples(client):
     # Load audio samples
     for key, file_path in samples.items():
         assert os.path.exists(file_path), f"Audio file not found: {file_path}"
-        samples[key] = {'filename': file_path, 'base64': load_audio_sample(file_path)}
+        samples[key] = {'filename': file_path,
+                       'base64': load_audio_sample(file_path)}
 
     # Connect to the RealtimeClient
     is_connected = await client.connect()
@@ -94,7 +101,8 @@ async def test_audio_samples(client):
     assert completed_item['item']['type'] == 'message'
     assert completed_item['item']['role'] == 'assistant'
     assert completed_item['item']['status'] == 'completed'
-    assert 'toronto' in completed_item['item']['formatted']['transcript'].lower()
+    assert 'toronto' in completed_item['item']['formatted']['transcript'].lower(
+    )
 
 if __name__ == "__main__":
     pytest.main([__file__])

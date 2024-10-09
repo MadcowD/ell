@@ -30,6 +30,7 @@ import colorama
 
 logger = logging.getLogger(__name__)
 
+
 def register(client: openai.Client):
     """
     Register OpenAI models with the provided client.
@@ -46,7 +47,7 @@ def register(client: openai.Client):
         The function doesn't return anything but updates the global
         configuration with the registered models.
     """
-    #XXX: Deprecation in 0.1.0
+    # XXX: Deprecation in 0.1.0
     standard_models = [
         'gpt-4-1106-preview',
         'gpt-4-32k-0314',
@@ -81,9 +82,10 @@ def register(client: openai.Client):
     for model_id in standard_models:
         config.register_model(model_id, client)
 
-    #XXX: Deprecation in 0.1.0
+    # XXX: Deprecation in 0.1.0
     config.register_model('o1-preview', client, supports_streaming=False)
     config.register_model('o1-mini', client, supports_streaming=False)
+
 
 default_client = None
 try:

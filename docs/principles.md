@@ -6,6 +6,7 @@ Some principles for developing ell2a that we pick up along the way.
 2. went missing..
 1. the user shouldn't wait to find out they're missing something:
     Consider caching
+
     ```
     import ell2a
 
@@ -15,6 +16,7 @@ Some principles for developing ell2a that we pick up along the way.
     with ell2a.cache(fn):
         fn()
     ```
+
     If I don't have a store installed, this shit will break when i get to the ell2a.cache.
 
     We prefer to have store enable caching; that is the cache contextmanager is only enabled if we have a store:
@@ -33,17 +35,20 @@ Some principles for developing ell2a that we pick up along the way.
     ```
 
 2. no unreadable side-effects.
+
    ```
    store = ell2a.stores.SQLiteStore("mystore")
    ell2a.use_store(store)
    ```
+
    is preferred to:
+
    ```
    store = ell2a.stores.SQLiteStore("mystore")
    store.install()
     ```
-   This is a side-effect.
 
+   This is a side-effect.
 
 4. api providers are the single source of truth for model information
     - we will never implement Model("gpt-4", Capabilities(vision=True))
@@ -52,7 +57,7 @@ Some principles for developing ell2a that we pick up along the way.
 
 5. ell2a is a library not a framework
     - we are building pytorch not keras. nice agent frameworks etc can exist on top of ell2a, but are not a part of ell2a itself. ell2a is meant to give you all of the building blocks to build systems.
-    - in the meta programming space, we will support standardized building blocks (optimizers, established prompt compilers, etc) but not too frameworky. 
+    - in the meta programming space, we will support standardized building blocks (optimizers, established prompt compilers, etc) but not too frameworky.
       (this is actually is a sticky point and drawing the line will always be hard, but initially this is good.)
 
 6. less abstraction is better

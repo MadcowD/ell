@@ -26,14 +26,14 @@ def describe_activity(image: Image.Image):
     ]
 
 
-@ell2a.tool()
+@ell2a.agent()
 def approve_claim(claim_id : str):
     """Approve a claim"""
     return f"approved {claim_id}"
 
-@ell2a.complex(model="anthropic.claude-3-haiku-20240307-v1:0", tools=[approve_claim], client=boto3.client('bedrock-runtime', region_name='us-east-1'))
+@ell2a.complex(model="anthropic.claude-3-haiku-20240307-v1:0", agents=[approve_claim], client=boto3.client('bedrock-runtime', region_name='us-east-1'))
 def insurance_claim_chatbot(message_history: str) -> str:
-    """You are an insurance claim approver. You can use a tool to approve a claim if an id is given to you."""
+    """You are an insurance claim approver. You can use a agent to approve a claim if an id is given to you."""
     return message_history
 
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     response_message = insurance_claim_chatbot(user_messages)
     print(response_message)
-    if response_message.tool_calls:
-        tool_results = response_message.call_tools_and_collect_as_message()
-        print(tool_results)
+    if response_message.agent_calls:
+        agent_results = response_message.call_agents_and_collect_as_message()
+        print(agent_results)
     print('THE END')

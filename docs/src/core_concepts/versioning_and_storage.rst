@@ -34,7 +34,7 @@ Serializing prompts via lexical closures
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-This automatic versioning is possible because ell2a treats prompts as discrete functional units called language model programs. By encapsulating the prompt within a function, we can use static and dynamic analysis tools to extract the source code of a prompt program and all its lexical dependencies at any point in time. This approach captures the exact set of source code needed to reproduce the prompt.
+This automatic versioning is possible because ell2a treats prompts as discrete functional units called language model programs. By encapsulating the prompt within a function, we can use static and dynamic analysis agents to extract the source code of a prompt program and all its lexical dependencies at any point in time. This approach captures the exact set of source code needed to reproduce the prompt.
 
 
 Consider the following function embedded in a large code base.
@@ -338,4 +338,4 @@ This capability allows you to easily track the flow of language model outputs, i
 ------------------------------------------------
 
 
-In the next chapter, we will explore how to visualize versioning and tracing data using ell2a studio. This powerful tool provides a comprehensive interface for analyzing and understanding the complex interactions within your language model programs.
+In the next chapter, we will explore how to visualize versioning and tracing data using ell2a studio. This powerful agent provides a comprehensive interface for analyzing and understanding the complex interactions within your language model programs.

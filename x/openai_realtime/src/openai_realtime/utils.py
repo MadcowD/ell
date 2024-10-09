@@ -1,6 +1,7 @@
 import base64
 import numpy as np
 
+
 class RealtimeUtils:
     @staticmethod
     def float_to_16bit_pcm(float32_array):
@@ -27,7 +28,8 @@ class RealtimeUtils:
         if isinstance(right, bytes):
             right = np.frombuffer(right, dtype=np.int16)
         if not isinstance(left, np.ndarray) or not isinstance(right, np.ndarray):
-            raise ValueError("Both items must be numpy arrays or bytes objects")
+            raise ValueError(
+                "Both items must be numpy arrays or bytes objects")
         return np.concatenate((left, right))
 
     @staticmethod

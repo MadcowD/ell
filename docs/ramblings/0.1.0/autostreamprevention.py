@@ -2,6 +2,8 @@ import openai
 import os
 
 # Define the function to stream the response
+
+
 def stream_openai_response(prompt):
     try:
         # Make the API call
@@ -15,11 +17,12 @@ def stream_openai_response(prompt):
         for chunk in response:
             if chunk.choices[0].delta.get("content"):
                 print(chunk.choices[0].delta.content, end="", flush=True)
-        
+
         print()  # Print a newline at the end
 
     except Exception as e:
         print(f"An error occurred: {e}")
+
 
 # Example usage
 prompt = "Tell me a short joke."

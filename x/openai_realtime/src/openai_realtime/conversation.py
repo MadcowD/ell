@@ -3,6 +3,7 @@ import json
 from .utils import RealtimeUtils
 import copy
 
+
 class RealtimeConversation:
     def __init__(self):
         self.default_frequency = 24000  # 24,000 Hz
@@ -27,11 +28,12 @@ class RealtimeConversation:
             raise ValueError("Missing 'event_id' on event")
         if 'type' not in event:
             raise ValueError("Missing 'type' on event")
-        
-        event_processor = getattr(self, f"_process_{event['type'].replace('.', '_')}", None)
+
+        event_processor = getattr(
+            self, f"_process_{event['type'].replace('.', '_')}", None)
         if not event_processor:
             raise ValueError(f"Missing conversation event processor for '{event['type']}'")
-        
+
         return event_processor(event, *args)
 
     def get_item(self, id):
@@ -46,13 +48,13 @@ class RealtimeConversation:
         if new_item['id'] not in self.item_lookup:
             self.item_lookup[new_item['id']] = new_item
             self.items.append(new_item)
-        
+
         new_item['formatted'] = {
             'audio': np.array([], dtype=np.int16),
             'text': '',
             'transcript': ''
         }
-        
+
         if new_item['type'] == 'message':
             if new_item['role'] == 'user':
                 new_item['status'] = 'completed'
@@ -62,7 +64,7 @@ class RealtimeConversation:
             else:
                 new_item['status'] = 'in_progress'
         elif new_item['type'] == 'function_call':
-            new_item['formatted']['tool'] = {
+            new_item['formatted']['agent'] = {
                 'type': 'function',
                 'name': new_item['name'],
                 'call_id': new_item['call_id'],
@@ -72,20 +74,21 @@ class RealtimeConversation:
         elif new_item['type'] == 'function_call_output':
             new_item['status'] = 'completed'
             new_item['formatted']['output'] = new_item['output']
-        
+
         if new_item.get('content'):
-            text_content = [c for c in new_item['content'] if c['type'] in ['text', 'input_text']]
+            text_content = [c for c in new_item['content']
+                            if c['type'] in ['text', 'input_text']]
             for content in text_content:
                 new_item['formatted']['text'] += content['text']
-        
+
         if new_item['id'] in self.queued_speech_items:
             new_item['formatted']['audio'] = self.queued_speech_items[new_item['id']]['audio']
             del self.queued_speech_items[new_item['id']]
-        
+
         if new_item['id'] in self.queued_transcript_items:
             new_item['formatted']['transcript'] = self.queued_transcript_items[new_item['id']]['transcript']
             del self.queued_transcript_items[new_item['id']]
-        
+
         return {'item': new_item, 'delta': None}
 
     def _process_conversation_item_truncated(self, event):
@@ -93,7 +96,7 @@ class RealtimeConversation:
         item = self.item_lookup.get(item_id)
         if not item:
             raise ValueError(f"item.truncated: Item '{item_id}' not found")
-        
+
         end_index = int((audio_end_ms * self.default_frequency) / 1000)
         item['formatted']['transcript'] = ''
         item['formatted']['audio'] = item['formatted']['audio'][:end_index]
@@ -104,7 +107,7 @@ class RealtimeConversation:
         item = self.item_lookup.get(item_id)
         if not item:
             raise ValueError(f"item.deleted: Item '{item_id}' not found")
-        
+
         del self.item_lookup[item['id']]
         self.items = [i for i in self.items if i['id'] != item['id']]
         return {'item': item, 'delta': None}
@@ -113,11 +116,12 @@ class RealtimeConversation:
         item_id, content_index, transcript = event['item_id'], event['content_index'], event['transcript']
         item = self.item_lookup.get(item_id)
         formatted_transcript = transcript or ' '
-        
+
         if not item:
-            self.queued_transcript_items[item_id] = {'transcript': formatted_transcript}
+            self.queued_transcript_items[item_id] = {
+                'transcript': formatted_transcript}
             return {'item': None, 'delta': None}
-        
+
         item['content'][content_index]['transcript'] = transcript
         item['formatted']['transcript'] = formatted_transcript
         return {'item': item, 'delta': {'transcript': transcript}}
@@ -132,8 +136,10 @@ class RealtimeConversation:
         speech = self.queued_speech_items[item_id]
         speech['audio_end_ms'] = audio_end_ms
         if input_audio_buffer is not None:
-            start_index = int((speech['audio_start_ms'] * self.default_frequency) / 1000)
-            end_index = int((speech['audio_end_ms'] * self.default_frequency) / 1000)
+            start_index = int(
+                (speech['audio_start_ms'] * self.default_frequency) / 1000)
+            end_index = int(
+                (speech['audio_end_ms'] * self.default_frequency) / 1000)
             speech['audio'] = input_audio_buffer[start_index:end_index]
         return {'item': None, 'delta': None}
 
@@ -186,7 +192,8 @@ class RealtimeConversation:
             raise ValueError(f"response.audio.delta: Item '{item_id}' not found")
         array_buffer = RealtimeUtils.base64_to_array_buffer(delta)
         append_values = np.frombuffer(array_buffer, dtype=np.int16)
-        item['formatted']['audio'] = np.concatenate([item['formatted']['audio'], append_values])
+        item['formatted']['audio'] = np.concatenate(
+            [item['formatted']['audio'], append_values])
         return {'item': item, 'delta': {'audio': append_values}}
 
     def _process_response_text_delta(self, event):
@@ -204,5 +211,5 @@ class RealtimeConversation:
         if not item:
             raise ValueError(f"response.function_call_arguments.delta: Item '{item_id}' not found")
         item['arguments'] += delta
-        item['formatted']['tool']['arguments'] += delta
+        item['formatted']['agent']['arguments'] += delta
         return {'item': item, 'delta': {'arguments': delta}}

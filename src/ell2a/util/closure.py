@@ -28,6 +28,7 @@ def xD():
     return test()
 
 """
+from dill.detect import nestedglobals
 import collections
 import ast
 import hashlib
@@ -46,6 +47,7 @@ from ell2a.util.should_import import should_import
 
 DELIM = "$$$$$$$$$$$$$$$$$$$$$$$$$"
 FORBIDDEN_NAMES = ["ell2a", "lstr"]
+
 
 def lexical_closure(
     func: Any,
@@ -79,27 +81,31 @@ def lexical_closure(
 
     recursion_stack.append(getattr(func, '__qualname__', str(func)))
 
-    outer_ell_func = func
-    while hasattr(func, "__ell_func__"):
-        func = func.__ell_func__
+    outer_ell2a_func = func
+    while hasattr(func, "__ell2a_func__"):
+        func = func.__ell2a_func__
 
     source = getsource(func, lstrip=True)
     already_closed.add(hash(func))
 
     globals_and_frees = _get_globals_and_frees(func)
-    dependencies, imports, modules = _process_dependencies(func, globals_and_frees, already_closed, recursion_stack, uses)
-    for k,v in forced_dependencies.items():
+    dependencies, imports, modules = _process_dependencies(
+        func, globals_and_frees, already_closed, recursion_stack, uses)
+    for k, v in forced_dependencies.items():
         # Todo: dictionary not necessary
-        _process_signature_dependency(v, dependencies, already_closed, recursion_stack, uses, k)
-    
-    cur_src = _build_initial_source(imports, dependencies, source)
-    
-    module_src = _process_modules(modules, cur_src, already_closed, recursion_stack, uses)
-    
-    dirty_src = _build_final_source(imports, module_src, dependencies, source)
-    dirty_src_without_func = _build_final_source(imports, module_src, dependencies, "")
+        _process_signature_dependency(
+            v, dependencies, already_closed, recursion_stack, uses, k)
 
-    CLOSURE_SOURCE[hash(func)] = dirty_src 
+    cur_src = _build_initial_source(imports, dependencies, source)
+
+    module_src = _process_modules(
+        modules, cur_src, already_closed, recursion_stack, uses)
+
+    dirty_src = _build_final_source(imports, module_src, dependencies, source)
+    dirty_src_without_func = _build_final_source(
+        imports, module_src, dependencies, "")
+
+    CLOSURE_SOURCE[hash(func)] = dirty_src
 
     dsrc = _clean_src(dirty_src_without_func)
 
@@ -108,10 +114,11 @@ def lexical_closure(
     dsrc = _format_source(dsrc)
 
     fn_hash = _generate_function_hash(source, dsrc, func.__qualname__)
-    
-    _update_ell_func(outer_ell_func, source, dsrc, globals_and_frees['globals'], globals_and_frees['frees'], fn_hash, uses)
-    
-    return (dirty_src, (source, dsrc), ({outer_ell_func} if not initial_call and hasattr(outer_ell_func, "__ell_func__") else uses))
+
+    _update_ell2a_func(outer_ell2a_func, source, dsrc,
+                     globals_and_frees['globals'], globals_and_frees['frees'], fn_hash, uses)
+
+    return (dirty_src, (source, dsrc), ({outer_ell2a_func} if not initial_call and hasattr(outer_ell2a_func, "__ell2a_func__") else uses))
 
 
 def _format_source(source: str) -> str:
@@ -122,18 +129,22 @@ def _format_source(source: str) -> str:
         # If Black formatting fails, return the original source
         return source
 
+
 def _get_globals_and_frees(func: Callable) -> Dict[str, Dict]:
     """Get global and free variables for a function."""
     globals_dict = collections.OrderedDict(globalvars(func))
     frees_dict = collections.OrderedDict(dill.detect.freevars(func))
-    
+
     if isinstance(func, type):
         for name, method in collections.OrderedDict(func.__dict__).items():
             if isinstance(method, (types.FunctionType, types.MethodType)):
-                globals_dict.update(collections.OrderedDict(dill.detect.globalvars(method)))
-                frees_dict.update(collections.OrderedDict(dill.detect.freevars(method)))
-    
+                globals_dict.update(collections.OrderedDict(
+                    dill.detect.globalvars(method)))
+                frees_dict.update(collections.OrderedDict(
+                    dill.detect.freevars(method)))
+
     return {'globals': globals_dict, 'frees': frees_dict}
+
 
 def _process_dependencies(func, globals_and_frees, already_closed, recursion_stack, uses):
     """Process function dependencies."""
@@ -142,59 +153,74 @@ def _process_dependencies(func, globals_and_frees, already_closed, recursion_sta
     imports = []
 
     if isinstance(func, (types.FunctionType, types.MethodType)):
-        _process_default_kwargs(func, dependencies, already_closed, recursion_stack, uses)
+        _process_default_kwargs(
+            func, dependencies, already_closed, recursion_stack, uses)
 
     for var_name, var_value in itertools.chain(globals_and_frees['globals'].items(), globals_and_frees['frees'].items()):
-        _process_variable(var_name, var_value, dependencies, modules, imports, already_closed, recursion_stack, uses)
+        _process_variable(var_name, var_value, dependencies,
+                          modules, imports, already_closed, recursion_stack, uses)
 
     return dependencies, imports, modules
+
+
 def _process_default_kwargs(func, dependencies, already_closed, recursion_stack, uses):
     """Process default keyword arguments and annotations of a function."""
     ps = inspect.signature(func).parameters
     for name, param in ps.items():
         if param.default is not inspect.Parameter.empty:
-            _process_signature_dependency(param.default, dependencies, already_closed, recursion_stack, uses, name)
+            _process_signature_dependency(
+                param.default, dependencies, already_closed, recursion_stack, uses, name)
         if param.annotation is not inspect.Parameter.empty:
-            _process_signature_dependency(param.annotation, dependencies, already_closed, recursion_stack, uses, f"{name}_annotation")
+            _process_signature_dependency(
+                param.annotation, dependencies, already_closed, recursion_stack, uses, f"{name}_annotation")
     if func.__annotations__.get('return') is not None:
-        _process_signature_dependency(func.__annotations__['return'], dependencies, already_closed, recursion_stack, uses, "return_annotation")
+        _process_signature_dependency(func.__annotations__[
+                                      'return'], dependencies, already_closed, recursion_stack, uses, "return_annotation")
     # XXX: In order to properly analyze this we should walk the AST rather than inspexting the signature; e.g. Field is FieldInfo not Field.
     # I don't care about the actual default at time of execution just the symbols required to statically reproduce the prompt.
+
 
 def _process_signature_dependency(val, dependencies, already_closed, recursion_stack, uses, name: Optional[str] = None):
     # Todo: Build general cattr like utility for unstructuring python objects with hooks that keep track of state variables.
     # Todo: break up closure into types and functions.
     # XXX: This is not exhaustive, we should determine should import on all dependencies
-    
+
     if name not in FORBIDDEN_NAMES:
         try:
             dep = None
             _uses = None
             if isinstance(val, (types.FunctionType, types.MethodType)):
-                dep, _, _uses = lexical_closure(val, already_closed=already_closed, recursion_stack=recursion_stack.copy())
+                dep, _, _uses = lexical_closure(
+                    val, already_closed=already_closed, recursion_stack=recursion_stack.copy())
             elif isinstance(val, (list, tuple, set)):
                 for item in val:
-                    _process_signature_dependency(item, dependencies, already_closed, recursion_stack, uses)
+                    _process_signature_dependency(
+                        item, dependencies, already_closed, recursion_stack, uses)
             else:
                 val_class = val if isinstance(val, type) else val.__class__
                 try:
-                    is_builtin = (val_class.__module__ == "builtins" or val_class.__module__ == "__builtins__")
+                    is_builtin = (
+                        val_class.__module__ == "builtins" or val_class.__module__ == "__builtins__")
                 except:
                     is_builtin = False
 
                 if not is_builtin:
                     if should_import(val_class.__module__):
-                        dependencies.append(dill.source.getimport(val_class, alias=val_class.__name__))
+                        dependencies.append(dill.source.getimport(
+                            val_class, alias=val_class.__name__))
                     else:
-                        dep, _, _uses = lexical_closure(val_class, already_closed=already_closed, recursion_stack=recursion_stack.copy())
+                        dep, _, _uses = lexical_closure(
+                            val_class, already_closed=already_closed, recursion_stack=recursion_stack.copy())
 
-            if dep: dependencies.append(dep)
-            if _uses: uses.update(_uses)
+            if dep:
+                dependencies.append(dep)
+            if _uses:
+                uses.update(_uses)
         except Exception as e:
             _raise_error(f"Failed to capture the lexical closure of parameter or annotation {name}", e, recursion_stack)
 
 
-def _process_variable(var_name, var_value, dependencies, modules, imports, already_closed, recursion_stack , uses):
+def _process_variable(var_name, var_value, dependencies, modules, imports, already_closed, recursion_stack, uses):
     """Process a single variable."""
     try:
         name = inspect.getmodule(var_value).__name__
@@ -203,9 +229,10 @@ def _process_variable(var_name, var_value, dependencies, modules, imports, alrea
             return
     except:
         pass
-    
+
     if isinstance(var_value, (types.FunctionType, type, types.MethodType)):
-        _process_callable(var_name, var_value, dependencies, already_closed, recursion_stack, uses)
+        _process_callable(var_name, var_value, dependencies,
+                          already_closed, recursion_stack, uses)
     elif isinstance(var_value, types.ModuleType):
         _process_module(var_name, var_value, modules, imports, uses)
     elif isinstance(var_value, types.BuiltinFunctionType):
@@ -213,20 +240,23 @@ def _process_variable(var_name, var_value, dependencies, modules, imports, alrea
     else:
         _process_other_variable(var_name, var_value, dependencies, uses)
 
+
 def _process_callable(var_name, var_value, dependencies, already_closed, recursion_stack, uses):
     """Process a callable (function, method, or class)."""
-    try: 
+    try:
         module_is_ell = 'ell2a' in inspect.getmodule(var_value).__name__
     except:
         module_is_ell = False
 
     if var_name not in FORBIDDEN_NAMES and not module_is_ell:
         try:
-            dep, _, _uses = lexical_closure(var_value, already_closed=already_closed, recursion_stack=recursion_stack.copy())
+            dep, _, _uses = lexical_closure(
+                var_value, already_closed=already_closed, recursion_stack=recursion_stack.copy())
             dependencies.append(dep)
             uses.update(_uses)
         except Exception as e:
             _raise_error(f"Failed to capture the lexical closure of global or free variable {var_name}", e, recursion_stack)
+
 
 def _process_module(var_name, var_value, modules, imports, uses):
     """Process a module."""
@@ -234,6 +264,7 @@ def _process_module(var_name, var_value, modules, imports, uses):
         imports.append(dill.source.getimport(var_value, alias=var_name))
     else:
         modules.append((var_name, var_value))
+
 
 def _process_other_variable(var_name, var_value, dependencies, uses):
     """Process variables that are not callables or modules."""
@@ -244,9 +275,11 @@ def _process_other_variable(var_name, var_value, dependencies, uses):
     else:
         dependencies.append(f"#<BmV>\n{var_name} = <{type(var_value).__name__} object>\n#</BmV>")
 
+
 def _build_initial_source(imports, dependencies, source):
     """Build the initial source code."""
     return f"{DELIM}\n" + f"\n{DELIM}\n".join(imports + dependencies + [source]) + f"\n{DELIM}\n"
+
 
 def _process_modules(modules, cur_src, already_closed, recursion_stack, uses):
     """Process module dependencies."""
@@ -254,23 +287,27 @@ def _process_modules(modules, cur_src, already_closed, recursion_stack, uses):
     while modules:
         mname, mval = modules.popleft()
         mdeps = []
-        attrs_to_extract = get_referenced_names(cur_src.replace(DELIM, ""), mname)
+        attrs_to_extract = get_referenced_names(
+            cur_src.replace(DELIM, ""), mname)
         for attr in attrs_to_extract:
-            _process_module_attribute(mname, mval, attr, mdeps, modules, already_closed, recursion_stack, uses)
-        
+            _process_module_attribute(
+                mname, mval, attr, mdeps, modules, already_closed, recursion_stack, uses)
+
         mdeps.insert(0, f"# Extracted from module: {mname}")
         reverse_module_src.appendleft("\n".join(mdeps))
-        
+
         cur_src = _dereference_module_names(cur_src, mname, attrs_to_extract)
-    
+
     return list(reverse_module_src)
+
 
 def _process_module_attribute(mname, mval, attr, mdeps, modules, already_closed, recursion_stack, uses):
     """Process a single attribute of a module."""
     val = getattr(mval, attr)
     if isinstance(val, (types.FunctionType, type, types.MethodType)):
         try:
-            dep, _, dep_uses = lexical_closure(val, already_closed=already_closed, recursion_stack=recursion_stack.copy())
+            dep, _, dep_uses = lexical_closure(
+                val, already_closed=already_closed, recursion_stack=recursion_stack.copy())
             mdeps.append(dep)
             uses.update(dep_uses)
         except Exception as e:
@@ -280,32 +317,39 @@ def _process_module_attribute(mname, mval, attr, mdeps, modules, already_closed,
     else:
         mdeps.append(f"{attr} = {repr(val)}")
 
+
 def _dereference_module_names(cur_src, mname, attrs_to_extract):
     """Dereference module names in the source code."""
     for attr in attrs_to_extract:
         cur_src = cur_src.replace(f"{mname}.{attr}", attr)
     return cur_src
 
+
 def _build_final_source(imports, module_src, dependencies, source):
     """Build the final source code."""
-    seperated_dependencies = sorted(imports) + sorted(module_src) + sorted(dependencies) + ([source] if source else [])
+    seperated_dependencies = sorted(
+        imports) + sorted(module_src) + sorted(dependencies) + ([source] if source else [])
     seperated_dependencies = list(dict.fromkeys(seperated_dependencies))
     return DELIM + "\n" + f"\n{DELIM}\n".join(seperated_dependencies) + "\n" + DELIM + "\n"
+
 
 def _generate_function_hash(source, dsrc, qualname):
     """Generate a hash for the function."""
     return "lmp-" + hashlib.md5("\n".join((source, dsrc, qualname)).encode()).hexdigest()
 
-def _update_ell_func(outer_ell_func, source, dsrc, globals_dict, frees_dict, fn_hash, uses):
+
+def _update_ell2a_func(outer_ell2a_func, source, dsrc, globals_dict, frees_dict, fn_hash, uses):
     """Update the ell2a function attributes."""
     formatted_source = _format_source(source)
     formatted_dsrc = _format_source(dsrc)
-    
-    if hasattr(outer_ell_func, "__ell_func__"):
-        
-        outer_ell_func.__ell_closure__ = (formatted_source, formatted_dsrc, globals_dict, frees_dict)
-        outer_ell_func.__ell_hash__ = fn_hash
-        outer_ell_func.__ell_uses__ = uses
+
+    if hasattr(outer_ell2a_func, "__ell2a_func__"):
+
+        outer_ell2a_func.__ell2a_closure__ = (
+            formatted_source, formatted_dsrc, globals_dict, frees_dict)
+        outer_ell2a_func.__ell2a_hash__ = fn_hash
+        outer_ell2a_func.__ell2a_uses__ = uses
+
 
 def _raise_error(message, exception, recursion_stack):
     """Raise an error with detailed information."""
@@ -329,7 +373,7 @@ def get_referenced_names(code: str, module_name: str):
     """
     # Remove content between #<BV> and #</BV> tags
     code = re.sub(r'#<BV>\n.*?\n#</BV>', '', code, flags=re.DOTALL)
-    
+
     # Remove content between #<BmV> and #</BmV> tags
     code = re.sub(r'#<BmV>\n.*?\n#</BmV>', '', code, flags=re.DOTALL)
 
@@ -343,7 +387,9 @@ def get_referenced_names(code: str, module_name: str):
 
     return referenced_names
 
+
 CLOSURE_SOURCE: Dict[str, str] = {}
+
 
 def lexically_closured_source(func, forced_dependencies: Optional[Dict[str, Any]] = None):
     """
@@ -382,19 +428,21 @@ def lexically_closured_source(func, forced_dependencies: Optional[Dict[str, Any]
 
     Note:
         This function relies on the `lexical_closure` function to perform the
-        actual closure generation. It also uses the `__ell_closure__` attribute
+        actual closure generation. It also uses the `__ell2a_closure__` attribute
         of the function, which is expected to be set by the `lexical_closure` function.
     """
     if not callable(func):
-        raise ValueError("Input must be a callable object (function, method, or class).")
-    _, fnclosure, uses = lexical_closure(func, initial_call=True, recursion_stack=[], forced_dependencies=forced_dependencies)
-    return func.__ell_closure__, uses
+        raise ValueError(
+            "Input must be a callable object (function, method, or class).")
+    _, fnclosure, uses = lexical_closure(func, initial_call=True, recursion_stack=[
+    ], forced_dependencies=forced_dependencies)
+    return func.__ell2a_closure__, uses
 
-import ast
 
 def _clean_src(dirty_src):
     # Now remove all duplicates and preserve order
-    split_by_setion = filter(lambda x: len(x.strip()) > 0, dirty_src.split(DELIM))
+    split_by_setion = filter(lambda x: len(
+        x.strip()) > 0, dirty_src.split(DELIM))
 
     # Now we need to remove all the duplicates
     split_by_setion = list(dict.fromkeys(split_by_setion))
@@ -415,6 +463,7 @@ def _clean_src(dirty_src):
     final_src = re.sub(r"\n{3,}", "\n\n", final_src)
 
     return final_src
+
 
 def is_function_called(func_name, source_code):
     """
@@ -441,6 +490,7 @@ def is_function_called(func_name, source_code):
     # If we've gone through all the nodes and haven't found a call to the function, it's not called
     return False
 
+
 #!/usr/bin/env python
 #
 # Author: Mike McKerns (mmckerns @caltech and @uqfoundation)
@@ -449,18 +499,18 @@ def is_function_called(func_name, source_code):
 # Copyright (c) 2016-2024 The Uncertainty Quantification Foundation.
 # License: 3-clause BSD.  The full license text is available at:
 #  - https://github.com/uqfoundation/dill/blob/master/LICENSE
-from dill.detect import nestedglobals
-import inspect
+
 
 def globalvars(func, recurse=True, builtin=False):
     """get objects defined in global scope that are referred to by func
 
     return a dict of {name:object}"""
-    while hasattr(func, "__ell_func__"):
-        func = func.__ell_func__
-    if inspect.ismethod(func): func = func.__func__
-    while hasattr(func, "__ell_func__"):
-        func = func.__ell_func__
+    while hasattr(func, "__ell2a_func__"):
+        func = func.__ell2a_func__
+    if inspect.ismethod(func):
+        func = func.__func__
+    while hasattr(func, "__ell2a_func__"):
+        func = func.__ell2a_func__
     if inspect.isfunction(func):
         globs = vars(inspect.getmodule(sum)).copy() if builtin else {}
         # get references from within closure
@@ -468,11 +518,12 @@ def globalvars(func, recurse=True, builtin=False):
         for obj in orig_func.__closure__ or {}:
             try:
                 cell_contents = obj.cell_contents
-            except ValueError: # cell is empty
+            except ValueError:  # cell is empty
                 pass
             else:
                 _vars = globalvars(cell_contents, recurse, builtin) or {}
-                func.update(_vars) #XXX: (above) be wary of infinte recursion?
+                # XXX: (above) be wary of infinte recursion?
+                func.update(_vars)
                 globs.update(_vars)
         # get globals
         globs.update(orig_func.__globals__ or {})
@@ -482,25 +533,25 @@ def globalvars(func, recurse=True, builtin=False):
         else:
             func.update(nestedglobals(orig_func.__code__))
             # find globals for all entries of func
-            for key in func.copy(): #XXX: unnecessary...?
+            for key in func.copy():  # XXX: unnecessary...?
                 nested_func = globs.get(key)
                 if nested_func is orig_func:
-                   #func.remove(key) if key in func else None
-                    continue  #XXX: globalvars(func, False)?
+                   # func.remove(key) if key in func else None
+                    continue  # XXX: globalvars(func, False)?
                 func.update(globalvars(nested_func, True, builtin))
     elif inspect.iscode(func):
         globs = vars(inspect.getmodule(sum)).copy() if builtin else {}
-       #globs.update(globals())
+       # globs.update(globals())
         if not recurse:
-            func = func.co_names # get names
+            func = func.co_names  # get names
         else:
-            orig_func = func.co_name # to stop infinite recursion
+            orig_func = func.co_name  # to stop infinite recursion
             func = set(nestedglobals(func))
             # find globals for all entries of func
-            for key in func.copy(): #XXX: unnecessary...?
+            for key in func.copy():  # XXX: unnecessary...?
                 if key is orig_func:
-                   #func.remove(key) if key in func else None
-                    continue  #XXX: globalvars(func, False)?
+                   # func.remove(key) if key in func else None
+                    continue  # XXX: globalvars(func, False)?
                 nested_func = globs.get(key)
                 func.update(globalvars(nested_func, True, builtin))
     # elif inspect.isclass(func):
@@ -508,8 +559,8 @@ def globalvars(func, recurse=True, builtin=False):
     # In the future we should exhaustively walk the AST here.
     else:
         return {}
-    #NOTE: if name not in __globals__, then we skip it...
-    return dict((name,globs[name]) for name in func if name in globs)
+    # NOTE: if name not in __globals__, then we skip it...
+    return dict((name, globs[name]) for name in func if name in globs)
 
 
 #

@@ -57,16 +57,16 @@ Example of a Complex LMP:
 
 .. code-block:: python
 
-    @ell2a.complex(model="gpt-4", tools=[some_tool])
+    @ell2a.complex(model="gpt-4", agents=[some_agent])
     def interactive_assistant(message_history: List[ell2a.Message]) -> List[ell2a.Message]:
         return [
-            ell2a.system("You are a helpful assistant with access to tools."),
+            ell2a.system("You are a helpful assistant with access to agents."),
         ] + message_history
 
 Key points:
 
 - Complex LMPs work with lists of ``ell2a.Message`` objects.
-- They can integrate tools and handle multi-turn conversations.
+- They can integrate agents and handle multi-turn conversations.
 - They offer more control over the interaction with the language model.
 
 Benefits of Language Model Programs
