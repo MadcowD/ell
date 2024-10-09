@@ -42,7 +42,7 @@ test2_v1 = """CHORD_FORMAT = "| Chord | Chord | ... |"
 @ell.simple(model="gpt-4o", temperature=0.5)
 def write_a_chord_progression_for_song(genre: Optional[str], key : Optional[str]) :
     return [
-        ell.system(f"You are a world class music theorist and composer. Your goal is to write chord progressions to songs given parameters. They should be fully featured and compositionally sound. Feel free to use advanced chords of your choosing. Only answer with the chord progression in {CHORD_FORMAT} format. Do not provide any additional text. Feel free to occaisonally use 13 chrods and complex chords if necessary etc."),
+        ell.system(f"You are a world class music theorist and composer. Your goal is to write chord progressions to songs given parameters. They should be fully featured and compositionally sound. Feel free to use advanced chords of your choosing. Only answer with the chord progression in {CHORD_FORMAT} format. Do not provide any additional text. Feel free to occaisonally use 13 chords and complex chords if necessary etc."),
         ell.user(f"Write a chord progression for a song {'in ' + genre if genre else ''} {'in the key of ' + key if key else ''}.")
 
     ]"""
@@ -52,7 +52,7 @@ test2_v2 = """CHORD_FORMAT = "| Chord | Chord | ... |"
 @ell.simple(model="gpt-4o", temperature=0.7)
 def write_a_chord_progression_for_song(genre: Optional[str], key : Optional[str]) :
     return [
-        ell.system(f"You are a world-renowned class music theorist and composer. Your goal is to write chord progressions for a song given a genre or key. They should be fully featured and compositionally sound. Feel free to use advanced chords of your choosing. Only answer with the chord progression in {CHORD_FORMAT} format. Do not provide any additional text. Feel free to occaisonally use 13 chrods and complex chords if necessary etc."),
+        ell.system(f"You are a world-renowned class music theorist and composer. Your goal is to write chord progressions for a song given a genre or key. They should be fully featured and compositionally sound. Feel free to use advanced chords of your choosing. Only answer with the chord progression in {CHORD_FORMAT} format. Do not provide any additional text. Feel free to occaisonally use 13 chords and complex chords if necessary etc."),
         ell.user(f"Write a chord progression for a song {'in ' + genre if genre else ''} {'in the key of ' + key if key else ''}.")
 
     ]"""
@@ -67,21 +67,64 @@ print(response)
 (response, *args) = write_commit_message_for_diff(test2_v1, test2_v2)
 print(response)
 
-### CLAUDE HAIKU ###
-# Decrease maximum length of joke scripts from 300 to 200 words:
-# * The `get_random_length` function was updated to return a length between 200 instead of 300 words.
-# * The system prompt in the `joke` function was changed to "You are a funny comedian. You respond in scripts for skits." from "You are a funny comedian. You respond in scripts for a standup comedy skit."
+### --BEFORE PROMPT CHANGES-- ###
 
-# Increase temperature and expand system prompt in `write_a_chord_progression_for_song` function:
-# * The `temperature` parameter in the `@ell.simple` decorator was increased from 0.5 to 0.7
-# * The system prompt in `write_a_chord_progression_for_song` was expanded to describe the function as "a world-renowned class music theorist and composer" instead of just "a world class music theorist and composer"
+### CLAUDE 3 HAIKU ###
+# Test 1:
+# Reduced maximum script length in `get_random_length()` function:
+# * The maximum script length returned by `get_random_length()` was reduced from 300 to 200 words.
+# * The system prompt for the `joke()` function was updated to remove the word "standup comedy".
+#
+# <Reduced maximum script length in `get_random_length()` function, updated system prompt for `joke()` function>:
+# * Decreased the maximum script length returned by `get_random_length()` from 300 to 200 words.
+# * Removed the phrase "standup comedy" from the system prompt for the `joke()` function.
+
+# Test 2:
+# Increased temperature in @ell.simple decorator from 0.5 to 0.7:
+# * Changed the temperature parameter in the @ell.simple decorator from 0.5 to 0.7.
+# * Updated the system prompt to describe the music theorist and composer as "world-renowned" instead of "world class".
+#
+# <commit_message summarizing all changes with specificity>:
+# Increased temperature in @ell.simple decorator from 0.5 to 0.7, updated system prompt description.
+#
+# * Changed the temperature parameter in the @ell.simple decorator from 0.5 to 0.7.
+# * Updated the system prompt to describe the music theorist and composer as "world-renowned" instead of "world class".
 
 ### GPT 4o MINI ###
-# Update `get_random_length` multiplier and shorten `joke` system prompt:
-# * Changed the multiplier in `get_random_length` from 300 to 200.
-# * Shortened the system prompt in `joke` from "You respond in scripts for a standup comedy skit." to "You respond in scripts for skits."
+# Test 1:
+# Reduce script length to 200 words and update skit prompt:  
+# * Changed `get_random_length` to return 200 instead of 300.  
+# * Updated the system prompt in `joke` to specify "scripts for skits" instead of "scripts for a standup comedy skit."
 
-# Update system prompt and temperature in `write_a_chord_progression_for_song` function:
-# * Changed "world class" to "world-renowned" in the system prompt.
-# * Updated the temperature from 0.5 to 0.7.
-# * Modified the phrase "to write chord progressions to songs given parameters" to "to write chord progressions for a song given a genre or key" in the system prompt.
+# Test 2:
+# Update model temperature and refine system prompt wording:
+# * Changed temperature from 0.5 to 0.7.
+# * Updated "world class" to "world-renowned class" in system prompt.
+# * Changed "to write chord progressions to songs given parameters" to "to write chord progressions for a song given a genre or key" in system prompt.
+
+
+### --AFTER PROMPT CHANGES-- ###
+
+### CLAUDE 3 HAIKU ###
+# Test 1:
+# Reduce maximum script length and simplify system prompt for joke function:
+# * Changed `get_random_length()` to return a maximum script length of 200 words, down from 300.
+# * Updated the system prompt for the `joke()` function to say "You are a funny comedian. You respond in scripts for skits." instead of "You are a funny comedian. You respond in scripts for a standup comedy skit."
+
+# Test 2:
+# Increase model temperature and refine system prompt wording:
+# * Changed temperature from 0.5 to 0.7.
+# * Updated "world class music theorist and composer" to "world-renowned class music theorist and composer" in system prompt.
+# * Changed "write chord progressions to songs given parameters" to "write chord progressions for a song given a genre or key" in system prompt.
+
+### GPT 4o MINI ###
+# Test 1:
+# Reduce script length and modify system prompt wording:
+# * Changed `get_random_length` to return 200 instead of 300.
+# * Updated system prompt from "scripts for a standup comedy skit" to "scripts for skits."
+
+# Test 2:
+# Update temperature and refine system prompt details:
+# * Changed temperature from 0.5 to 0.7.
+# * Updated "world class" to "world-renowned" in system prompt.
+# * Changed "write chord progressions to songs given parameters" to "write chord progressions for a song given a genre or key" in system prompt.
