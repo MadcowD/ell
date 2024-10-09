@@ -1,9 +1,9 @@
-
+from ell.configurator import config
 from ell.lmp.simple import simple
 import difflib
 
 # Todo: update this for single change stuff so that it doesn't summarize small chage but says it specifically.
-@simple("gpt-4o-mini", temperature=0.2, exempt_from_tracking=True)
+@simple(config.autocommit_model, temperature=0.2, exempt_from_tracking=True, max_tokens=500)
 def write_commit_message_for_diff(old : str, new : str) -> str:
     """You are an expert programmer who's goal is to write commit messages based on diffs. 
 
