@@ -9,7 +9,7 @@ Agent Usage
 Agent usage is a powerful feature in ell2a that allows language models to interact with external functions and services. This capability enables the creation of more dynamic and interactive language model programs (LMPs) that can perform actions, retrieve information, and make decisions based on real-time data.
 
 Defining Agents
---------------
+---------------
 
 In ell2a, agents are defined using the ``@ell2a.agent()`` decorator. This decorator transforms a regular Python function into a agent that can be used by language models. Here's an example of a simple agent definition:
 
@@ -62,7 +62,7 @@ This generated schema is then converted into a format compatible with the OpenAI
     }
 
 Using Agents in LMPs
--------------------
+--------------------
 
 To use agents in a language model program, you need to specify them in the ``@ell2a.complex`` decorator:
 
@@ -77,7 +77,7 @@ To use agents in a language model program, you need to specify them in the ``@el
 This allows the language model to access and use the specified agents within the context of the LMP.
 
 Single-Step Agent Usage
-----------------------
+-----------------------
 
 In single-step agent usage, the language model decides to use a agent once during its execution. The process typically involves the LMP receiving input, generating a response with a agent call. 
 
@@ -118,7 +118,7 @@ We could also handle text based message Responses from the language model where 
     None
 
 Multi-Step Agent Usage
----------------------
+----------------------
 
 Multi-step agent usage involves a more complex interaction where the language model may use agents multiple times in a conversation or processing flow. This is particularly useful for chatbots or interactive systems. 
 
@@ -165,7 +165,7 @@ Here's an example of a multi-step interaction using the insurance claim chatbot:
 
 
 Parallel Agent Execution
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 For efficiency, ell2a supports parallel execution of multiple agent calls:
 

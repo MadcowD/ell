@@ -4,7 +4,7 @@ Installation
 ``ell2a`` and ``ell2a studio`` are both contained within the ``ell2a-ai`` python package available on PyPI. You simply need to install the package and set up your API keys.
 
 Installing ell2a
---------------
+----------------
 
 1. Install using pip:
 

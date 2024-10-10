@@ -29,7 +29,7 @@ Consider the complexity of constructing a prompt that includes both text and an 
 This approach, while functional, is verbose and can become unwieldy as the complexity of inputs increases. It doesn't align well with the natural flow of programming and can make code less readable and more error-prone.
 
 ell2a's Approach to Multimodality
--------------------------------
+---------------------------------
 
 ell2a addresses these challenges by treating multimodal inputs and outputs as first-class citizens within its framework. Let's explore how ell2a simplifies working with multiple modalities:
 
