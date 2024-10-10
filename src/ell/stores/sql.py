@@ -271,6 +271,17 @@ class SQLStore(ell.store.Store):
             "graph_data": graph_data
         }
 
+    def get_evaluations(self, session: Session, filters: Dict[str, Any], skip: int = 0, limit: int = 100) -> List[SerializedEvaluation]:
+        query = select(SerializedEvaluation)
+        
+        for key, value in filters.items():
+            query = query.where(getattr(SerializedEvaluation, key) == value)
+        
+        query = query.offset(skip).limit(limit)
+        
+        results = session.exec(query).all()
+        return results
+
 class SQLiteStore(SQLStore):
     def __init__(self, db_dir: str):
         assert not db_dir.endswith('.db'), "Create store with a directory not a db."

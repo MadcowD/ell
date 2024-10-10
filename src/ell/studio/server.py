@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from sqlmodel import Session
 from ell.stores.sql import PostgresStore, SQLiteStore
@@ -9,11 +9,12 @@ import logging
 import json
 from ell.studio.config import Config
 from ell.studio.connection_manager import ConnectionManager
-from ell.studio.datamodels import InvocationPublicWithConsumes, SerializedLMPWithUses
+from ell.studio.datamodels import InvocationPublicWithConsumes, SerializedLMPWithUses, EvaluationPublic
 
 from ell.types import SerializedLMP
 from datetime import datetime, timedelta
 from sqlmodel import select
+from ell.types.studio.evaluations import SerializedEvaluation
 
 
 logger = logging.getLogger(__name__)
@@ -220,4 +221,40 @@ def create_app(config:Config):
     
     
     
+    @app.get("/api/evaluations", response_model=List[EvaluationPublic])
+    def get_evaluations(
+        evaluation_id: Optional[str] = Query(None),
+        lmp_id: Optional[str] = Query(None),
+        skip: int = Query(0, ge=0),
+        limit: int = Query(100, ge=1, le=100),
+        session: Session = Depends(get_session)
+    ):
+        filters: Dict[str, Any] = {}
+        if evaluation_id:
+            filters['id'] = evaluation_id
+        if lmp_id:
+            filters['lmp_id'] = lmp_id
+
+        evaluations = serializer.get_evaluations(
+            session,
+            filters=filters,
+            skip=skip,
+            limit=limit
+        )
+
+        if not evaluations:
+            raise HTTPException(status_code=404, detail="Evaluations not found")
+
+        return evaluations
+
+    @app.get("/api/evaluation/{evaluation_id}", response_model=EvaluationPublic)
+    def get_evaluation(
+        evaluation_id: str,
+        session: Session = Depends(get_session)
+    ):
+        evaluation = serializer.get_evaluations(session, filters={"id": evaluation_id})
+        if not evaluation:
+            raise HTTPException(status_code=404, detail="Evaluation not found")
+        return evaluation[0]
+
     return app

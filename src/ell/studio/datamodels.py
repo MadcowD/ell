@@ -3,6 +3,7 @@ from typing import List, Optional, Dict, Any
 from sqlmodel import SQLModel
 from ell.types import SerializedLMPBase, InvocationBase, InvocationContentsBase
 from ell.types.studio.evaluations import (
+    EvaluationLabelerBase,
     SerializedEvaluationBase,
     SerializedEvaluationRunBase,
     EvaluationRunLabelerSummaryBase,
@@ -46,16 +47,18 @@ class InvocationsAggregate(BaseModel):
 
 
 # Update these models at the end of the file
+class EvaluationLabelerPublic(EvaluationLabelerBase):
+    labeling_lmp: Optional[SerializedLMPBase]
 
-class EvaluationResultDatapoint(EvaluationResultDatapointBase):
-    pass
+class EvaluationRunLabelerSummaryPublic(EvaluationRunLabelerSummaryBase):
+    evaluation_labeler: EvaluationLabelerBase
 
-class EvaluationRunLabelerSummary(EvaluationRunLabelerSummaryBase):
-    pass
+class EvaluationRunPublic(SerializedEvaluationRunBase):
+    evaluated_lmp: SerializedLMPBase
+    labeler_summaries: List[EvaluationRunLabelerSummaryPublic]
 
-class SerializedEvaluationRun(SerializedEvaluationRunBase):
-    pass
+class EvaluationPublic(SerializedEvaluationBase):
+    labelers: List[EvaluationLabelerPublic]
+    runs: List[EvaluationRunPublic]
 
-class SerializedEvaluation(SerializedEvaluationBase):
-    pass
 

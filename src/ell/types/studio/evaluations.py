@@ -197,7 +197,7 @@ class EvaluationRunLabelerSummary(EvaluationRunLabelerSummaryBase, table=True):
 
 class SerializedEvaluationRunBase(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
-    evaluation_id: int = Field(foreign_key="serializedevaluation.id", index=True)
+    evaluation_id: str = Field(foreign_key="serializedevaluation.id", index=True)
     evaluated_lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)
     api_params: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     start_time: datetime = UTCTimestampField()
