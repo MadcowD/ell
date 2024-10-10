@@ -18,6 +18,7 @@ export function LMPCardTitle({
     ...rest
 }) {
     const paddingClass = paddingClassOverride ? paddingClassOverride : padding ? 'p-2' : '';
+    
     const scaleClass = `scale-${scale}`;
     const hoverClass = clickable ? ' duration-200 ease-in-out hover:bg-opacity-80 hover:bg-gray-700' : '';
     const cursorClass = clickable ? 'cursor-pointer' : '';

@@ -99,6 +99,15 @@ class Store(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_eval_versions_by_name(self, name: str) -> List[SerializedEvaluation]:
+        """
+        Get all versions of an evaluation by its name.
+
+        :param name: The name of the evaluation.
+        :return: A list of SerializedEvaluation objects representing all versions of the evaluation.
+        """
+        pass
 
     @contextmanager
     def freeze(self, *lmps: InvocableLM):

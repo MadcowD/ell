@@ -2,6 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
+import itertools
 from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union, cast
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import uuid
@@ -274,53 +275,72 @@ class Evaluation(BaseModel):
                     )
                 ))
             
-            # Create SerializedEvaluation
-            serialized_evaluation = SerializedEvaluation(
-                id=self.id,
-                name=self.name,
-                dataset_hash=dataset_hash,
-                n_evals=self.n_evals or len(self.dataset or []),
-            )
+            # get existing versions
+            existing_versions = config.store.get_eval_versions_by_name(self.name)
+            if any(v.id == self.id for v in existing_versions):
+                self.serialized = existing_versions[0]
+            else:
+                version_number = max(itertools.chain(map( lambda x: x.version_number, existing_versions), [0])) + 1
 
-            # Create EvaluationLabelers
-            labelers = []
-            # Metrics
-            for name, h in zip(self.metrics.keys(), metrics_ids):
-                labelers.append(
-                    EvaluationLabeler(
-                        name=name,
-                        type=EvaluationLabelerType.METRIC,
-                        evaluation_id=self.id,
-                        labeling_lmp_id=h,
-                    )
+                if config.autocommit:
+                    # if not _autocommit_warning():
+                    #     from ell.util.differ import write_commit_message_for_diff
+                    #     self.serialized.commit_message = str(write_commit_message_for_diff(
+                    #         f"{latest_version.dataset_hash}\n\n{latest_version.n_evals}",
+                    #         f"{self.serialized.dataset_hash}\n\n{self.serialized.n_evals}"
+                    #     )[0])
+                    pass
+                
+                
+                
+                # Create SerializedEvaluation
+                serialized_evaluation = SerializedEvaluation(
+                    id=self.id,
+                    name=self.name,
+                    dataset_hash=dataset_hash,
+                    n_evals=self.n_evals or len(self.dataset or []),
+                    version_number=version_number,
                 )
 
-            # Annotations
-            for name, h in zip(self.annotations.keys(), annotation_ids):
-                labelers.append(
-                    EvaluationLabeler(
-                        name=name,
-                        type=EvaluationLabelerType.ANNOTATION,
-                        evaluation_id=self.id,
-                        labeling_lmp_id=h,
+                # Create EvaluationLabelers
+                labelers = []
+                # Metrics
+                for name, h in zip(self.metrics.keys(), metrics_ids):
+                    labelers.append(
+                        EvaluationLabeler(
+                            name=name,
+                            type=EvaluationLabelerType.METRIC,
+                            evaluation_id=self.id,
+                            labeling_lmp_id=h,
+                        )
                     )
-                )
 
-            # Criterion
-            if self.criterion:
-                labelers.append(
-                    EvaluationLabeler(
-                        name="criterion",
-                        type=EvaluationLabelerType.CRITERION,
-                        evaluation_id=self.id,
-                        labeling_lmp_id=criteiron_ids[0],
+                # Annotations
+                for name, h in zip(self.annotations.keys(), annotation_ids):
+                    labelers.append(
+                        EvaluationLabeler(
+                            name=name,
+                            type=EvaluationLabelerType.ANNOTATION,
+                            evaluation_id=self.id,
+                            labeling_lmp_id=h,
+                        )
                     )
-                )
 
-            # Add labelers to the serialized evaluation
-            serialized_evaluation.labelers = labelers
-            self.serialized = serialized_evaluation
-            config.store.write_evaluation(serialized_evaluation)
+                # Criterion
+                if self.criterion:
+                    labelers.append(
+                        EvaluationLabeler(
+                            name="criterion",
+                            type=EvaluationLabelerType.CRITERION,
+                            evaluation_id=self.id,
+                            labeling_lmp_id=criteiron_ids[0],
+                        )
+                    )
+
+                # Add labelers to the serialized evaluation
+                serialized_evaluation.labelers = labelers
+                self.serialized = serialized_evaluation
+                config.store.write_evaluation(serialized_evaluation)
 
         # Now serialize the evaluation run,
         evaluation_run._write(evaluation_id=self.id)

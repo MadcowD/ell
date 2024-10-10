@@ -5,7 +5,7 @@ const getColorFromVersion = (version) => {
   return `hsl(${hue}, 40%, 70%)`; // Base color
 };
 
-const VersionBadge = ({ version, hash, className = '', shortVersion = false }) => {
+const VersionBadge = ({ version, hash, className = '', shortVersion = false, truncationLength = 9 }) => {
   const baseColor = getColorFromVersion(version);
   const lighterColor = `hsl(${baseColor.match(/\d+/)[0]}, 40%, 75%)`; // Slightly lighter
   const textColor = 'text-gray-900'; // Dark text for contrast
@@ -26,7 +26,7 @@ const VersionBadge = ({ version, hash, className = '', shortVersion = false }) =
           className={`px-2 py-1 ${textColor} font-mono`}
           style={{ backgroundColor: lighterColor }}
         >
-          {hash.substring(0, 9)}
+          {hash.substring(0, truncationLength)}
         </div>
       )}
     </div>

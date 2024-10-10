@@ -246,6 +246,23 @@ def create_app(config:Config):
             raise HTTPException(status_code=404, detail="Evaluations not found")
 
         return evaluations
+    
+    @app.get("/api/latest/evaluations", response_model=List[EvaluationPublic])
+    def get_latest_evaluations(
+        skip: int = Query(0, ge=0),
+        limit: int = Query(100, ge=1, le=100),
+        session: Session = Depends(get_session)
+    ):
+        evaluations = serializer.get_latest_evaluations(
+            session,
+            skip=skip,
+            limit=limit
+        )
+
+        if not evaluations:
+            raise HTTPException(status_code=404, detail="No evaluations found")
+
+        return evaluations
 
     @app.get("/api/evaluation/{evaluation_id}", response_model=EvaluationPublic)
     def get_evaluation(

@@ -221,7 +221,7 @@ def test_llm_critic_evaluation():
 def test_poem_eval():
     @ell.simple(model="gpt-4o")
     def write_a_bad_poem():
-        """Your poem must no logner than 75 words."""
+        """Your poem must no logner than 100 words."""
         return "Write a really poorly written poem."
 
 
@@ -236,13 +236,13 @@ def test_poem_eval():
         return f"Is this a good poem yes/no? {poem}"
 
     def score(datapoint, output):
-        return 1
+        return 'yes' in is_good_poem(output)
 
 
     ell.init(verbose=True, store="./logdir")
 
 
-    eval = ell.evaluation.Evaluation(name="poem_eval", n_evals=1, metrics=
+    eval = ell.evaluation.Evaluation(name="poem_eval", n_evals=10, metrics=
                                     {
                                     "critic_score": score,
                                     "length": lambda _, output: len(output) ,
@@ -251,7 +251,7 @@ def test_poem_eval():
 
     print("EVALUATING GOOD POEM")
     start = time.time()
-    run = eval.run(write_a_good_poem, n_workers=1, verbose=False)
+    run = eval.run(write_a_good_poem, n_workers=10, verbose=False)
     print(f"Average length: {run.results.metrics['length'].mean():.2f}")
     print(f"Average word length: {run.results.metrics['average_word_length'].mean():.2f}")
     print(f"Average critic score: {run.results.metrics['critic_score'].mean():.2f}")

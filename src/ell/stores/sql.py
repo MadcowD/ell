@@ -281,6 +281,42 @@ class SQLStore(ell.store.Store):
         
         results = session.exec(query).all()
         return results
+    
+    def get_latest_evaluations(self, session: Session, skip: int = 0, limit: int = 100) -> List[SerializedEvaluation]:
+        # Subquery to get the latest version number for each evaluation name
+        latest_versions = (
+            select(
+                SerializedEvaluation.name,
+                func.max(SerializedEvaluation.version_number).label("max_version")
+            )
+            .group_by(SerializedEvaluation.name)
+            .subquery()
+        )
+
+        # Main query to get the latest evaluations
+        query = (
+            select(SerializedEvaluation)
+            .join(
+                latest_versions,
+                and_(
+                    SerializedEvaluation.name == latest_versions.c.name,
+                    SerializedEvaluation.version_number == latest_versions.c.max_version
+                )
+            )
+            .order_by(SerializedEvaluation.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+
+        results = session.exec(query).all()
+        return list(results)
+
+    def get_eval_versions_by_name(self, name: str) -> List[SerializedEvaluation]:
+        with Session(self.engine) as session:
+            query = select(SerializedEvaluation).where(SerializedEvaluation.name == name)
+            query = query.order_by(SerializedEvaluation.version_number.desc())  # Sort by version number in descending order
+            results = session.exec(query).all()
+            return list(results)  # Convert to list to ensure it's a List[SerializedEvaluation]
 
 class SQLiteStore(SQLStore):
     def __init__(self, db_dir: str):
@@ -319,4 +355,4 @@ class SQLBlobStore(ell.store.BlobStore):
 class PostgresStore(SQLStore):
     def __init__(self, db_uri: str):
         super().__init__(db_uri)
-    
+
