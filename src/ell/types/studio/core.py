@@ -23,7 +23,6 @@ from sqlalchemy import Index, func
 
 from typing import TypeVar, Any
 
-
 def utc_now() -> datetime:
     """
     Returns the current UTC timestamp.
@@ -51,8 +50,10 @@ class UTCTimestamp(types.TypeDecorator[datetime]):
     cache_ok = True
     impl = types.TIMESTAMP
 
-    def process_result_value(self, value: datetime, dialect: Any):
-        return value.replace(tzinfo=timezone.utc)
+    def process_result_value(self, value: Optional[datetime], dialect: Any) -> Optional[datetime]:
+        if value is not None:
+            return value.replace(tzinfo=timezone.utc)
+        return None
 
 
 def UTCTimestampField(index: bool = False, **kwargs: Any):
@@ -109,8 +110,7 @@ class SerializedLMP(SerializedLMPBase, table=True):
         ),
     )
 
-    evaluation_runs : List["SerializedEvaluationRun"] = Relationship(back_populates="evaluated_lmp")
-
+    evaluation_runs: List["SerializedEvaluationRun"] = Relationship(back_populates="evaluated_lmp")
 
     class Config:
         table_name = "serializedlmp"
@@ -233,4 +233,4 @@ class Invocation(InvocationBase, table=True):
             "completion_tokens",
         ),
     )
-    evaluation_result_datapoints : List["EvaluationResultDatapoint"] = Relationship(back_populates="invocation_being_labeled")
+    evaluation_result_datapoints: List["EvaluationResultDatapoint"] = Relationship(back_populates="invocation_being_labeled")

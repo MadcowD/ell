@@ -2,6 +2,12 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlmodel import SQLModel
 from ell.types import SerializedLMPBase, InvocationBase, InvocationContentsBase
+from ell.types.studio.evaluations import (
+    SerializedEvaluationBase,
+    SerializedEvaluationRunBase,
+    EvaluationRunLabelerSummaryBase,
+    EvaluationResultDatapointBase,
+)
 
 
 class SerializedLMPWithUses(SerializedLMPBase):
@@ -17,7 +23,6 @@ class InvocationPublic(InvocationBase):
 class InvocationPublicWithConsumes(InvocationPublic):
     consumes: List[InvocationPublic]
     consumed_by: List[InvocationPublic]
-   
 
 
 from pydantic import BaseModel
@@ -38,4 +43,19 @@ class InvocationsAggregate(BaseModel):
     # successful_invocations: int
     # success_rate: float
     graph_data: List[GraphDataPoint]
+
+
+# Update these models at the end of the file
+
+class EvaluationResultDatapoint(EvaluationResultDatapointBase):
+    pass
+
+class EvaluationRunLabelerSummary(EvaluationRunLabelerSummaryBase):
+    pass
+
+class SerializedEvaluationRun(SerializedEvaluationRunBase):
+    pass
+
+class SerializedEvaluation(SerializedEvaluationBase):
+    pass
 
