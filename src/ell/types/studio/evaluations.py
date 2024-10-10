@@ -13,7 +13,6 @@ from pydantic import field_validator
 
 from sqlalchemy import func
 
-
 from .core import Invocation, SerializedLMP, UTCTimestampField
 
 #############################
@@ -24,8 +23,19 @@ class EvaluationLabelerType(str, Enum):
     ANNOTATION = "annotation"
     CRITERION = "criterion"
 
-class EvaluationLabeler(SQLModel, table=True):
-    id: str = Field(default=None, primary_key=True) # labeler-evaluation-id-name-type
+class EvaluationLabelerBase(SQLModel):
+    id: str = Field(default=None, primary_key=True)
+    name: str
+    type: EvaluationLabelerType
+    labeling_lmp_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id", index=True)
+    evaluation_id: str = Field(default=None, foreign_key="serializedevaluation.id")
+    labeling_rubric: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+
+class EvaluationLabeler(EvaluationLabelerBase, table=True):
+    evaluation: "SerializedEvaluation" = Relationship(back_populates="labelers")
+    labeling_lmp: Optional[SerializedLMP] = Relationship()
+    labels: List["EvaluationLabel"] = Relationship(back_populates="labeler")
+    evaluation_run_summaries: List["EvaluationRunLabelerSummary"] = Relationship(back_populates="evaluation_labeler")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -40,87 +50,52 @@ class EvaluationLabeler(SQLModel, table=True):
             assert evaluation == "evaluation"
             assert type in EvaluationLabelerType.__members__
             return v
-        
 
     @lru_cache(maxsize=128)
     @staticmethod
     def generate_id(evaluation_id: str, name: str, type: EvaluationLabelerType) -> str:
-        
         return f"labeler-{evaluation_id}-{name}-{type.name}"
-    
-    name: str
-    type: EvaluationLabelerType
 
-    labeling_lmp_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id", index=True)
-    evaluation_id : str = Field(default=None, foreign_key="serializedevaluation.id")
-
-    
-    # unused for now
-    labeling_rubric: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
-      
     @field_validator("labeling_lmp_id", "labeling_rubric")
     def validate_labeler_or_instructions(cls, v, values):
         if "labeling_lmp_id" not in values and "labeling_rubric" not in values:
             raise ValueError("Either labeler_lmp_id or instructions must be set")
         return v
-    
-    evaluation : "SerializedEvaluation" = Relationship(back_populates="labelers")
-    labeling_lmp : Optional["SerializedLMP"] = Relationship() # TODO: Add backpopulate if needed
-    labels: List["EvaluationLabel"] = Relationship(back_populates="labeler")
-    evaluation_run_summaries: List["EvaluationRunLabelerSummary"] = Relationship(back_populates="evaluation_labeler")
 
-
-class EvaluationLabel(SQLModel, table=True):
-    # Composite foreign keys referencing the primary key of EvaluationResultDatapoint
-    # BECAUSE WE ALWAYS LABEL AN INVOCATION.
-    labeled_datapoint_id : int = Field(
-        foreign_key="evaluationresultdatapoint.id",
-        primary_key=True
-    )
-    labeler_id: str = Field(
-        foreign_key="evaluationlabeler.id",
-        primary_key=True
-    )
-
-    # Label fields
+class EvaluationLabelBase(SQLModel):
+    labeled_datapoint_id: int = Field(foreign_key="evaluationresultdatapoint.id", primary_key=True)
+    labeler_id: str = Field(foreign_key="evaluationlabeler.id", primary_key=True)
     label_invocation_id: Optional[str] = Field(default=None, foreign_key="invocation.id")
-    manual_label: Optional[Dict[str, Any]] = Field(
-        default=None,
-        sa_column=Column(JSON)
-    )
+    manual_label: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
 
+class EvaluationLabel(EvaluationLabelBase, table=True):
     labeled_datapoint: "EvaluationResultDatapoint" = Relationship(back_populates="labels")
-    labeler: "EvaluationLabeler" = Relationship(back_populates="labels")
-    label_invocation: Optional[Invocation] = Relationship() # Add back popualte if you need to see how & if an invocation was used as a label.
+    labeler: EvaluationLabeler = Relationship(back_populates="labels")
+    label_invocation: Optional[Invocation] = Relationship()
 
-class EvaluationResultDatapoint(SQLModel, table=True):
-    # or this could just have an id. Feels pretty redudnant to have htis group table if the ids of evaluation label are the invocation being labeled & the run id
-    # input  cannot produce two resutls per run & invocation id.
+class EvaluationResultDatapointBase(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
     invocation_being_labeled_id: str = Field(foreign_key="invocation.id")
     evaluation_run_id: str = Field(foreign_key="serializedevaluationrun.id")
 
+class EvaluationResultDatapoint(EvaluationResultDatapointBase, table=True):
     invocation_being_labeled: Invocation = Relationship(back_populates="evaluation_result_datapoints")
-    evaluation_run : "SerializedEvaluationRun" = Relationship(back_populates="results")
-    labels: List[EvaluationLabel] = Relationship(back_populates="labeled_datapoint") # optional
-    
+    evaluation_run: "SerializedEvaluationRun" = Relationship(back_populates="results")
+    labels: List[EvaluationLabel] = Relationship(back_populates="labeled_datapoint")
 
-# per labeler result aggregate should not be mutated, could be defiend as a true base to be reused within the use facing eval setup.
-# XXX: Rename this at some point
-class EvaluationRunLabelerSummary(SQLModel, table=True):
+class EvaluationRunLabelerSummaryBase(SQLModel):
     evaluation_run_id: int = Field(foreign_key="serializedevaluationrun.id", primary_key=True)
     evaluation_labeler_id: str = Field(foreign_key="evaluationlabeler.id", primary_key=True)
-
     created_at: datetime = UTCTimestampField(default=func.now())
     updated_at: Optional[datetime] = UTCTimestampField(default=None)
     finalized_at: Optional[datetime] = UTCTimestampField(default=None)
-
     is_scalar: bool = Field(default=False)
     data: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     count: int = Field(default=0)
 
+class EvaluationRunLabelerSummary(EvaluationRunLabelerSummaryBase, table=True):
     evaluation_run: "SerializedEvaluationRun" = Relationship(back_populates="labeler_summaries")
-    evaluation_labeler: "EvaluationLabeler" = Relationship(back_populates="evaluation_run_summaries")
+    evaluation_labeler: EvaluationLabeler = Relationship(back_populates="evaluation_run_summaries")
 
     def mean(
         self,
@@ -220,32 +195,34 @@ class EvaluationRunLabelerSummary(SQLModel, table=True):
             "Ell studio does not currently support updating evaluation run results with new data."
         )
 
-
-class SerializedEvaluationRun(SQLModel, table=True):
+class SerializedEvaluationRunBase(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
     evaluation_id: int = Field(foreign_key="serializedevaluation.id", index=True)
     evaluated_lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)
     api_params: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
-
-    # we neeed to compute aggregatr statistics over the individual labels as a part of this run
-    # Because of human labels these aggregates are now no longer considered finished until the end time and must be mutated by ell studio
-
     start_time: datetime = UTCTimestampField()
     end_time: Optional[datetime] = UTCTimestampField(default=None)
-
-    # errors and success handling.
     success: bool 
     error: Optional[str] = Field(default=None)
-    
+
+class SerializedEvaluationRun(SerializedEvaluationRunBase, table=True):
     evaluation: "SerializedEvaluation" = Relationship(back_populates="runs")
-    evaluated_lmp: "SerializedLMP" = Relationship(back_populates="evaluation_runs")
-    
+    evaluated_lmp: SerializedLMP = Relationship(back_populates="evaluation_runs")
     results: List[EvaluationResultDatapoint] = Relationship(back_populates="evaluation_run")
-    labeler_summaries: List["EvaluationRunLabelerSummary"] = Relationship(back_populates="evaluation_run")
+    labeler_summaries: List[EvaluationRunLabelerSummary] = Relationship(back_populates="evaluation_run")
 
+class SerializedEvaluationBase(SQLModel):
+    id: str = Field(primary_key=True)
+    name: str
+    dataset_hash: str
+    n_evals: int
+    version_number: int = Field(default=0)
+    commit_message: Optional[str] = Field(default=None)
 
-class SerializedEvaluation(SQLModel, table=True):
-    id : str = Field(primary_key=True) # the hash of the input dataset hash + the lmp hashes of all of the labelers 
+class SerializedEvaluation(SerializedEvaluationBase, table=True):
+    labelers: List[EvaluationLabeler] = Relationship(back_populates="evaluation")
+    runs: List[SerializedEvaluationRun] = Relationship(back_populates="evaluation")
+
     @field_validator("id")
     def validate_id(cls, v):
         if v is not None:
@@ -253,28 +230,8 @@ class SerializedEvaluation(SQLModel, table=True):
             assert v.count("-") == 1
             return v
         return v
-    
-    name : str
-    dataset_hash : str # The idea here is we have the same input dataset we will re run over and over gain.
-    n_evals : int 
-
-    version_number: int = Field(default=0)
-    commit_message: Optional[str] = Field(default=None)
-
-    labelers: List["EvaluationLabeler"] = Relationship(back_populates="evaluation")
-    runs: List["SerializedEvaluationRun"] = Relationship(back_populates="evaluation")
 
     def get_labeler(self, type: EvaluationLabelerType, name: Optional[str] = None) -> Optional[EvaluationLabeler]:
-        """
-        Get a labeler by type and optionally by name.
-
-        Args:
-            type (EvaluationLabelerType): The type of the labeler.
-            name (Optional[str], optional): The name of the labeler. Defaults to None.
-
-        Returns:
-            Optional[EvaluationLabeler]: The matching labeler, or None if not found.
-        """
         for labeler in self.labelers:
             if labeler.type == type and (name is None or labeler.name == name):
                 return labeler
