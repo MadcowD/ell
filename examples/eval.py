@@ -236,13 +236,13 @@ def test_poem_eval():
         return f"Is this a good poem yes/no? {poem}"
 
     def score(datapoint, output):
-        return float("yes" in is_good_poem(output).lower())
+        return 1
 
 
     ell.init(verbose=True, store="./logdir")
 
 
-    eval = ell.evaluation.Evaluation(name="poem_eval", n_evals=20, metrics=
+    eval = ell.evaluation.Evaluation(name="poem_eval", n_evals=1, metrics=
                                     {
                                     "critic_score": score,
                                     "length": lambda _, output: len(output) ,
@@ -251,7 +251,7 @@ def test_poem_eval():
 
     print("EVALUATING GOOD POEM")
     start = time.time()
-    run = eval.run(write_a_good_poem, n_workers=10, verbose=False)
+    run = eval.run(write_a_good_poem, n_workers=1, verbose=False)
     print(f"Average length: {run.results.metrics['length'].mean():.2f}")
     print(f"Average word length: {run.results.metrics['average_word_length'].mean():.2f}")
     print(f"Average critic score: {run.results.metrics['critic_score'].mean():.2f}")

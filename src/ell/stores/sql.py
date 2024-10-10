@@ -13,9 +13,11 @@ from ell.types._lstr import _lstr
 from sqlalchemy import or_, func, and_, extract, FromClause
 from sqlalchemy.types import TypeDecorator, VARCHAR
 from ell.types.studio import SerializedLMPUses, utc_now
+from ell.types.studio.evaluations import EvaluationLabeler, EvaluationRunLabelerSummary, SerializedEvaluation, SerializedEvaluationRun
 from ell.util.serialization import pydantic_ltype_aware_cattr
 import gzip
 import json
+from sqlalchemy.exc import IntegrityError
 
 class SQLStore(ell.store.Store):
     def __init__(self, db_uri: str, blob_store: Optional[ell.store.BlobStore] = None):
@@ -73,6 +75,67 @@ class SQLStore(ell.store.Store):
             session.commit()
             return None
         
+    def write_evaluation(self, evaluation: SerializedEvaluation) -> str:
+        with Session(self.engine) as session:
+            try:
+                # Check if the evaluation already exists
+                existing_evaluation = session.exec(
+                    select(SerializedEvaluation).where(SerializedEvaluation.id == evaluation.id)
+                ).first()
+
+                if existing_evaluation:
+                    # Update the existing evaluation
+                    existing_evaluation.name = evaluation.name
+                    existing_evaluation.dataset_hash = evaluation.dataset_hash
+                    existing_evaluation.n_evals = evaluation.n_evals
+                    existing_evaluation.version_number = evaluation.version_number
+                    existing_evaluation.commit_message = evaluation.commit_message
+                else:
+                    # Add the new evaluation
+                    session.add(evaluation)
+
+                # Process labelers
+                for labeler in evaluation.labelers:
+                    existing_labeler = session.exec(
+                        select(EvaluationLabeler).where(
+                            (EvaluationLabeler.evaluation_id == evaluation.id) &
+                            (EvaluationLabeler.name == labeler.name)
+                        )
+                    ).first()
+
+                    if existing_labeler:
+                        # Update existing labeler
+                        existing_labeler.type = labeler.type
+                        existing_labeler.labeling_lmp_id = labeler.labeling_lmp_id
+                        existing_labeler.labeling_rubric = labeler.labeling_rubric
+                    else:
+                        # Add new labeler
+                        labeler.evaluation_id = evaluation.id
+                        session.add(labeler)
+
+                session.commit()
+                return evaluation.id
+            except IntegrityError as e:
+                session.rollback()
+                raise ValueError(f"Error writing evaluation: {str(e)}")
+            except Exception as e:
+                session.rollback()
+                raise e
+
+    def write_evaluation_run(self, evaluation_run: SerializedEvaluationRun) -> int:
+        with Session(self.engine) as session:
+            session.add(evaluation_run)
+            session.commit()
+            return evaluation_run.id
+        
+    def write_evaluation_run_labeler_summaries(self, summaries: List[EvaluationRunLabelerSummary]) -> int:
+        with Session(self.engine) as session:
+            session.add_all(summaries)
+            session.commit()
+            return len(summaries)
+        
+
+
     def get_cached_invocations(self, lmp_id :str, state_cache_key :str) -> List[Invocation]:
         with Session(self.engine) as session:
             return self.get_invocations(session, lmp_filters={"lmp_id": lmp_id}, filters={"state_cache_key": state_cache_key})

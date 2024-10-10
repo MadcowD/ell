@@ -109,7 +109,7 @@ class SerializedLMP(SerializedLMPBase, table=True):
         ),
     )
 
-    evaluation_runs : List["EvaluationRun"] = Relationship(back_populates="evaluated_lmp")
+    evaluation_runs : List["SerializedEvaluationRun"] = Relationship(back_populates="evaluated_lmp")
 
 
     class Config:

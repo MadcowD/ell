@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from functools import lru_cache
 
 import numpy as np
 
@@ -15,7 +16,7 @@ from sqlalchemy import func
 
 from .core import Invocation, SerializedLMP, UTCTimestampField
 
-#############################1
+#############################
 ### Evaluation & Labeling ###
 #############################
 class EvaluationLabelerType(str, Enum):
@@ -24,12 +25,34 @@ class EvaluationLabelerType(str, Enum):
     CRITERION = "criterion"
 
 class EvaluationLabeler(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: str = Field(default=None, primary_key=True) # labeler-evaluation-id-name-type
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.id is None:
+            self.id = EvaluationLabeler.generate_id(self.evaluation_id, self.name, self.type)
+
+    @field_validator("id")
+    def validate_id(cls, v):
+        if v is not None:
+            assert v.startswith("labeler-")
+            evaluation, eid, name, type = v.split("-")[1:]
+            assert evaluation == "evaluation"
+            assert type in EvaluationLabelerType.__members__
+            return v
+        
+
+    @lru_cache(maxsize=128)
+    @staticmethod
+    def generate_id(evaluation_id: str, name: str, type: EvaluationLabelerType) -> str:
+        
+        return f"labeler-{evaluation_id}-{name}-{type.name}"
+    
     name: str
     type: EvaluationLabelerType
 
-    labeling_lmp_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id")
-    evaluation_id : str = Field(default=None, foreign_key="evaluation.id")
+    labeling_lmp_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id", index=True)
+    evaluation_id : str = Field(default=None, foreign_key="serializedevaluation.id")
 
     
     # unused for now
@@ -41,7 +64,7 @@ class EvaluationLabeler(SQLModel, table=True):
             raise ValueError("Either labeler_lmp_id or instructions must be set")
         return v
     
-    evaluation : "Evaluation" = Relationship(back_populates="labelers")
+    evaluation : "SerializedEvaluation" = Relationship(back_populates="labelers")
     labeling_lmp : Optional["SerializedLMP"] = Relationship() # TODO: Add backpopulate if needed
     labels: List["EvaluationLabel"] = Relationship(back_populates="labeler")
     evaluation_run_summaries: List["EvaluationRunLabelerSummary"] = Relationship(back_populates="evaluation_labeler")
@@ -75,17 +98,17 @@ class EvaluationResultDatapoint(SQLModel, table=True):
     # input  cannot produce two resutls per run & invocation id.
     id: Optional[int] = Field(default=None, primary_key=True)
     invocation_being_labeled_id: str = Field(foreign_key="invocation.id")
-    evaluation_run_id: str = Field(foreign_key="evaluationrun.id")
+    evaluation_run_id: str = Field(foreign_key="serializedevaluationrun.id")
 
     invocation_being_labeled: Invocation = Relationship(back_populates="evaluation_result_datapoints")
-    evaluation_run : "EvaluationRun" = Relationship(back_populates="results")
+    evaluation_run : "SerializedEvaluationRun" = Relationship(back_populates="results")
     labels: List[EvaluationLabel] = Relationship(back_populates="labeled_datapoint") # optional
     
 
 # per labeler result aggregate should not be mutated, could be defiend as a true base to be reused within the use facing eval setup.
 # XXX: Rename this at some point
 class EvaluationRunLabelerSummary(SQLModel, table=True):
-    evaluation_run_id: str = Field(foreign_key="evaluationrun.id", primary_key=True)
+    evaluation_run_id: int = Field(foreign_key="serializedevaluationrun.id", primary_key=True)
     evaluation_labeler_id: str = Field(foreign_key="evaluationlabeler.id", primary_key=True)
 
     created_at: datetime = UTCTimestampField(default=func.now())
@@ -96,7 +119,7 @@ class EvaluationRunLabelerSummary(SQLModel, table=True):
     data: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     count: int = Field(default=0)
 
-    evaluation_run: "EvaluationRun" = Relationship(back_populates="labeler_summaries")
+    evaluation_run: "SerializedEvaluationRun" = Relationship(back_populates="labeler_summaries")
     evaluation_labeler: "EvaluationLabeler" = Relationship(back_populates="evaluation_run_summaries")
 
     def mean(
@@ -123,52 +146,45 @@ class EvaluationRunLabelerSummary(SQLModel, table=True):
     def from_labels(
         cls,
         data: Union[List[float], List[Dict[str, Any]]],
-        **other_keys: Dict[str, Any],
+        **other_keys
     ) -> "EvaluationRunLabelerSummary":
         if len(data) == 0:
             # XXXL revisit.
             raise ValueError(
                 "Aggregated run cannot contain empty data, at least one datapoint is required."
             )
-
-        is_scalar = all(isinstance(item, (int, float)) for item in data)
-
-        if is_scalar:
-            scalar_data = cast(List[float], data)
-            mean_value = np.mean(scalar_data)
-            std_value = np.std(scalar_data)
-            min_value = min(scalar_data)
-            max_value = max(scalar_data)
-
+    
+        stats = lambda x: {
+            "mean": float(np.mean(x)),
+            "std": float(np.std(x)),
+            "min": float(np.min(x)),
+            "max": float(np.max(x)),
+        }
+        try:
             return cls(
                 is_scalar=True,
-                data={
-                    "mean": mean_value,
-                    "std": std_value,
-                    "min": min_value,
-                    "max": max_value,
-                },
-                count=len(scalar_data),
+                data=stats(data),
+                count=len(data),
                 **other_keys,
             )
-        else:
-
+        except TypeError:
             def recursive_aggregate(items):
-                if all(isinstance(item, dict) for item in items):
-                    result = {}
-                    for key in items[0].keys():
-                        values = [item[key] for item in items if key in item]
-                        result[key] = recursive_aggregate(values)
-                    return result
-                elif all(isinstance(item, (int, float)) for item in items):
+                try:
+                    if all(isinstance(item, dict) for item in items):
+                        result = {}
+                        for key in items[0].keys():
+                            values = [item[key] for item in items if key in item]
+                            result[key] = recursive_aggregate(values)
+                        return result
+                    else:
+                        return stats(items)
+                except TypeError:
                     return {
-                        "mean": np.mean(items),
-                        "std": np.std(items),
-                        "min": min(items),
-                        "max": max(items),
+                        "mean": None,
+                        "std": None,
+                        "min": None,
+                        "max": None,
                     }
-                else:
-                    return None
 
             aggregated_data = recursive_aggregate(data)
 
@@ -205,9 +221,9 @@ class EvaluationRunLabelerSummary(SQLModel, table=True):
         )
 
 
-class EvaluationRun(SQLModel, table=True):
+class SerializedEvaluationRun(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    evaluation_id: int = Field(foreign_key="evaluation.id", index=True)
+    evaluation_id: int = Field(foreign_key="serializedevaluation.id", index=True)
     evaluated_lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)
     api_params: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
 
@@ -221,58 +237,45 @@ class EvaluationRun(SQLModel, table=True):
     success: bool 
     error: Optional[str] = Field(default=None)
     
-    evaluation: "Evaluation" = Relationship(back_populates="runs")
+    evaluation: "SerializedEvaluation" = Relationship(back_populates="runs")
     evaluated_lmp: "SerializedLMP" = Relationship(back_populates="evaluation_runs")
     
     results: List[EvaluationResultDatapoint] = Relationship(back_populates="evaluation_run")
     labeler_summaries: List["EvaluationRunLabelerSummary"] = Relationship(back_populates="evaluation_run")
 
 
-class Evaluation(SQLModel, table=True):
+class SerializedEvaluation(SQLModel, table=True):
     id : str = Field(primary_key=True) # the hash of the input dataset hash + the lmp hashes of all of the labelers 
+    @field_validator("id")
+    def validate_id(cls, v):
+        if v is not None:
+            assert v.startswith("evaluation-")
+            assert v.count("-") == 1
+            return v
+        return v
+    
     name : str
-    dataset_hash :  str # The idea here is we have the same input dataset we will re run over and over gain.
+    dataset_hash : str # The idea here is we have the same input dataset we will re run over and over gain.
     n_evals : int 
 
     version_number: int = Field(default=0)
     commit_message: Optional[str] = Field(default=None)
 
     labelers: List["EvaluationLabeler"] = Relationship(back_populates="evaluation")
-    runs: List["EvaluationRun"] = Relationship(back_populates="evaluation")
+    runs: List["SerializedEvaluationRun"] = Relationship(back_populates="evaluation")
 
+    def get_labeler(self, type: EvaluationLabelerType, name: Optional[str] = None) -> Optional[EvaluationLabeler]:
+        """
+        Get a labeler by type and optionally by name.
 
-# Last thing we need is like run group so that the invocations dont all show up in the ui without groupings..
-# class RunGroup(SQLModel, table=True):
-#     id: Optional[str] = Field(default=None, primary_key=True)
-#     name: str
-#     parent_id: Optional[str] = Field(default=None, foreign_key="rungroup.id")
-    
-#     # Relationships
-#     parent: Optional["RunGroup"] = Relationship(back_populates="children", sa_relationship_kwargs={"remote_side": [id]})
-#     children: List["RunGroup"] = Relationship(back_populates="parent")
+        Args:
+            type (EvaluationLabelerType): The type of the labeler.
+            name (Optional[str], optional): The name of the labeler. Defaults to None.
 
-#     # Optional additional fields
-#     description: Optional[str] = Field(default=None)
-#     created_at: datetime = Field(default_factory=datetime.utcnow)
-#     updated_at: datetime = Field(default_factory=datetime.utcnow)
-
-
-# TODO: FUTURE GENERALOIZATION OF EVALUATION RESULTS
-
-# class _DatapointDatasetLink(SQLModel, table=True):
-#     label_datapoint_id: str = Field(default=None, foreign_key="labeldatapoint.id", primary_key=True)
-#     dataset_id: str = Field(default=None, foreign_key="multilabeldataset.id", primary_key=True)
-
-
-# class EvaluationResultDataset(SQLModel, table=True):
-#     id: Optional[int] = Field(default=None, primary_key=True)
-#     datapoints : List[EvaluationResultDatapoint] = Relationship(back_populates="dataset", link_model=_DatapointDatasetLink)
-    
-#     # Now this is redudnatn
-#     # two joins through evaluation
-#     evaluation_run_id: str = Field(default=None, foreign_key="evaluationrun.id")
-#     evaluation_run : "EvaluationRun" = Relationship(back_populates="results")
-
-# In the future use the geneirc datapoitn dataset link.
-# This migration will be so messy.
-# XXX: We jsut need to make really good migrations.
+        Returns:
+            Optional[EvaluationLabeler]: The matching labeler, or None if not found.
+        """
+        for labeler in self.labelers:
+            if labeler.type == type and (name is None or labeler.name == name):
+                return labeler
+        return None
