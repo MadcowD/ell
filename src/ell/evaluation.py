@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
+from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import uuid
@@ -12,8 +13,7 @@ from sqlmodel._compat import SQLModelConfig
 from ell.lmp._track import _track
 from ell.types.message import LMP
 import statistics
-from tqdm import tqdm
-
+from ell.util.tqdm import tqdm
 import contextlib
 import dill
 import hashlib
@@ -34,14 +34,11 @@ Annotations = Dict[str, Annotation]
 
 # scores now doesn't make sense fulyl because of some other factors.
 # We can ignore human feedback for now even though it's the most interesting.
-
-
 class _ResultDatapoint(BaseModel):
     output: Any
     metrics: Dict[str, float]
     annotations: Dict[str, Any]
     criterion: Optional[bool]
-
 
 
 class EvaluationResults(BaseModel):
@@ -56,7 +53,12 @@ class EvaluationRun(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     results : EvaluationResults = Field(default_factory=EvaluationResults)
     dataset : Optional[Dataset] = Field(default=None)
+    n_evals: Optional[int] = Field(default=None)
+    samples_per_datapoint: int = Field(default=1)
+    
+
     lmp: Optional[LMP] = Field(default=None)
+    
     api_params: Dict[str, Any] = Field(default_factory=dict)
     start_time: datetime = Field(default_factory=datetime.now)
     end_time: Optional[datetime] = None
@@ -74,21 +76,32 @@ class EvaluationRun(BaseModel):
         raise NotImplementedError("Not implemented")
         
 
+
+
 class Evaluation(BaseModel):
     """Simple evaluation for prompt engineering rigorously"""
     model_config = ConfigDict(arbitrary_types_allowed=True)
     name: str
-    dataset: Dataset
+
+    dataset: Optional[Dataset] = Field(default=None)
+    # XXX: Rename this for 0.1.0
+    n_evals: Optional[int] = Field(default=None, description="If set, this will run the LMP n_evals times and evaluate the outputs. This is useful for LMPs without inputs where you want to evaluate metrics a number of times. ")
+
+    samples_per_datapoint: int = Field(default=1, description="How many samples per datapoint to generate, equivalent to setting n in api params for LMPs which support this When no dataset is provided then the total nubmer of evalautiosn will be samples_per_datapoint * n_evals..")
+    
+    
+    def __init__(self, *args, **kwargs):
+        assert ('dataset' in kwargs or 'n_evals' in kwargs), "Either dataset or n_evals must be set"
+        assert not ('dataset' in kwargs and 'n_evals' in kwargs), "Either dataset or samples_per_datapoint must be set, not both"
+        super().__init__(*args, **kwargs)   
+    
+
     metrics: Metrics = Field(default_factory=dict)
     annotations: Annotations = Field(default_factory=dict)
     criterion: Optional[Criterion] = None
     
-
     default_api_params: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
-    def write(self, serialized_evaluation_run) -> None:
-        pass
-   
 
     @field_validator('criterion')
     @classmethod
@@ -99,8 +112,13 @@ class Evaluation(BaseModel):
     @classmethod
     def validate_annotations(cls, annotations: Union[Annotations, List[Annotation]]) -> Annotations:
         return _validate_callable_dict(annotations, "annotation")
+    
 
-    def run(self, lmp,  *, n_workers: int = 1, api_params: Optional[Dict[str, Any]] = None, verbose: bool = False, samples_per_datapoint: int = 1) -> EvaluationRun:
+    def write(self, serialized_evaluation_run) -> None:
+        pass
+   
+    # XXX: Dones't support partial params outside of the dataset like client??
+    def run(self, lmp,  *, n_workers: int = 1, use_api_batching: bool = False, api_params: Optional[Dict[str, Any]] = None, verbose: bool = False, **additional_lmp_params) -> EvaluationRun:
         """
         Run the evaluation or optimization using the specified number of workers.
         
@@ -114,14 +132,34 @@ class Evaluation(BaseModel):
         Returns:
             EvaluationRun: Object containing statistics about the evaluation or optimization outputs.
         """
+        assert 'api_params' not in additional_lmp_params, f"specify api_params directly to run not within additional_lmp_params: {additional_lmp_params}"
+        # Inspect LMP signature to check for required arguments
+        import inspect
+        lmp_signature = inspect.signature(lmp)
+        required_params = len({
+            param for param in lmp_signature.parameters.values()
+            if param.default == param.empty and param.kind != param.VAR_KEYWORD
+        }) > 0
+    
+
         run_api_params = {**(self.default_api_params or {}), **(api_params or {})}
-        if samples_per_datapoint > 1:
-            run_api_params['n'] = samples_per_datapoint
+        lmp_params = dict(api_params=run_api_params, **additional_lmp_params)
+
+        dataset = self.dataset if self.dataset is not None else [{'input': None}]
+        if use_api_batching:
+            # we need to collate on unique datapoints here if possible; note that n_evals can never be set.
+            run_api_params['n'] = self.samples_per_datapoint * (self.n_evals or 1)
+        else:
+            dataset = sum([[data_point] * self.samples_per_datapoint * (self.n_evals or 1) for data_point in dataset], [])
+
+        # we will try to run with n = samples_per_datapoint * n_evals first and if the api rejects n as a param then we need to do something will try the standard way with the thread pool executor.
         lmp_to_use = lmp 
         
         evaluation_run = EvaluationRun(
             lmp=lmp_to_use,
             dataset=self.dataset,
+            n_evals=self.n_evals,
+            samples_per_datapoint=self.samples_per_datapoint,
             api_params=run_api_params,
             start_time=datetime.now()
         )
@@ -129,23 +167,21 @@ class Evaluation(BaseModel):
         original_verbose = config.verbose
         config.verbose = verbose
         try:
-            
             with ThreadPoolExecutor(max_workers=n_workers) as executor:
-                futures = [executor.submit(self._process_single, data_point, lmp_to_use, run_api_params) 
-                           for data_point in self.dataset]
+                futures = [executor.submit(self._process_single, data_point, lmp_to_use, lmp_params, required_params) 
+                           for data_point in dataset]
                 
-                desc = "Evaluating" 
+        
                 rowar_results = []
-                with tqdm(total=len(self.dataset), desc=desc) as pbar:
-                    for future in as_completed(futures):
-                        result = future.result()
-                        rowar_results.extend(result)
-                        pbar.update(1)
-                        
-
-                        # Just show progress for optimization
-                        pbar.set_postfix({'processed': len(rowar_results), 'most_recent_output': str(rowar_results[-1].output)[:10]})
-            
+                results_futures = []
+                for future in tqdm(as_completed(futures), total=len(futures), desc=f"{self.name} outputs"):
+                    get_outputs = future.result()
+                    results_futures.extend([executor.submit(o) for o in get_outputs])
+                for result_future in (pbar:= tqdm(as_completed(results_futures), total=len(results_futures), desc=f"{self.name} results")):
+                    rowar_results.append(result_future.result())
+                    pbar.set_description(f"{self.name} (last={str(rowar_results[-1].output)[:10]})")
+                
+        
             evaluation_run.end_time = datetime.now()
             # convert rowar results to evaluation results
             evaluation_run.results = EvaluationResults(
@@ -164,7 +200,7 @@ class Evaluation(BaseModel):
         finally:
             config.verbose = original_verbose
 
-    def _process_single(self, data_point: Datapoint, lmp: LMP, api_params: Dict[str, Any]) -> List[_ResultDatapoint]:
+    def _process_single(self, data_point: Datapoint, lmp: LMP, lmp_params: Dict[str, Any], required_params: bool) -> List[Any]:
         """
         Process a single data point using the LMP and apply all criteria.
         
@@ -176,25 +212,24 @@ class Evaluation(BaseModel):
         Returns:
             Tuple[List[Any], Dict[str, List[float]]]: The LMP outputs and a dictionary of scores from all metrics.
         """
-        if isinstance(data_point['input'], list):
-            lmp_output = lmp(*data_point['input'], api_params=api_params)
-        elif isinstance(data_point['input'], dict):
-            lmp_output = lmp(**data_point['input'], api_params=api_params)
-        else:
-            raise ValueError(f"Invalid input type: {type(data_point['input'])}")
+        lmp_output = (
+            lmp(**lmp_params) if not required_params else #type: ignore
+            lmp(*inp, **lmp_params) if isinstance((inp:=data_point['input']), list) else #type: ignore
+            lmp(**inp, **lmp_params) if isinstance(inp, dict) else #type: ignore
+            (_ for _ in ()).throw(ValueError(f"Invalid input type: {type(inp)}"))
+        )
         
-        if not isinstance(lmp_output, list):
-            lmp_output = [cast(Any, lmp_output)]
-        
-        return [
-                _ResultDatapoint(
-                    output=output,
-                    metrics={name: float(metric(data_point, output)) for name, metric in self.metrics.items()},
-                    annotations={name: annotation(data_point, output) for name, annotation in self.annotations.items()},
-                    criterion=bool(self.criterion(data_point, output)) if self.criterion else None
-                )
-             for output in lmp_output]
+        if not isinstance(lmp_output, list): lmp_output = [cast(Any, lmp_output)]
 
+        def process_rowar_results(output):
+            return _ResultDatapoint(
+                output=output,
+                metrics={name: float(metric(data_point, output)) for name, metric in self.metrics.items()},
+                annotations={name: annotation(data_point, output) for name, annotation in self.annotations.items()},
+                criterion=bool(self.criterion(data_point, output)) if self.criterion else None
+            )
+        return [partial(process_rowar_results, output) for output in lmp_output]
+    
 
 
 

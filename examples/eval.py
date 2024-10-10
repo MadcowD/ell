@@ -1,4 +1,5 @@
 from collections import UserDict
+import time
 import random
 from types import NoneType
 from typing import Any, Dict, Iterable, Optional, Protocol, List, Union
@@ -54,7 +55,7 @@ def test_predictor_evaluation():
         return float(output.lower() == label.lower())
 
     eval = ell.evaluation.Evaluation(
-        name="test", dataset=dataset, metrics={"score": score, "length": lambda _, output: len(output)}
+        name="test", dataset=dataset, metrics={"score": is_correct, "length": lambda _, output: len(output)}
     )
 
     # ell.init(verbose=True, store='./logdir')
@@ -67,7 +68,7 @@ def test_predictor_evaluation():
         return f"Answer the following question. {question}"
 
     result = eval.run(predict_capital, n_workers=4)
-    print(result.scores.mean())
+    print(result.results.metrics["score"].mean())
 
 
 def test_llm_critic_evaluation():
@@ -123,10 +124,6 @@ def test_llm_critic_evaluation():
         """
 
 
-    # model output etc. is just the second argument
-    # XXX: Need to support failure modes in metric computation...
-    import ell.lmp.function
-
 
     @ell.lmp.function.function()
     def score(datapoint, output, n_retries=3):
@@ -146,7 +143,8 @@ def test_llm_critic_evaluation():
     eval = ell.evaluation.Evaluation(
         name="test",
         dataset=dataset,
-        criteria={"score": score, "length": lambda _, output: len(output)},
+        samples_per_datapoint=1,
+        metrics={"score": score, "length": lambda _, output: len(output)},
     )
     # this means
     # we get metrics like "test-score", test-length etc.
@@ -164,23 +162,20 @@ def test_llm_critic_evaluation():
 
     # Using GPT-4o
     print("EVAL WITH GPT-4o")
-    result = eval.run(summarizer, samples_per_datapoint=1, n_workers=4, verbose=True)
-    print(result.scores)
-    print("Mean critic score:", np.mean([s['score'] for s in result.scores]))
-    print("Mean length of completions:", np.mean([s['length'] for s in result.scores]))
+    result = eval.run(summarizer, n_workers=10, verbose=False).results
+    print("Mean critic score:", result.metrics["score"].mean())
+    print("Mean length of completions:", result.metrics["length"].mean())
 
     # Using gpt-4o-mini
     print("EVAL WITH GPT-4o-mini")
     result = eval.run(
         summarizer,
-        samples_per_datapoint=1,
         n_workers=1,
         api_params={"model": "gpt-4o-mini"},
         verbose=False,
-    )
-    print(result.scores)
-    print("Mean critic score:", np.mean([s['score'] for s in result.scores]))
-    print("Mean length of completions:", np.mean([s['length'] for s in result.scores]))
+    ).results
+    print("Mean critic score:", result.metrics["score"].mean())
+    print("Mean length of completions:", result.metrics["length"].mean())
 
     # Define named functions for criteria
     def score_criterion(datapoint, output, n_retries=3):
@@ -208,31 +203,22 @@ def test_llm_critic_evaluation():
     eval_dict = ell.evaluation.Evaluation(
         name="test_dict",
         dataset=dataset,
-        criteria={"score": score_criterion, "length": length_criterion},
+        metrics={"score": score_criterion, "length": length_criterion},
     )
 
     # Run evaluation with list-based criteria
     print("EVAL WITH GPT-4o (list-based criteria)")
-    result_list = eval_list.run(summarizer, samples_per_datapoint=1, n_workers=4, verbose=False)
-    print(result_list.scores)
-    print("Mean critic score:", np.mean([s['score_criterion'] for s in result_list.scores]))
-    print("Mean length of completions:", np.mean([s['length_criterion'] for s in result_list.scores]))
+    results = eval_list.run(summarizer, n_workers=4, verbose=False).results
+    print("Mean critic score:", results.metrics["score"].mean())
+    print("Mean length of completions:", results.metrics["length"].mean())
 
     # Run evaluation with dict-based criteria
     print("EVAL WITH GPT-4o (dict-based criteria)")
-    result_dict = eval_dict.run(summarizer, samples_per_datapoint=1, n_workers=4, verbose=True)
-    print(result_dict.scores)
-    print("Mean critic score:", np.mean([s['score'] for s in result_dict.scores]))
-    print("Mean length of completions:", np.mean([s['length'] for s in result_dict.scores]))
+    results = eval_dict.run(summarizer , n_workers=4, verbose=False).results
+    print("Mean critic score:", results.metrics["score"].mean())
+    print("Mean length of completions:", results.metrics["length"].mean())
 
 def test_poem_eval():
-    # antipattenr needs ot get fixed.
-    dataset = [
-        { 
-            "input": [],
-        }
-    ]*20
-
     @ell.simple(model="gpt-4o")
     def write_a_bad_poem():
         """Your poem must no logner than 75 words."""
@@ -256,7 +242,7 @@ def test_poem_eval():
     ell.init(verbose=True, store="./logdir")
 
 
-    eval = ell.evaluation.Evaluation(name="poem_eval", dataset=dataset, metrics=
+    eval = ell.evaluation.Evaluation(name="poem_eval", n_evals=20, metrics=
                                     {
                                     "critic_score": score,
                                     "length": lambda _, output: len(output) ,
@@ -264,36 +250,19 @@ def test_poem_eval():
 
 
     print("EVALUATING GOOD POEM")
+    start = time.time()
     run = eval.run(write_a_good_poem, n_workers=10, verbose=False)
     print(f"Average length: {run.results.metrics['length'].mean():.2f}")
     print(f"Average word length: {run.results.metrics['average_word_length'].mean():.2f}")
     print(f"Average critic score: {run.results.metrics['critic_score'].mean():.2f}")
-
+    print(f"Time taken: {time.time() - start:.2f} seconds")
     print("EVALUATING BAD POEM")
     run = eval.run(write_a_bad_poem, n_workers=10, verbose=False)
     print(f"Average length: {run.results.metrics['length'].mean():.2f}")
     print(f"Average word length: {run.results.metrics['average_word_length'].mean():.2f}")
     print(f"Average critic score: {run.results.metrics['critic_score'].mean():.2f}")
 
-    # Expensive but a proof point to this being meaningful. BoN sampling actualyl gets you a better poem and you can calibrate the return against the discirminator. Bo10 = 85% against our critic.
-    # @ell.lmp.function.function()
-    # def rejection_sample_bad_poems(n_samples: int = 4, api_params: Dict[str, Any] = {}):
-    #     bad_poems = write_a_bad_poem(api_params=dict(n=10))
-    #     for poem in bad_poems:
-    #         if score(None, poem) > 0:
-    #             return poem
-    #     else:
-    #         return bad_poems[0]
-
-    # print("REJECTION SAMPLE BAD POEMS")
-    # run = eval.run(rejection_sample_bad_poems, n_workers=10, verbose=False)
-    # print(run.results.outputs)
-    # print(f"Average length: {run.results.metrics['length'].mean():.2f}")
-    # print(f"Average word length: {run.results.metrics['average_word_length'].mean():.2f}")
-    # print(f"Average critic score: {run.results.metrics['critic_score'].mean():.2f}")
-
 
 
 if __name__ == "__main__":
-    # ell.init(verbose=True, store="./logdir")
     test_poem_eval()
