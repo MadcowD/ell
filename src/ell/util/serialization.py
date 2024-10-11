@@ -91,8 +91,8 @@ def get_immutable_vars(vars_dict):
 
 
 def compute_state_cache_key(ipstr, fn_closure):
-    _global_free_vars_str = f"{json.dumps(get_immutable_vars(fn_closure[2]), sort_keys=True, default=repr)}"
-    _free_vars_str = f"{json.dumps(get_immutable_vars(fn_closure[3]), sort_keys=True, default=repr)}"
+    _global_free_vars_str = f"{json.dumps(get_immutable_vars(fn_closure[2]), sort_keys=True, default=repr, ensure_ascii=False)}"
+    _free_vars_str = f"{json.dumps(get_immutable_vars(fn_closure[3]), sort_keys=True, default=repr, ensure_ascii=False)}"
     state_cache_key = hashlib.sha256(f"{ipstr}{_global_free_vars_str}{_free_vars_str}".encode('utf-8')).hexdigest()
     return state_cache_key
 
@@ -103,7 +103,7 @@ def prepare_invocation_params(params):
     cleaned_invocation_params = pydantic_ltype_aware_cattr.unstructure(invocation_params)
     
     # Thisis because we wneed the caching to work on the hash of a cleaned and serialized object.
-    jstr = json.dumps(cleaned_invocation_params, sort_keys=True, default=repr)
+    jstr = json.dumps(cleaned_invocation_params, sort_keys=True, default=repr, ensure_ascii=False)
 
     consumes = set()
     import re

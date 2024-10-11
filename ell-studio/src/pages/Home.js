@@ -117,20 +117,23 @@ print(greeting)`}
           <ScrollArea className="h-screen">
             <div className="space-y-4 p-4">
               {lmps.map((lmp) => (
-                <Card 
-                  key={lmp.name} 
-                  className="cursor-pointer hover:bg-accent/50 transition-colors duration-200"
-                  onClick={(e) => toggleExpand(lmp.name, e)}
+                <Link 
+                  to={`/lmp/${lmp.name}`} 
+                  className="flex cursor-pointer hover:bg-accent/50 transition-colors duration-200"
+                  onClick={(e) => e.stopPropagation()}
                 >
+                  <Card 
+                    key={lmp.name} 
+                  className="cursor-pointer hover:bg-accent/50 rounded transition-colors duration-200"
+                  onClick={(e) => toggleExpand(lmp.name, e)}
+                  >
                   <CardHeader>
                     <div className="flex flex-col space-y-2">
-                      <Link 
-                        to={`/lmp/${lmp.name}`} 
-                        className="text-xl font-semibold text-foreground hover:text-primary break-words"
-                        onClick={(e) => e.stopPropagation()}
+                      <div 
+                        className="text-xl font-semibold text-foreground hover:text-primary break-words cursor-pointer"
                       >
                         {lmp.name}
-                      </Link>
+                      </div>
                       <div className="flex space-x-2">
                         <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
                           ID: {truncateId(lmp.lmp_id)}
@@ -150,6 +153,7 @@ print(greeting)`}
                     </div>
                   </CardContent>
                 </Card>
+              </Link>
               ))}
             </div>
           </ScrollArea>

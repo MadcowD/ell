@@ -198,7 +198,7 @@ def content_block_to_bedrock_format(content_block: ContentBlock) -> Dict[str, An
     elif content_block.parsed:
         return {
             "type": "text",
-            "text": json.dumps(content_block.parsed.model_dump())
+            "text": json.dumps(content_block.parsed.model_dump(), ensure_ascii=False)
         }
     elif content_block.tool_call:
         return {

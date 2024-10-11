@@ -7,11 +7,11 @@ from .utils import RealtimeUtils
 import json
 
 class RealtimeClient(RealtimeEventHandler):
-    def __init__(self, url=None, api_key=None, dangerously_allow_api_key_in_browser=False, debug=False):
+    def __init__(self, url=None, api_key=None, instructions='', dangerously_allow_api_key_in_browser=False, debug=False):
         super().__init__()
         self.default_session_config = {
             'modalities': ['text', 'audio'],
-            'instructions': '',
+            'instructions': instructions,
             'voice': 'alloy',
             'input_audio_format': 'pcm16',
             'output_audio_format': 'pcm16',
@@ -66,7 +66,7 @@ class RealtimeClient(RealtimeEventHandler):
         self.realtime.on('server.response.content_part.added', handle_conversation_event)
         self.realtime.on('server.input_audio_buffer.speech_started', lambda event: (
             handle_conversation_event(event),
-            self.dispatch('conversation.interrupted')
+            self.dispatch('conversation.interrupted', event)
         ))
         self.realtime.on('server.input_audio_buffer.speech_stopped', lambda event: 
             handle_conversation_event(event, self.input_audio_buffer)
@@ -82,11 +82,21 @@ class RealtimeClient(RealtimeEventHandler):
         self.realtime.on('server.response.audio.delta', handle_conversation_event)
         self.realtime.on('server.response.text.delta', handle_conversation_event)
         self.realtime.on('server.response.function_call_arguments.delta', handle_conversation_event)
-        self.realtime.on('server.response.output_item.done', lambda event: (
-            handle_conversation_event(event),
-            self.dispatch('conversation.item.completed', {'item': event['item']}) if event['item']['status'] == 'completed' else None,
-            self._call_tool(event['item']['formatted']['tool']) if event['item']['formatted'].get('tool') else None
-        ))
+        def handle_output_item_done( event):
+            handle_conversation_event(event)
+            item = event.get('item', {})
+            
+            if item.get('status') == 'completed':
+                self.dispatch('conversation.item.completed', {'item': item})
+            
+            formatted = item.get('formatted', {})
+            tool = formatted.get('tool') if isinstance(formatted, dict) else None
+            
+            if tool:
+                asyncio.create_task(self._call_tool(tool))
+        self.realtime.on('server.response.output_item.done', handle_output_item_done)
+
+  
 
     def is_connected(self):
         return self.realtime.is_connected() and self.session_created
@@ -233,7 +243,7 @@ class RealtimeClient(RealtimeEventHandler):
                 'item': {
                     'type': 'function_call_output',
                     'call_id': tool['call_id'],
-                    'output': json.dumps(result)
+                    'output': json.dumps(result, ensure_ascii=False)
                 }
             })
         except Exception as e:
@@ -241,7 +251,7 @@ class RealtimeClient(RealtimeEventHandler):
                 'item': {
                     'type': 'function_call_output',
                     'call_id': tool['call_id'],
-                    'output': json.dumps({'error': str(e)})
+                    'output': json.dumps({'error': str(e)}, ensure_ascii=False)
                 }
             })
         self.create_response()

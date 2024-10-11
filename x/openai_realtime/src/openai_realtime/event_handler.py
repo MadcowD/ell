@@ -11,11 +11,17 @@ class RealtimeEventHandler:
         self.next_event_handlers.clear()
         return True
 
-    def on(self, event_name: str, callback: Callable):
-        if event_name not in self.event_handlers:
-            self.event_handlers[event_name] = []
-        self.event_handlers[event_name].append(callback)
-        return callback
+    def on(self, event_name: str, callback: Callable = None):
+        def decorator(func):
+            if event_name not in self.event_handlers:
+                self.event_handlers[event_name] = []
+            self.event_handlers[event_name].append(func)
+            return func
+
+        if callback is None:
+            return decorator
+        else:
+            return decorator(callback)
 
     def on_next(self, event_name: str, callback: Callable):
         if event_name not in self.next_event_handlers:

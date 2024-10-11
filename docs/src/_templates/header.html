@@ -1,33 +1,131 @@
 {% extends "!header.html" %}
 
 {% block header_logo %}
-      <a href="{{ pathto(master_doc) }}" class="flex items-center mr-6">
-        {%- if logo_url %}
-          <img height="24" width="120" class="mr-2 dark:invert" src="{{ logo_url }}" alt="Logo" />
-        {%- endif -%}
-        {%- if theme_logo_dark and not logo_url %}
-          <img width="120" height="24" class="mr-2 hidden dark:block" src="{{ pathto('_static/' + theme_logo_dark, 1) }}" alt="Logo" />
-        {%- endif -%}
-        {%- if theme_logo_light and not logo_url %}
-        <img width="120" height="24" class="mr-2 dark:hidden" src="{{ pathto('_static/' + theme_logo_light, 1) }}" alt="Logo" />
-        {%- endif -%}
-      </a>
+<style>
+:root {
+  --color-1: 0 100% 63%;
+  --color-2: 270 100% 63%;
+  --color-3: 210 100% 63%;
+  --color-4: 195 100% 63%;
+  --color-5: 90 100% 63%;
+}
+
+@keyframes rainbow {
+    0% { background-position: 0%; }
+    100% { background-position: 200%; }
+}
+
+.github-star-btn {
+    height: 2.2rem;
+    padding: 0.5rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    border: 0;
+    position: relative;
+    background-size: 200%;
+    background-clip: padding-box, border-box, border-box;
+    background-origin: border-box;
+    border: calc(0.08 * 1rem) solid transparent;
+    color: #fff;
+    background-image: 
+      linear-gradient(#121213, #121213),
+      linear-gradient(#121213 50%, rgba(18,18,19,0.6) 80%, rgba(18,18,19,0)),
+      linear-gradient(90deg, hsl(var(--color-1)), hsl(var(--color-5)), hsl(var(--color-3)), hsl(var(--color-4)), hsl(var(--color-2)));
+    animation: rainbow 2s infinite linear;
+}
+
+.github-star-btn::before {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    left: 50%;
+    z-index: 0;
+    height: 20%;
+    width: 60%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, hsl(var(--color-1)), hsl(var(--color-5)), hsl(var(--color-3)), hsl(var(--color-4)), hsl(var(--color-2)));
+    background-size: 200%;
+    filter: blur(calc(0.8 * 1rem));
+    animation: rainbow 2s infinite linear;
+}
+
+.dark .github-star-btn {
+    color: #030303;
+    background-image: 
+      linear-gradient(#fff, #fff),
+      linear-gradient(#fff 50%, rgba(255,255,255,0.6) 80%, rgba(0,0,0,0)),
+      linear-gradient(90deg, hsl(var(--color-1)), hsl(var(--color-5)), hsl(var(--color-3)), hsl(var(--color-4)), hsl(var(--color-2)));
+}
+
+
+nav a {
+  white-space: nowrap;
+}
+
+.twin-btn-container {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-direction: row-reverse;
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .twin-btn-container {
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+}
+
+
+@media (max-width: 640px) {
+    .github-star-btn {
+        font-size: 12px;
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+
+
+</style>
+
+
+<a href="{{ pathto(master_doc) }}" class="flex items-center mr-6">
+    {%- if logo_url %}
+      <img height="24" width="120" class="mr-2 dark:invert" src="{{ logo_url }}" alt="Logo" style="min-width: 120px; max-width: 120px;" />
+    {%- endif -%}
+    {%- if theme_logo_dark and not logo_url %}
+      <img width="120" height="24" class="mr-2 hidden dark:block" src="{{ pathto('_static/' + theme_logo_dark, 1) }}" alt="Logo" style="min-width: 120px; max-width: 120px;" />
+    {%- endif -%}
+    {%- if theme_logo_light and not logo_url %}
+    <img width="120" height="24" class="mr-2 dark:hidden" src="{{ pathto('_static/' + theme_logo_light, 1) }}" alt="Logo" style="min-width: 120px; max-width: 120px;" />
+    {%- endif -%}
+</a>
 {% endblock header_logo %}
 
-
 {%- block header_right %}
-<div class="flex items-center justify-between flex-1 space-x-2 sm:space-x-4 md:justify-end">
+<div class="flex flex-wrap items-center justify-between flex-1 space-x-2 sm:space-x-4 md:justify-end">
   {%- if docsearch or hasdoc('search') %}
-  <div class="ml-4">
-    <a href="https://github.com/madcowd/ell" target="_blank" rel="noopener noreferrer" class="github-star-btn flex items-center px-3 py-2 rounded-md  transition-colors rounded-md border border-gray-500 px-4" >
-      <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+  <div class="twin-btn-container">
+  <div class="github-star-btn-container md:w-auto mb-2 md:mb-0">
+    <a href="https://github.com/madcowd/ell" target="_blank" rel="noopener noreferrer" class="github-star-btn whitespace-nowrap">
+      <svg class="w-5 h-5 mr-2 hidden sm:inline-block" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
       </svg>
       <span class="font-medium">Star on GitHub</span>
+      <svg class="star-icon w-4 h-4 ml-2" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <animate attributeName="opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite" />
+        </path>
+      </svg>
       <span class="ml-2 star-count" data-stars="0" style="min-width: 3ch; text-align: center;">0</span>
     </a>
   </div>
-
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const starBtn = document.querySelector('.github-star-btn');
@@ -58,18 +156,40 @@
 
   </script>
 
-  <div class="flex-1 w-full md:w-auto md:flex-none">
+  <div class="searchbox-container w-full md:w-auto md:flex-none">
     {%- include "searchbox.html" %}
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.querySelector('.searchbox-container input');
+      const starBtnContainer = document.querySelector('.github-star-btn-container');
+  
+      if (searchInput && starBtnContainer) {
+        const isMobile = window.innerWidth < 768; // Adjust this breakpoint as needed
+  
+        if (isMobile) {
+          searchInput.addEventListener('focus', function() {
+            starBtnContainer.style.display = 'none';
+          });
+  
+          searchInput.addEventListener('blur', function() {
+            starBtnContainer.style.display = 'block';
+          });
+        }
+      }
+    });
+  </script>
+</div>
   {%- endif %}
 
   {%- block extra_header_link_icons %}
-  <nav class="flex items-center space-x-1">
+  <nav class="flex items-center space-x-1 mt-2 md:mt-0">
     {%- if theme_extra_header_link_icons|tobool %}
     {%- for text,url in theme_extra_header_link_icons.items() %}
     {%- if url is mapping %}
     <a href="{{ url.link }}" title="Visit {{ text }}" rel="noopener nofollow">
-      <div
+      <div 
         class="inline-flex items-center justify-center px-0 text-sm font-medium transition-colors rounded-md disabled:opacity-50 disabled:pointer-events-none hover:bg-accent hover:text-accent-foreground h-9 w-9">
         {{ url.icon }}
       </div>
