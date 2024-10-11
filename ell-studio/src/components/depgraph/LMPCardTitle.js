@@ -14,7 +14,8 @@ export function LMPCardTitle({
     shortVersion = false,
     paddingClassOverride = '',
     nameOverride = null,
-    showInvocationCount = true,  // New prop to control invocation count display
+    showInvocationCount = true,
+    outlineStyle = 'solid',  // New prop to control outline style
     ...rest
 }) {
     const paddingClass = paddingClassOverride ? paddingClassOverride : padding ? 'p-2' : '';
@@ -23,19 +24,22 @@ export function LMPCardTitle({
     const hoverClass = clickable ? ' duration-200 ease-in-out hover:bg-opacity-80 hover:bg-gray-700' : '';
     const cursorClass = clickable ? 'cursor-pointer' : '';
 
+    // Define outline styles
+    const outlineClasses = {
+        solid: lmp.is_lmp ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800',
+        dashed: lmp.is_lmp ? 'bg-transparent text-blue-800 border border-dashed border-blue-400' : 'bg-transparent text-yellow-800 border border-dashed border-yellow-400'
+    };
+
     return (
         <div className={`flex items-center space-x-2 ${paddingClass} ${scaleClass} transition-colors ${additionalClassName} ${hoverClass} ${cursorClass} rounded-md overflow-hidden`} {...(clickable ? rest : {})}>
             <div className="flex-shrink-0">
                 {lmp.lmp_type === "LM" ? 
-                    // <div className="h-3 w-3">
-                    //     <img src="/gif.gif" alt="LMP logo" className="h-full w-full object-contain invert" />
-                    // </div>
                     <BiCube className="h-4 w-4 text-yellow-600" />
                 : lmp.lmp_type === "TOOL" ?
                     <FiTool className="h-4 w-4 text-white-600" />
                 : <BiCube className="h-4 w-4 text-yellow-600" />}
             </div>
-            {nameOverride ? nameOverride : <code className={`px-2 py-1 rounded-md ${lmp.is_lmp ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'} text-${fontSize} font-medium truncate`}>
+            {nameOverride ? nameOverride : <code className={`px-2 py-1 rounded-md ${outlineClasses[outlineStyle]} text-${fontSize} font-medium truncate`}>
                  {lmp.name}()
             </code> }
             {displayVersion && <VersionBadge version={lmp.version_number + 1} lmpId={lmp.lmp_id} shortVersion={shortVersion} />}
