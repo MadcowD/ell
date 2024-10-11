@@ -15,22 +15,26 @@ const EvaluationCard = ({ evaluation }) => {
   const totalRuns = evaluation.runs.length;
   const successfulRuns = evaluation.runs.filter(run => run.success).length;
 
-  // Group runs by LMP FQN
+  // Group runs by LMP name
   const groupedRuns = useMemo(() => {
     const groups = {};
     evaluation.runs.forEach(run => {
-      const fqn = `${run.evaluated_lmp.name}.${run.evaluated_lmp.lmp_id}`;
-      if (!groups[fqn]) {
-        groups[fqn] = [];
+      const lmpName = run.evaluated_lmp.name;
+      if (!groups[lmpName]) {
+        groups[lmpName] = [];
       }
-      groups[fqn].push(run);
+      groups[lmpName].push(run);
     });
     return groups;
   }, [evaluation.runs]);
 
-  // Get the latest run for each LMP
+  // Get the latest run for each LMP name
   const latestRuns = useMemo(() => {
-    return Object.values(groupedRuns).map(runs => runs[runs.length - 1]);
+    return Object.values(groupedRuns).map(runs => 
+      runs.reduce((latest, current) => 
+        new Date(current.end_time) > new Date(latest.end_time) ? current : latest
+      )
+    );
   }, [groupedRuns]);
 
   // Extract the evaluated LMPs from the latest runs

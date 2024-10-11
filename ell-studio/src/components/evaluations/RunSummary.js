@@ -81,7 +81,7 @@ const RunSummary = ({ groupedRuns, totalRuns, successfulRuns }) => {
     new Date(current.end_time) > new Date(latest.end_time) ? current : latest
   );
 
-  const previousRun = groupedRuns[`${mostRecentRun.evaluated_lmp.name}.${mostRecentRun.evaluated_lmp.lmp_id}`]
+  const previousRun = groupedRuns[`${mostRecentRun.evaluated_lmp.name}`]
     .slice(-2, -1)[0];
 
   return (
