@@ -76,7 +76,12 @@ class SQLStore(ell.store.Store):
     def get_cached_invocations(self, lmp_id :str, state_cache_key :str) -> List[Invocation]:
         with Session(self.engine) as session:
             return self.get_invocations(session, lmp_filters={"lmp_id": lmp_id}, filters={"state_cache_key": state_cache_key})
-        
+
+    def get_cached_invocations_contents(self, lmp_id :str, state_cache_key :str) -> List[Invocation]:
+        with Session(self.engine) as session:
+            cached_invocations = self.get_invocations(session, lmp_filters={"lmp_id": lmp_id}, filters={"state_cache_key": state_cache_key})
+            return [cached.contents for cached in cached_invocations]
+
     def get_versions_by_fqn(self, fqn :str) -> List[SerializedLMP]:
         with Session(self.engine) as session:
             return self.get_lmps(session, name=fqn)

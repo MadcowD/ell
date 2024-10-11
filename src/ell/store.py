@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from typing import Any, Optional, Dict, List, Set, Union
 from ell.types._lstr import _lstr
-from ell.types import SerializedLMP, Invocation
+from ell.types import SerializedLMP, Invocation, InvocationContents
 from ell.types.message import InvocableLM
 
 class BlobStore(ABC):
@@ -56,6 +56,13 @@ class Store(ABC):
     def get_cached_invocations(self, lmp_id :str, state_cache_key :str) -> List[Invocation]:
         """
         Get cached invocations for a given LMP and state cache key.
+        """
+        pass
+
+    @abstractmethod
+    def get_cached_invocations_contents(self, lmp_id: str, state_cache_key: str) -> List[InvocationContents]:
+        """
+        Get cached invocation contents for a given LMP and state cache key.
         """
         pass
 
