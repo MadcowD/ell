@@ -6,8 +6,9 @@ For example, to register an OpenAI model:
 
 """
 
-import ell.models.openai
 import ell.models.anthropic
-import ell.models.ollama
-import ell.models.groq
 import ell.models.bedrock
+import ell.models.groq
+import ell.models.local
+import ell.models.ollama
+import ell.models.openai
