@@ -1,14 +1,26 @@
-import React from 'react';
-import { FiArrowUp, FiArrowDown } from 'react-icons/fi';
+import React, { useEffect, useRef, useState } from 'react';
+import { Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, LineElement, PointElement, Tooltip as ChartTooltip, Filler } from 'chart.js';
 import { LMPCardTitle } from '../depgraph/LMPCardTitle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../common/Tooltips';
+import { FiTrendingUp, FiTrendingDown, FiMinus, FiBarChart2 } from 'react-icons/fi';
 
-const getPercentageChange = (current, previous) => {
-  if (previous === 0) return current > 0 ? 100 : 0;
-  return ((current - previous) / previous) * 100;
+ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, ChartTooltip, Filler);
+
+const getColorForTrend = (trend) => {
+  if (trend > 0) return 'text-emerald-400';
+  if (trend < 0) return 'text-rose-400';
+  return 'text-gray-400';
+};
+
+const getTrendIcon = (trend) => {
+  if (trend > 0) return <FiTrendingUp className="inline-block mr-1" />;
+  if (trend < 0) return <FiTrendingDown className="inline-block mr-1" />;
+  return <FiMinus className="inline-block mr-1" />;
 };
 
 const calculateConfidence = (current, previous, currentStdDev, previousStdDev, n) => {
+  if (previous === undefined || previous === null) return 0;
   const pooledStdDev = Math.sqrt((currentStdDev**2 + previousStdDev**2) / 2);
   const standardError = pooledStdDev * Math.sqrt(2/n);
   const zScore = Math.abs(current - previous) / standardError;
@@ -16,7 +28,6 @@ const calculateConfidence = (current, previous, currentStdDev, previousStdDev, n
   return confidence;
 };
 
-// Approximation of the cumulative distribution function for the standard normal distribution
 const pnorm = (x) => {
   const t = 1 / (1 + 0.2316419 * Math.abs(x));
   const d = 0.3989423 * Math.exp(-x * x / 2);
@@ -25,26 +36,129 @@ const pnorm = (x) => {
   return p;
 };
 
-const MetricChange = ({ current, previous, currentStdDev, previousStdDev, n }) => {
-  const percentChange = getPercentageChange(current, previous);
-  const isPositive = percentChange > 0;
-  const color = isPositive ? 'text-green-600' : 'text-red-600';
-  const Icon = isPositive ? FiArrowUp : FiArrowDown;
-  const confidence = calculateConfidence(current, previous, currentStdDev, previousStdDev, n);
+const MetricChart = ({ data, hoverIndex, onHover }) => {
+  const chartRef = useRef(null);
+  const [chartKey, setChartKey] = useState(0);
+
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(() => {
+      if (chartRef.current) {
+        chartRef.current.resize();
+        setChartKey(prevKey => prevKey + 1);
+      }
+    });
+
+    if (chartRef.current) {
+      resizeObserver.observe(chartRef.current.canvas);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  const trend = data[data.length - 1] - data[0];
+  const trendColor = trend > 0 ? 'rgba(52, 211, 153, 0.8)' : 'rgba(239, 68, 68, 0.8)';
+  const fillColor = trend > 0 ? 'rgba(52, 211, 153, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+
+  const chartData = {
+    labels: data.map((_, index) => index + 1),
+    datasets: [{
+      data,
+      borderColor: trendColor,
+      backgroundColor: fillColor,
+      pointRadius: 0,
+      borderWidth: 1,
+      tension: 0.4,
+      fill: true,
+    }],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { 
+      legend: { display: false },
+      tooltip: { enabled: false }
+    },
+    scales: { 
+      x: { display: false }, 
+      y: { 
+        display: false,
+        min: Math.min(...data) * 0.95,
+        max: Math.max(...data) * 1.05,
+      } 
+    },
+  };
 
   return (
-    <TooltipProvider delayDuration={50}>
+    <div 
+      style={{ width: '100%', height: '20px' }}
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const index = Math.round((x / rect.width) * (data.length - 1));
+        onHover(index);
+      }}
+      onMouseLeave={() => onHover(null)}
+    >
+      <Line key={chartKey} ref={chartRef} data={chartData} options={options} />
+    </div>
+  );
+};
+
+const MetricDisplay = ({ summary, historicalData }) => {
+  const [hoverIndex, setHoverIndex] = useState(null);
+  const currentValue = hoverIndex !== null ? historicalData[hoverIndex].mean : summary.data.mean;
+  const previousValue = historicalData[historicalData.length - 2]?.mean;
+  
+  const percentChange = previousValue !== undefined && previousValue !== 0
+    ? ((currentValue - previousValue) / Math.abs(previousValue) * 100).toFixed(1)
+    : (currentValue !== 0 ? '100.0' : '0.0');
+
+  const trendColor = getColorForTrend(parseFloat(percentChange));
+  const trendIcon = getTrendIcon(parseFloat(percentChange));
+  const confidence = calculateConfidence(
+    currentValue,
+    previousValue,
+    summary.data.std,
+    historicalData[historicalData.length - 2]?.std || 0,
+    summary.count
+  );
+
+  return (
+    <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={`flex items-center ${color} text-xs`}>
-            <Icon className="mr-0.5 h-3 w-3" />
-            {Math.abs(percentChange).toFixed(1)}%
-          </span>
+          <div className="flex items-center space-x-2 text-xs py-1 hover:bg-accent/50 transition-colors duration-200">
+            <div className="w-1/2 font-medium truncate flex items-center" title={summary.evaluation_labeler.name}>
+              <FiBarChart2 className="mr-1 h-3 w-3 text-muted-foreground flex-shrink-0" />
+              <code className="text-xs font-medium truncate">
+                {summary.evaluation_labeler.name}
+              </code>
+            </div>
+            <div className="w-1/2 flex items-center justify-end space-x-2">
+              <div className="w-16">
+                <MetricChart 
+                  data={historicalData.map(d => d.mean)} 
+                  hoverIndex={hoverIndex}
+                  onHover={setHoverIndex}
+                />
+              </div>
+              <div className="text-right min-w-12"> {/* Fixed width and height */}
+                <div className="font-bold font-mono">{currentValue.toFixed(2)}</div>
+                <div className={`text-[10px] ${trendColor}`}>
+                  {trendIcon}
+                  {Math.abs(parseFloat(percentChange)).toFixed(1)}%
+                </div>
+              </div>
+            </div>
+          </div>
         </TooltipTrigger>
-        <TooltipContent>
+        <TooltipContent sideOffset={25}>
           <div className="text-xs">
-            <p>Change: {(current - previous).toFixed(4)}</p>
-            <p>Percentage Change: {percentChange.toFixed(2)}%</p>
+            <p className="font-medium">{summary.evaluation_labeler.name}</p>
+            <p>Current: {currentValue.toFixed(4)} (±{summary.data.std.toFixed(4)})</p>
+            <p>Previous: {previousValue !== undefined ? previousValue.toFixed(4) : 'N/A'}</p>
+            <p>Change: {previousValue !== undefined ? (currentValue - previousValue).toFixed(4) : 'N/A'}</p>
             <p>Confidence: {confidence.toFixed(2)}%</p>
           </div>
         </TooltipContent>
@@ -53,34 +167,11 @@ const MetricChange = ({ current, previous, currentStdDev, previousStdDev, n }) =
   );
 };
 
-const MetricValue = ({ value, stdDev, n }) => (
-  <TooltipProvider>
-    <Tooltip delayDuration={0}>
-      <TooltipTrigger asChild>
-        <span className="flex items-baseline text-xs">
-          {value.toFixed(2)}
-          <span className="ml-0.5 text-[8px] text-gray-400 border-b border-dotted border-gray-400 leading-[1.3]">±{stdDev.toFixed(2)}</span>
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>
-        <div className="text-xs">
-          <p>Mean: {value.toFixed(4)}</p>
-          <p>Standard Deviation: {stdDev.toFixed(4)}</p>
-          <p>Number of Datapoints: {n}</p>
-        </div>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-);
-
 const RunSummary = ({ groupedRuns }) => {
   const latestRuns = Object.values(groupedRuns).map(runs => runs[runs.length - 1]);
   const mostRecentRun = latestRuns.reduce((latest, current) => 
     new Date(current.end_time) > new Date(latest.end_time) ? current : latest
   );
-
-  const previousRun = groupedRuns[`${mostRecentRun.evaluated_lmp.name}`]
-    .slice(-2, -1)[0];
 
   return (
     <div className="text-xs">
@@ -88,36 +179,28 @@ const RunSummary = ({ groupedRuns }) => {
         lmp={mostRecentRun.evaluated_lmp} 
         displayVersion 
         showInvocationCount={true} 
-        additionalClassName="text-[10px]" 
+        additionalClassName="text-xs mb-2" 
         paddingClassOverride='p-2'
       />
-      <div className="space-y-1 p-2 pt-0">
-        {mostRecentRun.labeler_summaries.map(summary => {
+      <div className="pt-0 p-2">
+        {mostRecentRun.labeler_summaries.map((summary, index) => {
           if (!summary.is_scalar) return null;
-          const previousSummary = previousRun?.labeler_summaries.find(
-            s => s.evaluation_labeler_id === summary.evaluation_labeler_id
-          );
-          const currentValue = summary.data.mean;
-          const previousValue = previousSummary?.data.mean || 0;
+          const historicalData = groupedRuns[mostRecentRun.evaluated_lmp.name]
+            .map(run => run.labeler_summaries
+              .find(s => s.evaluation_labeler_id === summary.evaluation_labeler_id)?.data
+            )
+            .filter(Boolean);
 
           return (
-            <div key={summary.evaluation_labeler_id} className="flex items-center justify-between">
-              <span className="font-medium truncate mr-2" title={summary.evaluation_labeler.name}>
-                {summary.evaluation_labeler.name}:
-              </span>
-              <div className="flex items-center space-x-2">
-                <MetricValue value={currentValue} stdDev={summary.data.std} n={summary.count} />
-                {previousRun && (
-                  <MetricChange 
-                    current={currentValue} 
-                    previous={previousValue} 
-                    currentStdDev={summary.data.std}
-                    previousStdDev={previousSummary?.data.std || 0}
-                    n={summary.count}
-                  />
-                )}
-              </div>
-            </div>
+            <React.Fragment key={summary.evaluation_labeler_id}>
+              <MetricDisplay 
+                summary={summary}
+                historicalData={historicalData}
+              />
+              {index < mostRecentRun.labeler_summaries.length - 1 && (
+                <div className="border-b border-gray-900 my-1" />
+              )}
+            </React.Fragment>
           );
         })}
       </div>
