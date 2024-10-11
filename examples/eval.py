@@ -47,7 +47,7 @@ def test_predictor_evaluation():
             "input": {"question": "What is the capital of argentina?"},
             "expected_output": "Buenos Aires",
         },
-        {"input": {"question": "Hotdog land"}, "expected_output": "Hotdog land"},
+        {"input": {"question": "Hotdog land"}, "expected_output": "Banana"},
     ]
 
     def is_correct(datapoint, output):
@@ -62,7 +62,7 @@ def test_predictor_evaluation():
     @ell.simple(model="gpt-4o")
     def predict_capital(question: str):
         """
-        Answer only with the capital of the country. If hotdog land, answer hotdog land.
+        Answer only with the capital of the country. If hotdog land, answer Banana.
         """
         # print(question[0])
         return f"Answer the following question. {question}"
@@ -222,7 +222,7 @@ def test_poem_eval():
     @ell.simple(model="gpt-4o")
     def write_a_bad_poem(): 
         """Your poem must no logner than 60 words."""
-        return "Write a really poorly written poem but make use big words. It should be  basically unintelligablle to most college level students."
+        return "Write a really well written poem. "
 
 
     @ell.simple(model="gpt-4o")
@@ -242,7 +242,7 @@ def test_poem_eval():
     ell.init(verbose=True, store="./logdir")
 
 
-    eval = ell.evaluation.Evaluation(name="poem_eval", n_evals=20, metrics=
+    eval = ell.evaluation.Evaluation(name="poem_eval", n_evals=25, metrics=
                                     {
                                     "critic_score": score,
                                     "length": lambda _, output: len(output) ,
@@ -265,4 +265,6 @@ def test_poem_eval():
 
 
 if __name__ == "__main__":
-    test_poem_eval()
+   test_poem_eval()
+#    ell.init(verbose=True, store="./logdir")
+#    test_predictor_evaluation()

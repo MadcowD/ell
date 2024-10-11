@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState, useEffect, useLayoutEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, LineElement, PointElement, Tooltip as ChartTooltip, Filler } from 'chart.js';
 import { LMPCardTitle } from '../depgraph/LMPCardTitle';
@@ -38,22 +38,6 @@ const pnorm = (x) => {
 
 const MetricChart = ({ data, hoverIndex, onHover }) => {
   const chartRef = useRef(null);
-  const [chartKey, setChartKey] = useState(0);
-
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver(() => {
-      if (chartRef.current) {
-        chartRef.current.resize();
-        setChartKey(prevKey => prevKey + 1);
-      }
-    });
-
-    if (chartRef.current) {
-      resizeObserver.observe(chartRef.current.canvas);
-    }
-
-    return () => resizeObserver.disconnect();
-  }, []);
 
   const trend = data[data.length - 1] - data[0];
   const trendColor = trend > 0 ? 'rgba(52, 211, 153, 0.8)' : 'rgba(239, 68, 68, 0.8)';
@@ -91,7 +75,7 @@ const MetricChart = ({ data, hoverIndex, onHover }) => {
 
   return (
     <div 
-      style={{ width: '100%', height: '20px' }}
+      className="w-full h-5"
       onMouseMove={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -100,13 +84,14 @@ const MetricChart = ({ data, hoverIndex, onHover }) => {
       }}
       onMouseLeave={() => onHover(null)}
     >
-      <Line key={chartKey} ref={chartRef} data={chartData} options={options} />
+      <Line ref={chartRef} data={chartData} options={options} />
     </div>
   );
 };
 
-const MetricDisplay = ({ summary, historicalData }) => {
+const MetricDisplay = ({ summary, historicalData, isVertical }) => {
   const [hoverIndex, setHoverIndex] = useState(null);
+
   const currentValue = hoverIndex !== null ? historicalData[hoverIndex].mean : summary.data.mean;
   const previousValue = historicalData[historicalData.length - 2]?.mean;
   
@@ -128,22 +113,22 @@ const MetricDisplay = ({ summary, historicalData }) => {
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="flex items-center space-x-2 text-xs py-1 hover:bg-accent/50 transition-colors duration-200">
-            <div className="w-1/2 font-medium truncate flex items-center" title={summary.evaluation_labeler.name}>
+          <div className={`flex flex-col space-y-1 text-xs py-1 hover:bg-accent/50 transition-colors duration-200`}>
+            <div className={`w-full  font-medium truncate flex items-center`} title={summary.evaluation_labeler.name}>
               <FiBarChart2 className="mr-1 h-3 w-3 text-muted-foreground flex-shrink-0" />
-              <code className="text-xs font-medium truncate">
+              <code className="metric-label text-xs font-medium truncate max-w-[calc(100%-1.5rem)]">
                 {summary.evaluation_labeler.name}
               </code>
             </div>
-            <div className="w-1/2 flex items-center justify-end space-x-2">
-              <div className="w-16">
+            <div className={`w-full flex items-center justify-between md:justify-end space-x-2`}>
+              <div className="w-full min-w-[100px] max-w-[200px]">
                 <MetricChart 
                   data={historicalData.map(d => d.mean)} 
                   hoverIndex={hoverIndex}
                   onHover={setHoverIndex}
                 />
               </div>
-              <div className="text-right min-w-12"> {/* Fixed width and height */}
+              <div className="text-right min-w-[3rem]">
                 <div className="font-bold font-mono">{currentValue.toFixed(2)}</div>
                 <div className={`text-[10px] ${trendColor}`}>
                   {trendIcon}
@@ -167,14 +152,16 @@ const MetricDisplay = ({ summary, historicalData }) => {
   );
 };
 
-const RunSummary = ({ groupedRuns }) => {
+const RunSummary = ({ groupedRuns, isVertical }) => {
   const latestRuns = Object.values(groupedRuns).map(runs => runs[runs.length - 1]);
   const mostRecentRun = latestRuns.reduce((latest, current) => 
     new Date(current.end_time) > new Date(latest.end_time) ? current : latest
   );
 
+  const scalarSummaries = mostRecentRun.labeler_summaries.filter(summary => summary.is_scalar);
+
   return (
-    <div className="text-xs">
+    <div className="text-xs run-summary-container">
       <LMPCardTitle 
         lmp={mostRecentRun.evaluated_lmp} 
         displayVersion 
@@ -182,9 +169,8 @@ const RunSummary = ({ groupedRuns }) => {
         additionalClassName="text-xs mb-2" 
         paddingClassOverride='p-2'
       />
-      <div className="pt-0 p-2">
-        {mostRecentRun.labeler_summaries.map((summary, index) => {
-          if (!summary.is_scalar) return null;
+      <div className="pt-0 p-2 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+        {scalarSummaries.map((summary, index) => {
           const historicalData = groupedRuns[mostRecentRun.evaluated_lmp.name]
             .map(run => run.labeler_summaries
               .find(s => s.evaluation_labeler_id === summary.evaluation_labeler_id)?.data
@@ -196,9 +182,10 @@ const RunSummary = ({ groupedRuns }) => {
               <MetricDisplay 
                 summary={summary}
                 historicalData={historicalData}
+                isVertical={isVertical}
               />
-              {index < mostRecentRun.labeler_summaries.length - 1 && (
-                <div className="border-b border-gray-900 my-1" />
+              {index < scalarSummaries.length - 1 && (
+                <div className="border-b border-gray-900 my-0 md:hidden" />
               )}
             </React.Fragment>
           );

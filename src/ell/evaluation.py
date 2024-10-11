@@ -267,7 +267,7 @@ class Evaluation(BaseModel):
             return
         if not self.serialized:
             self.id = "evaluation-" + hsh(
-                ((dataset_hash := hsh((dill.dumps(self.dataset) if self.dataset else str(self.n_evals)) + str(self.samples_per_datapoint)))
+                ((dataset_hash := hsh((str(dill.dumps(self.dataset)) if self.dataset else str(self.n_evals)) + str(self.samples_per_datapoint)))
                     + "".join(
                         sorted(metrics_ids := [ido(f) for f in self.metrics.values()])
                         + sorted(annotation_ids := [ido(a) for a in self.annotations.values()])
@@ -477,10 +477,10 @@ class Evaluation(BaseModel):
             Tuple[List[Any], Dict[str, List[float]]]: The LMP outputs and a dictionary of scores from all metrics.
         """
         lmp_params_with_invocation_id = {**lmp_params, "_get_invocation_id": True}
-        lmp_output, invocation_id = (
+        lmp_output = (
                  lmp(**lmp_params_with_invocation_id) if not required_params  # type: ignore
             else (lmp(*inp, **lmp_params_with_invocation_id) if isinstance((inp := data_point["input"]), list)  # type: ignore
-            else (lmp(**inp, **lmp_params_with_invocation_id) if isinstanc(inp, dict)  # type: ignore
+            else (lmp(**inp, **lmp_params_with_invocation_id) if isinstance(inp, dict)  # type: ignore
             else (_ for _ in ()).throw(ValueError(f"Invalid input type: {type(inp)}")))))
 
         if not isinstance(lmp_output, list):
@@ -488,9 +488,9 @@ class Evaluation(BaseModel):
         def process_rowar_results(output):
             return _ResultDatapoint(
                 output=output,
-                metrics={name: metric(data_point, output, _get_invocation_id=True) for name, metric in self.metrics.items()},
-                annotations={name: annotation(data_point, output, _get_invocation_id=True) for name, annotation in self.annotations.items()},
-                criterion=self.criterion(data_point, output, _get_invocation_id=True) if self.criterion else None,
+                metrics={name: metric(data_point, output[0], _get_invocation_id=True) for name, metric in self.metrics.items()},
+                annotations={name: annotation(data_point, output[0], _get_invocation_id=True) for name, annotation in self.annotations.items()},
+                criterion=self.criterion(data_point, output[0], _get_invocation_id=True) if self.criterion else None,
             )
         return [partial(process_rowar_results, output) for output in lmp_output]
 
