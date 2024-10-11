@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { FiBarChart2, FiClock, FiDatabase, FiTag, FiZap, FiCode, FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import { Card, CardHeader, CardContent } from '../common/Card';
+import { Card, CardContent } from '../common/Card';
 import VersionBadge from '../VersionBadge';
 import { getTimeAgo } from '../../utils/lmpUtils';
 import { LMPCardTitle } from '../depgraph/LMPCardTitle';
@@ -40,8 +40,8 @@ const EvaluationCard = ({ evaluation }) => {
     <Link to={`/evaluations/${evaluation.id}`}>
       <Card className="hover:bg-accent/50 transition-colors duration-200">
         <CardContent className="p-4">
-          <div className="flex">
-            <div className="flex-grow pr-4">
+          <div className="flex flex-col lg:flex-row">
+            <div className="flex-grow lg:pr-4">
               <div className="flex items-center space-x-2 mb-2">
                 <FiBarChart2 className="h-4 w-4 text-yellow-600" />
                 <code className="px-2 py-1 rounded-md bg-blue-100 text-blue-800 text-sm font-medium truncate">
@@ -91,7 +91,7 @@ const EvaluationCard = ({ evaluation }) => {
                     <Card className="p-0.5 hover:bg-accent/50 transition-colors duration-200">
                       {displayedLMPs.map((lmp) => (
                         <Link key={lmp.lmp_id} to={`/lmp/${lmp.name}/${lmp.lmp_id}`} className="block">
-                          <LMPCardTitle lmp={lmp} displayVersion shortVersion={true} showInvocationCount={true} additionalClassName="text-[10px]" paddingClassOverride='p-2'/>
+                          <LMPCardTitle lmp={lmp} displayVersion shortVersion={true} showInvocationCount={true} outlineStyle='dashed' additionalClassName="text-[10px]" paddingClassOverride='p-2'/>
                         </Link>
                       ))}
                     </Card>
@@ -120,12 +120,28 @@ const EvaluationCard = ({ evaluation }) => {
             </div>
             
             {totalRuns > 0 && (
-              <div className="w-1/3 flex-shrink-0 border-l pl-4">
-                <RunSummary
-                  groupedRuns={groupedRuns}
-                  totalRuns={totalRuns}
-                  successfulRuns={successfulRuns}
-                />
+              <div className="lg:w-1/3 lg:flex-shrink-0 lg:border-l lg:pl-2 mt-4 lg:mt-0">
+                <h3 className="text-xs font-semibold mb-1 flex items-center">
+                  <FiZap className="mr-1 h-3 w-3" /> Latest Run Summary
+                </h3>
+                <div className="lg:hidden">
+                  <Card >
+                    <CardContent className="p-0">
+                      <RunSummary
+                        groupedRuns={groupedRuns}
+                        totalRuns={totalRuns}
+                        successfulRuns={successfulRuns}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+                <div className="hidden lg:block mt-2">
+                  <RunSummary
+                    groupedRuns={groupedRuns}
+                    totalRuns={totalRuns}
+                    successfulRuns={successfulRuns}
+                  />
+                </div>
               </div>
             )}
           </div>

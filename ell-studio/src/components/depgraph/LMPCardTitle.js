@@ -27,7 +27,7 @@ export function LMPCardTitle({
     // Define outline styles
     const outlineClasses = {
         solid: lmp.is_lmp ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800',
-        dashed: lmp.is_lmp ? 'bg-transparent text-blue-800 border border-dashed border-blue-400' : 'bg-transparent text-yellow-800 border border-dashed border-yellow-400'
+        dashed: lmp.is_lmp ? 'bg-transparent text-blue-500 border border-dotted border-blue-400' : 'bg-transparent text-yellow-500 border border-dotted border-yellow-400'
     };
 
     return (

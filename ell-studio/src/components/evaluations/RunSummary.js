@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiArrowUp, FiArrowDown, FiZap } from 'react-icons/fi';
+import { FiArrowUp, FiArrowDown } from 'react-icons/fi';
 import { LMPCardTitle } from '../depgraph/LMPCardTitle';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../common/Tooltips';
 
@@ -88,10 +88,10 @@ const RunSummary = ({ groupedRuns }) => {
         lmp={mostRecentRun.evaluated_lmp} 
         displayVersion 
         showInvocationCount={true} 
-        additionalClassName="text-[10px] mb-1" 
-        paddingClassOverride='p-0'
+        additionalClassName="text-[10px]" 
+        paddingClassOverride='p-2'
       />
-      <div className="space-y-1">
+      <div className="space-y-1 p-2 pt-0">
         {mostRecentRun.labeler_summaries.map(summary => {
           if (!summary.is_scalar) return null;
           const previousSummary = previousRun?.labeler_summaries.find(
