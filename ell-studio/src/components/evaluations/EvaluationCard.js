@@ -38,10 +38,10 @@ const EvaluationCard = ({ evaluation }) => {
 
   return (
     <Link to={`/evaluations/${evaluation.id}`}>
-      <Card className="hover:bg-accent/50 bg-accent/25 transition-colors duration-200 mb-4" >
+      <Card className="hover:bg-accent/50 bg-accent/10 transition-colors duration-200 mb-4" >
         <CardContent className="p-4">
-          <div className="flex flex-col 2xl:flex-row">
-            <div className="flex-grow 2xl:pr-4 2xl:w-1/2">
+          <div className="flex flex-col lg:flex-row">
+            <div className="flex-grow lg:pr-4 lg:w-1/2">
               <div className="flex items-center space-x-2 mb-2">
                 <FiBarChart2 className="h-4 w-4 text-yellow-600" />
                 <code className="px-2 py-1 rounded-md bg-blue-100 text-blue-800 text-sm font-medium truncate">
@@ -83,7 +83,7 @@ const EvaluationCard = ({ evaluation }) => {
               </div>
               
               {evaluatedLMPs.length > 0 && (
-                <div className="border-t pt-3 mt-2">
+                <div className="border-t pt-3 mt-2 hidden lg:block">
                   <h3 className="text-xs font-semibold mb-1 flex items-center">
                     <FiCode className="mr-1" /> Evaluated LMPs
                   </h3>
@@ -120,11 +120,11 @@ const EvaluationCard = ({ evaluation }) => {
             </div>
             
             {totalRuns > 0 && (
-              <div className="2xl:w-1/2 2xl:flex-shrink-0 2xl:border-l 2xl:pl-2 mt-4 2xl:mt-0">
+              <div className="lg:w-1/2 lg:flex-shrink-0 lg:border-l lg:pl-2 mt-4 lg:mt-0">
                 <h3 className="text-xs font-semibold mb-1 flex items-center">
                   <FiZap className="mr-1 h-3 w-3" /> Latest Run Summary
                 </h3>
-                <div className="2xl:hidden">
+                <div className="lg:hidden">
                   <Card >
                     <CardContent className="p-0">
                       <RunSummary
@@ -136,7 +136,7 @@ const EvaluationCard = ({ evaluation }) => {
                     </CardContent>
                   </Card>
                 </div>
-                <div className="hidden 2xl:block mt-2">
+                <div className="hidden lg:block mt-2">
                   <RunSummary
                     groupedRuns={groupedRuns}
                     totalRuns={totalRuns}

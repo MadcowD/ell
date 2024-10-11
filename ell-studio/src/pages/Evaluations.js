@@ -7,7 +7,6 @@ import { Card, CardHeader, CardContent } from '../components/common/Card';
 import { ScrollArea } from '../components/common/ScrollArea';
 import { Button } from '../components/common/Button';
 import EvaluationCard from '../components/evaluations/EvaluationCard';
-import EvaluationsAnalyticsSidePanel from '../components/evaluations/EvaluationsAnalyticsSidePanel';
 
 const Evaluations = () => {
   const navigate = useNavigate();
@@ -31,16 +30,12 @@ const Evaluations = () => {
     navigate('/evaluations/create');
   };
 
-  const sidebarContent = (
-    <EvaluationsAnalyticsSidePanel evaluations={filteredEvaluations} />
-  );
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
-
   return (
-    <GenericPageLayout sidebarContent={sidebarContent}>
+    <GenericPageLayout showSidebar={false}>
       <div className="bg-background text-foreground p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold">Evaluations</h1>

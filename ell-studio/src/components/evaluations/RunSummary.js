@@ -120,7 +120,7 @@ const MetricDisplay = ({ summary, historicalData, isVertical }) => {
                 {summary.evaluation_labeler.name}
               </code>
             </div>
-            <div className={`w-full flex items-center justify-between md:justify-end space-x-2`}>
+            <div className={`w-full flex items-center justify-between space-x-2`}>
               <div className="w-full min-w-[100px] max-w-[200px]">
                 <MetricChart 
                   data={historicalData.map(d => d.mean)} 
@@ -128,11 +128,11 @@ const MetricDisplay = ({ summary, historicalData, isVertical }) => {
                   onHover={setHoverIndex}
                 />
               </div>
+              <div className="flex-shrink-0"></div>
               <div className="text-right min-w-[3rem]">
                 <div className="font-bold font-mono">{currentValue.toFixed(2)}</div>
-                <div className={`text-[10px] ${trendColor}`}>
-                  {trendIcon}
-                  {Math.abs(parseFloat(percentChange)).toFixed(1)}%
+                <div className={`text-[10px] ${trendColor} whitespace-nowrap`}>
+                  {trendIcon}{Math.abs(parseFloat(percentChange)).toFixed(1)}%
                 </div>
               </div>
             </div>
@@ -168,6 +168,7 @@ const RunSummary = ({ groupedRuns, isVertical }) => {
         showInvocationCount={true} 
         additionalClassName="text-xs mb-2" 
         paddingClassOverride='p-2'
+        shortVersion={!isVertical}
       />
       <div className="pt-0 p-2 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
         {scalarSummaries.map((summary, index) => {
