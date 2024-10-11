@@ -225,9 +225,10 @@ class _OpenAIProvider extends BaseProvider implements Provider {
                 new ContentBlock({
                   tool_call: new ToolCall(
                     matching_tool,
-                    tool_call.id,
                     //new _lstr(tool_call.id, origin_id),
-                    JSON.parse(tool_call.function.arguments)
+                    // FIXME. this is not safe as the model may not return valid json
+                    JSON.parse(tool_call.function.arguments),
+                    tool_call.id,
                   ),
                 })
               )
@@ -291,13 +292,14 @@ export const messageToOpenAIFormat = async (
           id: toolCall.tool_call_id!,
           type: 'function',
           function: {
-            name: toolCall.tool.name,
+            // @ts-ignore
+            name: toolCall.tool.__ell_tool_name__,
             arguments: JSON.stringify(toolCall.params),
           },
         })),
       }
     } catch (e) {
-      console.error(`Error serializing tool calls: ${e}. Did you fully type your @ell.tool decorated functions?`)
+      console.error(`Error serializing tool calls`,e)
       throw e
     }
   }

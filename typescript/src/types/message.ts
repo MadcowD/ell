@@ -82,15 +82,19 @@ class ToolCall {
     public tool_call_id?: _lstr_generic
   ) {}
 
-  call(): any {
+  async call(): Promise<any> {
     // Implementation
-    return this.tool(...Object.values(this.params))
+    return await this.tool(this.params)
   }
 
-  callAndCollectAsMessageBlock(): ContentBlock {
-    const res = this.tool(...Object.values(this.params), {
-      _tool_call_id: this.tool_call_id,
-    })
+  async callAndCollectAsMessageBlock(): Promise<ContentBlock> {
+    const res = await this.tool(
+      // only support structs in ts
+      // ...Object.values(this.params)
+      this.params,
+      undefined,
+      this.tool_call_id,
+    )
     return new ContentBlock({ tool_result: res })
   }
 
@@ -235,13 +239,16 @@ class Message<ResponseFormat extends ResponseFormatSchema | string | Image = str
   }
 
   async callToolsAndCollectAsMessage(parallel: boolean = false, maxWorkers?: number): Promise<Message> {
-    let content: ContentBlock[]
+    let content: ContentBlock[] = []
     if (parallel) {
       content = await Promise.all(
         this.content.filter((c) => c.tool_call).map((c) => c.tool_call!.callAndCollectAsMessageBlock())
       )
     } else {
-      content = this.content.filter((c) => c.tool_call).map((c) => c.tool_call!.callAndCollectAsMessageBlock())
+      const toolCalls = this.content.filter((c) => c.tool_call).map((c) => c.tool_call!)
+      for (const toolCall of toolCalls) {
+        content.push(await toolCall.callAndCollectAsMessageBlock())
+      }
     }
     return new Message('user', content)
   }

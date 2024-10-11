@@ -56,7 +56,7 @@ test('getLMPsInFile', async () => {
     config: '',
     endColumn: 3,
     endLine: 13,
-    filepath: '/Users/alexdixon/projects/ell2t/typescript/test/fixtures/example.ts',
+    filepath: path.join(pathToRepoRoot, '/test/fixtures/example.ts'),
     fqn: 'test.fixtures.example.approveClaim',
     // "inputSchema": z.object({claim_id: z.number()}),
     // "outputSchema": z.string(),

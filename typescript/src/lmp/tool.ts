@@ -1,5 +1,12 @@
-import { ContentBlock } from '../types/message'
+import {ContentBlock, ToolResult} from '../types/message'
 import { LMPType } from './types'
+import { getCallerFileLocation } from './utils'
+import * as logging from '../util/_logging'
+import { LMPDefinition, tsc } from '../util/tsc'
+import { generateFunctionHash } from '../util/hash'
+import { invokeWithTracking } from './_track'
+
+const logger = logging.getLogger('ell')
 
 /**
  * Defines a tool for use in language model programs (LMPs) that support tool use.
@@ -127,13 +134,43 @@ import { LMPType } from './types'
  */
 export const tool = <InputType extends Record<string, any>, OutputType extends any>(
   fn: (input: InputType) => Promise<OutputType>,
-  options?: { excempt_from_tracking?: boolean }
+  options?: {
+    excempt_from_tracking?: boolean
+    description?: string
+    paramDescriptions?: Record<keyof InputType, string>
+  }
 ) => {
+  const { filepath, line, column } = getCallerFileLocation()
+
+  if (!filepath || !line || !column) {
+    logger.error(`LMP cannot be tracked. Your source maps may be incorrect or unavailable.`)
+  }
+  let trackAttempted = false
+  let lmpDefinition: LMPDefinition | undefined = undefined
+  let lmpId: string | undefined = undefined
+
   const wrapper = async (args: InputType, _invocation_origin?: string, _tool_call_id?: string) => {
-    const result = await fn(args)
+    // In Python, tracking goes around the outside of the wrapper.
+    // This may be a better pattern overall but for now we'll stay inside.
+
+    let result: OutputType
+    // todo. rest of track / handle not tracked
+    if (!options?.excempt_from_tracking && lmpDefinition && lmpId) {
+      result =  await invokeWithTracking(
+        { ...lmpDefinition, lmpId }, 
+        [args], 
+        fn as any, 
+        options ||{})
+
+    } else {
+      result = await fn(args)
+    }
     if (!_tool_call_id) {
+      // when called as a normal function return the result
       return result // _invocation_api_params, {}
     }
+    // when called with a tool call id we presume a model is calling
+    // and transform the result into a content block
 
     let content_results: ContentBlock[] = []
 
@@ -150,32 +187,36 @@ export const tool = <InputType extends Record<string, any>, OutputType extends a
         `Failed to convert tool use result to ContentBlock: ${e}. Tools must return json serializable objects. or a list of ContentBlocks.`
       )
     }
-  }
-  Object.defineProperty(wrapper, '__ell_tool_kwargs__', { value: options })
-  Object.defineProperty(wrapper, '__ell_func__', { value: fn })
-  Object.defineProperty(wrapper, '__ell_type__', { value: LMPType.TOOL })
-  Object.defineProperty(wrapper, '__ell_exempt_from_tracking', { value: options?.excempt_from_tracking })
-
-  try {
-    // Create a zod type and assign
-
-  } catch (e) {
-    console.error("Failed to generate tool call params model")
+    return new ToolResult(_tool_call_id,content_results)
   }
 
-}
+  // atm get lmp could be sync (or have a sync version)
+  void tsc
+    .getLMP(filepath!, line!, column!)
+    .then((def) => {
+      if (!def) {
+        logger.error(
+          `No LMP definition found at ${filepath}:${line}:${column}. Your source maps may be incorrect or unavailable.`
+        )
+        return
+      }
+      lmpId = generateFunctionHash(def.source, '', def.lmpName)
+      lmpDefinition = def
+      Object.defineProperty(wrapper, '__ell_lmp_id__', { value: lmpId })
 
-
-
-
-
-
-
-
-
-
-
-
+      // gonna diverge from python here for a sec...
+      // Object.defineProperty(wrapper, '__ell_params_model__', { value: def?.inputSchema })
+      Object.defineProperty(wrapper, '__ell_type__', { value: LMPType.TOOL })
+      Object.defineProperty(wrapper, '__ell_lmp_name__', { value: def?.lmpName })
+      Object.defineProperty(wrapper, '__ell_tool_name__', { value: def?.lmpName })
+      Object.defineProperty(wrapper, '__ell_tool_input__', { value: def?.inputSchema })
+      Object.defineProperty(wrapper, '__ell_tool_output__', { value: def?.outputSchema })
+      Object.defineProperty(wrapper, '__ell_tool_description__', { value: options?.description })
+    })
+    .catch((e) => {
+      console.error('Failed to generate tool call params model', e)
+      throw new Error('Failed to generate tool call params model')
+    })
 
   return wrapper
 }

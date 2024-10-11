@@ -83,6 +83,8 @@ const lmpTypeFromDefinitionType = (definitionType: LMPDefinitionType) => {
       return LMPType.LM
     case 'complex':
       return LMPType.MULTIMODAL
+    case 'tool':
+      return LMPType.TOOL
     default:
       throw new Error(`Unknown LMP definition type: ${definitionType}`)
   }
@@ -312,6 +314,9 @@ export const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string },
       // await session.post('Debugger.resume')
       await session.post('Debugger.disable')
       session.disconnect()
+      if (lmp.lmpDefinitionType === 'tool') {
+        return lmpfnoutput
+      }
 
       const modelClient = await getModelClient(a)
       const provider = config.getProviderFor(modelClient)

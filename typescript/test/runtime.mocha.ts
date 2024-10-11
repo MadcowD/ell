@@ -7,37 +7,38 @@ import { Message } from '../src/types'
 import { complex, simple } from 'ell-ai'
 import assert from 'assert'
 
-before(() => {
-  config.defaultClient = config.defaultClient || new OpenAI({ apiKey: 'test' })
-  // @ts-expect-error
-  config.defaultClient.chat.completions.create = async (...args) => {
-    return <OpenAI.Chat.Completions.ChatCompletion>{
-      usage: {
-        prompt_tokens: 10,
-        completion_tokens: 10,
-        latency_ms: 10,
-        total_tokens: 20,
-      },
-      id: 'chatcmpl-123',
-      created: 1677652288,
-      model: 'gpt-3.5-turbo-0125',
-      object: 'chat.completion',
-      choices: [
-        <OpenAI.Chat.Completions.ChatCompletion.Choice>{
-          index: 0,
-          finish_reason: 'stop',
-          logprobs: null,
-          message: {
-            // @ts-expect-error
-            content: args[0].messages[0].content[0].text,
-            role: 'assistant',
-            refusal: null,
-          },
-        },
-      ],
-    }
-  }
-})
+// this runs like...everywhere. in every test
+// before(() => {
+//   config.defaultClient = config.defaultClient || new OpenAI({ apiKey: 'test' })
+//   // @ts-expect-error
+//   config.defaultClient.chat.completions.create = async (...args) => {
+//     return <OpenAI.Chat.Completions.ChatCompletion>{
+//       usage: {
+//         prompt_tokens: 10,
+//         completion_tokens: 10,
+//         latency_ms: 10,
+//         total_tokens: 20,
+//       },
+//       id: 'chatcmpl-123',
+//       created: 1677652288,
+//       model: 'gpt-3.5-turbo-0125',
+//       object: 'chat.completion',
+//       choices: [
+//         <OpenAI.Chat.Completions.ChatCompletion.Choice>{
+//           index: 0,
+//           finish_reason: 'stop',
+//           logprobs: null,
+//           message: {
+//             // @ts-expect-error
+//             content: args[0].messages[0].content[0].text,
+//             role: 'assistant',
+//             refusal: null,
+//           },
+//         },
+//       ],
+//     }
+//   }
+// })
 
 const logger = logging.getLogger('runtime.test')
 test('runtime', async () => {
