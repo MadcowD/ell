@@ -48,9 +48,6 @@ def main():
     if args.dev:
         assert args.port == 5555, "Port must be 5000 in development mode"
 
-    if not args.storage_dir:
-        logger.warning("WARNING: Using current directory as the storage dir, pass --storage-dir to change this.")
-
     config = Config.create(storage_dir=args.storage_dir,
                     pg_connection_string=args.pg_connection_string)
     app = create_app(config)
@@ -69,7 +66,7 @@ def main():
                 return FileResponse(static_dir / "index.html")
 
     # Respect Config.create behavior, which has fallback to env vars.
-    db_path = Path(config.storage_dir)
+    db_path = Path(config.storage_dir) if config.storage_dir else None
 
     async def db_watcher(db_path, app):
         last_stat = None
@@ -126,7 +123,8 @@ def main():
     config = uvicorn.Config(app=app, host=args.host, port=args.port, loop=loop)
     server = uvicorn.Server(config)
     loop.create_task(server.serve())
-    loop.create_task(db_watcher(db_path, app))
+    if db_path:
+        loop.create_task(db_watcher(db_path, app))
     if args.open:
         loop.create_task(open_browser(args.host, args.port))
     loop.run_forever()
