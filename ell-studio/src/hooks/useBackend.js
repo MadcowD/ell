@@ -257,3 +257,26 @@ export const useLatestEvaluations = (page = 0, pageSize = 100) => {
     },
   });
 };
+
+export const useEvaluation = (id) => {
+  return useQuery({
+    queryKey: ["evaluation", id],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/api/evaluation/${id}`);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+};
+
+export const useEvaluationRuns = (evaluationId, page = 0, pageSize = 10) => {
+  return useQuery({
+    queryKey: ["evaluationRuns", evaluationId, page, pageSize],
+    queryFn: async () => {
+      const skip = page * pageSize;
+      const response = await axios.get(`${API_BASE_URL}/api/evaluations/${evaluationId}/runs?skip=${skip}&limit=${pageSize}`);
+      return response.data;
+    },
+    enabled: !!evaluationId,
+  });
+};

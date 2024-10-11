@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import LMP from './pages/LMP';
 import Invocations from './pages/Invocations';
 import Evaluations from './pages/Evaluations';
+import Evaluation from './pages/Evaluation';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './styles/globals.css';
 import './styles/sourceCode.css';
@@ -93,6 +94,7 @@ function App() {
                   <Route path="/lmp/:name/:id?" element={<LMP />} />
                   <Route path="/invocations" element={<Invocations />} />
                   <Route path="/evaluations" element={<Evaluations />} />
+                  <Route path="/evaluations/:id" element={<Evaluation />} />
                 </Routes>
               </main>
             </div>

@@ -276,6 +276,8 @@ class SQLStore(ell.store.Store):
         
         for key, value in filters.items():
             query = query.where(getattr(SerializedEvaluation, key) == value)
+            print(key, value)
+            
         
         query = query.offset(skip).limit(limit)
         
