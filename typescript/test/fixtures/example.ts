@@ -8,6 +8,10 @@ const hello = simple({ model: 'gpt-4o' }, async (a: string) => {
   return a
 })
 
+const approveClaim = ell.tool(async (input: { claim_id: string }) => {
+  return `approved ${input.claim_id}`
+})
+
 hello('world').then((a) => {
   console.log(a)
 })

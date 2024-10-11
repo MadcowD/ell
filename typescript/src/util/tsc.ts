@@ -1,15 +1,15 @@
 import * as path from 'path'
 import ts from 'typescript'
+import * as z from 'zod'
 import { Logger } from './_logging'
 
 const logger = new Logger('ell.tsc')
 
-const LMP_FUNCTION_EXPORT_NAMES = ['simple', 'complex']
+const LMP_FUNCTION_EXPORT_NAMES = ['simple', 'complex', 'tool']
 
-// FIXME. remove this once we have a stable import
 const ELL_MODULE_IDENTIFIERS = ['ell-ai']
 const isEllModuleIdentifier = (identifier: string) =>
-  identifier.includes('ell') || ELL_MODULE_IDENTIFIERS.includes(identifier)
+  ELL_MODULE_IDENTIFIERS.includes(identifier)
 
 /**
  * Get all import declarations in a source file
@@ -44,11 +44,13 @@ const hasEllImport = (sourceFile: ts.SourceFile): boolean => {
 
 export interface EllTSC {
   getAST(filePath: string): Promise<ts.SourceFile | undefined>
+
   getLMPsInFile(filePath: string): Promise<LMPDefinition[]>
+
   getFunctionSource(filePath: string, line: number, column: number): Promise<string | null>
 }
 
-export type LMPDefinitionType = 'simple' | 'complex'
+export type LMPDefinitionType = 'simple' | 'complex' | 'tool'
 export type LMPDefinition = {
   lmpDefinitionType: LMPDefinitionType
   lmpName: string
@@ -61,6 +63,8 @@ export type LMPDefinition = {
   column: number
   endLine: number
   endColumn: number
+  inputSchema?: z.ZodTypeAny
+  outputSchema?: z.ZodTypeAny
 }
 
 export class EllTSC implements EllTSC {
@@ -68,6 +72,7 @@ export class EllTSC implements EllTSC {
   // maps filePath to LMPs
   private lmpCache: Map<string, LMPDefinition[]> = new Map()
   private tsconfigPath: string | undefined
+
   constructor(rootDir?: string) {
     if (!rootDir) {
       try {
@@ -100,6 +105,7 @@ export class EllTSC implements EllTSC {
     const tsconfigDir = path.dirname(this.tsconfigPath)
     return filePath.replace(tsconfigDir, '').replace(/\//g, '.').replace(/\.ts$/g, '').slice(1)
   }
+
   public fqn(filepath: string, name: string): string {
     return `${this.namespace(filepath)}.${name}`
   }
@@ -173,10 +179,12 @@ export class EllTSC implements EllTSC {
     const lmpTypeToAlias: Record<LMPDefinitionType, string> = {
       simple: 'simple',
       complex: 'complex',
+      tool: 'tool',
     }
     const aliasToLMPType: Record<string, LMPDefinitionType> = {
       simple: 'simple',
       complex: 'complex',
+      tool: 'tool',
     }
 
     const getFqn = (filePath: string, name: string) => {
@@ -221,33 +229,65 @@ export class EllTSC implements EllTSC {
         }
       }
     }
+
     function visitCallExpression(
       node: ts.CallExpression
-    ): Pick<LMPDefinition, 'lmpDefinitionType' | 'config' | 'fn'> | undefined {
+    ): Pick<LMPDefinition, 'lmpDefinitionType' | 'config' | 'fn' | 'inputSchema' | 'outputSchema'> | undefined {
       // Bare function call
       // mySimpleAlias()
       // myComplexAlias()
+      // myToolAlias()
       if (ts.isIdentifier(node.expression)) {
         if (Object.keys(aliasToLMPType).includes(node.expression.text)) {
+          const lmpType = aliasToLMPType[node.expression.text]
           if (node.arguments.length > 0) {
-            const lmpFnConfig = node.arguments[0]
-            const lmpFn = node.arguments[1]
+            // todo. maybe allow config in second argument to ell.tool
+            const config = lmpType === 'tool' ? '' : node.arguments[0].getText(sourceFile)
+            const fn = (lmpType === 'tool' ? node.arguments[0] : node.arguments[1]).getText(sourceFile)
+            if (lmpType === 'tool') {
+              const { inputSchema, outputSchema } = getToolSchema(
+                node.arguments[0] as ts.ArrowFunction | ts.FunctionExpression,
+                checker
+              )
+              return {
+                lmpDefinitionType: lmpType,
+                config,
+                fn,
+                inputSchema,
+                outputSchema,
+              }
+            }
             return {
-              lmpDefinitionType: aliasToLMPType[node.expression.text],
-              config: lmpFnConfig.getText(sourceFile),
-              fn: lmpFn.getText(sourceFile),
+              lmpDefinitionType: lmpType,
+              config,
+              fn,
             }
           }
         }
       }
       // Method/property access
       // myEll.mySimpleAlias()
+      // myEll.myToolAlias()
       if (
         ts.isPropertyAccessExpression(node.expression) &&
         Object.keys(aliasToLMPType).includes(node.expression.name.text) &&
         ts.isIdentifier(node.expression.expression) &&
         node.expression.expression.text === ellModuleImportIdentifier
       ) {
+        if (aliasToLMPType[node.expression.name.text] === 'tool') {
+          const { inputSchema, outputSchema } = getToolSchema(
+            node.arguments[0] as ts.ArrowFunction | ts.FunctionExpression,
+            checker
+          )
+          return {
+            lmpDefinitionType: 'tool',
+            // todo. maybe allow config in second argument to ell.tool
+            config: '',
+            fn: node.arguments[0].getText(sourceFile),
+            inputSchema,
+            outputSchema,
+          }
+        }
         if (node.arguments.length > 0) {
           return {
             lmpDefinitionType: aliasToLMPType[node.expression.name.text],
@@ -257,6 +297,8 @@ export class EllTSC implements EllTSC {
         }
       }
     }
+
+    const checker = this.program.getTypeChecker()
 
     function visit(node: ts.Node) {
       if (ts.isImportDeclaration(node)) {
@@ -288,6 +330,8 @@ export class EllTSC implements EllTSC {
                   column: character + 1,
                   endLine: endLine + 1,
                   endColumn: endCharacter + 1,
+                  inputSchema: lmp.inputSchema,
+                  outputSchema: lmp.outputSchema,
                 })
               }
             }
@@ -302,6 +346,82 @@ export class EllTSC implements EllTSC {
 
     this.lmpCache.set(filePath, lmpDefinitions)
     return lmpDefinitions
+  }
+}
+
+function getToolSchema(node: ts.ArrowFunction | ts.FunctionExpression, checker: ts.TypeChecker) {
+  let inputSchema: z.ZodTypeAny | undefined
+  let outputSchema: z.ZodTypeAny | undefined
+  const functionType = checker.getTypeAtLocation(node)
+  const callSignatures = functionType.getCallSignatures()
+  // todo. hard to support overloads for tool calls....
+  if (callSignatures.length > 0) {
+    const signature = callSignatures[0]
+    const parameters = signature.getParameters()
+    if (parameters.length > 0) {
+      const paramType = checker.getTypeOfSymbolAtLocation(parameters[0], parameters[0].valueDeclaration!)
+      inputSchema = typeToZodSchema(paramType, checker)
+    }
+
+    // We may not need return type for today's tool call APIs,
+    // but this is powerful information to know in case we want structured tool output
+    // or the ability to chain tool calls via function composition.
+    const returnType = signature.getReturnType()
+    if (
+      returnType.symbol &&
+      returnType.symbol.name === 'Promise' &&
+      returnType.symbol.getEscapedName() === 'Promise' &&
+      (returnType as ts.TypeReference).typeArguments
+    ) {
+      const promiseTypeArg = (returnType as ts.TypeReference).typeArguments![0]
+      outputSchema = typeToZodSchema(promiseTypeArg, checker)
+    } else {
+      outputSchema = typeToZodSchema(returnType, checker)
+    }
+  }
+  return { inputSchema, outputSchema }
+}
+
+/**
+ * Converts a TypeScript type into a Zod schema.
+ * @param type The TypeScript type to convert.
+ * @param checker The TypeScript type checker.
+ * @returns A Zod schema representing the TypeScript type.
+ */
+function typeToZodSchema(type: ts.Type, checker: ts.TypeChecker): z.ZodTypeAny {
+  if (type.flags & ts.TypeFlags.Number) {
+    return z.number()
+  } else if (type.flags & ts.TypeFlags.String) {
+    return z.string()
+  } else if (type.flags & ts.TypeFlags.Boolean) {
+    return z.boolean()
+  } else if (type.flags & ts.TypeFlags.Null) {
+    return z.null()
+  } else if (type.flags & ts.TypeFlags.Undefined) {
+    return z.undefined()
+  } else if (type.flags & ts.TypeFlags.Any) {
+    return z.any()
+  } else if (type.isUnion()) {
+    const schemas = type.types.map((t) => typeToZodSchema(t, checker))
+    return z.union(schemas as [z.ZodTypeAny, z.ZodTypeAny])
+  } else if (type.isIntersection()) {
+    const schemas = type.types.map((t) => typeToZodSchema(t, checker))
+    return z.intersection(schemas[0], schemas[1]) // Simplified for two types
+  } else if (type.getSymbol()?.getName() === 'Array') {
+    const elementType = (type as ts.TypeReference).typeArguments?.[0]
+    if (elementType) {
+      return z.array(typeToZodSchema(elementType, checker))
+    }
+    return z.array(z.any())
+  } else if (type.getSymbol()?.members) {
+    const shape: Record<string, z.ZodTypeAny> = {}
+    type.getProperties().forEach((prop) => {
+      const propType = checker.getTypeOfSymbolAtLocation(prop, prop.valueDeclaration!)
+      shape[prop.getName()] = typeToZodSchema(propType, checker)
+    })
+    return z.object(shape)
+  } else {
+    return z.any()
   }
 }
 
