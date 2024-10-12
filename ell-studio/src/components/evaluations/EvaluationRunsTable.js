@@ -61,6 +61,7 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
         </Card>
       ), 
       sortable: true,
+      maxWidth: 200,
     },
     { 
       header: 'Version', 
@@ -75,14 +76,15 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
       maxWidth: 150,
       sortable: true
     },
-    { 
-      header: 'End Time', 
-      key: 'created_at', 
-      render: (item) => <span className="text-gray-400">{getTimeAgo(item.created_at)}</span>, 
-      maxWidth: 150,
-      sortable: true
-    },
+
     ...getMetricColumns(),
+    { 
+        header: 'Finished', 
+        key: 'created_at', 
+        render: (item) => <span className="text-gray-400">{getTimeAgo(item.created_at)}</span>, 
+        maxWidth: 150,
+        sortable: true
+      },
   ];
 
   const initialSortConfig = { key: 'created_at', direction: 'desc' };

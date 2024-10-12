@@ -123,7 +123,7 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
           />
         </Card>
       ), 
-      sortable: true,
+      sortable: true
       
     },
     { 
