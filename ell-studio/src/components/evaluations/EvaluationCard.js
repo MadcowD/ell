@@ -10,7 +10,7 @@ import { EvaluationCardTitle } from './EvaluationCardTitle';
 
 const INITIAL_LMP_DISPLAY_COUNT = 2;
 
-const EvaluationCard = ({ evaluation }) => {
+const EvaluationCard = ({ evaluation, isGraphMode = false }) => {
   const [showAllLMPs, setShowAllLMPs] = useState(false);
   const totalRuns = evaluation.runs.length;
   const successfulRuns = evaluation.runs.filter(run => run.success).length;
@@ -39,10 +39,10 @@ const EvaluationCard = ({ evaluation }) => {
 
   return (
     <Link to={`/evaluations/${evaluation.id}`}>
-      <Card className="hover:bg-accent/50 bg-accent/10 transition-colors duration-200 mb-4" >
+      <Card className={`hover:bg-accent/50 bg-accent/10 transition-colors duration-200 ${isGraphMode ? '' : 'mb-4'}`}>
         <CardContent className="p-4">
-          <div className="flex flex-col lg:flex-row">
-            <div className="flex-grow lg:pr-4 lg:w-1/2">
+          <div className={`flex ${isGraphMode ? 'flex-col' : 'flex-col lg:flex-row'}`}>
+            <div className={`flex-grow ${isGraphMode ? '' : 'lg:pr-4 lg:w-1/2'}`}>
               <EvaluationCardTitle 
                 evaluation={evaluation}
                 fontSize="sm"
@@ -77,7 +77,7 @@ const EvaluationCard = ({ evaluation }) => {
                 </div>
               </div>
               
-              {evaluatedLMPs.length > 0 && (
+              {!isGraphMode && evaluatedLMPs.length > 0 && (
                 <div className="border-t pt-3 mt-2 hidden lg:block">
                   <h3 className="text-xs font-semibold mb-1 flex items-center">
                     <FiCode className="mr-1" /> Evaluated LMPs
@@ -115,11 +115,11 @@ const EvaluationCard = ({ evaluation }) => {
             </div>
             
             {totalRuns > 0 && (
-              <div className="lg:w-1/2 lg:flex-shrink-0 lg:border-l lg:pl-2 mt-4 lg:mt-0">
+              <div className={`mt-4 ${isGraphMode ? '' : 'lg:w-1/2 lg:flex-shrink-0 lg:border-l lg:pl-2  lg:mt-0'}`}>
                 <h3 className="text-xs font-semibold mb-1 flex items-center">
                   <FiZap className="mr-1 h-3 w-3" /> Latest Run Summary
                 </h3>
-                <div className="lg:hidden">
+                <div className={isGraphMode ? '' : 'lg:hidden'}>
                   <Card >
                     <CardContent className="p-0">
                       <RunSummary
@@ -131,14 +131,16 @@ const EvaluationCard = ({ evaluation }) => {
                     </CardContent>
                   </Card>
                 </div>
-                <div className="hidden lg:block mt-2">
-                  <RunSummary
-                    groupedRuns={groupedRuns}
+                {!isGraphMode && (
+                  <div className={'hidden lg:block mt-2'}>
+                    <RunSummary
+                      groupedRuns={groupedRuns}
                     totalRuns={totalRuns}
                     successfulRuns={successfulRuns}
-                    isVertical={true}
-                  />
-                </div>
+                    isVertical={false}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>

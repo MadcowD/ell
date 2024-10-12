@@ -27,7 +27,7 @@ const RunSummary = ({ groupedRuns, isVertical }) => {
         showInvocationCount={true} 
         additionalClassName="text-xs mb-2" 
         paddingClassOverride='p-2'
-        shortVersion={!isVertical}
+        shortVersion={true}
       />
       <MetricTable 
         summaries={scalarSummaries}

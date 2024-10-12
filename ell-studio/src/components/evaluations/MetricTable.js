@@ -151,7 +151,7 @@ const MetricDisplay = ({ summary, historicalData, isVertical }) => {
 
 const MetricTable = ({ summaries, historicalData, isVertical }) => {
   return (
-    <div className="pt-0 p-2 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+    <div className={`pt-0 p-2 grid grid-cols-1 ${isVertical ? '' : 'md:grid-cols-2'} gap-x-4 gap-y-2`}>
       {summaries.map((summary, index) => (
         <React.Fragment key={summary.evaluation_labeler_id}>
           <MetricDisplay 

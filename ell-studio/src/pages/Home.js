@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { getTimeAgo } from '../utils/lmpUtils';
 import { DependencyGraph } from '../components/depgraph/DependencyGraph';
-import { useLatestLMPs, useTraces } from '../hooks/useBackend';
+import { useLatestEvaluations, useLatestLMPs, useTraces } from '../hooks/useBackend';
 import VersionBadge from '../components/VersionBadge';
 import { BiCube } from 'react-icons/bi';
 import { Card, CardHeader, CardContent } from 'components/common/Card';
@@ -17,6 +17,7 @@ function Home() {
   const { darkMode } = useTheme();
   const { data: lmps, isLoading: isLoadingLMPs } = useLatestLMPs();
   const { data: traces, isLoading: isLoadingTraces } = useTraces(lmps);
+  const { data: evals, isLoading: isLoadingEvals } = useLatestEvaluations();
 
   const toggleExpand = (lmpName, event) => {
     if (event.target.tagName.toLowerCase() !== 'a') {
@@ -42,8 +43,9 @@ function Home() {
   // TODO: Make graph dynamically update.
   const memoizedTraces = useMemo(() => firstTraces, [firstTraces]);
   const memoizedLMPs = useMemo(() => firstLMPs, [firstLMPs]);
+  const memoizedEvals = useMemo(() => evals, [evals]);
 
-  if (isLoadingLMPs || isLoadingTraces) {
+  if (isLoadingLMPs || isLoadingTraces || isLoadingEvals) {
     return (
       <div className={`bg-background min-h-screen flex items-center justify-center`}>
         <p className={`text-foreground`}>Loading...</p>
@@ -108,7 +110,7 @@ print(greeting)`}
               </div>
             </div>
             <div className="w-full h-full">
-              <MemoizedDependencyGraph lmps={memoizedLMPs} traces={memoizedTraces} key={memoizedLMPs.length + memoizedTraces.length}/>
+              <MemoizedDependencyGraph lmps={memoizedLMPs} traces={memoizedTraces} key={memoizedLMPs.length + memoizedTraces.length } evals={memoizedEvals}/>
             </div>
           </div>
         </ResizablePanel>
