@@ -126,7 +126,7 @@ export function init(options: {
   defaultSystemPrompt?: string
   defaultOpenaiClient?: OpenAI
   providers?: Array<Provider>
-}): void {
+} = {}): void {
   config.verbose = options.verbose ?? false
   config.lazyVersioning = options.lazyVersioning ?? true
 

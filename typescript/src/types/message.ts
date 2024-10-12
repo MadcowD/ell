@@ -93,7 +93,7 @@ class ToolCall {
       // ...Object.values(this.params)
       this.params,
       undefined,
-      this.tool_call_id,
+      this.tool_call_id
     )
     return new ContentBlock({ tool_result: res })
   }
@@ -183,6 +183,13 @@ function coerceContentList(
   return content.map((c) => ContentBlock.coerce(c))
 }
 
+// TODO. this may be under construction in python.
+// we also need to port textOnly APIs/methods
+const repr = (a: any) => JSON.stringify(a)
+function _content_to_text(content: ContentBlock[]): string {
+  return content.map((c) => c.text || repr(c)).join('\n')
+}
+
 class Message<ResponseFormat extends ResponseFormatSchema | string | Image = string | Image> extends BaseModel {
   content: ContentBlock[]
 
@@ -202,7 +209,7 @@ class Message<ResponseFormat extends ResponseFormatSchema | string | Image = str
   }
 
   get text(): string | undefined {
-    return this.content.map((c) => c.text || `<${c.type}>`).join('\n')
+    return this.content.map((c) => c.text || _content_to_text([c])).join('\n')
   }
 
   get images(): ImageContent[] | undefined {
