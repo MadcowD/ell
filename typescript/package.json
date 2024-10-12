@@ -14,7 +14,7 @@
   "scripts": {
     "build": "node scripts/build.js",
     "clean": "rimraf dist",
-    "test": "vitest",
+    "test": "mocha && vitest run",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
