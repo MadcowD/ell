@@ -7,8 +7,8 @@ from ell.types.message import Message
 ell.init(verbose=True, store='./logdir', autocommit=True)
 
 
-@ell.tool(autogenerate=True)
-def order_t_shirt(size, color, address):
+@ell.tool()
+def order_t_shirt(size : str, color : str, address : str):
     
     # ....\
     pass

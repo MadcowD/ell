@@ -56,9 +56,14 @@ def register(client: openai.Client):
     for model_id in standard_models:
         config.register_model(model_id, client)
 
+
 default_client = None
 try:
-    default_client = openai.Client(base_url="https://api.x.ai/v1", api_key=os.environ.get("XAI_API_KEY"))
+
+    xai_api_key = os.environ.get("XAI_API_KEY")
+    if not xai_api_key:
+        raise openai.OpenAIError("XAI_API_KEY not found in environment variables")
+    default_client = openai.Client(base_url="https://api.x.ai/v1", api_key=xai_api_key)
 except openai.OpenAIError as e:
     pass
 
