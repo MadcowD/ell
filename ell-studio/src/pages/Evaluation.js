@@ -9,6 +9,9 @@ import EvaluationDetailsSidebar from '../components/evaluations/EvaluationDetail
 import { EvaluationCardTitle } from '../components/evaluations/EvaluationCardTitle';
 import EvaluationOverview from '../components/evaluations/EvaluationOverview';
 import VersionBadge from '../components/VersionBadge';
+import LMPSourceView from '../components/source/LMPSourceView';
+import { FiCopy } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 
 const evaluationConfig = {
   getPath: (version) => `/evaluations/${version.id}`,
@@ -34,6 +37,25 @@ function Evaluation() {
     });
     return groups;
   }, [evaluation?.runs]);
+
+  const handleCopyCode = (lmp) => {
+    const fullCode = `${lmp.dependencies.trim()}\n\n${lmp.source.trim()}`;
+    navigator.clipboard
+      .writeText(fullCode)
+      .then(() => {
+        toast.success("Code copied to clipboard", {
+          duration: 2000,
+          position: "top-center",
+        });
+      })
+      .catch((err) => {
+        console.error("Failed to copy code: ", err);
+        toast.error("Failed to copy code", {
+          duration: 2000,
+          position: "top-center",
+        });
+      });
+  };
 
   if (isLoadingEvaluation) {
     return <div className="flex items-center justify-center h-screen">Loading evaluation...</div>;
@@ -70,7 +92,7 @@ function Evaluation() {
 
           <div className="mb-6">
             <div className="flex border-b border-border">
-              {['Runs', 'Version History'].map((tab) => (
+              {['Runs', 'Metrics', 'Version History'].map((tab) => (
                 <button
                   key={tab}
                   className={`px-4 py-2 focus:outline-none ${
@@ -95,6 +117,35 @@ function Evaluation() {
                   onSelectRun={setSelectedRun}
                   currentlySelectedRun={selectedRun}
                 />
+              )}
+              {activeTab === 'metrics' && (
+                <div>
+                  {evaluation.labelers.map((labeler, index) => (
+                    <div key={index} className="mb-6 bg-card rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center space-x-4">
+                          <h2 className="text-md font-semibold text-card-foreground">Metric: {labeler.name}</h2>
+                          <VersionBadge version={labeler.labeling_lmp.version_number + 1} />
+                        </div>
+                        <div className="flex space-x-4 items-center">
+                          <button
+                            className="p-1 rounded bg-secondary hover:bg-secondary/80 transition-colors"
+                            onClick={() => handleCopyCode(labeler.labeling_lmp)}
+                          >
+                            <FiCopy className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="overflow-hidden">
+                        <LMPSourceView
+                          lmp={labeler.labeling_lmp}
+                          showDependenciesInitial={true}
+                          viewMode="Source"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
               {activeTab === 'version_history' && (
                 <VersionHistoryPane 
