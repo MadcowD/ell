@@ -119,11 +119,11 @@ function CustomControls() {
   );
 }
 
-export function DependencyGraph({ lmps, traces, ...rest }) {
+export function DependencyGraph({ lmps, traces, evals, ...rest }) {
   // construct ndoes from LMPS
   const { initialEdges, initialNodes } = useMemo(
-    () => getInitialGraph(lmps, traces),
-    [lmps, traces]
+    () => getInitialGraph(lmps, traces, evals),
+    [lmps, traces, evals]
   );
 
   return (
