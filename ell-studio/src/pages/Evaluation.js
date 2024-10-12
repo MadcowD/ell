@@ -7,9 +7,15 @@ import VersionBadge from '../components/VersionBadge';
 import { Card, CardContent } from '../components/common/Card';
 import VersionHistoryPane from '../components/VersionHistoryPane';
 import RunSummary from '../components/evaluations/RunSummary';
-import MetricTable from '../components/evaluations/MetricTable';
 import EvaluationRunsTable from '../components/evaluations/EvaluationRunsTable';
+import EvaluationDetailsSidebar from '../components/evaluations/EvaluationDetailsSidebar';
 import { getTimeAgo } from '../utils/lmpUtils';
+
+const evaluationConfig = {
+  getPath: (version) => `/evaluations/${version.id}`,
+  getId: (version) => version.id,
+  isCurrentVersion: (version, location) => location.pathname.endsWith(version.id)
+};
 
 function Evaluation() {
   const { id } = useParams();
@@ -30,58 +36,6 @@ function Evaluation() {
     return groups;
   }, [evaluation?.runs]);
 
-  const sidebar = useMemo(() => (
-    <div className="space-y-4">
-      <Card>
-        <CardContent className="p-4">
-          <h3 className="text-lg font-semibold mb-2">Evaluation Details</h3>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-            <div className="flex items-center">
-              <FiZap className="mr-2 h-4 w-4" />
-              <span>{evaluation?.runs.length} runs</span>
-            </div>
-            <div className="flex items-center">
-              <FiBarChart2 className="mr-2 h-4 w-4" />
-              <span>{evaluation?.n_evals} datapoints</span>
-            </div>
-            <div className="flex items-center">
-              <FiDatabase className="mr-2 h-4 w-4" />
-              <span>Dataset: {evaluation?.dataset_hash.substring(0, 8)}</span>
-            </div>
-            <div className="flex items-center">
-              <FiTag className="mr-2 h-4 w-4" />
-              <span>{evaluation?.labelers.length} metrics</span>
-            </div>
-            <div className="flex items-center col-span-2">
-              <FiClock className="mr-2 h-4 w-4" />
-              <span>Created: {getTimeAgo(new Date(evaluation?.created_at))}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-4">
-          <h3 className="text-lg font-semibold mb-2">Metrics</h3>
-          {evaluation && (
-            <MetricTable 
-              summaries={evaluation.runs[evaluation.runs.length - 1].labeler_summaries.filter(summary => summary.is_scalar)}
-              historicalData={evaluation.runs.reduce((acc, run) => {
-                run.labeler_summaries.forEach(summary => {
-                  if (!acc[summary.evaluation_labeler_id]) {
-                    acc[summary.evaluation_labeler_id] = [];
-                  }
-                  acc[summary.evaluation_labeler_id].push(summary.data);
-                });
-                return acc;
-              }, {})}
-              isVertical={true}
-            />
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  ), [evaluation]);
-
   if (isLoadingEvaluation) {
     return <div className="flex items-center justify-center h-screen">Loading evaluation...</div>;
   }
@@ -90,7 +44,7 @@ function Evaluation() {
     <GenericPageLayout
       selectedTrace={selectedRun}
       setSelectedTrace={setSelectedRun}
-      sidebarContent={sidebar}
+      sidebarContent={<EvaluationDetailsSidebar evaluation={evaluation} />}
     >
       <div className="bg-background text-foreground">
         <div className="flex justify-between items-center mb-6">
@@ -190,7 +144,10 @@ function Evaluation() {
                 />
               )}
               {activeTab === 'version_history' && (
-                <VersionHistoryPane versions={[evaluation]} />
+                <VersionHistoryPane 
+                  versions={[evaluation]} 
+                  config={evaluationConfig}
+                />
               )}
             </div>
           </div>
