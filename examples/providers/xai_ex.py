@@ -5,6 +5,7 @@ import os
 ell.init(verbose=True)
 
 # Models are automatically registered, so we can use them without specifying the client
+# set XAI_API_KEY=your_api_key in your environment to run this example
 @ell.simple(model='grok-2-mini')
 def use_default_xai_client(prompt: str) -> str:
     return prompt

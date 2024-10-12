@@ -7,3 +7,10 @@ openaigym.py
 o1.py
 chord*
 server_example.py
+limbo.py
+providers/bedrock_ex.py
+azure_ex.py
+openrouter_ex.py
+vllm_ex.py
+*_ex.py
+bedrock_hello.py
