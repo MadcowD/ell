@@ -21,11 +21,22 @@ const MetricDisplay = ({ currentValue, previousValue, label, showTooltip = true 
 
   const trendColorClass = getColorForTrend(parseFloat(percentChange));
   const trendIcon = getTrendIcon(parseFloat(percentChange));
+  const [isHighlighted, setIsHighlighted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsHighlighted(true);
+    const timer = setTimeout(() => setIsHighlighted(false), 100);
+    return () => clearTimeout(timer);
+  }, [currentValue]);
 
   const content = (
     <div className="text-right min-w-[5rem]">
-      <div className="font-bold font-mono">{currentValue.toFixed(2)}</div>
-      <div className={`text-[10px] ${trendColorClass} whitespace-nowrap`}>
+      <div className={`font-bold font-mono overflow-hidden`}>
+        <span className={`inline-block transition-all duration-100 ease-in-out ${isHighlighted ? 'text-emerald-400 transform scale-105' : 'transform scale-100'}`}>
+          {currentValue.toFixed(2)}
+        </span>
+      </div>
+      <div className={`text-[10px] ${trendColorClass} whitespace-nowrap transition-opacity duration-300 ease-in-out ${isHighlighted ? 'opacity-100' : 'opacity-80'}`}>
         {trendIcon}{Math.abs(parseFloat(percentChange)).toFixed(1)}%
       </div>
     </div>
@@ -35,11 +46,14 @@ const MetricDisplay = ({ currentValue, previousValue, label, showTooltip = true 
     return content;
   }
 
+
   return (
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          {content}
+          <div>
+            {content}
+          </div>
         </TooltipTrigger>
         <TooltipContent sideOffset={5}>
           <div className="text-xs">

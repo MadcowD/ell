@@ -81,7 +81,7 @@ const MetricGraphGrid = ({ evaluation, groupedRuns }) => {
                   lmp={labeler.labeling_lmp}
                   nameOverridePrint={labeler.name}
                   displayVersion
-                  showInvocationCount={true}
+                  showInvocationCount={false}
                   additionalClassName="text-xs"
                   paddingClassOverride="p-0"
                   shortVersion={true}
