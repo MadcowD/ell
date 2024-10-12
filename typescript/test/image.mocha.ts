@@ -5,7 +5,7 @@ import assert from 'assert'
 
 test('detectImageFormatFromBase64', () => {
   // Test empty string
-  assert.equal(imageFormatFromBase64(''), 'unknown')
+  assert.equal(imageFormatFromBase64(''), null)
 
   // Test JPEG
   assert.equal(imageFormatFromBase64('/9j/4AAQSkZJRgABAQEAYABgAAD'), 'jpeg')
@@ -29,5 +29,5 @@ test('detectImageFormatFromBase64', () => {
   assert.equal(imageFormatFromBase64('UklGRh4AAABXRUJQVlA4'), 'webp')
 
   // Test unknown format
-  assert.equal(imageFormatFromBase64('SGVsbG8gV29ybGQh'), 'unknown')
+  assert.equal(imageFormatFromBase64('SGVsbG8gV29ybGQh'), null)
 })
