@@ -6,6 +6,7 @@ import VersionBadge from '../VersionBadge';
 import { getTimeAgo } from '../../utils/lmpUtils';
 import { LMPCardTitle } from '../depgraph/LMPCardTitle';
 import RunSummary from './RunSummary';
+import { EvaluationCardTitle } from './EvaluationCardTitle';
 
 const INITIAL_LMP_DISPLAY_COUNT = 2;
 
@@ -42,22 +43,16 @@ const EvaluationCard = ({ evaluation }) => {
         <CardContent className="p-4">
           <div className="flex flex-col lg:flex-row">
             <div className="flex-grow lg:pr-4 lg:w-1/2">
-              <div className="flex items-center space-x-2 mb-2">
-                <FiBarChart2 className="h-4 w-4 text-yellow-600" />
-                <code className="px-2 py-1 rounded-md bg-blue-100 text-blue-800 text-sm font-medium truncate">
-                  {evaluation.name}
-                </code>
-                <VersionBadge 
-                  version={evaluation.version_number} 
-                  hash={evaluation.id} 
-                  shortVersion={false}
-                  truncationLength={20}
-                />
-                <div className="flex items-center text-xs text-gray-400" title={`${totalRuns} runs`}>
-                  <FiZap className="w-3 h-3 mr-1" />
-                  {totalRuns}
-                </div>
-              </div>
+              <EvaluationCardTitle 
+                evaluation={evaluation}
+                fontSize="sm"
+                displayVersion={true}
+                shortVersion={false}
+                showRunCount={true}
+                outlineStyle="solid"
+                padding={false}
+                additionalClassName="mb-2"
+              />
               
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground mb-2">
                 <div className="flex items-center">

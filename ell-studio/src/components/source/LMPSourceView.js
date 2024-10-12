@@ -92,7 +92,7 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
         // ge tthe lmp name its the function name after the def but before the signature args etc
         const lmp_name = match[1].split('(')[0];
         console.log(lmp_name);
-        if (uses.some(u => u.name === lmp_name)) {
+        if (uses?.some(u => u.name === lmp_name)) {
           return `#<LMP>\n${line}\n#</LMP>`;
         }
       }
