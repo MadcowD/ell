@@ -1,7 +1,7 @@
 import { LMPCardTitle } from '../depgraph/LMPCardTitle';
 import HierarchicalTable from '../HierarchicalTable';
 import React, { useMemo, useCallback, useEffect, useState } from 'react';
-import { Card } from '../Card';
+import { OldCard } from '../OldCard';
 import { getTimeAgo } from '../../utils/lmpUtils';
 import VersionBadge from '../VersionBadge';
 import { useNavigate } from 'react-router-dom';
@@ -110,7 +110,7 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
       header: 'LMP', 
       key: 'name', 
       render: (item) => (
-        <Card noMinW={true}>
+        <OldCard noMinW={true}>
           <LMPCardTitle 
             lmp={item.lmp} 
             paddingClassOverride='pl-2'
@@ -121,7 +121,7 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
             }} 
             showInvocationCount={false}
           />
-        </Card>
+        </OldCard>
       ), 
       sortable: true
       

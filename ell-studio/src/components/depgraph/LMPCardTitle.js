@@ -15,7 +15,8 @@ export function LMPCardTitle({
     paddingClassOverride = '',
     nameOverride = null,
     showInvocationCount = true,
-    outlineStyle = 'solid',  // New prop to control outline style
+    outlineStyle = 'solid',
+    nameOverridePrint = null,  // New prop for printing name override
     ...rest
 }) {
     const paddingClass = paddingClassOverride ? paddingClassOverride : padding ? 'p-2' : '';
@@ -37,10 +38,12 @@ export function LMPCardTitle({
                     <BiCube className="h-4 w-4 text-yellow-600" />
                 : lmp.lmp_type === "TOOL" ?
                     <FiTool className="h-4 w-4 text-white-600" />
+                : lmp.lmp_type === "METRIC" ?
+                    <FiZap className="h-4 w-4 text-blue-600" />
                 : <BiCube className="h-4 w-4 text-yellow-600" />}
             </div>
             {nameOverride ? nameOverride : <code className={`px-2 py-1 rounded-md ${outlineClasses[outlineStyle]} text-${fontSize} font-medium truncate`}>
-                 {lmp.name}()
+                 {nameOverridePrint || lmp.name}()
             </code> }
             {displayVersion && <VersionBadge version={lmp.version_number + 1} lmpId={lmp.lmp_id} shortVersion={shortVersion} />}
             {showInvocationCount && lmp.num_invocations > 0 && (

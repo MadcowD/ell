@@ -51,21 +51,21 @@ function EvaluationDetailsSidebar({ evaluation }) {
 
         <div className="bg-card p-2 rounded">
           <h3 className="text-sm font-semibold text-card-foreground mb-1">Metrics</h3>
-          {evaluation && (
-            <MetricTable 
-              summaries={evaluation.runs[evaluation.runs.length - 1].labeler_summaries.filter(summary => summary.is_scalar)}
-              historicalData={evaluation.runs.reduce((acc, run) => {
-                run.labeler_summaries.forEach(summary => {
-                  if (!acc[summary.evaluation_labeler_id]) {
-                    acc[summary.evaluation_labeler_id] = [];
-                  }
-                  acc[summary.evaluation_labeler_id].push(summary.data);
-                });
-                return acc;
-              }, {})}
-              isVertical={true}
-            />
-          )}
+          {/* {evaluation && (
+            // <MetricTable 
+            //   summaries={evaluation.runs[evaluation.runs.length - 1].labeler_summaries.filter(summary => summary.is_scalar)}
+            //   historicalData={evaluation.runs.reduce((acc, run) => {
+            //     run.labeler_summaries.forEach(summary => {
+            //       if (!acc[summary.evaluation_labeler_id]) {
+            //         acc[summary.evaluation_labeler_id] = [];
+            //       }
+            //       acc[summary.evaluation_labeler_id].push(summary.data);
+            //     });
+            //     return acc;
+            //   }, {})}
+            //   isVertical={true}
+            // />
+          )} */}
         </div>
       </motion.div>
     </SidePanel>

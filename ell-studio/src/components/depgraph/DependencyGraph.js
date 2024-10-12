@@ -18,7 +18,7 @@ import ReactFlow, {
 import { getBezierPath } from 'reactflow';
 import { Link } from "react-router-dom";
 import { LMPCardTitle } from "./LMPCardTitle";
-import { Card } from "../Card";
+import { OldCard } from "../OldCard";
 import EvaluationCard from "../evaluations/EvaluationCard"; // Update this import
 import "reactflow/dist/style.css";
 import { ZoomIn, ZoomOut, Lock, Maximize, Unlock } from 'lucide-react';
@@ -35,11 +35,11 @@ function LMPNode({ data }) {
   return (
     <>
       <Handle type="source" position={Position.Bottom} id="uses" />
-      <Card  key={lmp.lmp_id}>
+      <OldCard  key={lmp.lmp_id}>
         <Link to={`/lmp/${lmp.name}`}>
           <LMPCardTitle displayVersion lmp={lmp} fontSize="sm" />
         </Link>
-      </Card>
+      </OldCard>
       <Handle type="target" position={Position.Top} id="usedby" />
       <Handle type="target" position={Position.Left} id="inputs" />
       <Handle type="source" position={Position.Right} id="outputs" />
