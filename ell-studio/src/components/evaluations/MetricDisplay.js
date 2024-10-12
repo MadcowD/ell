@@ -22,17 +22,16 @@ const MetricDisplay = ({ currentValue, previousValue, label, showTooltip = true 
   const trendColorClass = getColorForTrend(parseFloat(percentChange));
   const trendIcon = getTrendIcon(parseFloat(percentChange));
   const [isHighlighted, setIsHighlighted] = React.useState(false);
-
   React.useEffect(() => {
     setIsHighlighted(true);
-    const timer = setTimeout(() => setIsHighlighted(false), 100);
+    const timer = setTimeout(() => setIsHighlighted(false), 150);
     return () => clearTimeout(timer);
   }, [currentValue]);
 
   const content = (
     <div className="text-right min-w-[5rem]">
       <div className={`font-bold font-mono overflow-hidden`}>
-        <span className={`inline-block transition-all duration-100 ease-in-out ${isHighlighted ? 'text-emerald-400 transform scale-105' : 'transform scale-100'}`}>
+        <span className={`inline-block transition-all duration-100 ease-in-out ${isHighlighted ? `${trendColorClass} transform scale-105` : 'transform scale-100'}`}>
           {currentValue.toFixed(2)}
         </span>
       </div>
