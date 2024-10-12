@@ -139,7 +139,7 @@ export const GraphRenderer = ({ graphId }) => {
   };
 
   return (
-    <div style={{ width: '100%', height: '300px', position: 'relative' }}>
+    <div style={{ width: '100%', height: '250px', position: 'relative' }}>
       <Line ref={chartRef} options={options} data={data} />
       <CustomTooltip
         visible={tooltipState.visible}

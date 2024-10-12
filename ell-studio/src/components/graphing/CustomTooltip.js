@@ -16,9 +16,6 @@ const formatNumber = (value) => {
 export const CustomTooltip = ({ visible, position, labels, datasets, activeIndex, chartHeight }) => {
   const [animatedPosition, setAnimatedPosition] = useState(position);
 
-  // Remove the isHovered state as it's no longer needed
-  // const [isHovered, setIsHovered] = useState(false);
-
   useEffect(() => {
     if (visible) {
       setAnimatedPosition(position);
@@ -31,39 +28,6 @@ export const CustomTooltip = ({ visible, position, labels, datasets, activeIndex
   const lineColor = datasets.length > 0 ? datasets[0].borderColor : 'rgba(0,0,0,0.7)';
   return (
     <>
-      {/* <div
-        // Remove the hover effect class
-        // className="hover:opacity-70"
-        style={{
-          position: 'absolute',
-          left: `${animatedPosition.x}px`,
-          top: `${animatedPosition.y}px`,
-          background: 'rgba(0,0,0,0.8)',
-          color: 'white',
-          padding: '8px',
-          borderRadius: '4px',
-          pointerEvents: 'none', // Change this to 'none'
-          fontSize: '12px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          transition: 'left 0.2s ease-out, top 0.2s ease-out, opacity 0.3s ease-in-out',
-          opacity: visible ? 1 : 0, // Remove the hover opacity change
-          transform: 'translate(-50%, -100%)',
-          zIndex: 2,
-        }}
-      >
-        <div style={{ fontWeight: 'bold', marginBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.3)', paddingBottom: '4px' }}>
-          {labels[activeIndex]}
-        </div>
-        {datasets.map((dataset, i) => (
-          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-            <span style={{ marginRight: '12px', display: 'flex', alignItems: 'center' }}>
-              <span style={{ width: '8px', height: '8px', backgroundColor: dataset.borderColor, marginRight: '6px', display: 'inline-block' }}></span>
-              {dataset.label}:
-            </span>
-            <span style={{ fontWeight: 'bold' }}>{formatNumber(dataset.data[activeIndex])}</span>
-          </div>
-        ))}
-      </div> */}
       <div
         style={{
           position: 'absolute',
