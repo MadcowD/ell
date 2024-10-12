@@ -1,0 +1,50 @@
+name: TypeScript CI
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'typescript/**'
+      - '.github/workflows/test_typescript.yaml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Cache node modules
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-node-modules
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+
+    - name: Install dependencies
+      run: |
+        cd typescript
+        npm ci
+
+    - name: Run build 
+      run: |
+        cd typescript
+        npm run build
+
+    - name: Run TypeScript tests
+      run: |
+        cd typescript
+        npm test
