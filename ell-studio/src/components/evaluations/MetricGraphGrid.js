@@ -17,6 +17,7 @@ const MetricGraphGrid = ({ evaluation, groupedRuns, onActiveIndexChange }) => {
         if (summary) {
           const { mean, std, min, max } = summary.data;
           const count = summary.count;
+          console.log(count)
           
           // Calculate Standard Error of the Mean (SEM)
           const sem = std / Math.sqrt(count);

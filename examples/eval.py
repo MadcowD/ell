@@ -55,14 +55,15 @@ def test_predictor_evaluation():
         return float(output.lower() == label.lower())
 
     eval = ell.evaluation.Evaluation(
-        name="capital_prediction", dataset=dataset, metrics={"score": is_correct, "length": lambda _, output: len(output)}
+        name="capital_prediction", dataset=dataset, metrics={"score": is_correct, "length": lambda _, output: len(output)}, samples_per_datapoint=5
+
     )
 
     # ell.init(verbose=True, store='./logdir')
     @ell.simple(model="gpt-4o")
     def predict_capital(question: str):
         """
-        Answer only with the capital of the country. If hotdog land, answer Banana.
+        Answer only with the capital of the country. If hotdog land, answer hotdog land.
         """
         # print(question[0])
         return f"Answer the following question. {question}"

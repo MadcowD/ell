@@ -1,16 +1,16 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-from functools import partial
+from functools import partial, wraps
 import itertools
 from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union, cast
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import uuid
-
+from ell.types.studio import LMPType
 import openai
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from sqlmodel._compat import SQLModelConfig
 from ell.lmp._track import _track
 from ell.types.message import LMP
@@ -196,7 +196,6 @@ class EvaluationRun(BaseModel):
         config.store.write_evaluation_run_labeler_summaries(summaries)
 
 class Evaluation(BaseModel):
-    """Simple evaluation for prompt engineering rigorously"""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
     name: str
@@ -219,16 +218,15 @@ class Evaluation(BaseModel):
     serialized: Optional[SerializedEvaluation] = Field(default=None)
 
     id: Optional[str] = Field(default=None)
-
-    def __init__(self, *args, **kwargs):
-        assert (
-            "dataset" in kwargs or "n_evals" in kwargs
-        ), "Either dataset or n_evals must be set"
-        assert not (
-            "dataset" in kwargs and "n_evals" in kwargs
-        ), "Either dataset or samples_per_datapoint must be set, not both"
-
-        super().__init__(*args, **kwargs)
+    
+    @model_validator(mode='before')
+    @classmethod
+    def validate_dataset_or_n_evals(cls, values):
+        if 'dataset' not in values and 'n_evals' not in values:
+            raise ValueError("Either dataset or n_evals must be set")
+        if 'dataset' in values and 'n_evals' in values:
+            raise ValueError("Either dataset or n_evals must be set, not both")
+        return values
 
     @field_validator("metrics", "annotations", "criterion", mode="before")
     def wrap_callables_in_lmp_function(cls, value):
@@ -237,7 +235,7 @@ class Evaluation(BaseModel):
         if isinstance(value, dict):
             return {
                 k: (
-                    function()(v)
+                    function(type=LMPType.LABELR)(v)
                     if callable(v) and not hasattr(v, "__ell_track__")
                     else v
                 )

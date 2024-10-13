@@ -62,21 +62,24 @@ export const getInitialGraph = (lmps, traces, evals) => {
     };
   });
 
-  // Create LMP nodes, excluding those that are part of evaluations
-  const lmpNodes = lmps.filter(Boolean).filter(lmp => !evalLmpIds.has(lmp.lmp_id)).map(lmp => {
-    const dimensions = calculateNodeDimensions('lmp', lmp);
-    return {
-      id: `${lmp.lmp_id}`,
-      type: "lmp",
-      data: { 
-        label: lmp.name, 
-        lmp,
-        isEvalLabeler: evalLmpIds.has(lmp.lmp_id),
-        ...dimensions
-      },
-      position: { x: 0, y: 0 },
-    };
-  });
+  // Create LMP nodes, excluding those that are part of evaluations and those of type "metric"
+  const lmpNodes = lmps.filter(Boolean)
+    .filter(lmp => !evalLmpIds.has(lmp.lmp_id) && lmp.lmp_type !== "LABELER")
+    .map(lmp => {
+      const dimensions = calculateNodeDimensions('lmp', lmp);
+      console.log(lmp);
+      return {
+        id: `${lmp.lmp_id}`,
+        type: "lmp",
+        data: { 
+          label: lmp.name, 
+          lmp,
+          isEvalLabeler: evalLmpIds.has(lmp.lmp_id),
+          ...dimensions
+        },
+        position: { x: 0, y: 0 },
+      };
+    });
 
   const deadNodes = lmps.flatMap(lmp => 
     (lmp.uses || [])

@@ -51,7 +51,6 @@ class SQLStore(ell.store.Store):
                 return None
             except sqlalchemy.exc.IntegrityError as e:
                 session.rollback()
-                print("race condition")
                 return None
 
     def write_invocation(self, invocation: Invocation, consumes: Set[str]) -> Optional[Any]:
