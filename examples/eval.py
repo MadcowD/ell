@@ -222,7 +222,7 @@ def test_poem_eval():
     @ell.simple(model="gpt-4o")
     def write_a_bad_poem(): 
         """Your poem must no logner than 60 words."""
-        return "Write a really well written poem. "
+        return "Write a really poorly written poem "
 
 
     @ell.simple(model="gpt-4o")
