@@ -3,6 +3,7 @@ import json
 import os
 from typing import Any, Optional, Dict, List, Set, Union
 from pydantic import BaseModel
+import sqlalchemy
 from sqlmodel import Session, SQLModel, create_engine, select
 import ell.store
 import cattrs
@@ -31,22 +32,27 @@ class SQLStore(ell.store.Store):
 
     def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:
         with Session(self.engine) as session:
-            # Bind the serialized_lmp to the session
-            lmp = session.exec(select(SerializedLMP).filter(SerializedLMP.lmp_id == serialized_lmp.lmp_id)).first()
-            
-            if lmp:
-                # Already added to the DB.
-                return lmp
-            else:
-                session.add(serialized_lmp)
-            
-            for use_id in uses:
-                used_lmp = session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == use_id)).first()
-                if used_lmp:
-                    serialized_lmp.uses.append(used_lmp)
-            
-            session.commit()
-        return None
+            try:
+                # Bind the serialized_lmp to the session
+                lmp = session.exec(select(SerializedLMP).filter(SerializedLMP.lmp_id == serialized_lmp.lmp_id)).first()
+                
+                if lmp:
+                    # Already added to the DB.
+                    return lmp
+                else:
+                    session.add(serialized_lmp)
+                
+                for use_id in uses:
+                    used_lmp = session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == use_id)).first()
+                    if used_lmp:
+                        serialized_lmp.uses.append(used_lmp)
+                
+                session.commit()
+                return None
+            except sqlalchemy.exc.IntegrityError as e:
+                session.rollback()
+                print("race condition")
+                return None
 
     def write_invocation(self, invocation: Invocation, consumes: Set[str]) -> Optional[Any]:
         with Session(self.engine) as session:

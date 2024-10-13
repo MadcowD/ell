@@ -124,7 +124,8 @@ export const GraphRenderer = ({ graphId }) => {
     dataset.errorBars && dataset.errorBars.some(error => error > 0 || (error.low - error.high > 0))
   );
 
-  let yAxisScale = {};
+  let yAxisScale = {
+    ...sharedConfig.options.scales.y,};
   if (hasNonZeroErrorBars || true) {
     // Calculate min and max values including error bars
     const minMaxValues = data.datasets.reduce((acc, dataset) => {
@@ -150,6 +151,7 @@ export const GraphRenderer = ({ graphId }) => {
 
     yAxisScale = {
       y: {
+        ...sharedConfig.options.scales.y,
         beginAtZero: false,
         min: Math.max(0, minMaxValues.min - yAxisPadding),
         max: minMaxValues.max + yAxisPadding,

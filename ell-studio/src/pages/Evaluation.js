@@ -103,7 +103,7 @@ function Evaluation() {
 
           <div className="mb-6">
             <div className="flex border-b border-border">
-              {['Runs', 'Metrics', 'Version History'].map((tab) => (
+              {['Runs', 'Version History'].map((tab) => (
                 <button
                   key={tab}
                   className={`px-4 py-2 focus:outline-none ${

@@ -4,6 +4,7 @@ import { Card } from '../common/Card';
 import Graph from '../graphing/Graph';
 import { GraphProvider } from '../graphing/GraphSystem';
 import MetricDisplay from './MetricDisplay';
+import { Link } from 'react-router-dom';
 
 const MetricGraphGrid = ({ evaluation, groupedRuns, onActiveIndexChange }) => {
   const [activeIndex, setActiveIndex] = useState(null);
@@ -40,7 +41,7 @@ const MetricGraphGrid = ({ evaluation, groupedRuns, onActiveIndexChange }) => {
     }, { means: [], stdDevs: [], errors: [], confidenceIntervals: [] });
   };
 
-  const xData = Array.from({ length: getHistoricalData(evaluation.labelers?.[0]).means.length}, (_, i) => `Run ${i + 1}`);
+  const xData = Array.from({ length: getHistoricalData(evaluation.labelers?.[0]).means.length}, (_, i) => `${i + 1}`);
 
   const handleHover = useCallback((index) => {
     setActiveIndex(index);
@@ -53,7 +54,6 @@ const MetricGraphGrid = ({ evaluation, groupedRuns, onActiveIndexChange }) => {
   }, [onActiveIndexChange]);
 
   const hasMultipleValues = getHistoricalData(evaluation.labelers[0]).means.length > 1;
-
   return (
     <GraphProvider 
       xData={xData} 
@@ -69,6 +69,21 @@ const MetricGraphGrid = ({ evaluation, groupedRuns, onActiveIndexChange }) => {
               position: 'average', 
               // TODO: Make the label custom so when we click it takes us to that run id.
             },
+          },
+          scales: {
+            x: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Run Number'
+              }
+            },
+            y: {
+              display: true,
+              title: {
+                display: false
+              }
+            }
           }
         } 
       }} 
@@ -86,6 +101,7 @@ const MetricGraphGrid = ({ evaluation, groupedRuns, onActiveIndexChange }) => {
           return (
             <Card key={labeler.id}>
               <div className={`flex justify-between items-center p-2 ${hasMultipleValues ? 'border-b border-gray-800' : ''}`}>
+                <Link to={`/lmp/${labeler.labeling_lmp.name}/${labeler.labeling_lmp.lmp_id}`}>
                 <LMPCardTitle
                   lmp={labeler.labeling_lmp}
                   nameOverridePrint={labeler.name}
@@ -95,6 +111,7 @@ const MetricGraphGrid = ({ evaluation, groupedRuns, onActiveIndexChange }) => {
                   paddingClassOverride="p-0"
                   shortVersion={true}
                 />
+                </Link>
                 <MetricDisplay
                   currentValue={currentValue}
                   previousValue={previousValue}

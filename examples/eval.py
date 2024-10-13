@@ -55,7 +55,7 @@ def test_predictor_evaluation():
         return float(output.lower() == label.lower())
 
     eval = ell.evaluation.Evaluation(
-        name="test", dataset=dataset, metrics={"score": is_correct, "length": lambda _, output: len(output)}
+        name="capital_prediction", dataset=dataset, metrics={"score": is_correct, "length": lambda _, output: len(output)}
     )
 
     # ell.init(verbose=True, store='./logdir')
@@ -265,6 +265,6 @@ def test_poem_eval():
 
 
 if __name__ == "__main__":
-   test_poem_eval()
-#    ell.init(verbose=True, store="./logdir")
-#    test_predictor_evaluation()
+#    test_poem_eval()
+   ell.init(verbose=True, store="./logdir")
+   test_predictor_evaluation()
