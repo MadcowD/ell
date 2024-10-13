@@ -11,3 +11,4 @@ import ell.models.anthropic
 import ell.models.ollama
 import ell.models.groq
 import ell.models.bedrock
+import ell.models.xai

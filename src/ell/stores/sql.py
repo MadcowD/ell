@@ -23,7 +23,7 @@ class SQLStore(ell.store.Store):
     def __init__(self, db_uri: str, blob_store: Optional[ell.store.BlobStore] = None):
         self.engine = create_engine(db_uri,
                                     json_serializer=lambda obj: json.dumps(pydantic_ltype_aware_cattr.unstructure(obj), 
-                                     sort_keys=True, default=repr))
+                                     sort_keys=True, default=repr, ensure_ascii=False))
         
         SQLModel.metadata.create_all(self.engine)
         self.open_files: Dict[str, Dict[str, Any]] = {}

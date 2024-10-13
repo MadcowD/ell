@@ -2,14 +2,15 @@ import os
 import subprocess
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
 import logging
-from colorama import Fore, Style, init
+from colorama import Fore, Style, init  # type: ignore
 import argparse
 import json
 import hashlib
 import fnmatch
 import threading
+import psutil
 
 # Initialize colorama for cross-platform colored output
 init()
@@ -63,7 +64,6 @@ def run_example(example_path, verbose=False, cache=None):
         # Prepare simulated input based on the example file
         simulated_input = get_simulated_input(filename)
         
-        # Run the example with simulated input
         process = subprocess.Popen(
             [sys.executable, example_path],
             stdin=subprocess.PIPE,
@@ -71,12 +71,28 @@ def run_example(example_path, verbose=False, cache=None):
             stderr=subprocess.PIPE,
             text=True
         )
-        
-        stdout, stderr = process.communicate(input=simulated_input)
-        
+
+        def kill_proc_tree(pid):
+            parent = psutil.Process(pid)
+            for child in parent.children(recursive=True):
+                child.kill()
+            parent.kill()
+
+        try:
+            stdout, stderr = process.communicate(input=simulated_input, timeout=60)
+        except subprocess.TimeoutExpired:
+            kill_proc_tree(process.pid)
+            return filename, "TIMEOUT", 60, "Example execution timed out after 60 seconds", ""
+
         end_time = time.time()
         runtime = end_time - start_time
         
+        if process.returncode != 0:
+            error_message = f"Process exited with non-zero status: {process.returncode}\nStderr: {stderr}"
+            if cache is not None:
+                update_cache(cache, file_hash, "ERROR", runtime)
+            return filename, "ERROR", runtime, error_message, stdout
+
         if cache is not None:
             update_cache(cache, file_hash, "SUCCESS", runtime)
         return filename, "SUCCESS", runtime, None, stdout
@@ -146,18 +162,21 @@ def run_all_examples(args):
                 print(f"{Fore.GREEN}{futures[future]} . (Runtime: {runtime:.2f}s){Style.RESET_ALL}")
             elif status == "CACHED":
                 print(f"{Fore.BLUE}{futures[future]} C (Cached Runtime: {runtime:.2f}s){Style.RESET_ALL}")
+            elif status == "TIMEOUT":
+                print(f"{Fore.YELLOW}{futures[future]} T (Timeout: {runtime:.2f}s){Style.RESET_ALL}")
+                print(f"  Error: {error}")
             else:
                 print(f"{Fore.RED}{futures[future]} F (Runtime: {runtime:.2f}s){Style.RESET_ALL}")
                 print(f"  Error: {error}")
                 print(f"  Full output:")
                 print(output)
-                if not args.continue_on_error:
-                    print(f"\n{Fore.RED}Stopping execution due to failure.{Style.RESET_ALL}")
-                    for running_future in futures:
-                        if not running_future.done():
-                            print(f"{Fore.YELLOW}Cancelling: {futures[running_future]}{Style.RESET_ALL}")
-                    executor.shutdown(wait=False, cancel_futures=True)
-                    break
+            if status in ["ERROR", "TIMEOUT"] and not args.continue_on_error:
+                print(f"\n{Fore.RED}Stopping execution due to failure.{Style.RESET_ALL}")
+                for running_future in futures:
+                    if not running_future.done():
+                        print(f"{Fore.YELLOW}Cancelling: {futures[running_future]}{Style.RESET_ALL}")
+                executor.shutdown(wait=False, cancel_futures=True)
+                break
 
     if args.cache:
         save_cache(cache)
@@ -166,18 +185,21 @@ def run_all_examples(args):
     total_examples = len(results)
     successful = sum(1 for _, status, _, _ in results if status in {"SUCCESS", "CACHED"})
     failed = sum(1 for _, status, _, _ in results if status == "ERROR")
-    skipped = total_examples - successful - failed
+    timed_out = sum(1 for _, status, _, _ in results if status == "TIMEOUT")
+    skipped = total_examples - successful - failed - timed_out
 
     print(f"Total examples: {total_examples}")
     print(f"{Fore.GREEN}Successful: {successful}{Style.RESET_ALL}")
     print(f"{Fore.RED}Failed: {failed}{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}Timed out: {timed_out}{Style.RESET_ALL}")
     print(f"{Fore.YELLOW}Skipped: {skipped}{Style.RESET_ALL}")
 
-    if failed > 0:
-        print("\nFailed examples:")
+    if failed > 0 or timed_out > 0:
+        print("\nFailed or timed out examples:")
         for example, status, runtime, error in results:
-            if status == "ERROR":
-                print(f"{Fore.RED}{example} (Runtime: {runtime:.2f}s){Style.RESET_ALL}")
+            if status in ["ERROR", "TIMEOUT"]:
+                color = Fore.RED if status == "ERROR" else Fore.YELLOW
+                print(f"{color}{example} ({status}, Runtime: {runtime:.2f}s){Style.RESET_ALL}")
                 print(f"  Error: {error}")
 
     average_runtime = sum(runtime for _, _, runtime, _ in results) / len(results)
@@ -186,7 +208,7 @@ def run_all_examples(args):
     if all(status in {"SUCCESS", "CACHED"} for _, status, _, _ in results):
         print(f"\n{Fore.GREEN}All examples were successful.{Style.RESET_ALL}")
     else:
-        print(f"\n{Fore.YELLOW}Some examples did not run successfully. Please review the output above.{Style.RESET_ALL}")
+        print(f"\n{Fore.YELLOW}Some examples did not run successfully or timed out. Please review the output above.{Style.RESET_ALL}")
 
 if __name__ == "__main__":
     args = parse_arguments()

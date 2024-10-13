@@ -54,7 +54,7 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
                     elif isinstance(result, list) and all(isinstance(c, ContentBlock) for c in result):
                         content_results = result
                     else:
-                        content_results = [ContentBlock(text=_lstr(json.dumps(result),origin_trace=_invocation_origin))]
+                        content_results = [ContentBlock(text=_lstr(json.dumps(result, ensure_ascii=False),origin_trace=_invocation_origin))]
                 except TypeError as e:
                     raise TypeError(f"Failed to convert tool use result to ContentBlock: {e}. Tools must return json serializable objects. or a list of ContentBlocks.")
                 # XXX: Need to support images and other content types somehow. We should look for images inside of the the result and then go from there.
