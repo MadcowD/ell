@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { CustomTooltip, useTooltip } from './CustomTooltip';
+import { SharedVerticalIndicator, useSharedVerticalIndicator } from './SharedVerticalIndicator';
+import ErrorBarPlugin from './ErrorBarPlugin';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ErrorBarPlugin);
 
 const GraphContext = createContext();
 
@@ -11,8 +12,8 @@ export const useGraphContext = () => useContext(GraphContext);
 
 export const GraphProvider = ({ children, xData, sharedConfig, onHover, onLeave }) => {
   const [graphs, setGraphs] = useState({});
-  const [activeTooltipIndex, setActiveTooltipIndex] = useState(null);
-  const [sharedTooltipY, setSharedTooltipY] = useState(null);
+  const [activeIndicatorIndex, setActiveIndicatorIndex] = useState(null);
+  const [sharedIndicatorY, setSharedIndicatorY] = useState(null);
 
   const addGraph = useCallback((graphId) => {
     setGraphs(prevGraphs => {
@@ -53,17 +54,17 @@ export const GraphProvider = ({ children, xData, sharedConfig, onHover, onLeave 
     }));
   }, []);
 
-  const setActiveTooltip = useCallback((index, y) => {
-    setActiveTooltipIndex(index);
-    setSharedTooltipY(y);
+  const setActiveIndicator = useCallback((index, y) => {
+    setActiveIndicatorIndex(index);
+    setSharedIndicatorY(y);
     if (onHover) {
       onHover(index);
     }
   }, [onHover]);
 
-  const clearActiveTooltip = useCallback(() => {
-    setActiveTooltipIndex(null);
-    setSharedTooltipY(null);
+  const clearActiveIndicator = useCallback(() => {
+    setActiveIndicatorIndex(null);
+    setSharedIndicatorY(null);
     if (onLeave) {
       onLeave();
     }
@@ -78,10 +79,10 @@ export const GraphProvider = ({ children, xData, sharedConfig, onHover, onLeave 
       addMetric, 
       removeMetric, 
       sharedConfig,
-      activeTooltipIndex,
-      sharedTooltipY,
-      setActiveTooltip,
-      clearActiveTooltip
+      activeIndicatorIndex,
+      sharedIndicatorY,
+      setActiveIndicator,
+      clearActiveIndicator
     }}>
       {children}
     </GraphContext.Provider>
@@ -93,14 +94,14 @@ export const GraphRenderer = ({ graphId }) => {
     xData, 
     graphs, 
     sharedConfig, 
-    activeTooltipIndex, 
-    sharedTooltipY, 
-    setActiveTooltip, 
-    clearActiveTooltip 
+    activeIndicatorIndex, 
+    sharedIndicatorY, 
+    setActiveIndicator,
+    clearActiveIndicator
   } = useGraphContext();
   const graph = graphs[graphId];
   const chartRef = React.useRef(null);
-  const tooltipState = useTooltip(chartRef, activeTooltipIndex, sharedTooltipY, clearActiveTooltip);
+  const indicatorState = useSharedVerticalIndicator(chartRef, activeIndicatorIndex, sharedIndicatorY, clearActiveIndicator);
   
   if (!graph || !graph.metrics || graph.metrics.length === 0) {
     return <div>Loading graph...</div>;
@@ -113,55 +114,98 @@ export const GraphRenderer = ({ graphId }) => {
       data: metric.yData,
       borderColor: metric.color,
       backgroundColor: metric.color,
+      errorBars: metric.errorBars,
       ...metric.config,
     })),
   };
 
+  // Check if there are any non-zero error bars
+  const hasNonZeroErrorBars = data.datasets.some(dataset => 
+    dataset.errorBars && dataset.errorBars.some(error => error > 0 || (error.low - error.high > 0))
+  );
+
+  let yAxisScale = {};
+  if (hasNonZeroErrorBars || true) {
+    // Calculate min and max values including error bars
+    const minMaxValues = data.datasets.reduce((acc, dataset) => {
+      dataset.data.forEach((value, index) => {
+        const errorBar = dataset.errorBars ? dataset.errorBars[index] : 0;
+        if (typeof errorBar === 'number') {
+          acc.min = Math.min(acc.min, value - errorBar);
+          acc.max = Math.max(acc.max, value + errorBar);
+        } else if (errorBar && typeof errorBar === 'object') {
+          console.log('errorBar', errorBar);
+          acc.min = Math.min(acc.min, errorBar.low);
+          acc.max = Math.max(acc.max, errorBar.high);
+        } else {
+          acc.min = Math.min(acc.min, value);
+          acc.max = Math.max(acc.max, value);
+        }
+      });
+      return acc;
+    }, { min: Infinity, max: -Infinity });
+
+    // Add some padding to the min and max values
+    const yAxisPadding = (minMaxValues.max - minMaxValues.min) * 0.1;
+
+    yAxisScale = {
+      y: {
+        beginAtZero: false,
+        min: Math.max(0, minMaxValues.min - yAxisPadding),
+        max: minMaxValues.max + yAxisPadding,
+      }
+    };
+  }
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: {
-      legend: { position: 'top' },
-      title: { display: true, text: sharedConfig.title },
-      tooltip: { enabled: false },
-    },
     hover: { mode: 'index', intersect: false },
+    ...sharedConfig.options,
     onHover: (event, elements, chart) => {
       if (elements && elements.length > 0) {
         const rect = chart.canvas.getBoundingClientRect();
         const y = rect.bottom - rect.top + 40;
-        setActiveTooltip(elements[0].index, y);
+        setActiveIndicator(elements[0].index, y);
       } else {
-        clearActiveTooltip();
+        clearActiveIndicator();
       }
     },
-    ...sharedConfig.options,
+    scales: {
+      ...sharedConfig.options.scales,
+      ...yAxisScale,
+    },
+    plugins: {
+      errorBar: {
+        draw: true,
+      },
+      ...sharedConfig.options.plugins,
+    },
   };
 
   return (
     <div style={{ width: '100%', height: '250px', position: 'relative' }}>
       <Line ref={chartRef} options={options} data={data} />
-      <CustomTooltip
-        visible={tooltipState.visible}
-        position={tooltipState.position}
+      <SharedVerticalIndicator
+        visible={indicatorState.visible}
+        position={indicatorState.position}
         labels={data.labels}
         datasets={data.datasets}
-        activeIndex={activeTooltipIndex}
-        chartHeight={tooltipState.chartHeight}
+        activeIndex={activeIndicatorIndex}
+        chartHeight={indicatorState.chartHeight}
       />
     </div>
   );
 };
 
-export const MetricAdder = ({ graphId, label, yData, color, config }) => {
+export const MetricAdder = ({ graphId, label, yData, color, config, errorBars }) => {
   const { addMetric, removeMetric } = useGraphContext();
 
   React.useEffect(() => {
     const metricId = Date.now();
-    console.log(`Adding metric to graph ${graphId}:`, { id: metricId, label, yData, color, config });
-    addMetric(graphId, { id: metricId, label, yData, color, config });
+    addMetric(graphId, { id: metricId, label, yData, color, config, errorBars });
     return () => removeMetric(graphId, metricId);
-  }, [graphId, label, yData, color, config, addMetric, removeMetric]);
+  }, [graphId, label, yData, color, config, errorBars, addMetric, removeMetric]);
 
   return null;
 };
@@ -170,7 +214,6 @@ export const useGraph = (graphId) => {
   const { addGraph, removeGraph } = useGraphContext();
 
   React.useEffect(() => {
-    console.log(`Initializing graph ${graphId}`);
     addGraph(graphId);
     return () => removeGraph(graphId);
   }, [graphId, addGraph, removeGraph]);

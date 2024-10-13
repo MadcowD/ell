@@ -5,27 +5,54 @@ import Graph from '../graphing/Graph';
 import { GraphProvider } from '../graphing/GraphSystem';
 import MetricDisplay from './MetricDisplay';
 
-const MetricGraphGrid = ({ evaluation, groupedRuns }) => {
+const MetricGraphGrid = ({ evaluation, groupedRuns, onActiveIndexChange }) => {
   const [activeIndex, setActiveIndex] = useState(null);
 
   const getHistoricalData = (labeler) => {
-    return Object.values(groupedRuns).flatMap(runs => 
-      runs.map(run => {
+    if (!labeler) return { means: [], stdDevs: [], errors: [], confidenceIntervals: [] };
+    return Object.values(groupedRuns).reduce((acc, runs) => {
+      runs.forEach(run => {
         const summary = run.labeler_summaries.find(s => s.evaluation_labeler_id === labeler.id);
-        return summary ? summary.data.mean : null;
-      }).filter(Boolean)
-    );
+        if (summary) {
+          const { mean, std, min, max } = summary.data;
+          const count = summary.count;
+          
+          // Calculate Standard Error of the Mean (SEM)
+          const sem = std / Math.sqrt(count);
+          
+          // Z-score for 95% confidence
+          const zScore = 1.96;
+          
+          // Margin of Error
+          let marginOfError = zScore * sem;
+          
+          // Bounded Confidence Interval
+          let lowerBound = Math.max(mean - marginOfError, min);
+          let upperBound = Math.min(mean + marginOfError, max);
+          
+          acc.means.push(mean);
+          acc.stdDevs.push(std);
+          acc.errors.push(marginOfError);
+          acc.confidenceIntervals.push({ low: lowerBound, high: upperBound });
+        }
+      });
+      return acc;
+    }, { means: [], stdDevs: [], errors: [], confidenceIntervals: [] });
   };
 
-  const xData = Array.from({ length: getHistoricalData(evaluation.labelers[0]).length }, (_, i) => `Run ${i + 1}`);
+  const xData = Array.from({ length: getHistoricalData(evaluation.labelers?.[0]).means.length}, (_, i) => `Run ${i + 1}`);
 
   const handleHover = useCallback((index) => {
     setActiveIndex(index);
-  }, []);
+    onActiveIndexChange(index);
+  }, [onActiveIndexChange]);
 
   const handleLeave = useCallback(() => {
     setActiveIndex(null);
-  }, []);
+    onActiveIndexChange(null);
+  }, [onActiveIndexChange]);
+
+  const hasMultipleValues = getHistoricalData(evaluation.labelers[0]).means.length > 1;
 
   return (
     <GraphProvider 
@@ -36,6 +63,12 @@ const MetricGraphGrid = ({ evaluation, groupedRuns }) => {
           plugins: {
             title: { display: false },
             legend: { display: false },
+            tooltip: { 
+              enabled: true, 
+              intersect: false, 
+              position: 'average', 
+              // TODO: Make the label custom so when we click it takes us to that run id.
+            },
           }
         } 
       }} 
@@ -44,39 +77,15 @@ const MetricGraphGrid = ({ evaluation, groupedRuns }) => {
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {evaluation.labelers.map((labeler) => {
-          const historicalData = getHistoricalData(labeler);
+          const { means: historicalData, stdDevs, confidenceIntervals } = getHistoricalData(labeler);
           if (historicalData.length === 0) return null;
 
-          const graphId = `labeler-${labeler.id}`;
-          const trend = historicalData[historicalData.length - 1] - historicalData[0];
-          const trendColor = trend > 0 ? 'rgba(52, 211, 153, 0.8)' : 'rgba(239, 68, 68, 0.8)';
-          const fillColor = trend > 0 ? 'rgba(52, 211, 153, 0.2)' : 'rgba(239, 68, 68, 0.2)';
-
-          const metrics = [
-            {
-              label: labeler.name,
-              yData: historicalData,
-              color: trendColor,
-              config: {
-                backgroundColor: fillColor,
-                borderColor: trendColor,
-                fill: true,
-                tension: 0.4,
-                borderWidth: 1,
-                pointRadius: 3,
-              }
-            }
-          ];
-          const currentValue = activeIndex !== null && activeIndex < historicalData.length
-            ? historicalData[activeIndex]
-            : historicalData[historicalData.length - 1] || null;
-          const previousValue = activeIndex !== null && activeIndex > 0
-            ? historicalData[activeIndex - 1]
-            : currentValue;
+          const currentValue = activeIndex !== null ? historicalData[activeIndex] : historicalData[historicalData.length - 1];
+          const previousValue = activeIndex !== null && activeIndex > 0 ? historicalData[activeIndex - 1] : historicalData[historicalData.length - 2];
 
           return (
             <Card key={labeler.id}>
-              <div className="border-b border-gray-800 flex justify-between items-center p-2">
+              <div className={`flex justify-between items-center p-2 ${hasMultipleValues ? 'border-b border-gray-800' : ''}`}>
                 <LMPCardTitle
                   lmp={labeler.labeling_lmp}
                   nameOverridePrint={labeler.name}
@@ -92,12 +101,29 @@ const MetricGraphGrid = ({ evaluation, groupedRuns }) => {
                   label={labeler.name}
                 />
               </div>
-              <div className="p-4">
-                <Graph
-                  graphId={graphId}
-                  metrics={metrics}
-                />
-              </div>
+              {hasMultipleValues && (
+                <div className="p-4">
+                  <Graph
+                    graphId={`labeler-${labeler.id}`}
+                    metrics={[
+                      {
+                        label: labeler.name,
+                        yData: historicalData,
+                        errorBars: confidenceIntervals,
+                        color: currentValue > historicalData[0] ? 'rgba(52, 211, 153, 0.8)' : 'rgba(239, 68, 68, 0.8)',
+                        config: {
+                          backgroundColor: currentValue > historicalData[0] ? 'rgba(52, 211, 153, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                          borderColor: currentValue > historicalData[0] ? 'rgba(52, 211, 153, 0.8)' : 'rgba(239, 68, 68, 0.8)',
+                          fill: true,
+                          tension: 0.4,
+                          borderWidth: 1,
+                          pointRadius: 3,
+                        }
+                      }
+                    ]}
+                  />
+                </div>
+              )}
             </Card>
           );
         })}

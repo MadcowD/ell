@@ -25,6 +25,7 @@ function Evaluation() {
   const [selectedRun, setSelectedRun] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 10;
+  const [activeIndex, setActiveIndex] = useState(null);
 
   const { data: evaluation, isLoading: isLoadingEvaluation } = useEvaluation(id);
 
@@ -57,7 +58,13 @@ function Evaluation() {
       });
   };
 
-  if (isLoadingEvaluation) {
+  // TODO: Move hte graph state all the way out so we don't do callbacks and get do bidirectional state propagation
+  const handleActiveIndexChange = (index) => {
+    setActiveIndex(index);
+    console.log('Active index in Evaluation:', index);
+  };
+
+  if (isLoadingEvaluation || !evaluation?.labelers?.length) {
     return <div className="flex items-center justify-center h-screen">Loading evaluation...</div>;
   }
 
@@ -88,7 +95,11 @@ function Evaluation() {
         </div>
 
         <main className="overflow-y-auto hide-scrollbar">
-          <EvaluationOverview evaluation={evaluation} groupedRuns={groupedRuns} />
+          <EvaluationOverview 
+            evaluation={evaluation} 
+            groupedRuns={groupedRuns}
+            onActiveIndexChange={handleActiveIndexChange}
+          />
 
           <div className="mb-6">
             <div className="flex border-b border-border">
@@ -116,6 +127,7 @@ function Evaluation() {
                   pageSize={pageSize}
                   onSelectRun={setSelectedRun}
                   currentlySelectedRun={selectedRun}
+                  activeIndex={activeIndex}
                 />
               )}
               {activeTab === 'metrics' && (

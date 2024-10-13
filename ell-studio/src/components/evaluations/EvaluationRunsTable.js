@@ -6,7 +6,7 @@ import { Card } from '../common/Card';
 import { getTimeAgo } from '../../utils/lmpUtils';
 import VersionBadge from '../VersionBadge';
 
-const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSelectRun, currentlySelectedRun }) => {
+const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSelectRun, currentlySelectedRun, activeIndex }) => {
   const navigate = useNavigate();
 
   const onClickLMP = (run) => {
@@ -14,12 +14,13 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
   };
 
   const runsTableData = useMemo(() => {
-    return runs.map(run => ({
+    return runs.map((run, index) => ({
       ...run,
       id: run.id,
       name: run.evaluated_lmp.name,
       version: run.evaluated_lmp.version_number + 1,
       created_at: new Date(run.end_time),
+      runIndex: index, // Add this line to keep track of the run's index
     }));
   }, [runs]);
 
@@ -99,9 +100,18 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
       data={runsTableData}
       onRowClick={onSelectRun}
       initialSortConfig={initialSortConfig}
-      rowClassName={(item) => 
-        item.id === currentlySelectedRun?.id ? 'bg-blue-600 bg-opacity-30' : ''
-      }
+      rowClassName={(item) => {
+        let className = '';
+        if (item.runIndex === activeIndex) {
+          className += 'bg-blue-600 bg-opacity-30 ';
+        } else if (activeIndex !== null) {
+          className += 'opacity-50 ';
+        }
+        if (item.id === currentlySelectedRun?.id) {
+          className += 'border-2 border-blue-600 ';
+        }
+        return className.trim();
+      }}
       currentPage={currentPage}
       onPageChange={setCurrentPage}
       pageSize={pageSize}

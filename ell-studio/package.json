@@ -17,6 +17,7 @@
     "axios": "^1.6.0",
     "base64-js": "^1.5.1",
     "chart.js": "^4.4.4",
+    "chartjs-chart-error-bars": "^4.4.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "d3-force": "^3.0.0",

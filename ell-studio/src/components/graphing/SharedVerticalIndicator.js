@@ -13,7 +13,7 @@ const formatNumber = (value) => {
   return value;
 };
 
-export const CustomTooltip = ({ visible, position, labels, datasets, activeIndex, chartHeight }) => {
+export const SharedVerticalIndicator = ({ visible, position, labels, datasets, activeIndex, chartHeight }) => {
   const [animatedPosition, setAnimatedPosition] = useState(position);
 
   useEffect(() => {
@@ -46,34 +46,34 @@ export const CustomTooltip = ({ visible, position, labels, datasets, activeIndex
   );
 };
 
-export const useTooltip = (chartRef, activeTooltipIndex, sharedTooltipY, clearActiveTooltip) => {
-  const [tooltipState, setTooltipState] = useState({ visible: false, position: { x: 0, y: 0 } });
+export const useSharedVerticalIndicator = (chartRef, activeIndicatorIndex, sharedIndicatorY, clearActiveIndicator) => {
+  const [indicatorLocation, setIndicatorLocation] = useState({ visible: false, position: { x: 0, y: 0 } });
   const [chartHeight, setChartHeight] = useState(0);
 
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart) return;
 
-    const updateTooltip = () => {
+    const updateSharedVerticalIndicator = () => {
       if (!chart || !chart.canvas) return;
 
-      if (activeTooltipIndex !== null && activeTooltipIndex >= 0 && activeTooltipIndex < chart.data.labels.length) {
+      if (activeIndicatorIndex !== null && activeIndicatorIndex >= 0 && activeIndicatorIndex < chart.data.labels.length) {
         const meta = chart.getDatasetMeta(0);
-        if (!meta || !meta.data || activeTooltipIndex >= meta.data.length) return;
+        if (!meta || !meta.data || activeIndicatorIndex >= meta.data.length) return;
 
-        const activeElement = meta.data[activeTooltipIndex];
+        const activeElement = meta.data[activeIndicatorIndex];
         
-        setTooltipState({ visible: true, position: { x: activeElement.x, y: sharedTooltipY } });
+        setIndicatorLocation({ visible: true, position: { x: activeElement.x, y: sharedIndicatorY } });
         setChartHeight(chart.height);
       } else {
-        setTooltipState(prev => ({ ...prev, visible: false }));
+        setIndicatorLocation(prev => ({ ...prev, visible: false }));
       }
     };
 
-    updateTooltip();
+    updateSharedVerticalIndicator();
 
     const handleMouseLeave = () => {
-      clearActiveTooltip();
+      clearActiveIndicator();
     };
 
     chart.canvas.addEventListener('mouseleave', handleMouseLeave);
@@ -83,7 +83,7 @@ export const useTooltip = (chartRef, activeTooltipIndex, sharedTooltipY, clearAc
         chart.canvas.removeEventListener('mouseleave', handleMouseLeave);
       }
     };
-  }, [activeTooltipIndex, sharedTooltipY, clearActiveTooltip]);
+  }, [activeIndicatorIndex, sharedIndicatorY, clearActiveIndicator, chartRef]);
 
-  return { ...tooltipState, chartHeight };
+  return { ...indicatorLocation, chartHeight };
 };

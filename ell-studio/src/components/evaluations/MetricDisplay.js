@@ -29,7 +29,7 @@ const MetricDisplay = ({ currentValue, previousValue, label, showTooltip = true 
   }, [currentValue]);
 
   const content = (
-    <div className="text-right min-w-[5rem]">
+    <div className="text-right min-w-[3rem]">
       <div className={`font-bold font-mono overflow-hidden`}>
         <span className={`inline-block transition-all duration-100 ease-in-out ${isHighlighted ? `${trendColorClass} transform scale-105` : 'transform scale-100'}`}>
           {currentValue.toFixed(2)}
@@ -50,7 +50,7 @@ const MetricDisplay = ({ currentValue, previousValue, label, showTooltip = true 
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div>
+          <div >
             {content}
           </div>
         </TooltipTrigger>
@@ -58,8 +58,8 @@ const MetricDisplay = ({ currentValue, previousValue, label, showTooltip = true 
           <div className="text-xs">
             <p className="font-medium">{label}</p>
             <p>Current: {currentValue.toFixed(4)}</p>
-            <p>Previous: {previousValue !== undefined ? previousValue.toFixed(4) : 'N/A'}</p>
-            <p>Change: {previousValue !== undefined ? (currentValue - previousValue).toFixed(4) : 'N/A'}</p>
+            <p>Previous: {previousValue !== undefined && previousValue !== null ? previousValue.toFixed(4) : 'N/A'}</p>
+            <p>Change: {previousValue !== undefined && previousValue !== null ? (currentValue - previousValue).toFixed(4) : 'N/A'}</p>
           </div>
         </TooltipContent>
       </Tooltip>

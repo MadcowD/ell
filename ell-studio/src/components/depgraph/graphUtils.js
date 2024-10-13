@@ -38,6 +38,7 @@ const calculateNodeDimensions = (nodeType, data) => {
  * @returns {Object} - Contains initial nodes and edges.
  */
 export const getInitialGraph = (lmps, traces, evals) => {
+  if(!lmps || !traces || !evals) return { initialNodes: [], initialEdges: [] };
   const lmpIds = new Set(lmps.map(lmp => lmp.lmp_id));
   const evalLmpIds = new Set();
   const lmpToEvalMap = new Map();

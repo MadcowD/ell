@@ -14,7 +14,7 @@ const MetricTable = ({ summaries, historicalData, isVertical }) => {
 
         return (
           <React.Fragment key={summary.evaluation_labeler_id}>
-            <div className={`flex flex-col space-y-1 text-xs py-1 hover:bg-accent/50 transition-colors duration-200`}>
+            <div className={`flex flex-col space-y-1 text-xs py-1 hover:bg-accent/50 transition-colors duration-200 pr-1`}>
               <div className={`w-full font-medium truncate flex items-center`} title={summary.evaluation_labeler.name}>
                 <FiBarChart2 className="mr-1 h-3 w-3 text-muted-foreground flex-shrink-0" />
                 <code className="metric-label text-xs font-medium truncate max-w-[calc(100%-1.5rem)]">
