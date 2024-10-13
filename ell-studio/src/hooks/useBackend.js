@@ -40,6 +40,7 @@ export const useWebSocketConnection = () => {
         queryClient.invalidateQueries({ queryKey: ["lmpDetails"] });
         queryClient.invalidateQueries({ queryKey: ["evaluations"] });
         queryClient.invalidateQueries({ queryKey: ["latestEvaluations"] });
+        queryClient.invalidateQueries({ queryKey: ["evaluation"] });
         console.log("Database updated, invalidating queries");
       }
     };

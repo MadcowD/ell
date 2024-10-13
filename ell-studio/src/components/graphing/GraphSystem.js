@@ -176,10 +176,27 @@ export const GraphRenderer = ({ graphId }) => {
       ...yAxisScale,
     },
     plugins: {
+      ...sharedConfig.options.plugins,
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const value = context.parsed.y;
+            let label = `${context.dataset.label}: ${value.toFixed(2)}`;
+            
+            const chartErrorBarData = context.chart.errorBarData;
+            const errorData = chartErrorBarData?.[context.datasetIndex]?.[context.dataIndex];
+            
+            if (errorData) {
+              label += `(95% CI: [${errorData.low.toFixed(2)}, ${errorData.high.toFixed(2)}])`;
+            }
+            
+            return label;
+          }
+        }
+      },
       errorBar: {
         draw: true,
       },
-      ...sharedConfig.options.plugins,
     },
   };
 

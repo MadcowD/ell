@@ -42,6 +42,9 @@ const drawErrorBar = (ctx, x, y, errorLow, errorHigh, color, width) => {
 
 const ErrorBarPlugin = {
   id: 'errorBar',
+  beforeInit(chart) {
+    chart.errorBarData = {};
+  },
   afterDatasetsDraw(chart, args, options) {
     const { ctx } = chart;
     
@@ -59,17 +62,26 @@ const ErrorBarPlugin = {
             
             let errorLow, errorHigh;
             if (typeof dataset.errorBars[index] === 'object') {
-              // Calculate error bar lengths in pixels
-              errorLow = Math.abs(chart.scales.y.getPixelForValue(datapoint) - 
-                                  chart.scales.y.getPixelForValue(dataset.errorBars[index].low));
-              errorHigh = Math.abs(chart.scales.y.getPixelForValue(datapoint) - 
-                                   chart.scales.y.getPixelForValue(dataset.errorBars[index].high));
+              errorLow = dataset.errorBars[index].low;
+              errorHigh = dataset.errorBars[index].high;
             } else {
-              errorLow = errorHigh = Math.abs(chart.scales.y.getPixelForValue(datapoint) - 
-                                              chart.scales.y.getPixelForValue(datapoint + dataset.errorBars[index]));
+              errorLow = datapoint - dataset.errorBars[index];
+              errorHigh = datapoint + dataset.errorBars[index];
             }
             
-            drawErrorBar(ctx, x, y, errorLow, errorHigh, dataset.borderColor, dataset.borderWidth || 1);
+            // Store error bar data for tooltip access
+            if (!chart.errorBarData[datasetIndex]) {
+              chart.errorBarData[datasetIndex] = [];
+            }
+            chart.errorBarData[datasetIndex][index] = { low: errorLow, high: errorHigh };
+
+            // Convert to pixel values for drawing
+            const errorLowPx = Math.abs(chart.scales.y.getPixelForValue(datapoint) - 
+                                        chart.scales.y.getPixelForValue(errorLow));
+            const errorHighPx = Math.abs(chart.scales.y.getPixelForValue(datapoint) - 
+                                         chart.scales.y.getPixelForValue(errorHigh));
+            
+            drawErrorBar(ctx, x, y, errorLowPx, errorHighPx, dataset.borderColor, dataset.borderWidth || 1);
           }
         });
       }
