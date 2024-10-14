@@ -1,11 +1,19 @@
 import React from 'react';
 import { FiGitCommit, FiClock, FiCopy, FiChevronRight } from 'react-icons/fi';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import VersionBadge from './VersionBadge';
 
-const VersionHistoryPane = ({ versions, onSelect }) => {
+const VersionHistoryPane = ({ 
+  versions, 
+  onSelect, 
+  config: {
+    getPath,
+    getId,
+    isCurrentVersion
+  }
+}) => {
   const navigate = useNavigate();
-  const { id: currentLmpId } = useParams();
+  const location = useLocation();
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
@@ -39,7 +47,8 @@ const VersionHistoryPane = ({ versions, onSelect }) => {
   let totalIndex = 0;
 
   const handleVersionClick = (version) => {
-    navigate(`/lmp/${version.name}/${version.lmp_id}`);
+    const path = getPath(version);
+    navigate(path);
     if (onSelect) {
       onSelect(version);
     }
@@ -55,44 +64,45 @@ const VersionHistoryPane = ({ versions, onSelect }) => {
             const commitLines = (version.commit_message || 'Commit message not available').split('\n');
             const commitTitle = commitLines[0] || 'Commit message not available';
             const commitDetails = commitLines.slice(1).join('\n').trim();
+            const versionId = getId(version);
             return (
-            <div key={version.lmp_id} className="mb-2 border border-gray-700 rounded-lg overflow-hidden">
-              <div className={`bg-gray-800 p-3 flex items-center justify-between cursor-pointer hover:bg-gray-750 ${version.lmp_id === currentLmpId ? 'bg-blue-900' : ''}`}
-                   onClick={() => handleVersionClick(version)}>
-                <div>
-                  <div className="flex items-center mb-1">
-                    <FiGitCommit className="text-blue-400 mr-2" />
-                    <span className="font-semibold">{commitTitle}</span>
+              <div key={versionId} className="mb-2 border border-gray-700 rounded-lg overflow-hidden">
+                <div className={`bg-gray-800 p-3 flex items-center justify-between cursor-pointer hover:bg-gray-750 ${isCurrentVersion(version, location) ? 'bg-blue-900' : ''}`}
+                     onClick={() => handleVersionClick(version)}>
+                  <div>
+                    <div className="flex items-center mb-1">
+                      <FiGitCommit className="text-blue-400 mr-2" />
+                      <span className="font-semibold">{commitTitle}</span>
+                    </div>
+                    {commitDetails && (
+                      <div className="text-sm text-gray-400 ml-6 mt-1 whitespace-pre-wrap">{commitDetails}</div>
+                    )}
+                    <div className="flex items-center text-sm text-gray-400 mt-2">
+                      <img
+                        src={version.author_avatar || 'https://github.com/github.png'}
+                        alt="Author"
+                        className="w-5 h-5 rounded-full mr-2"
+                      />
+                      <span>{version.author_name || 'Unknown'} committed</span>
+                      <FiClock className="ml-4 mr-1" />
+                      <span>{formatDate(version.created_at)}</span>
+                    </div>
                   </div>
-                  {commitDetails && (
-                    <div className="text-sm text-gray-400 ml-6 mt-1 whitespace-pre-wrap">{commitDetails}</div>
-                  )}
-                  <div className="flex items-center text-sm text-gray-400 mt-2">
-                    <img
-                      src={version.author_avatar || 'https://github.com/github.png'}
-                      alt="Author"
-                      className="w-5 h-5 rounded-full mr-2"
-                    />
-                    <span>{version.author_name || 'Unknown'} committed</span>
-                    <FiClock className="ml-4 mr-1" />
-                    <span>{formatDate(version.created_at)}</span>
+                  <FiChevronRight className="text-gray-500" />
+                </div>
+                <div className={`bg-gray-850 px-3 py-2 flex items-center justify-between ${isCurrentVersion(version, location) || (totalIndex === 1 && !location.pathname.includes('/')) ? 'bg-blue-800' : ''}`}>
+                  <div className="flex items-center">
+                    <VersionBadge version={versions.length - totalIndex + 1} className="mr-2" />
+                    <span className="text-xs font-mono text-gray-400">{versionId.substring(0, 7)}</span>
                   </div>
+                  <button
+                    className="text-gray-400 hover:text-gray-200 focus:outline-none"
+                    onClick={() => copyToClipboard(versionId)}
+                    title="Copy full hash"
+                  >
+                    <FiCopy />
+                  </button>
                 </div>
-                <FiChevronRight className="text-gray-500" />
-              </div>
-              <div className={`bg-gray-850 px-3 py-2 flex items-center justify-between ${version.lmp_id === currentLmpId || (totalIndex === 1 && !currentLmpId) ? 'bg-blue-800' : ''}`}>
-                <div className="flex items-center">
-                  <VersionBadge version={versions.length - totalIndex + 1} className="mr-2" />
-                  <span className="text-xs font-mono text-gray-400">{version.lmp_id.substring(0, 7)}</span>
-                </div>
-                <button
-                  className="text-gray-400 hover:text-gray-200 focus:outline-none"
-                  onClick={() => copyToClipboard(version.lmp_id)}
-                  title="Copy full hash"
-                >
-                  <FiCopy />
-                </button>
-              </div>
               </div>
             );
           })}

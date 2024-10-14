@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { FiZap, FiSettings, FiCode, FiDatabase } from 'react-icons/fi';
 import { BiCube } from 'react-icons/bi';
 import { motion } from 'framer-motion';
+import EvaluationsIcon from './evaluations/EvaluationsIcon';
 
 const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -40,6 +41,7 @@ const Sidebar = () => {
       <nav className="flex-grow space-y-1 px-2">
         <SidebarLink to="/" icon={BiCube} label="Models" />
         <SidebarLink to="/invocations" icon={FiZap} label="Invocations" />
+        <SidebarLink to="/evaluations" icon={EvaluationsIcon} label="Evaluations" />
         {/* <SidebarLink to="/code" icon={FiCode} label="Code" />
         <SidebarLink to="/data" icon={FiDatabase} label="Data" /> */}
       </nav>

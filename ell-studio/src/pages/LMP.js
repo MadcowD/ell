@@ -24,6 +24,13 @@ import LMPDetailsSidePanel from "../components/LMPDetailsSidePanel";
 import { Card } from "../components/common/Card";
 
 import GenericPageLayout from "../components/layouts/GenericPageLayout";
+
+const lmpConfig = {
+  getPath: (version) => `/lmp/${version.name}/${version.lmp_id}`,
+  getId: (version) => version.lmp_id,
+  isCurrentVersion: (version, location) => location.pathname.includes(version.lmp_id)
+};
+
 function LMP() {
   const { name, id } = useParams();
   let [searchParams, setSearchParams] = useSearchParams();
@@ -238,7 +245,10 @@ function LMP() {
                 </>
               )}
               {activeTab === "version_history" && (
-                <VersionHistoryPane versions={versionHistory} />
+                <VersionHistoryPane 
+                  versions={versionHistory} 
+                  config={lmpConfig}
+                />
               )}
             </div>
           </div>

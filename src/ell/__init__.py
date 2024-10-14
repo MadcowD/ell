@@ -10,6 +10,17 @@ from ell.lmp.complex import complex
 from ell.types.message import system, user, assistant, Message, ContentBlock
 from ell.__version__ import __version__
 
+
+def human_feedback(model, **kwargs):
+    pass
+
+class Evaluation:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def run(self, *args, **kwargs):
+        pass
+
 # Import all models
 import ell.providers
 import ell.models

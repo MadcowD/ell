@@ -7,7 +7,7 @@ import { useInvocationsFromLMP } from '../hooks/useBackend';
 import { LMPCardTitle } from './depgraph/LMPCardTitle';
 import { format } from 'date-fns';
 import SidePanel from './common/SidePanel';
-import MetricChart from './MetricChart';
+import MetricChart from './graphing/MetricChart';
 import { motion } from 'framer-motion';
 import {Card} from './common/Card';
 

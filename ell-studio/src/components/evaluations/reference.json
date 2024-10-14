@@ -1,0 +1,463 @@
+
+    {
+      "id": "evaluation-e0ec6b331a8c820b280f39650ad87eca",
+      "name": "poem_eval",
+      "created_at": "2024-10-10T22:29:35Z",
+      "dataset_hash": "38b3eff8baf56627478ec76a704e9b52",
+      "n_evals": 10,
+      "version_number": 2,
+      "commit_message": null,
+      "labelers": [
+        {
+          "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-critic_score-METRIC",
+          "name": "critic_score",
+          "type": "metric",
+          "labeling_lmp_id": "lmp-05680bf1e9e658bbcddad24cbb3e5a54",
+          "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca",
+          "labeling_rubric": null,
+          "labeling_lmp": {
+            "name": "test_poem_eval.<locals>.score",
+            "source": "def score(datapoint, output):\n    return \"yes\" in is_good_poem(output)\n",
+            "created_at": "2024-10-10T22:29:33.592968Z",
+            "api_params": null,
+            "initial_global_vars": {},
+            "commit_message": "Add @ell.simple decorator to is_good_poem function:\n* Introduced @ell.simple decorator with model and temperature parameters.\n* Changed function name from `score` to `is_good_poem`.\n* Updated system prompt to include specific response format.\n* Modified return value of `score` to check for 'yes' in `is_good_poem` output.",
+            "lmp_id": "lmp-05680bf1e9e658bbcddad24cbb3e5a54",
+            "dependencies": "@ell.simple(model=\"gpt-4o\", temperature=0.1)\ndef is_good_poem(poem: str):\n    \"\"\"Include either 'yes' or 'no' at the end of your response. <analysis>. <yes or no>.\"\"\"\n    return f\"Is this a good poem yes/no? {poem}\"\n",
+            "lmp_type": "FUNCTION",
+            "initial_free_vars": {
+              "is_good_poem": "<Object of type function>"
+            },
+            "num_invocations": 38,
+            "version_number": 1
+          }
+        },
+        {
+          "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-length-METRIC",
+          "name": "length",
+          "type": "metric",
+          "labeling_lmp_id": "lmp-11b9aab61d2f514a79f3787b0b14960f",
+          "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca",
+          "labeling_rubric": null,
+          "labeling_lmp": {
+            "name": "test_poem_eval.<locals>.<lambda@11b9aa>",
+            "source": "\"length\": lambda _, output: len(output) ,\n",
+            "created_at": "2024-10-10T22:17:07.535510Z",
+            "api_params": null,
+            "initial_global_vars": {},
+            "commit_message": null,
+            "lmp_id": "lmp-11b9aab61d2f514a79f3787b0b14960f",
+            "dependencies": "\n",
+            "lmp_type": "FUNCTION",
+            "initial_free_vars": {},
+            "num_invocations": 70,
+            "version_number": 0
+          }
+        },
+        {
+          "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-average_word_length-METRIC",
+          "name": "average_word_length",
+          "type": "metric",
+          "labeling_lmp_id": "lmp-924138b48e7bfb9ce2add3d00a284300",
+          "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca",
+          "labeling_rubric": null,
+          "labeling_lmp": {
+            "name": "test_poem_eval.<locals>.<lambda@924138>",
+            "source": "\"average_word_length\": lambda _, output: sum(len(word) for word in output.split()) / len(output.split())})\n",
+            "created_at": "2024-10-10T22:17:07.543092Z",
+            "api_params": null,
+            "initial_global_vars": {},
+            "commit_message": null,
+            "lmp_id": "lmp-924138b48e7bfb9ce2add3d00a284300",
+            "dependencies": "\n",
+            "lmp_type": "FUNCTION",
+            "initial_free_vars": {},
+            "num_invocations": 70,
+            "version_number": 0
+          }
+        }
+      ],
+      "runs": [
+        {
+          "id": 5,
+          "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca",
+          "evaluated_lmp_id": "lmp-43aa5c2a8bd3f4c03edbef87a97af6fa",
+          "api_params": {},
+          "start_time": "2024-10-10T15:29:30.222298Z",
+          "end_time": "2024-10-10T15:29:35.050561Z",
+          "success": true,
+          "error": null,
+          "evaluated_lmp": {
+            "name": "test_poem_eval.<locals>.write_a_good_poem",
+            "source": "@ell.simple(model=\"gpt-4o\")\ndef write_a_good_poem():\n    \"\"\"Your poem must no logner than 60 words.\"\"\"\n    return \"Write a really well written poem.\"\n",
+            "created_at": "2024-10-10T22:17:06.391998Z",
+            "api_params": null,
+            "initial_global_vars": {},
+            "commit_message": null,
+            "lmp_id": "lmp-43aa5c2a8bd3f4c03edbef87a97af6fa",
+            "dependencies": "\n",
+            "lmp_type": "LM",
+            "initial_free_vars": {},
+            "num_invocations": 37,
+            "version_number": 0
+          },
+          "labeler_summaries": [
+            {
+              "evaluation_run_id": 5,
+              "evaluation_labeler_id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-average_word_length-METRIC",
+              "created_at": "2024-10-10T22:29:35Z",
+              "updated_at": null,
+              "finalized_at": null,
+              "is_scalar": true,
+              "data": {
+                "max": 5.7,
+                "mean": 5.156704689308549,
+                "min": 4.775510204081633,
+                "std": 0.2926856773010382
+              },
+              "count": 10,
+              "evaluation_labeler": {
+                "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-average_word_length-METRIC",
+                "labeling_lmp_id": "lmp-924138b48e7bfb9ce2add3d00a284300",
+                "labeling_rubric": null,
+                "name": "average_word_length",
+                "type": "metric",
+                "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca"
+              }
+            },
+            {
+              "evaluation_run_id": 5,
+              "evaluation_labeler_id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-critic_score-METRIC",
+              "created_at": "2024-10-10T22:29:35Z",
+              "updated_at": null,
+              "finalized_at": null,
+              "is_scalar": true,
+              "data": {
+                "max": 0,
+                "mean": 0,
+                "min": 0,
+                "std": 0
+              },
+              "count": 10,
+              "evaluation_labeler": {
+                "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-critic_score-METRIC",
+                "labeling_lmp_id": "lmp-05680bf1e9e658bbcddad24cbb3e5a54",
+                "labeling_rubric": null,
+                "name": "critic_score",
+                "type": "metric",
+                "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca"
+              }
+            },
+            {
+              "evaluation_run_id": 5,
+              "evaluation_labeler_id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-length-METRIC",
+              "created_at": "2024-10-10T22:29:35Z",
+              "updated_at": null,
+              "finalized_at": null,
+              "is_scalar": true,
+              "data": {
+                "max": 310,
+                "mean": 293.6,
+                "min": 278,
+                "std": 11.586198686368192
+              },
+              "count": 10,
+              "evaluation_labeler": {
+                "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-length-METRIC",
+                "labeling_lmp_id": "lmp-11b9aab61d2f514a79f3787b0b14960f",
+                "labeling_rubric": null,
+                "name": "length",
+                "type": "metric",
+                "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca"
+              }
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca",
+          "evaluated_lmp_id": "lmp-35a382a3f39e32779d8e9194a902b63c",
+          "api_params": {},
+          "start_time": "2024-10-10T15:29:35.074010Z",
+          "end_time": "2024-10-10T15:29:38.401680Z",
+          "success": true,
+          "error": null,
+          "evaluated_lmp": {
+            "name": "test_poem_eval.<locals>.write_a_bad_poem",
+            "source": "@ell.simple(model=\"gpt-4o\")\ndef write_a_bad_poem():\n    \"\"\"Your poem must no logner than 75 words.\"\"\"\n    return \"Write a really poorly written poem.\"\n",
+            "created_at": "2024-10-10T22:19:12.331014Z",
+            "api_params": null,
+            "initial_global_vars": {},
+            "commit_message": null,
+            "lmp_id": "lmp-35a382a3f39e32779d8e9194a902b63c",
+            "dependencies": "\n",
+            "lmp_type": "LM",
+            "initial_free_vars": {},
+            "num_invocations": 22,
+            "version_number": 0
+          },
+          "labeler_summaries": [
+            {
+              "evaluation_run_id": 6,
+              "evaluation_labeler_id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-average_word_length-METRIC",
+              "created_at": "2024-10-10T22:29:38Z",
+              "updated_at": null,
+              "finalized_at": null,
+              "is_scalar": true,
+              "data": {
+                "max": 4.267857142857143,
+                "mean": 3.8121618030312967,
+                "min": 3.2903225806451615,
+                "std": 0.27904990397259494
+              },
+              "count": 10,
+              "evaluation_labeler": {
+                "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-average_word_length-METRIC",
+                "labeling_lmp_id": "lmp-924138b48e7bfb9ce2add3d00a284300",
+                "labeling_rubric": null,
+                "name": "average_word_length",
+                "type": "metric",
+                "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca"
+              }
+            },
+            {
+              "evaluation_run_id": 6,
+              "evaluation_labeler_id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-critic_score-METRIC",
+              "created_at": "2024-10-10T22:29:38Z",
+              "updated_at": null,
+              "finalized_at": null,
+              "is_scalar": true,
+              "data": {
+                "max": 0,
+                "mean": 0,
+                "min": 0,
+                "std": 0
+              },
+              "count": 10,
+              "evaluation_labeler": {
+                "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-critic_score-METRIC",
+                "labeling_lmp_id": "lmp-05680bf1e9e658bbcddad24cbb3e5a54",
+                "labeling_rubric": null,
+                "name": "critic_score",
+                "type": "metric",
+                "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca"
+              }
+            },
+            {
+              "evaluation_run_id": 6,
+              "evaluation_labeler_id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-length-METRIC",
+              "created_at": "2024-10-10T22:29:38Z",
+              "updated_at": null,
+              "finalized_at": null,
+              "is_scalar": true,
+              "data": {
+                "max": 364,
+                "mean": 295.8,
+                "min": 220,
+                "std": 43.05531326096699
+              },
+              "count": 10,
+              "evaluation_labeler": {
+                "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-length-METRIC",
+                "labeling_lmp_id": "lmp-11b9aab61d2f514a79f3787b0b14960f",
+                "labeling_rubric": null,
+                "name": "length",
+                "type": "metric",
+                "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca"
+              }
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca",
+          "evaluated_lmp_id": "lmp-43aa5c2a8bd3f4c03edbef87a97af6fa",
+          "api_params": {},
+          "start_time": "2024-10-10T15:43:24.667034Z",
+          "end_time": "2024-10-10T15:43:27.680376Z",
+          "success": true,
+          "error": null,
+          "evaluated_lmp": {
+            "name": "test_poem_eval.<locals>.write_a_good_poem",
+            "source": "@ell.simple(model=\"gpt-4o\")\ndef write_a_good_poem():\n    \"\"\"Your poem must no logner than 60 words.\"\"\"\n    return \"Write a really well written poem.\"\n",
+            "created_at": "2024-10-10T22:17:06.391998Z",
+            "api_params": null,
+            "initial_global_vars": {},
+            "commit_message": null,
+            "lmp_id": "lmp-43aa5c2a8bd3f4c03edbef87a97af6fa",
+            "dependencies": "\n",
+            "lmp_type": "LM",
+            "initial_free_vars": {},
+            "num_invocations": 37,
+            "version_number": 0
+          },
+          "labeler_summaries": [
+            {
+              "evaluation_run_id": 7,
+              "evaluation_labeler_id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-average_word_length-METRIC",
+              "created_at": "2024-10-10T22:43:27Z",
+              "updated_at": null,
+              "finalized_at": null,
+              "is_scalar": true,
+              "data": {
+                "max": 5.738095238095238,
+                "mean": 5.1218758094739005,
+                "min": 4.695652173913044,
+                "std": 0.2912878241552186
+              },
+              "count": 10,
+              "evaluation_labeler": {
+                "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-average_word_length-METRIC",
+                "labeling_lmp_id": "lmp-924138b48e7bfb9ce2add3d00a284300",
+                "labeling_rubric": null,
+                "name": "average_word_length",
+                "type": "metric",
+                "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca"
+              }
+            },
+            {
+              "evaluation_run_id": 7,
+              "evaluation_labeler_id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-critic_score-METRIC",
+              "created_at": "2024-10-10T22:43:27Z",
+              "updated_at": null,
+              "finalized_at": null,
+              "is_scalar": true,
+              "data": {
+                "max": 0,
+                "mean": 0,
+                "min": 0,
+                "std": 0
+              },
+              "count": 10,
+              "evaluation_labeler": {
+                "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-critic_score-METRIC",
+                "labeling_lmp_id": "lmp-05680bf1e9e658bbcddad24cbb3e5a54",
+                "labeling_rubric": null,
+                "name": "critic_score",
+                "type": "metric",
+                "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca"
+              }
+            },
+            {
+              "evaluation_run_id": 7,
+              "evaluation_labeler_id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-length-METRIC",
+              "created_at": "2024-10-10T22:43:27Z",
+              "updated_at": null,
+              "finalized_at": null,
+              "is_scalar": true,
+              "data": {
+                "max": 342,
+                "mean": 293.3,
+                "min": 263,
+                "std": 21.062051182161717
+              },
+              "count": 10,
+              "evaluation_labeler": {
+                "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-length-METRIC",
+                "labeling_lmp_id": "lmp-11b9aab61d2f514a79f3787b0b14960f",
+                "labeling_rubric": null,
+                "name": "length",
+                "type": "metric",
+                "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca"
+              }
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca",
+          "evaluated_lmp_id": "lmp-bcda1f9818be7e4baaac4bf9a9842008",
+          "api_params": {},
+          "start_time": "2024-10-10T15:43:27.700337Z",
+          "end_time": "2024-10-10T15:43:32.134376Z",
+          "success": true,
+          "error": null,
+          "evaluated_lmp": {
+            "name": "test_poem_eval.<locals>.write_a_bad_poem",
+            "source": "@ell.simple(model=\"gpt-4o\")\ndef write_a_bad_poem():\n    \"\"\"Your poem must no logner than 100 words.\"\"\"\n    return \"Write a really poorly written poem.\"\n",
+            "created_at": "2024-10-10T22:43:29.575229Z",
+            "api_params": null,
+            "initial_global_vars": {},
+            "commit_message": "Increase word limit in system prompt from 75 to 100:  \n* Updated system prompt to require no longer than 100 words.",
+            "lmp_id": "lmp-bcda1f9818be7e4baaac4bf9a9842008",
+            "dependencies": "\n",
+            "lmp_type": "LM",
+            "initial_free_vars": {},
+            "num_invocations": 10,
+            "version_number": 1
+          },
+          "labeler_summaries": [
+            {
+              "evaluation_run_id": 8,
+              "evaluation_labeler_id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-average_word_length-METRIC",
+              "created_at": "2024-10-10T22:43:32Z",
+              "updated_at": null,
+              "finalized_at": null,
+              "is_scalar": true,
+              "data": {
+                "max": 4.148148148148148,
+                "mean": 3.867277533272864,
+                "min": 3.4705882352941178,
+                "std": 0.20228923985745975
+              },
+              "count": 10,
+              "evaluation_labeler": {
+                "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-average_word_length-METRIC",
+                "labeling_lmp_id": "lmp-924138b48e7bfb9ce2add3d00a284300",
+                "labeling_rubric": null,
+                "name": "average_word_length",
+                "type": "metric",
+                "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca"
+              }
+            },
+            {
+              "evaluation_run_id": 8,
+              "evaluation_labeler_id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-critic_score-METRIC",
+              "created_at": "2024-10-10T22:43:32Z",
+              "updated_at": null,
+              "finalized_at": null,
+              "is_scalar": true,
+              "data": {
+                "max": 0,
+                "mean": 0,
+                "min": 0,
+                "std": 0
+              },
+              "count": 10,
+              "evaluation_labeler": {
+                "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-critic_score-METRIC",
+                "labeling_lmp_id": "lmp-05680bf1e9e658bbcddad24cbb3e5a54",
+                "labeling_rubric": null,
+                "name": "critic_score",
+                "type": "metric",
+                "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca"
+              }
+            },
+            {
+              "evaluation_run_id": 8,
+              "evaluation_labeler_id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-length-METRIC",
+              "created_at": "2024-10-10T22:43:32Z",
+              "updated_at": null,
+              "finalized_at": null,
+              "is_scalar": true,
+              "data": {
+                "max": 458,
+                "mean": 382,
+                "min": 300,
+                "std": 58.535459338763204
+              },
+              "count": 10,
+              "evaluation_labeler": {
+                "id": "labeler-evaluation-e0ec6b331a8c820b280f39650ad87eca-length-METRIC",
+                "labeling_lmp_id": "lmp-11b9aab61d2f514a79f3787b0b14960f",
+                "labeling_rubric": null,
+                "name": "length",
+                "type": "metric",
+                "evaluation_id": "evaluation-e0ec6b331a8c820b280f39650ad87eca"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  

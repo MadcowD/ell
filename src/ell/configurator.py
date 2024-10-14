@@ -139,6 +139,7 @@ class Config(BaseModel):
                 return provider
         return None
 
+
 # Single* instance
 # XXX: Make a singleton
 config = Config()

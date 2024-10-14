@@ -3,7 +3,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { FiChevronDown, FiChevronRight, FiMaximize2, FiMinimize2, FiCopy, FiRefreshCw } from 'react-icons/fi';
 import '../../styles/SourceCodeView.css';
-import { Card } from "../Card";
+import { OldCard } from "../OldCard";
 import { useNavigate } from 'react-router-dom';
 
 import { CodeSection } from './CodeSection';
@@ -50,7 +50,7 @@ const UsedLMPWrapper = ({ uses, children, selectedInvocation, content, }) => {
   if (!lmp) return <>{children}</>;
   return (
     <div className='' style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
-      <Card style={{ display: 'inline-block' }} onClick={() => {
+      <OldCard style={{ display: 'inline-block' }} onClick={() => {
         navigate(`/lmp/${lmp.name}/${lmp.lmp_id}`);
       }}>
         <LMPCardTitle 
@@ -72,7 +72,7 @@ const UsedLMPWrapper = ({ uses, children, selectedInvocation, content, }) => {
           displayVersion
           fontSize="md" 
         />
-      </Card>
+      </OldCard>
     </div>
   );
 }
@@ -92,7 +92,7 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
         // ge tthe lmp name its the function name after the def but before the signature args etc
         const lmp_name = match[1].split('(')[0];
         console.log(lmp_name);
-        if (uses.some(u => u.name === lmp_name)) {
+        if (uses?.some(u => u.name === lmp_name)) {
           return `#<LMP>\n${line}\n#</LMP>`;
         }
       }

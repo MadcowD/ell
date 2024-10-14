@@ -5,6 +5,8 @@ from typing import Any, Optional, Dict, List, Set, Union
 from ell.types._lstr import _lstr
 from ell.types import SerializedLMP, Invocation
 from ell.types.message import InvocableLM
+from ell.types.studio.evaluations import EvaluationRunLabelerSummary, SerializedEvaluation, SerializedEvaluationRun
+# from ell.types.studio import SerializedEvaluation, SerializedEvaluationRun
 
 class BlobStore(ABC):
     @abstractmethod
@@ -53,6 +55,37 @@ class Store(ABC):
         pass
 
     @abstractmethod
+    def write_evaluation(self, evaluation: SerializedEvaluation) -> str:
+        """
+        Write an evaluation to the storage.
+
+        :param evaluation: Evaluation object containing all evaluation details.
+        :param runs: List of EvaluationRun objects representing the evaluation runs.
+        :return: Optional return value.
+        """
+        pass
+
+    @abstractmethod
+    def write_evaluation_run(self, evaluation_run: SerializedEvaluationRun) -> int:
+        """
+        Write an evaluation run to the storage.
+
+        :param evaluation_run: EvaluationRun object containing all evaluation run details.
+        :return: Optional return value.
+        """
+        pass
+
+    @abstractmethod
+    def write_evaluation_run_labeler_summaries(self, summaries: List[EvaluationRunLabelerSummary]) -> int:
+        """
+        Write evaluation run labeler summaries to the storage.
+
+        :param summaries: List of EvaluationRunLabelerSummary objects containing all evaluation run labeler summary details.
+        :return: Optional return value.
+        """
+        pass
+
+    @abstractmethod
     def get_cached_invocations(self, lmp_id :str, state_cache_key :str) -> List[Invocation]:
         """
         Get cached invocations for a given LMP and state cache key.
@@ -66,6 +99,15 @@ class Store(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_eval_versions_by_name(self, name: str) -> List[SerializedEvaluation]:
+        """
+        Get all versions of an evaluation by its name.
+
+        :param name: The name of the evaluation.
+        :return: A list of SerializedEvaluation objects representing all versions of the evaluation.
+        """
+        pass
 
     @contextmanager
     def freeze(self, *lmps: InvocableLM):

@@ -3,6 +3,7 @@ import json
 import os
 from typing import Any, Optional, Dict, List, Set, Union
 from pydantic import BaseModel
+import sqlalchemy
 from sqlmodel import Session, SQLModel, create_engine, select
 import ell.store
 import cattrs
@@ -13,9 +14,11 @@ from ell.types._lstr import _lstr
 from sqlalchemy import or_, func, and_, extract, FromClause
 from sqlalchemy.types import TypeDecorator, VARCHAR
 from ell.types.studio import SerializedLMPUses, utc_now
+from ell.types.studio.evaluations import EvaluationLabeler, EvaluationRunLabelerSummary, SerializedEvaluation, SerializedEvaluationRun
 from ell.util.serialization import pydantic_ltype_aware_cattr
 import gzip
 import json
+from sqlalchemy.exc import IntegrityError
 
 class SQLStore(ell.store.Store):
     def __init__(self, db_uri: str, blob_store: Optional[ell.store.BlobStore] = None):
@@ -29,22 +32,26 @@ class SQLStore(ell.store.Store):
 
     def write_lmp(self, serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[Any]:
         with Session(self.engine) as session:
-            # Bind the serialized_lmp to the session
-            lmp = session.exec(select(SerializedLMP).filter(SerializedLMP.lmp_id == serialized_lmp.lmp_id)).first()
-            
-            if lmp:
-                # Already added to the DB.
-                return lmp
-            else:
-                session.add(serialized_lmp)
-            
-            for use_id in uses:
-                used_lmp = session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == use_id)).first()
-                if used_lmp:
-                    serialized_lmp.uses.append(used_lmp)
-            
-            session.commit()
-        return None
+            try:
+                # Bind the serialized_lmp to the session
+                lmp = session.exec(select(SerializedLMP).filter(SerializedLMP.lmp_id == serialized_lmp.lmp_id)).first()
+                
+                if lmp:
+                    # Already added to the DB.
+                    return lmp
+                else:
+                    session.add(serialized_lmp)
+                
+                for use_id in uses:
+                    used_lmp = session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == use_id)).first()
+                    if used_lmp:
+                        serialized_lmp.uses.append(used_lmp)
+                
+                session.commit()
+                return None
+            except sqlalchemy.exc.IntegrityError as e:
+                session.rollback()
+                return None
 
     def write_invocation(self, invocation: Invocation, consumes: Set[str]) -> Optional[Any]:
         with Session(self.engine) as session:
@@ -73,6 +80,67 @@ class SQLStore(ell.store.Store):
             session.commit()
             return None
         
+    def write_evaluation(self, evaluation: SerializedEvaluation) -> str:
+        with Session(self.engine) as session:
+            try:
+                # Check if the evaluation already exists
+                existing_evaluation = session.exec(
+                    select(SerializedEvaluation).where(SerializedEvaluation.id == evaluation.id)
+                ).first()
+
+                if existing_evaluation:
+                    # Update the existing evaluation
+                    existing_evaluation.name = evaluation.name
+                    existing_evaluation.dataset_hash = evaluation.dataset_hash
+                    existing_evaluation.n_evals = evaluation.n_evals
+                    existing_evaluation.version_number = evaluation.version_number
+                    existing_evaluation.commit_message = evaluation.commit_message
+                else:
+                    # Add the new evaluation
+                    session.add(evaluation)
+
+                # Process labelers
+                for labeler in evaluation.labelers:
+                    existing_labeler = session.exec(
+                        select(EvaluationLabeler).where(
+                            (EvaluationLabeler.evaluation_id == evaluation.id) &
+                            (EvaluationLabeler.name == labeler.name)
+                        )
+                    ).first()
+
+                    if existing_labeler:
+                        # Update existing labeler
+                        existing_labeler.type = labeler.type
+                        existing_labeler.labeling_lmp_id = labeler.labeling_lmp_id
+                        existing_labeler.labeling_rubric = labeler.labeling_rubric
+                    else:
+                        # Add new labeler
+                        labeler.evaluation_id = evaluation.id
+                        session.add(labeler)
+
+                session.commit()
+                return evaluation.id
+            except IntegrityError as e:
+                session.rollback()
+                raise ValueError(f"Error writing evaluation: {str(e)}")
+            except Exception as e:
+                session.rollback()
+                raise e
+
+    def write_evaluation_run(self, evaluation_run: SerializedEvaluationRun) -> int:
+        with Session(self.engine) as session:
+            session.add(evaluation_run)
+            session.commit()
+            return evaluation_run.id
+        
+    def write_evaluation_run_labeler_summaries(self, summaries: List[EvaluationRunLabelerSummary]) -> int:
+        with Session(self.engine) as session:
+            session.add_all(summaries)
+            session.commit()
+            return len(summaries)
+        
+
+
     def get_cached_invocations(self, lmp_id :str, state_cache_key :str) -> List[Invocation]:
         with Session(self.engine) as session:
             return self.get_invocations(session, lmp_filters={"lmp_id": lmp_id}, filters={"state_cache_key": state_cache_key})
@@ -208,6 +276,55 @@ class SQLStore(ell.store.Store):
             "graph_data": graph_data
         }
 
+    def get_evaluations(self, session: Session, filters: Dict[str, Any], skip: int = 0, limit: int = 100) -> List[SerializedEvaluation]:
+        query = select(SerializedEvaluation)
+        
+        for key, value in filters.items():
+            query = query.where(getattr(SerializedEvaluation, key) == value)
+            print(key, value)
+            
+        
+        query = query.offset(skip).limit(limit)
+        
+        results = session.exec(query).all()
+        return results
+    
+    def get_latest_evaluations(self, session: Session, skip: int = 0, limit: int = 100) -> List[SerializedEvaluation]:
+        # Subquery to get the latest version number for each evaluation name
+        latest_versions = (
+            select(
+                SerializedEvaluation.name,
+                func.max(SerializedEvaluation.version_number).label("max_version")
+            )
+            .group_by(SerializedEvaluation.name)
+            .subquery()
+        )
+
+        # Main query to get the latest evaluations
+        query = (
+            select(SerializedEvaluation)
+            .join(
+                latest_versions,
+                and_(
+                    SerializedEvaluation.name == latest_versions.c.name,
+                    SerializedEvaluation.version_number == latest_versions.c.max_version
+                )
+            )
+            .order_by(SerializedEvaluation.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+
+        results = session.exec(query).all()
+        return list(results)
+
+    def get_eval_versions_by_name(self, name: str) -> List[SerializedEvaluation]:
+        with Session(self.engine) as session:
+            query = select(SerializedEvaluation).where(SerializedEvaluation.name == name)
+            query = query.order_by(SerializedEvaluation.version_number.desc())  # Sort by version number in descending order
+            results = session.exec(query).all()
+            return list(results)  # Convert to list to ensure it's a List[SerializedEvaluation]
+
 class SQLiteStore(SQLStore):
     def __init__(self, db_dir: str):
         assert not db_dir.endswith('.db'), "Create store with a directory not a db."
@@ -245,4 +362,4 @@ class SQLBlobStore(ell.store.BlobStore):
 class PostgresStore(SQLStore):
     def __init__(self, db_uri: str):
         super().__init__(db_uri)
-    
+
