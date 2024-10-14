@@ -29,7 +29,7 @@ Response format:
 <Short commit message summarizing all the changes with specificity>:
 * <Bulleted list of each specific change>.
 """
-    clean_program_of_all_bv_tags = lambda program : program.replace("#<BV>", "").replace("#</BV>", "").replace("#<BmV>", "").replace("#</BmV>", "")
+    clean_program_of_all_bv_tags = lambda program : program.replace("# <BV>", "").replace("# </BV>", "").replace("# <BmV>", "").replace("# </BmV>", "")
     old_clean = clean_program_of_all_bv_tags(old)
     new_clean = clean_program_of_all_bv_tags(new)
 
