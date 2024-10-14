@@ -12,6 +12,14 @@ export function DiffRenderer({
 }) {
   if (!previousCode) return null;
 
+  function removeEllTags(code) {
+    const ellTagRegex = /\s*#\s*<\/?(BV|BmV|LMP)>/g;
+    return code.replace(ellTagRegex, '');
+  }
+
+  code = removeEllTags(code);
+  previousCode = removeEllTags(previousCode);
+
   var previousCodeRows = []
   var currentCodeRows = []
   const getHighlightedCode = (code, rowsCb) => {
