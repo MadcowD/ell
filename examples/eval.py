@@ -63,7 +63,7 @@ def test_predictor_evaluation():
     @ell.simple(model="gpt-4o")
     def predict_capital(question: str):
         """
-        Answer only with the capital of the country. If hotdog land, answer hotdog land.
+        Answer only with the capital of the country. If hotdog land, answer Banana.
         """
         # print(question[0])
         return f"Answer the following question. {question}"
