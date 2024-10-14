@@ -39,6 +39,7 @@ def main():
     parser.add_argument("--host", default="127.0.0.1", help="Host to run the server on (default: localhost)")
     parser.add_argument("--port", type=int, default=5555, help="Port to run the server on (default: 5555)")
     parser.add_argument("--dev", action="store_true", help="Run in development mode")
+    parser.add_argument("--dev-static-dir", default=None, help="Directory to serve static files from in development mode")
     parser.add_argument("--open", action="store_true", help="Opens the studio web UI in a browser")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enables debug logging for more verbose output")
     args = parser.parse_args()
@@ -64,6 +65,8 @@ def main():
                 return FileResponse(file_path)
             else:
                 return FileResponse(static_dir / "index.html")
+    elif args.dev_static_dir:
+        app.mount("/", StaticFiles(directory=args.dev_static_dir, html=True), name="static")
 
     # Respect Config.create behavior, which has fallback to env vars.
     db_path = Path(config.storage_dir) if config.storage_dir else None

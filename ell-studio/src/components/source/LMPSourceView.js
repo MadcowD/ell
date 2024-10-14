@@ -93,7 +93,7 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
         const lmp_name = match[1].split('(')[0];
         console.log(lmp_name);
         if (uses.some(u => u.name === lmp_name)) {
-          return `#<LMP>\n${line}\n#</LMP>`;
+          return `# <LMP>\n${line}\n# </LMP>`;
         }
       }
       return line;
@@ -121,21 +121,21 @@ const LMPSourceView = ({ lmp, showDependenciesInitial = false, selectedInvocatio
 
     return [{
     name: 'boundedVariable',
-    startTag: '#<BV>',
-    endTag: '#</BV>',
+    startTag: '# <BV>',
+    endTag: '# </BV>',
     wrapper: ({children, key, content}) => {
       return <>{children}</>
     }},
     {
       name: 'boundedMutableVariable',
-      startTag: '#<BmV>',
-      endTag: '#</BmV>',
+      startTag: '# <BmV>',
+      endTag: '# </BmV>',
       wrapper: mutableBVWrapper
     },
     {
       name: 'usedLMP',
-      startTag: '#<LMP>',
-      endTag: '#</LMP>',
+      startTag: '# <LMP>',
+      endTag: '# </LMP>',
       wrapper: ({children, selectedInvocation, content}) => {
         return <UsedLMPWrapper uses={uses} selectedInvocation={selectedInvocation} content={content}>{children}</UsedLMPWrapper>
       }
