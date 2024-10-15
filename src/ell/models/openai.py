@@ -30,6 +30,7 @@ import colorama
 
 logger = logging.getLogger(__name__)
 
+
 def register(client: openai.Client):
     """
     Register OpenAI models with the provided client.
