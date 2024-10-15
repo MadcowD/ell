@@ -60,8 +60,8 @@ ell.simple(model, client=my_client)(...)
 
 
 def _autocommit_warning():
-    if (config.get_client_for("gpt-4o-mini")[0] is None):
-        logger.warning(f"{Fore.LIGHTYELLOW_EX}WARNING: Autocommit is enabled but no OpenAI client found for autocommit model 'gpt-4o-mini' (set your OpenAI API key). Commit messages will not be written.{Style.RESET_ALL}")
+    if (config.get_client_for(config.autocommit_model)[0] is None):
+        logger.warning(f"{Fore.LIGHTYELLOW_EX}WARNING: Autocommit is enabled but no client found for autocommit model '{config.autocommit_model}'. Commit messages will not be written.{Style.RESET_ALL}")
         return True
     return False
 
