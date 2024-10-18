@@ -24,7 +24,7 @@ def register(base_url):
         It logs any errors encountered during the process.
     """
     global client
-    client = openai.Client(base_url=base_url)
+    client = openai.Client(base_url=base_url, api_key="ollama")
     
     try:
         response = requests.get(f"{base_url}/../api/tags")
