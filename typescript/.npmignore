@@ -1,0 +1,9 @@
+.gitignore
+logdir
+node_modules
+examples
+src
+test
+scripts
+.prettierrc
+vitest.config.mts

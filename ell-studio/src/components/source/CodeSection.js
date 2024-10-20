@@ -9,6 +9,7 @@ export function CodeSection({
   showCode, 
   setShowCode, 
   lines : linesOverride, 
+  language,
   isDependent = false, 
   collapsedHeight = '150px',
   enableFormatToggle = false,
@@ -104,7 +105,7 @@ export function CodeSection({
             <CodeHighlighter
               code={getFormattedCode()}
             {...rest} // Spread the remaining props to CodeHighlighter
-              language={enableFormatToggle ? (isYamlFormat ? 'yaml' : 'json') : undefined}
+              language={enableFormatToggle ? (isYamlFormat ? 'yaml' : 'json') : language}
             />
           )}
           {!showCode && (
