@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from functools  import lru_cache
+from functools import lru_cache
 import inspect
 from types import MappingProxyType
 from typing import (
@@ -32,7 +32,7 @@ class Ell2aCallParams(BaseModel):
     messages: List[Message] = Field(..., description="Conversation context")
     client: Any = Field(..., description="API client")
     agents: List[LMP] = Field(default_factory=list,
-                             description="Available agents")
+                              description="Available agents")
     api_params: Dict[str, Any] = Field(
         default_factory=dict, description="API parameters"
     )

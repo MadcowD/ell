@@ -1,7 +1,7 @@
 # todo: implement tracing for structured outs. this a v2 feature.
 import json
 from ell2a.types._lstr import _lstr
-from functools  import cached_property
+from functools import cached_property
 import numpy as np
 import base64
 from io import BytesIO
@@ -17,7 +17,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from ell2a.util.serialization import serialize_image
 _lstr_generic = Union[_lstr, str]
 InvocableAgent = Callable[..., Union["AgentResult",
-                                    _lstr_generic, List["ContentBlock"], ]]
+                                     _lstr_generic, List["ContentBlock"], ]]
 
 # AnyContent represents any type that can be passed to Message.
 AnyContent = Union["ContentBlock", str, "AgentCall", "AgentResult",
@@ -67,7 +67,7 @@ class AgentCall(BaseModel):
 
     def call_and_collect_as_content_block(self):
         res = self.agent(**self.params.model_dump(),
-                        _agent_call_id=self.agent_call_id)
+                         _agent_call_id=self.agent_call_id)
         return ContentBlock(agent_result=res)
 
     def call_and_collect_as_message(self):
@@ -114,7 +114,8 @@ class ImageContent(BaseModel):
                 mode = 'RGB' if value.shape[2] == 3 else 'RGBA'
                 return cls(image=PILImage.fromarray(value, mode=mode))
             else:
-                raise ValueError(f"Invalid numpy array shape for image: {value.shape}. Expected 3D array with 3 or 4 channels.")
+                raise ValueError(
+                    f"Invalid numpy array shape for image: {value.shape}. Expected 3D array with 3 or 4 channels.")
 
         if isinstance(value, PILImage.Image):
             if value.mode not in ('L', 'RGB', 'RGBA'):

@@ -10,7 +10,7 @@ from ell2a.util.verbosity import compute_color, model_usage_logger_pre
 
 from ell2a.util.verbosity import model_usage_logger_post_end, model_usage_logger_post_intermediate, model_usage_logger_post_start
 
-from functools  import wraps
+from functools import wraps
 from typing import Any, Dict, Optional, List, Callable, Tuple, Union
 
 
@@ -132,7 +132,8 @@ def _client_for_model(
                 model, _name, '', long=True, error=True))
 
     if client is None:
-        raise ValueError(f"No client found for model '{model}'. Ensure the model is registered using 'register_model' in 'config.py' or specify a client directly using the 'client' argument in the decorator or function call.")
+        raise ValueError(
+            f"No client found for model '{model}'. Ensure the model is registered using 'register_model' in 'config.py' or specify a client directly using the 'client' argument in the decorator or function call.")
     return client
 
 

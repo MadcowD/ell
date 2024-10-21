@@ -98,12 +98,9 @@ def main():
 
                     if time_changed or size_changed or inode_changed:
                         logger.info(
-                            f"Database changed: mtime {time.ctime(
-                                last_stat.st_mtime)} -> {time.ctime(current_stat.st_mtime)}, "
-                            f"size {
-                                last_stat.st_size} -> {current_stat.st_size}, "
-                            f"inode {
-                                last_stat.st_ino} -> {current_stat.st_ino}"
+                            f"Database changed: mtime {time.ctime(last_stat.st_mtime)} -> {time.ctime(current_stat.st_mtime)}, "
+                            f"size {last_stat.st_size} -> {current_stat.st_size}, "
+                            f"inode {last_stat.st_ino} -> {current_stat.st_ino}"
                         )
                         await app.notify_clients("database_updated")
 

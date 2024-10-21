@@ -82,7 +82,8 @@ class Store(ABC):
         old_cache_values = {}
         try:
             for lmp in lmps:
-                old_cache_values[lmp] = getattr(lmp, '__ell2a_use_cache__', None)
+                old_cache_values[lmp] = getattr(
+                    lmp, '__ell2a_use_cache__', None)
                 setattr(lmp, '__ell2a_use_cache__', self)
             yield
         finally:

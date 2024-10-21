@@ -1,4 +1,4 @@
-from functools  import wraps
+from functools import wraps
 import json
 from typing import Any, Callable, Optional
 
@@ -56,7 +56,8 @@ def agent(*, exempt_from_tracking: bool = False, **agent_kwargs):
                         content_results = [ContentBlock(text=_lstr(json.dumps(
                             result, ensure_ascii=False), origin_trace=_invocation_origin))]
                 except TypeError as e:
-                    raise TypeError(f"Failed to convert agent use result to ContentBlock: {e}. Agents must return json serializable objects. or a list of ContentBlocks.")
+                    raise TypeError(
+                        f"Failed to convert agent use result to ContentBlock: {e}. Agents must return json serializable objects. or a list of ContentBlocks.")
                 # XXX: Need to support images and other content types somehow. We should look for images inside of the the result and then go from there.
                 # try:
                 #     content_results = coerce_content_list(result)
@@ -70,7 +71,8 @@ def agent(*, exempt_from_tracking: bool = False, **agent_kwargs):
                     if c.parsed:
                         # Warning: Formatted response in agent result will be converted to text
                         # TODO: Logging needs to produce not print.
-                        print(f"Warning: Formatted response in agent result will be converted to text. Original: {c.parsed}")
+                        print(
+                            f"Warning: Formatted response in agent result will be converted to text. Original: {c.parsed}")
                         c.text = _lstr(c.parsed.model_dump_json(),
                                        origin_trace=_invocation_origin)
                         c.parsed = None
@@ -98,7 +100,8 @@ def agent(*, exempt_from_tracking: bool = False, **agent_kwargs):
 
             # Determine the type annotation
             if param.annotation == inspect.Parameter.empty:
-                raise ValueError(f"Parameter {param_name} has no type annotation, and cannot be converted into a agent schema for OpenAI and other provisders. Should OpenAI produce a string or an integer, etc, for this parameter?")
+                raise ValueError(
+                    f"Parameter {param_name} has no type annotation, and cannot be converted into a agent schema for OpenAI and other provisders. Should OpenAI produce a string or an integer, etc, for this parameter?")
             annotation = param.annotation
 
             # Determine the default value

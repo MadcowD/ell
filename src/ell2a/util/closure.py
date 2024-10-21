@@ -116,7 +116,7 @@ def lexical_closure(
     fn_hash = _generate_function_hash(source, dsrc, func.__qualname__)
 
     _update_ell2a_func(outer_ell2a_func, source, dsrc,
-                     globals_and_frees['globals'], globals_and_frees['frees'], fn_hash, uses)
+                       globals_and_frees['globals'], globals_and_frees['frees'], fn_hash, uses)
 
     return (dirty_src, (source, dsrc), ({outer_ell2a_func} if not initial_call and hasattr(outer_ell2a_func, "__ell2a_func__") else uses))
 
@@ -217,7 +217,8 @@ def _process_signature_dependency(val, dependencies, already_closed, recursion_s
             if _uses:
                 uses.update(_uses)
         except Exception as e:
-            _raise_error(f"Failed to capture the lexical closure of parameter or annotation {name}", e, recursion_stack)
+            _raise_error(
+                f"Failed to capture the lexical closure of parameter or annotation {name}", e, recursion_stack)
 
 
 def _process_variable(var_name, var_value, dependencies, modules, imports, already_closed, recursion_stack, uses):
@@ -255,7 +256,8 @@ def _process_callable(var_name, var_value, dependencies, already_closed, recursi
             dependencies.append(dep)
             uses.update(_uses)
         except Exception as e:
-            _raise_error(f"Failed to capture the lexical closure of global or free variable {var_name}", e, recursion_stack)
+            _raise_error(
+                f"Failed to capture the lexical closure of global or free variable {var_name}", e, recursion_stack)
 
 
 def _process_module(var_name, var_value, modules, imports, uses):
@@ -273,7 +275,8 @@ def _process_other_variable(var_name, var_value, dependencies, uses):
     elif is_immutable_variable(var_value):
         dependencies.append(f"#<BV>\n{var_name} = {repr(var_value)}\n#</BV>")
     else:
-        dependencies.append(f"#<BmV>\n{var_name} = <{type(var_value).__name__} object>\n#</BmV>")
+        dependencies.append(
+            f"#<BmV>\n{var_name} = <{type(var_value).__name__} object>\n#</BmV>")
 
 
 def _build_initial_source(imports, dependencies, source):
@@ -311,7 +314,8 @@ def _process_module_attribute(mname, mval, attr, mdeps, modules, already_closed,
             mdeps.append(dep)
             uses.update(dep_uses)
         except Exception as e:
-            _raise_error(f"Failed to capture the lexical closure of {mname}.{attr}", e, recursion_stack)
+            _raise_error(
+                f"Failed to capture the lexical closure of {mname}.{attr}", e, recursion_stack)
     elif isinstance(val, types.ModuleType):
         modules.append((attr, val))
     else:

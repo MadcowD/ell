@@ -1,4 +1,4 @@
-from functools  import lru_cache, wraps
+from functools import lru_cache, wraps
 from typing import Dict, Any, Optional, Tuple, Union, Type
 import openai
 import logging
@@ -111,7 +111,8 @@ class Config(BaseModel):
             warning_message = f"Warning: A default provider for model '{model_name}' could not be found. Falling back to default OpenAI client from environment variables."
             if self.verbose:
                 from colorama import Fore, Style
-                _config_logger.warning(f"{Fore.LIGHTYELL2AOW_EX}{warning_message}{Style.RESET_ALL}")
+                _config_logger.warning(
+                    f"{Fore.LIGHTYELL2AOW_EX}{warning_message}{Style.RESET_ALL}")
             else:
                 _config_logger.debug(warning_message)
             client = self.default_client

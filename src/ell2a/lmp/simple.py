@@ -1,4 +1,4 @@
-from functools  import wraps
+from functools import wraps
 from typing import Any, Optional
 
 from ell2a.lmp.complex import complex

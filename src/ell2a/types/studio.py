@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 import enum
-from functools  import cached_property
+from functools import cached_property
 
 import sqlalchemy.types as types
 

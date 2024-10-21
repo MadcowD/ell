@@ -13,7 +13,7 @@ import inspect
 import secrets
 import time
 from datetime import datetime
-from functools  import wraps
+from functools import wraps
 from typing import Any, Callable, Dict, Iterable, Optional, OrderedDict, Tuple
 
 from ell2a.util.serialization import get_immutable_vars
@@ -105,14 +105,16 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
                     results = [d.deserialize()
                                for d in cached_invocations[0].results]
 
-                    logger.info(f"Using cached result for {func_to_track.__qualname__} with state cache key: {state_cache_key}")
+                    logger.info(
+                        f"Using cached result for {func_to_track.__qualname__} with state cache key: {state_cache_key}")
                     if len(results) == 1:
                         return results[0]
                     else:
                         return results
                     # Todo: Unfiy this with the non-cached case. We should go through the same code pathway.
                 else:
-                    logger.info(f"Attempted to use cache on {func_to_track.__qualname__} but it was not cached, or did not exist in the store. Refreshing cache...")
+                    logger.info(
+                        f"Attempted to use cache on {func_to_track.__qualname__} but it was not cached, or did not exist in the store. Refreshing cache...")
 
             _start_time = utc_now()
 
@@ -145,7 +147,7 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
                     ipstr, func_to_track.__ell2a_closure__)
 
             _write_invocation(func_to_track, invocation_id, latency_ms, prompt_tokens, completion_tokens,
-            state_cache_key, invocation_api_params, cleaned_invocation_params, consumes, result, parent_invocation_id)
+                              state_cache_key, invocation_api_params, cleaned_invocation_params, consumes, result, parent_invocation_id)
 
             if _get_invocation_id:
                 return result, invocation_id

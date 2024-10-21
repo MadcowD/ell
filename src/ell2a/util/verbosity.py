@@ -55,10 +55,14 @@ def check_version_and_log():
                         if latest_version != ell2a.__version__:
                             print(
                                 f"{Fore.YELL2AOW}╔═════════════════════════════════════════════════════════════════╗")
-                            print(f"{Fore.YELL2AOW}║ {Fore.GREEN}A new version of ELL2A2A is available: {Fore.CYAN}{latest_version:<29}{Fore.YELL2AOW}║")
-                            print(f"{Fore.YELL2AOW}║ {Fore.GREEN}You can update by running:{Fore.YELL2AOW}                                      ║")
-                            print(f"{Fore.YELL2AOW}║ {Fore.CYAN}pip install --upgrade ell2a-ai{Fore.YELL2AOW}                                    ║")
-                            print(f"{Fore.YELL2AOW}╚═════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}")
+                            print(
+                                f"{Fore.YELL2AOW}║ {Fore.GREEN}A new version of ELL2A2A is available: {Fore.CYAN}{latest_version:<29}{Fore.YELL2AOW}║")
+                            print(
+                                f"{Fore.YELL2AOW}║ {Fore.GREEN}You can update by running:{Fore.YELL2AOW}                                      ║")
+                            print(
+                                f"{Fore.YELL2AOW}║ {Fore.CYAN}pip install --upgrade ell2a-ai{Fore.YELL2AOW}                                    ║")
+                            print(
+                                f"{Fore.YELL2AOW}╚═════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}")
                 except requests.RequestException:
                     pass  # Silently handle any network-related errors
                 _has_logged_version_statement = True
@@ -105,7 +109,8 @@ def wrap_text_with_prefix(message, width: int, prefix: str, subsequent_prefix: s
                 content.image.image, min(80, width - len(prefix)))
         else:
             if content.agent_result:
-                contnets_to_wrap = [ContentBlock(text=f"AgentResult(agent_call_id={content.agent_result.agent_call_id}):"), *content.agent_result.result]
+                contnets_to_wrap = [ContentBlock(
+                    text=f"AgentResult(agent_call_id={content.agent_result.agent_call_id}):"), *content.agent_result.result]
             else:
                 contnets_to_wrap = [content]
 
@@ -128,8 +133,10 @@ def wrap_text_with_prefix(message, width: int, prefix: str, subsequent_prefix: s
             else:
                 result.append(f"{prefix}{text_color}{RESET}")
         else:
-            result.append(f"{subsequent_prefix}{text_color}{wrapped_lines[0]}{RESET}")
-        result.extend([f"{subsequent_prefix}{text_color}{line}{RESET}" for line in wrapped_lines[1:]])
+            result.append(
+                f"{subsequent_prefix}{text_color}{wrapped_lines[0]}{RESET}")
+        result.extend(
+            [f"{subsequent_prefix}{text_color}{line}{RESET}" for line in wrapped_lines[1:]])
     return result
 
 
@@ -178,7 +185,8 @@ def model_usage_logger_pre(
 
     terminal_width = get_terminal_width()
 
-    logger.info(f"Invoking LMP: {invoking_lmp.__name__} (hash: {lmp_hash[:8]})")
+    logger.info(
+        f"Invoking LMP: {invoking_lmp.__name__} (hash: {lmp_hash[:8]})")
 
     print(f"{PIPE_COLOR}╔{'═' * (terminal_width - 2)}╗{RESET}")
     print(f"{PIPE_COLOR}║ {color}{BOLD}{UNDERLINE}{invoking_lmp.__name__}{RESET}{color}({formatted_params}){RESET}")
@@ -195,7 +203,8 @@ def model_usage_logger_post_start(color: str = "", n: int = 1):
     """Log the start of model output with ASCII box."""
     terminal_width = get_terminal_width()
     print(f"{PIPE_COLOR}╟{'─' * (terminal_width - 2)}╢{RESET}")
-    print(f"{PIPE_COLOR}║ {BOLD}Output{f'[0 of {n}]' if n > 1 else ''}:{RESET}")
+    print(
+        f"{PIPE_COLOR}║ {BOLD}Output{f'[0 of {n}]' if n > 1 else ''}:{RESET}")
     print(f"{PIPE_COLOR}╟{'─' * (terminal_width - 2)}╢{RESET}")
     print(f"{PIPE_COLOR}│   {ASSISTANT_COLOR}assistant: {RESET}", end='')
     sys.stdout.flush()

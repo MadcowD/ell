@@ -171,10 +171,10 @@ try:
                     ell2a_message = Ell2aChatCompletionMessage.from_chat_completion_message(
                         oai_choice.message)
                     content_blocks = []
-    
+
                     if ell2a_message.refusal:
                         raise ValueError(ell2a_message.refusal)
-    
+
                     if ell2a_message.parsed:
                         content_blocks.append(ContentBlock(
                             parsed=ell2a_message.parsed))
@@ -190,7 +190,7 @@ try:
                             )
                             if logger:
                                 logger(ell2a_message.content)
-    
+
                         for agent_call in ell2a_message.agent_calls:
                             matching_agent = ell2a_call.get_agent_by_name(
                                 agent_call.name)
@@ -201,13 +201,14 @@ try:
                                         agent=matching_agent,
                                         agent_call_id=_lstr(
                                             agent_call.agent_call_id, origin_trace=origin_id),
-                                        params=json.loads(agent_call.arguments),
+                                        params=json.loads(
+                                            agent_call.arguments),
                                     )
                                 )
                             )
                             if logger:
                                 logger(repr(agent_call))
-    
+
                     messages.append(
                         Message(role=ell2a_message.role, content=content_blocks))
 
@@ -264,7 +265,8 @@ except ImportError:
 
 def _content_block_to_openai_format(content_block: ContentBlock) -> Dict[str, Any]:
     if (image := content_block.image):
-        image_url = dict(url=serialize_image(image.image) if image.image else image.url)
+        image_url = dict(url=serialize_image(image.image)
+                         if image.image else image.url)
         # XXX: Solve per content params better
         if image.detail:
             image_url["detail"] = image.detail
