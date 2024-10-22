@@ -14,7 +14,7 @@ function getRandomPunctuation(): string {
   return randomChoice(['!', '!!', '!!!'])
 }
 
-export const hello = ell.simple({ model: 'gpt-4o-mini' }, async (name: string) => {
+export const hello = ell.simple({ model: 'gpt-4o-mini' }, (name: string) => {
   const adjective = getRandomAdjective()
   const punctuation = getRandomPunctuation()
 

@@ -10,7 +10,7 @@ import { EllCallParams } from '../provider'
 
 const logger = logging.getLogger('ell')
 
-type SimpleLMPInner = (...args: any[]) => Promise<string | Array<Message>>
+type SimpleLMPInner = (...args: any[]) => string | Array<Message> | Promise<string | Array<Message>>
 type SimpleLMP<A extends SimpleLMPInner> = ((...args: Parameters<A>) => Promise<string>) & {
   __ell_type__?: 'simple'
   __ell_lmp_name__?: string
@@ -49,7 +49,7 @@ export const simple = <F extends SimpleLMPInner>(a: Kwargs, f: F): SimpleLMP<F> 
     if (lmpId && !a.exempt_from_tracking) {
       return await invokeWithTracking({ ...lmpDefinition!, lmpId }, args, f, a)
     }
-    const promptFnOutput = await f(...args)
+    const promptFnOutput = await Promise.resolve(f(...args))
     const modelClient = await getModelClient(a)
     const provider = config.getProviderFor(modelClient)
     if (!provider) {

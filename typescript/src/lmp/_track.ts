@@ -46,7 +46,7 @@ export type Invocation = {
 
 
 
-type F = (...args: any[]) => Promise<string | Array<Message>>
+type F = (...args: any[]) => Promise<string | Array<Message>> | string | Array<Message>
 
 /**
  * Used for tracing of invocations.
@@ -303,7 +303,7 @@ export const invokeWithTracking = async (lmp: LMPDefinition & { lmpId: string },
       }
 
       const start = performance.now()
-      const lmpfnoutput = await f(...args)
+      const lmpfnoutput = await Promise.resolve(f(...args))
       // const event = await getNextPausedEvent()
       // console.log('event', event)
       // await handleBreakpointHit(event)

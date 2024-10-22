@@ -68,4 +68,24 @@ describe('lmp', () => {
     const result = await child2('world')
     assert.deepStrictEqual(result, new Message('assistant', 'child'))
   })
+
+  test('sync prompt functions', async () => {
+    const child = simple({ model: 'gpt-4o-mini' }, (a: string) => {
+      return 'child'
+    })
+    const hello = simple({ model: 'gpt-4o' }, async (a: { a: string }) => {
+      const ok = await child(a.a)
+      return a.a + ok
+    })
+
+    const result = await hello({ a: 'world' })
+
+    assert.equal(result, 'worldchild')
+
+    assert.ok(hello.__ell_lmp_id__?.startsWith('lmp-'))
+    assert.equal(hello.__ell_lmp_name__, 'hello')
+
+    assert.ok(child.__ell_lmp_id__?.startsWith('lmp-'))
+    assert.equal(child.__ell_lmp_name__, 'child')
+  })
 })

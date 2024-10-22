@@ -78,6 +78,7 @@ export type InvocationContents = {
   free_vars: Record<string, any>
   is_external: boolean
   invocation: Invocation
+  // todo. created_at?
 }
 export const InvocationContents = (props: InvocationContents) => ({
   ...props,
@@ -138,7 +139,7 @@ class Mutex {
 }
 
 export class SQLiteStore extends Store {
-  private db: Database | null = null
+  public db: Database | null = null
   private dbPath: string
   private txMutex = new Mutex()
 
