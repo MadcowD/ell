@@ -2,6 +2,23 @@ import { OpenAI } from 'openai'
 import { Store } from "./serialize/sql";
 import { Provider } from './provider' // Assuming you have a Provider interface/class
 
+/**
+ * Configurator class for managing the configuration of the application.
+ * 
+ *
+ * @class Config
+ * @property {Map<string, OpenAI>} registry - The registry of OpenAI clients.
+ * @property {boolean} verbose - Whether to enable verbose logging.
+ * @property {boolean} wrappedLogging - Whether to enable wrapped logging.
+ * @property {number | undefined} overrideWrappedLoggingWidth - The width to override wrapped logging.
+ * @property {Store | undefined} store - The store for the application.
+ * @property {boolean} autocommit - Whether to enable autocommit.
+ * @property {boolean} lazyVersioning - Whether to enable lazy versioning.
+ * @property {Record<string, any>} defaultLmParams - The default language model parameters.
+ * @property {string} defaultSystemPrompt - The default system prompt.
+ * @property {OpenAI | undefined} defaultClient - The default OpenAI client.
+ * @property {Map<typeof OpenAI, Provider>} providers - The providers for the application.
+ */
 class Config {
   public registry: Map<string, OpenAI> = new Map()
   public verbose: boolean = false
