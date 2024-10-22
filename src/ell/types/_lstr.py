@@ -73,7 +73,7 @@ class _lstr(str):
          __mul__: Perform a multiplication operation between this lstr instance and an integer or another lstr.
          __rmul__: Perform a right multiplication operation between an integer or another lstr and this lstr instance.
          __getitem__: Get a slice or index of this lstr instance.
-         __getattr__: Get an attribute from this lstr instance.
+         __getattribute__: Get an attribute from this lstr instance.
          join: Join a sequence of strings or lstr instances into a single lstr instance.
          split: Split this lstr instance into a list of lstr instances based on a separator.
          rsplit: Split this lstr instance into a list of lstr instances based on a separator, starting from the right.
