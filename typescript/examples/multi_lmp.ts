@@ -1,20 +1,20 @@
 import * as ell from 'ell-ai'
 
-const generateStoryIdeas = ell.simple({ model: 'gpt-4o-mini', temperature: 1.0 }, async (about: string) => {
+const generateStoryIdeas = ell.simple({ model: 'gpt-4o-mini', temperature: 1.0 }, (about: string) => {
   return [
     ell.system('You are an expert story ideator. Only answer in a single sentence.'),
     ell.user(`Generate a story idea about ${about}.`),
   ]
 })
 
-const writeADraftOfAStory = ell.simple({ model: 'gpt-4o-mini', temperature: 1.0 }, async (idea: string) => {
+const writeADraftOfAStory = ell.simple({ model: 'gpt-4o-mini', temperature: 1.0 }, (idea: string) => {
   return [
     ell.system('You are an adept story writer. The story should only be 3 paragraphs.'),
     ell.user(`Write a story about ${idea}.`),
   ]
 })
 
-const chooseTheBestDraft = ell.simple({ model: 'gpt-4o', temperature: 0.1 }, async (drafts: string[]) => {
+const chooseTheBestDraft = ell.simple({ model: 'gpt-4o', temperature: 0.1 }, (drafts: string[]) => {
   return [
     ell.system('You are an expert fiction editor.'),
     ell.user(`Choose the best draft from the following list: ${drafts.join('\n')}`),

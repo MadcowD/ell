@@ -12,7 +12,7 @@ const MovieReview = z.object({
 const generateMovieReview = ell.complex({ 
   model: "gpt-4o-mini", 
   response_format: MovieReview ,
-}, async (movie: string) => {
+}, (movie: string) => {
   return [
     ell.system("You are a movie review generator. Given the name of a movie, you need to return a structured review."),
     ell.user(`Generate a review for the movie ${movie}`)

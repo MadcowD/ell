@@ -1,6 +1,6 @@
 import * as ell from 'ell-ai'
 
-const describeImage = ell.complex({ model: 'gpt-4o-mini' }, async (url: string) => [
+const describeImage = ell.complex({ model: 'gpt-4o-mini' }, (url: string) => [
   ell.system('You are a helpful assistant that can help people see.'),
   ell.user('Please describe this image in glorious detail.'),
   ell.user(new ell.ImageContent({ url, detail: 'low' })),

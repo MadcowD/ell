@@ -11,7 +11,7 @@ import { EllCallParams } from '../provider'
 
 const logger = logging.getLogger('ell')
 
-type ComplexLMPInner = (...args: any[]) => Promise<Array<Message>>
+type ComplexLMPInner = (...args: any[]) => Promise<Array<Message>> | Array<Message>
 type ComplexLMP<A extends ComplexLMPInner, ResponseFormat extends ResponseFormatSchema> = ((
   ...args: Parameters<A>
 ) => Promise<ResponseFormat extends any ? Message<ResponseFormat> : Array<Message>>) & {
@@ -294,7 +294,7 @@ export const complex = <PromptFn extends ComplexLMPInner, ResponseFormat extends
     if (lmpId && !a.exempt_from_tracking) {
       return await invokeWithTracking({ ...lmpDefinition!, lmpId }, args, f, a)
     }
-    const promptFnOutput = await f(...args)
+    const promptFnOutput = await Promise.resolve(f(...args))
     const modelClient = await getModelClient(a)
     const provider = config.getProviderFor(modelClient)
     if (!provider) {
