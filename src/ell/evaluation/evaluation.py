@@ -220,33 +220,12 @@ class Evaluation(BaseModel):
         if not config.store:
             return
         if not self.serialized:
-            self.id = "evaluation-" + hsh(
-                (
-                    (
-                        dataset_hash := hsh(
-                            (
-                                str(dill.dumps(self.dataset))
-                                if self.dataset
-                                else str(self.n_evals)
-                            )
-                            + str(self.samples_per_datapoint)
-                        )
-                    )
-                    + "".join(
-                        sorted(metrics_ids := [ido(f) for f in self.metrics.values()])
-                        + sorted(
-                            annotation_ids := [
-                                ido(a) for a in self.annotations.values()
-                            ]
-                        )
-                        + (
-                            criteiron_ids := (
-                                [ido(self.criterion)] if self.criterion else []
-                            )
-                        )
-                    )
-                )
-            )
+            dataset_hash = hsh(str(dill.dumps(self.dataset) if self.dataset else str(self.n_evals)) + str(self.samples_per_datapoint))
+            metrics_ids = [ido(f) for f in self.metrics.values()]
+            annotation_ids = [ido(a) for a in self.annotations.values()]
+            criteiron_ids = [ido(self.criterion)] if self.criterion else []
+            
+            self.id = "evaluation-" + hsh(dataset_hash + "".join(sorted(metrics_ids) + sorted(annotation_ids) + criteiron_ids))
 
             # get existing versions
             existing_versions = config.store.get_eval_versions_by_name(self.name)
