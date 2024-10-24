@@ -374,7 +374,7 @@ class Evaluation(BaseModel):
                     )
 
             evaluation_run.end_time = datetime.now()
-            print(rowar_results)
+
             # convert rowar results to evaluation results
             evaluation_run.results = EvaluationResults.from_rowar_results(rowar_results)
 

@@ -20,7 +20,7 @@ def get_lmp_output(
         return lmp(*inp, **lmp_params)
     elif isinstance(inp, dict):
         return lmp(**inp, **lmp_params)
-    if inp is None:
+    elif inp is None:
         return lmp(**lmp_params)
     else:
         raise ValueError(f"Invalid input type: {type(inp)}")
