@@ -41,6 +41,8 @@ class EvaluationResults(BaseModel, Generic[T]):
         rowar_results: List[_ResultDatapoint],
     ) -> "EvaluationResults":
         def extract_values(is_invocation: bool, attribute: str):
+            # To be clear this makes me hate that we have seggrefated these to different types on the object.
+            # XXX: We should just allow criteiron to be multitudanal and have labelers as the field with a uniform way to treat them all in the implementaiton. Thats the way the backend does it.
             return {
                 name: (np.array if not is_invocation else list)([(getattr(result, attribute)[name])[int(is_invocation)] for result in rowar_results])
                 for name in getattr(rowar_results[0], attribute)
