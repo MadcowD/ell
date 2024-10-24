@@ -1,7 +1,6 @@
 import pytest
 
 import ell.lmp.function
-from unittest.mock import MagicMock, patch
 from datetime import datetime
 from ell.evaluation.evaluation import Evaluation, EvaluationRun
 from ell.evaluation.results import EvaluationResults
@@ -24,6 +23,7 @@ def mock_evaluation():
         samples_per_datapoint=2,
         metrics={"mock_metric": lambda x, y: 1.0},
         annotations={"mock_annotation": lambda x, y: "annotation"},
+        criterion=lambda x, y: True
     )
 
 
@@ -85,3 +85,17 @@ def test_evaluation_run_with_missing_params(mock_evaluation):
     results = mock_evaluation._process_single(data_point, lmp, lmp_params, required_params)
     assert len(results) == 1
     assert results[0]().output[0] == "mock_output"
+
+
+def test_evaluation_run_with_criterion(mock_evaluation):
+    # Test with a criterion
+    data_point = {"input": {"param": "test_input"}}
+    lmp = MockLMP
+    required_params = False
+
+    results = mock_evaluation._process_single(data_point, lmp, {}, required_params)
+    assert len(results) == 1
+    assert results[0]().criterion[0] == True
+
+
+

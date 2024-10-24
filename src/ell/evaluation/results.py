@@ -40,28 +40,28 @@ class EvaluationResults(BaseModel, Generic[T]):
     def from_rowar_results(
         rowar_results: List[_ResultDatapoint],
     ) -> "EvaluationResults":
-        def extract_values(index_for_invocation_id: int, attribute: str):
+        def extract_values(is_invocation: bool, attribute: str):
             return {
-            name: np.array([(val := getattr(result, attribute)[name])[index_for_invocation_id] for result in rowar_results])
+                name: (np.array if not is_invocation else list)([(getattr(result, attribute)[name])[int(is_invocation)] for result in rowar_results])
                 for name in getattr(rowar_results[0], attribute)
             }
 
-        def extract_criterion(index: int):
+        def extract_criterion(is_invocation: bool):
             return (
-                [cast(Tuple[bool, InvocationID], result.criterion)[index] for result in rowar_results]
+                [cast(Tuple[bool, InvocationID], result.criterion)[int(is_invocation)] for result in rowar_results]
                 if rowar_results[0].criterion
                 else None
             )
 
         return EvaluationResults[None](
             outputs=[result.output[0] for result in rowar_results],
-            metrics=extract_values(0, 'metrics'),
-            annotations=extract_values(0, 'annotations'),
-            criterion=extract_criterion(0),
+            metrics=extract_values(False, 'metrics'),
+            annotations=extract_values(False, 'annotations'),
+            criterion=extract_criterion(False),
             invocation_ids=EvaluationResults[str](
                 outputs=[result.output[1] for result in rowar_results],
-                metrics=extract_values(1, 'metrics'),
-                annotations=extract_values(1, 'annotations'),
-                criterion=extract_criterion(1),
+                metrics=extract_values(True, 'metrics'),
+                annotations=extract_values(True, 'annotations'),
+                criterion=extract_criterion(True),
             ),
         )
