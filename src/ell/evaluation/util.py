@@ -1,7 +1,9 @@
 from ell.evaluation.results import Any, Callable, Datapoint, Dict, List
 
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
+
+from ell.types.message import LMP
 
 
 def get_lmp_output(
@@ -13,11 +15,13 @@ def get_lmp_output(
     if not required_params:
         return lmp(**lmp_params)
 
-    inp = data_point["input"]
+    inp = data_point.get("input", None)
     if isinstance(inp, list):
         return lmp(*inp, **lmp_params)
     elif isinstance(inp, dict):
         return lmp(**inp, **lmp_params)
+    if inp is None:
+        return lmp(**lmp_params)
     else:
         raise ValueError(f"Invalid input type: {type(inp)}")
 

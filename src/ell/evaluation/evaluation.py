@@ -221,6 +221,7 @@ class Evaluation(BaseModel):
         if not config.store:
             return
         if not self.serialized:
+            # Todo standardize this.
             dataset_hash = hsh(str(dill.dumps(self.dataset) if self.dataset else str(self.n_evals)) + str(self.samples_per_datapoint))
             metrics_ids = [ido(f) for f in self.metrics.values()]
             annotation_ids = [ido(a) for a in self.annotations.values()]
@@ -373,6 +374,7 @@ class Evaluation(BaseModel):
                     )
 
             evaluation_run.end_time = datetime.now()
+            print(rowar_results)
             # convert rowar results to evaluation results
             evaluation_run.results = EvaluationResults.from_rowar_results(rowar_results)
 

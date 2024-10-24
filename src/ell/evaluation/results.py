@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union, Generic
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union, Generic, cast
 from pydantic import BaseModel, ConfigDict, Field
 import numpy as np
 from dataclasses import dataclass
@@ -36,48 +36,32 @@ class EvaluationResults(BaseModel, Generic[T]):
     )
 
     invocation_ids: Optional["EvaluationResults[InvocationID]"] = Field(default=None)
-
     @staticmethod
     def from_rowar_results(
         rowar_results: List[_ResultDatapoint],
     ) -> "EvaluationResults":
-        return EvaluationResults[None](
-            outputs=[result.output[0] for result in rowar_results],
-            metrics={
-                name: np.array([result.metrics[name][0] for result in rowar_results])
-                for name in rowar_results[0].metrics
-            },
-            annotations={
-                name: ([result.annotations[name][0] for result in rowar_results])
-                for name in rowar_results[0].annotations
-            },
-            criterion=(
-                [
-                    cast(Tuple[bool, InvocationID], result.criterion)[0]
-                    for result in rowar_results
-                ]
+        def extract_values(index_for_invocation_id: int, attribute: str):
+            return {
+            name: np.array([(val := getattr(result, attribute)[name])[index_for_invocation_id] for result in rowar_results])
+                for name in getattr(rowar_results[0], attribute)
+            }
+
+        def extract_criterion(index: int):
+            return (
+                [cast(Tuple[bool, InvocationID], result.criterion)[index] for result in rowar_results]
                 if rowar_results[0].criterion
                 else None
-            ),
+            )
+
+        return EvaluationResults[None](
+            outputs=[result.output[0] for result in rowar_results],
+            metrics=extract_values(0, 'metrics'),
+            annotations=extract_values(0, 'annotations'),
+            criterion=extract_criterion(0),
             invocation_ids=EvaluationResults[str](
                 outputs=[result.output[1] for result in rowar_results],
-                metrics={
-                    name: np.array(
-                        [result.metrics[name][1] for result in rowar_results]
-                    )
-                    for name in rowar_results[0].metrics
-                },
-                annotations={
-                    name: ([result.annotations[name][1] for result in rowar_results])
-                    for name in rowar_results[0].annotations
-                },
-                criterion=(
-                    [
-                        cast(Tuple[bool, InvocationID], result.criterion)[1]
-                        for result in rowar_results
-                    ]
-                    if rowar_results[0].criterion
-                    else None
-                ),
+                metrics=extract_values(1, 'metrics'),
+                annotations=extract_values(1, 'annotations'),
+                criterion=extract_criterion(1),
             ),
         )

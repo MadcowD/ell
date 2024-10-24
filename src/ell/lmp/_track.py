@@ -64,9 +64,10 @@ def _track(
 
         state_cache_key: str = None
         if not config.store:
-            return func_to_track(
+            res = func_to_track(
                 *fn_args, **fn_kwargs, _invocation_origin=invocation_id
             )[0]
+            return (res, invocation_id) if _get_invocation_id else res
 
         parent_invocation_id = get_current_invocation()
         try:
