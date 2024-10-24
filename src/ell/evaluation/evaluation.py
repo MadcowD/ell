@@ -1,6 +1,5 @@
 from datetime import datetime
 from functools import partial
-import itertools
 from typing import (
     Any,
     Dict,
@@ -10,7 +9,6 @@ from typing import (
     cast,
 )
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import uuid
 from ell.evaluation.results import _ResultDatapoint, EvaluationResults
 from ell.evaluation.serialization import write_evaluation
 from ell.evaluation.util import get_lmp_output
@@ -20,11 +18,8 @@ from ell.evaluation.util import validate_callable_dict
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from ell.types.message import LMP
-import statistics
-from ell.util.closure_util import ido
-from ell.util.closure_util import hsh
 from ell.util.tqdm import tqdm
-
+import inspect
 
 from ell.configurator import config
 
@@ -45,7 +40,7 @@ class EvaluationRun(BaseModel):
 
     @property
     def inputs(self) -> List[Any]:
-        return [d["input"] for d in self.dataset] if self.dataset else []
+        return [d.get("input", None) for d in self.dataset] if self.dataset else []
 
     @property
     def outputs(self) -> List[Any]:
@@ -79,46 +74,6 @@ class Evaluation(BaseModel):
 
     id: Optional[str] = Field(default=None)
 
-    @model_validator(mode="before")
-    @classmethod
-    def validate_dataset_or_n_evals(cls, values):
-        if "dataset" not in values and "n_evals" not in values:
-            raise ValueError("Either dataset or n_evals must be set")
-        if "dataset" in values and "n_evals" in values:
-            raise ValueError("Either dataset or n_evals must be set, not both")
-        return values
-
-    @field_validator("metrics", "annotations", "criterion", mode="before")
-    def wrap_callables_in_lmp_function(cls, value):
-        from ell.lmp.function import function
-
-        if isinstance(value, dict):
-            return {
-                k: (
-                    function(type=LMPType.LABELR)(v)
-                    if callable(v) and not hasattr(v, "__ell_track__")
-                    else v
-                )
-                for k, v in value.items()
-            }
-        elif callable(value) and not hasattr(value, "__ell_track__"):
-            return function()(value)
-        elif value is None:
-            return value 
-        else:
-            raise ValueError(f"Expected dict, callable, or None, got {type(value)}")
-
-    @field_validator("metrics")
-    def validate_metrics(cls, metrics: Union[Metric, List[Metrics]]) -> Metric:
-        return validate_callable_dict(metrics, "metric")
-
-    @field_validator("annotations")
-    def validate_annotations(
-        cls, annotations: Union[Annotations, List[Annotation]]
-    ) -> Annotations:
-        return validate_callable_dict(annotations, "annotation")
-
-    
     # XXX: Dones't support partial params outside of the dataset like client??
     def run(
         self,
@@ -130,40 +85,9 @@ class Evaluation(BaseModel):
         verbose: bool = False,
         **additional_lmp_params,
     ) -> EvaluationRun:
-        assert (
-            "api_params" not in additional_lmp_params
-        ), f"specify api_params directly to run not within additional_lmp_params: {additional_lmp_params}"
-        # Inspect LMP signature to check for required arguments
-        import inspect
-
-        lmp_signature = inspect.signature(lmp)
-        required_params = (
-            len(
-                {
-                    param
-                    for param in lmp_signature.parameters.values()
-                    if param.default == param.empty and param.kind != param.VAR_KEYWORD
-                }
-            )
-            > 0
-        )
-
-        run_api_params = {**(self.default_api_params or {}), **(api_params or {})}
-        lmp_params = dict(api_params=run_api_params, **additional_lmp_params)
-
-        dataset = self.dataset if self.dataset is not None else [{"input": None}]
-        if use_api_batching:
-            # we need to collate on unique datapoints here if possible; note that n_evals can never be set.
-            run_api_params["n"] = self.samples_per_datapoint * (self.n_evals or 1)
-        else:
-            dataset = sum(
-                [
-                    [data_point] * self.samples_per_datapoint * (self.n_evals or 1)
-                    for data_point in dataset
-                ],
-                [],
-            )
-
+        
+        required_params, run_api_params, lmp_params = self.prepare_run_params(lmp, api_params, additional_lmp_params)
+        dataset = self.prepare_run_dataset(use_api_batching, run_api_params)
 
         evaluation_run = EvaluationRun(
             lmp=lmp,
@@ -249,4 +173,82 @@ class Evaluation(BaseModel):
 
         return [partial(process_rowar_results, output) for output in lmp_output]
 
+    def prepare_run_params(self, lmp, api_params, additional_lmp_params):
+        assert (
+            "api_params" not in additional_lmp_params
+        ), f"specify api_params directly to run not within additional_lmp_params: {additional_lmp_params}"
+        # Inspect LMP signature to check for required arguments
 
+
+        lmp_signature = inspect.signature(lmp)
+        required_params = (
+            len(
+                {
+                    param
+                    for param in lmp_signature.parameters.values()
+                    if param.default == param.empty and param.kind != param.VAR_KEYWORD
+                }
+            )
+            > 0
+        )
+
+        run_api_params = {**(self.default_api_params or {}), **(api_params or {})}
+        lmp_params = dict(api_params=run_api_params, **additional_lmp_params)
+        return required_params,run_api_params,lmp_params
+
+    def prepare_run_dataset(self, use_api_batching, run_api_params):
+        dataset = self.dataset if self.dataset is not None else [{"input": None}]
+        if use_api_batching:
+            # we need to collate on unique datapoints here if possible; note that n_evals can never be set.
+            run_api_params["n"] = self.samples_per_datapoint * (self.n_evals or 1)
+        else:
+            dataset = sum(
+                [
+                    [data_point] * self.samples_per_datapoint * (self.n_evals or 1)
+                    for data_point in dataset
+                ],
+                [],
+            )
+            
+        return dataset
+    
+    @model_validator(mode="before")
+    @classmethod
+    def validate_dataset_or_n_evals(cls, values):
+        if "dataset" not in values and "n_evals" not in values:
+            raise ValueError("Either dataset or n_evals must be set")
+        if "dataset" in values and "n_evals" in values:
+            raise ValueError("Either dataset or n_evals must be set, not both")
+        return values
+
+    @field_validator("metrics", "annotations", "criterion", mode="before")
+    def wrap_callables_in_lmp_function(cls, value):
+        from ell.lmp.function import function
+
+        if isinstance(value, dict):
+            return {
+                k: (
+                    function(type=LMPType.LABELR)(v)
+                    if callable(v) and not hasattr(v, "__ell_track__")
+                    else v
+                )
+                for k, v in value.items()
+            }
+        elif callable(value) and not hasattr(value, "__ell_track__"):
+            return function()(value)
+        elif value is None:
+            return value 
+        else:
+            raise ValueError(f"Expected dict, callable, or None, got {type(value)}")
+
+    @field_validator("metrics")
+    def validate_metrics(cls, metrics: Union[Metric, List[Metrics]]) -> Metric:
+        return validate_callable_dict(metrics, "metric")
+
+    @field_validator("annotations")
+    def validate_annotations(
+        cls, annotations: Union[Annotations, List[Annotation]]
+    ) -> Annotations:
+        return validate_callable_dict(annotations, "annotation")
+
+    

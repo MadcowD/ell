@@ -1,10 +1,8 @@
 from ell.evaluation.results import Any, Callable, Datapoint, Dict, List
 
-
 from typing import Any, Dict, List, Union
 
 from ell.types.message import LMP
-
 
 def get_lmp_output(
     data_point: Datapoint,
