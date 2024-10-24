@@ -67,7 +67,7 @@ class EvaluationRun(BaseModel):
     def invocation_ids(self) -> Optional[EvaluationResults[InvocationID]]:
         return self.results.invocation_ids
 
-    def _write(self, evaluation_id: str):
+    def write(self, evaluation_id: str):
         if not config.store:
             return
 
@@ -78,12 +78,12 @@ class EvaluationRun(BaseModel):
             api_params=self.api_params,
             start_time=self.start_time,
             end_time=self.end_time,
-            success=True,  # Assuming the run was successful; you might want to add error handling
-            error=None,  # Add error information if needed
+            success=True,
+            error=None,
         )
         invocation_ids = self.results.invocation_ids
-        # Create EvaluationResultDatapoints
 
+        # Create EvaluationResultDatapoints
         result_datapoints = []
         for i, output in enumerate(self.results.outputs):
             result_datapoint = EvaluationResultDatapoint(
@@ -130,47 +130,30 @@ class EvaluationRun(BaseModel):
             result_datapoints.append(result_datapoint)
 
         serialized_run.results = result_datapoints
-        # Let;s add a result summary.
+
+        # Write summaries using a helper function
+        def create_summaries(data_dict, labeler_type):
+            return [
+                EvaluationRunLabelerSummary.from_labels(
+                    data=values,
+                    evaluation_run_id=id,
+                    evaluation_labeler_id=EvaluationLabeler.generate_id(
+                        evaluation_id=evaluation_id,
+                        name=name,
+                        type=labeler_type,
+                    ),
+                )
+                for name, values in data_dict.items()
+            ]
 
         id = config.store.write_evaluation_run(serialized_run)
-        # write summaries now
-        summaries = []
-        for metric_name, metric_values in self.results.metrics.items():
-            summaries.append(
-                EvaluationRunLabelerSummary.from_labels(
-                    data=metric_values,
-                    evaluation_run_id=id,
-                    evaluation_labeler_id=EvaluationLabeler.generate_id(
-                        evaluation_id=evaluation_id,
-                        name=metric_name,
-                        type=EvaluationLabelerType.METRIC,
-                    ),
-                )
-            )
-        for annotation_name, annotation_values in self.results.annotations.items():
-            summaries.append(
-                EvaluationRunLabelerSummary.from_labels(
-                    data=annotation_values,
-                    evaluation_run_id=id,
-                    evaluation_labeler_id=EvaluationLabeler.generate_id(
-                        evaluation_id=evaluation_id,
-                        name=annotation_name,
-                        type=EvaluationLabelerType.ANNOTATION,
-                    ),
-                )
-            )
+
+        # Collect summaries for metrics, annotations, and criterion
+        summaries = create_summaries(self.results.metrics, EvaluationLabelerType.METRIC)
+        summaries += create_summaries(self.results.annotations, EvaluationLabelerType.ANNOTATION)
         if self.results.criterion is not None:
-            summaries.append(
-                EvaluationRunLabelerSummary.from_labels(
-                    data=self.results.criterion,
-                    evaluation_run_id=id,
-                    evaluation_labeler_id=EvaluationLabeler.generate_id(
-                        evaluation_id=evaluation_id,
-                        name="criterion",
-                        type=EvaluationLabelerType.CRITERION,
-                    ),
-                )
-            )
+            summaries += create_summaries({"criterion": self.results.criterion}, EvaluationLabelerType.CRITERION)
+
         config.store.write_evaluation_run_labeler_summaries(summaries)
 
 
@@ -189,6 +172,7 @@ class Evaluation(BaseModel):
         default=1,
         description="How many samples per datapoint to generate, equivalent to setting n in api params for LMPs which support this When no dataset is provided then the total nubmer of evalautiosn will be samples_per_datapoint * n_evals..",
     )
+    
     metrics: Metrics = Field(default_factory=dict)
     annotations: Annotations = Field(default_factory=dict)
     criterion: Optional[Criterion] = None
@@ -339,7 +323,7 @@ class Evaluation(BaseModel):
                 config.store.write_evaluation(serialized_evaluation)
 
         # Now serialize the evaluation run,
-        evaluation_run._write(evaluation_id=self.id)
+        evaluation_run.write(evaluation_id=self.id)
 
     # XXX: Dones't support partial params outside of the dataset like client??
     def run(
@@ -511,5 +495,6 @@ class Evaluation(BaseModel):
             )
 
         return [partial(process_rowar_results, output) for output in lmp_output]
+
 
 
