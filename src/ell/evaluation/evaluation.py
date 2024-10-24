@@ -92,40 +92,34 @@ class EvaluationRun(BaseModel):
                 invocation_ids=invocation_ids.outputs[i],
             )
 
-            for metric_name, metric_values in self.results.metrics.items():
-                label = EvaluationLabel(
-                    labeler_id=EvaluationLabeler.generate_id(
-                        evaluation_id=evaluation_id,
-                        name=metric_name,
-                        type=EvaluationLabelerType.METRIC,
-                    ),
-                    label_invocation_id=invocation_ids.metrics[metric_name][i],
-                )
-                result_datapoint.labels.append(label)
+            # Helper function to create labels
+            def create_labels(values_dict, labeler_type, invocation_ids_dict):
+                return [
+                    EvaluationLabel(
+                        labeled_datapoint_id=result_datapoint.id,
+                        labeler_id=EvaluationLabeler.generate_id(
+                            evaluation_id=evaluation_id, name=name, type=labeler_type
+                        ),
+                        label_invocation_id=invocation_ids_dict[name][i],
+                    )
+                    for name in values_dict
+                ]
 
-            for annotation_name, annotation_values in self.results.annotations.items():
-                label = EvaluationLabel(
-                    labeled_datapoint_id=result_datapoint.id,
-                    labeler_id=EvaluationLabeler.generate_id(
-                        evaluation_id=evaluation_id,
-                        name=annotation_name,
-                        type=EvaluationLabelerType.ANNOTATION,
-                    ),
-                    label_invocation_id=invocation_ids.annotations[annotation_name][i],
-                )
-                result_datapoint.labels.append(label)
+            # Create labels for metrics and annotations
+            result_datapoint.labels.extend(create_labels(
+                self.results.metrics, EvaluationLabelerType.METRIC, invocation_ids.metrics
+            ))
+            result_datapoint.labels.extend(create_labels(
+                self.results.annotations, EvaluationLabelerType.ANNOTATION, invocation_ids.annotations
+            ))
 
+            # Create criterion labels if present
             if self.results.criterion is not None:
-                criterion_label = EvaluationLabel(
-                    labeled_datapoint_id=result_datapoint.id,
-                    labeler_id=EvaluationLabeler.generate_id(
-                        evaluation_id=evaluation_id,
-                        name="criterion",
-                        type=EvaluationLabelerType.CRITERION,
-                    ),
-                    label_invocation_id=invocation_ids.criterion[i],
-                )
-                result_datapoint.labels.append(criterion_label)
+                result_datapoint.labels.extend(create_labels(
+                    {"criterion": self.results.criterion},
+                    EvaluationLabelerType.CRITERION,
+                    {"criterion": invocation_ids.criterion}
+                ))
 
             result_datapoints.append(result_datapoint)
 
@@ -283,39 +277,22 @@ class Evaluation(BaseModel):
                 )
 
                 # Create EvaluationLabelers
-                labelers = []
-                # Metrics
-                for name, h in zip(self.metrics.keys(), metrics_ids):
-                    labelers.append(
+                def create_labelers(names, ids, labeler_type):
+                    return [
                         EvaluationLabeler(
                             name=name,
-                            type=EvaluationLabelerType.METRIC,
+                            type=labeler_type,
                             evaluation_id=self.id,
                             labeling_lmp_id=h,
                         )
-                    )
+                        for name, h in zip(names, ids)
+                    ]
 
-                # Annotations
-                for name, h in zip(self.annotations.keys(), annotation_ids):
-                    labelers.append(
-                        EvaluationLabeler(
-                            name=name,
-                            type=EvaluationLabelerType.ANNOTATION,
-                            evaluation_id=self.id,
-                            labeling_lmp_id=h,
-                        )
-                    )
-
-                # Criterion
-                if self.criterion:
-                    labelers.append(
-                        EvaluationLabeler(
-                            name="criterion",
-                            type=EvaluationLabelerType.CRITERION,
-                            evaluation_id=self.id,
-                            labeling_lmp_id=criteiron_ids[0],
-                        )
-                    )
+                labelers = (
+                    create_labelers(self.metrics.keys(), metrics_ids, EvaluationLabelerType.METRIC) +
+                    create_labelers(self.annotations.keys(), annotation_ids, EvaluationLabelerType.ANNOTATION) +
+                    (create_labelers(["criterion"], criteiron_ids, EvaluationLabelerType.CRITERION) if self.criterion else [])
+                )
 
                 # Add labelers to the serialized evaluation
                 serialized_evaluation.labelers = labelers
@@ -336,19 +313,6 @@ class Evaluation(BaseModel):
         verbose: bool = False,
         **additional_lmp_params,
     ) -> EvaluationRun:
-        """
-        Run the evaluation or optimization using the specified number of workers.
-
-        Args:
-            n_workers (int): Number of parallel workers to use. Default is 1.
-            lmp (Optional[LMP]): LMP to use for this run. If None, uses the LMP set during initialization.
-            api_params (Dict[str, Any]): API parameters to override defaults.
-            verbose (bool): Whether to run in verbose mode. Default is False.
-            samples_per_datapoint (int): Number of samples to generate per datapoint. Default is 1.
-
-        Returns:
-            EvaluationRun: Object containing statistics about the evaluation or optimization outputs.
-        """
         assert (
             "api_params" not in additional_lmp_params
         ), f"specify api_params directly to run not within additional_lmp_params: {additional_lmp_params}"
@@ -445,56 +409,48 @@ class Evaluation(BaseModel):
         lmp_params: Dict[str, Any],
         required_params: bool,
     ) -> List[Any]:
-        """
-        Process a single data point using the LMP and apply all criteria.
-
-        Args:
-        data_point (Any): A single item from the dataset.
-            lmp (LMP): The LMP to use for processing.
-            api_params (Dict[str, Any]): API parameters for this run.
-
-        Returns:
-            Tuple[List[Any], Dict[str, List[float]]]: The LMP outputs and a dictionary of scores from all metrics.
-        """
         lmp_params_with_invocation_id = {**lmp_params, "_get_invocation_id": True}
-        lmp_output = (
-            lmp(**lmp_params_with_invocation_id)
-            if not required_params  # type: ignore
-            else (
-                lmp(*inp, **lmp_params_with_invocation_id)
-                if isinstance((inp := data_point["input"]), list)  # type: ignore
-                else (
-                    lmp(**inp, **lmp_params_with_invocation_id)
-                    if isinstance(inp, dict)  # type: ignore
-                    else (_ for _ in ()).throw(
-                        ValueError(f"Invalid input type: {type(inp)}")
-                    )
-                )
-            )
-        )
+        lmp_output = self._get_lmp_output(data_point, lmp, lmp_params_with_invocation_id, required_params)
 
         if not isinstance(lmp_output, list):
             lmp_output = [cast(Any, lmp_output)]
 
         def process_rowar_results(output):
+            def apply_labelers(labelers):
+                return {
+                    name: labeler(data_point, output[0], _get_invocation_id=True)
+                    for name, labeler in labelers.items()
+                }
+
             return _ResultDatapoint(
                 output=output,
-                metrics={
-                    name: metric(data_point, output[0], _get_invocation_id=True)
-                    for name, metric in self.metrics.items()
-                },
-                annotations={
-                    name: annotation(data_point, output[0], _get_invocation_id=True)
-                    for name, annotation in self.annotations.items()
-                },
-                criterion=(
-                    self.criterion(data_point, output[0], _get_invocation_id=True)
-                    if self.criterion
-                    else None
-                ),
+                metrics=apply_labelers(self.metrics),
+                annotations=apply_labelers(self.annotations),
+                criterion=apply_labelers({None: self.criterion})[None] if self.criterion else None
             )
+            
 
         return [partial(process_rowar_results, output) for output in lmp_output]
+
+    def _get_lmp_output(
+        self,
+        data_point: Datapoint,
+        lmp: LMP,
+        lmp_params: Dict[str, Any],
+        required_params: bool,
+    ) -> Union[List[Any], Any]:
+        if not required_params:
+            return lmp(**lmp_params)
+        
+        inp = data_point["input"]
+        if isinstance(inp, list):
+            return lmp(*inp, **lmp_params)
+        elif isinstance(inp, dict):
+            return lmp(**inp, **lmp_params)
+        else:
+            raise ValueError(f"Invalid input type: {type(inp)}")
+
+
 
 
 
