@@ -1,7 +1,10 @@
+from sqlmodel import Session
+
 from ell.configurator import config
 from ell.ctxt import get_session_id
 from typing import Dict, List, Optional, Set, Any
 from ell.types import SerializedLMP, Invocation, InvocationContents
+
 
 def write_lmp(serialized_lmp: SerializedLMP, uses: Dict[str, Any]) -> Optional[SerializedLMP]:
     """
@@ -79,9 +82,24 @@ def get_latest_lmps(skip: int = 0, limit: int = 10) -> List[Dict[str, Any]]:
     :param limit: Maximum number of records to return.
     :return: A list of SerializedLMP objects.
     """
-    with config.store.engine.begin() as session:
+    with Session(config.store.engine) as session:
         return config.store.get_latest_lmps(session, skip, limit)
 
+def get_invocations_by_lmp_name(lmp_name: str, skip: int = 0, limit: int = 10) -> List[Dict[str, Any]]:
+    """
+    Retrieve invocations for a given LMP name, sorted by creation time in descending order.
+
+    :param lmp_name: The name of the LMP.
+    :param skip: Number of records to skip (for pagination).
+    :param limit: Maximum number of records to return.
+    :return: A list of Invocation objects sorted by creation time in descending order.
+    """
+    lmp_filters = {"name": lmp_name}
+    filters = None  # The sorting is handled by default in the get_invocations method
+    
+    with Session(config.store.engine) as session:
+        return config.store.get_invocations(session, lmp_filters, skip=skip, limit=limit, filters=filters)
+    
 def get_lmps(skip: int = 0, limit: int = 10, **filters: Any) -> List[Dict[str, Any]]:
     """
     Retrieve LMPs based on filters.
@@ -91,7 +109,7 @@ def get_lmps(skip: int = 0, limit: int = 10, **filters: Any) -> List[Dict[str, A
     :param filters: Additional filters to apply.
     :return: A list of SerializedLMP objects.
     """
-    with config.store.engine.begin() as session:
+    with Session(config.store.engine) as session:
         return config.store.get_lmps(session, skip, limit, **filters)
 
 def get_invocations(lmp_filters: Dict[str, Any], skip: int = 0, limit: int = 10, filters: Optional[Dict[str, Any]] = None, hierarchical: bool = False) -> List[Dict[str, Any]]:
@@ -105,7 +123,7 @@ def get_invocations(lmp_filters: Dict[str, Any], skip: int = 0, limit: int = 10,
     :param hierarchical: Whether to return hierarchical results.
     :return: A list of Invocation objects.
     """
-    with config.store.engine.begin() as session:
+    with Session(config.store.engine) as session:
         return config.store.get_invocations(session, lmp_filters, skip, limit, filters, hierarchical)
 
 def get_traces() -> List[Dict[str, Any]]:
@@ -114,7 +132,7 @@ def get_traces() -> List[Dict[str, Any]]:
 
     :return: A list of trace dictionaries.
     """
-    with config.store.engine.begin() as session:
+    with Session(config.store.engine) as session:
         return config.store.get_traces(session)
 
 def get_invocations_aggregate(lmp_filters: Optional[Dict[str, Any]] = None, filters: Optional[Dict[str, Any]] = None, days: int = 30) -> Dict[str, Any]:
@@ -126,5 +144,5 @@ def get_invocations_aggregate(lmp_filters: Optional[Dict[str, Any]] = None, filt
     :param days: Number of days to include in the aggregation.
     :return: A dictionary containing aggregate data and graph data.
     """
-    with config.store.engine.begin() as session:
-        return config.store.get_invocations_aggregate(session, lmp_filters, filters, days)
+    with Session(config.store.engine) as session:
+        return config.store.get_invocations_aggregate(session, lmp_filters, filters, days);
