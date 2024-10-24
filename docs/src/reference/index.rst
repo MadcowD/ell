@@ -19,3 +19,9 @@ Automatically generated API reference for ``ell``.
    :caption: API Reference
 
    self
+
+
+TypeScript 
+==================
+
+.. js:automodule:: configurator

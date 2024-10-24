@@ -7,34 +7,56 @@ Structured outputs are essential for ensuring that language model responses are 
 
 Consider the following example, which demonstrates how to use Pydantic models to define structured outputs in ell:
 
-.. code-block:: python
+.. tabs::
 
-   from pydantic import BaseModel, Field
+   .. group-tab:: python
 
-   class MovieReview(BaseModel):
-       title: str = Field(description="The title of the movie")
-       rating: int = Field(description="The rating of the movie out of 10")
-       summary: str = Field(description="A brief summary of the movie")
+      .. code-block:: python
 
-   @ell.complex(model="gpt-4o-2024-08-06", response_format=MovieReview)
-   def generate_movie_review(movie: str) -> MovieReview:
-       """You are a movie review generator. Given the name of a movie, you need to return a structured review."""
-       return f"generate a review for the movie {movie}"
+         from pydantic import BaseModel, Field
+
+         class MovieReview(BaseModel):
+             title: str = Field(description="The title of the movie")
+             rating: int = Field(description="The rating of the movie out of 10")
+             summary: str = Field(description="A brief summary of the movie")
+
+         @ell.complex(model="gpt-4o-2024-08-06", response_format=MovieReview)
+         def generate_movie_review(movie: str) -> MovieReview:
+             """You are a movie review generator. Given the name of a movie, you need to return a structured review."""
+             return f"generate a review for the movie {movie}"
+
+   .. group-tab:: typescript
+
+      .. literalinclude:: ../../../typescript/examples/output_parsing.ts
+         :language: typescript
+         :lines: 1-20
 
 By defining the `MovieReview` model, we ensure that the output of the `generate_movie_review` function adheres to a specific structure, making it easier to parse and utilize in downstream applications. This approach not only enhances the reliability of the generated content but also simplifies the integration of language model outputs into larger systems.
 
 Once we have defined and generated structured outputs, we can easily access and manipulate the data within them. Let's continue with our movie review example to demonstrate how to work with structured outputs:
 
-.. code-block:: python
+.. tabs::
 
-   # Generate a movie review
-   message = generate_movie_review("The Matrix")
-   review = message.parsed
+   .. group-tab:: python    
 
-   # Access individual fields
-   print(f"Movie Title: {review.title}")
-   print(f"Rating: {review.rating}/10")
-   print(f"Summary: {review.summary}")
+      .. code-block:: python
+
+         # Generate a movie review
+         message = generate_movie_review("The Matrix")
+         review = message.parsed
+
+         # Access individual fields
+         print(f"Movie Title: {review.title}")
+         print(f"Rating: {review.rating}/10")
+         print(f"Summary: {review.summary}")
+
+   .. group-tab:: typescript
+
+      .. literalinclude:: ../../../typescript/examples/output_parsing.ts
+         :language: typescript
+         :lines: 22-31
+
+         
 
 In this example, we first generate a movie review using our `generate_movie_review` function. We can then access individual fields of the structured output directly, as shown in the first part of the code.
 

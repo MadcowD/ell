@@ -64,6 +64,7 @@ class SerializedLMPBase(SQLModel):
     name: str = Field(index=True)
     source: str
     dependencies: str
+    language: str = Field(default="python")
     created_at: datetime = UTCTimestampField(index=True, nullable=False)
 
     lmp_type: LMPType
