@@ -12,9 +12,10 @@ from typing import (
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import uuid
 from ell.evaluation.results import _ResultDatapoint, EvaluationResults
+from ell.evaluation.util import get_lmp_output
 from ell.types.studio import LMPType
 import openai
-from ell.util.serialization import validate_callable_dict
+from ell.evaluation.util import validate_callable_dict
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -389,7 +390,7 @@ class Evaluation(BaseModel):
         required_params: bool,
     ) -> List[Any]:
         lmp_params_with_invocation_id = {**lmp_params, "_get_invocation_id": True}
-        lmp_output = self._get_lmp_output(data_point, lmp, lmp_params_with_invocation_id, required_params)
+        lmp_output = get_lmp_output(data_point, lmp, lmp_params_with_invocation_id, required_params)
 
         if not isinstance(lmp_output, list):
             lmp_output = [cast(Any, lmp_output)]
@@ -410,26 +411,6 @@ class Evaluation(BaseModel):
             
 
         return [partial(process_rowar_results, output) for output in lmp_output]
-
-    def _get_lmp_output(
-        self,
-        data_point: Datapoint,
-        lmp: LMP,
-        lmp_params: Dict[str, Any],
-        required_params: bool,
-    ) -> Union[List[Any], Any]:
-        if not required_params:
-            return lmp(**lmp_params)
-        
-        inp = data_point["input"]
-        if isinstance(inp, list):
-            return lmp(*inp, **lmp_params)
-        elif isinstance(inp, dict):
-            return lmp(**inp, **lmp_params)
-        else:
-            raise ValueError(f"Invalid input type: {type(inp)}")
-
-
 
 
 

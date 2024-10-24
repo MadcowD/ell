@@ -4,7 +4,6 @@ import base64
 import hashlib
 from io import BytesIO
 import json
-from typing import Callable, Dict, List, Union
 import cattrs
 import numpy as np
 from pydantic import BaseModel
@@ -65,8 +64,6 @@ pydantic_ltype_aware_cattr.register_unstructure_hook(
     BaseModel,
     lambda obj: obj.model_dump(exclude_none=True, exclude_unset=True)
 )
-
-
 
 
 def get_immutable_vars(vars_dict):
@@ -162,30 +159,3 @@ def is_immutable_variable(value):
     return False
 
 
-def validate_callable_dict(
-    items: Union[Dict[str, Callable], List[Callable]], item_type: str
-) -> Dict[str, Callable]:
-    if isinstance(items, list):
-        items_dict = {}
-        for item in items:
-            if not callable(item):
-                raise ValueError(
-                    f"Each {item_type} must be a callable, got {type(item)}"
-                )
-            if not hasattr(item, "__name__") or item.__name__ == "<lambda>":
-                raise ValueError(
-                    f"Each {item_type} in a list must have a name (not a lambda)"
-                )
-            items_dict[item.__name__] = item
-        return items_dict
-    elif isinstance(items, dict):
-        for name, item in items.items():
-            if not callable(item):
-                raise ValueError(
-                    f"{item_type.capitalize()} '{name}' must be a callable, got {type(item)}"
-                )
-        return items
-    else:
-        raise ValueError(
-            f"{item_type}s must be either a list of callables or a dictionary, got {type(items)}"
-        )
