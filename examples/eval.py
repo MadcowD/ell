@@ -9,6 +9,7 @@ import numpy as np
 
 import ell.lmp.function
 
+
 def test_predictor_evaluation():
     dataset: List[ell.evaluation.Datapoint] = [
         {
@@ -55,20 +56,21 @@ def test_predictor_evaluation():
         return float(output.lower() == label.lower())
 
     eval = ell.evaluation.Evaluation(
-        name="capital_prediction", dataset=dataset, metrics={"score": is_correct, "length": lambda _, output: len(output)}, samples_per_datapoint=5
-
+        name="capital_prediction",
+        dataset=dataset,
+        metrics={"score": is_correct, "length": lambda _, output: len(output)},
+        samples_per_datapoint=1,
     )
-
     # ell.init(verbose=True, store='./logdir')
-    @ell.simple(model="gpt-4o")
+    @ell.simple(model="gpt-4o", max_tokens=10)
     def predict_capital(question: str):
         """
-        Answer only with the capital of the country. If hotdog land, answer Banana.
+        Answer only with the populations of the country. If hotdog land, answer Banana.
         """
         # print(question[0])
         return f"Answer the following question. {question}"
 
-    result = eval.run(predict_capital, n_workers=4)
+    result = eval.run(predict_capital, n_workers=10)
     print(result.results.metrics["score"].mean())
 
 
@@ -100,7 +102,6 @@ def test_llm_critic_evaluation():
         },
     ]
 
-
     @ell.simple(model="gpt-4o", temperature=0.1)
     def critic(text_to_summarize: str, ai_produced_summary: str):
         """
@@ -124,8 +125,6 @@ def test_llm_critic_evaluation():
         {ai_produced_summary}
         """
 
-
-
     @ell.lmp.function.function()
     def score(datapoint, output, n_retries=3):
         for _ in range(n_retries):
@@ -139,7 +138,6 @@ def test_llm_critic_evaluation():
                 continue
         raise Exception("Failed to score")
 
-
     # named criteria are interesting, allows anonymous functions &  specific isntantiation of functional criteria (partial(...))
     eval = ell.evaluation.Evaluation(
         name="test",
@@ -150,16 +148,13 @@ def test_llm_critic_evaluation():
     # this means
     # we get metrics like "test-score", test-length etc.
 
-
     # Now we prompt shit
     @ell.simple(model="gpt-4o")
     def summarizer(text: str):
         """You are a succinct summarizer. You are given a text and you should return a summary of the text. It should be no longer than 5 sentence. Focus on capturing the main points of the text as best as possible"""
         return f"Summarize the following text. {text}"
 
-
     ell.init(verbose=True, store="./logdir")
-
 
     # Using GPT-4o
     print("EVAL WITH GPT-4o")
@@ -215,40 +210,44 @@ def test_llm_critic_evaluation():
 
     # Run evaluation with dict-based criteria
     print("EVAL WITH GPT-4o (dict-based criteria)")
-    results = eval_dict.run(summarizer , n_workers=4, verbose=False).results
+    results = eval_dict.run(summarizer, n_workers=4, verbose=False).results
     print("Mean critic score:", results.metrics["score"].mean())
     print("Mean length of completions:", results.metrics["length"].mean())
 
+
 def test_poem_eval():
     @ell.simple(model="gpt-4o")
-    def write_a_bad_poem(): 
+    def write_a_bad_poem():
         """Your poem must no logner than 60 words."""
         return "Write a really poorly written poem "
 
-
     @ell.simple(model="gpt-4o")
     def write_a_good_poem():
-        """Your poem must no logner than 60 words. """
+        """Your poem must no logner than 60 words."""
         return "Write a really well written poem."
 
     @ell.simple(model="gpt-4o", temperature=0.1)
-    def is_good_poem(poem : str):
+    def is_good_poem(poem: str):
         """Include either 'yes' or 'no' at the end of your response. <analysis>. <yes or no>."""
         return f"Is this a good poem yes/no? {poem}"
 
     def score(datapoint, output):
-        return 'yes' in is_good_poem(output).lower()
-
+        return "yes" in is_good_poem(output).lower()
 
     ell.init(verbose=True, store="./logdir")
 
-
-    eval = ell.evaluation.Evaluation(name="poem_eval", n_evals=25, metrics=
-                                    {
-                                    "critic_score": score,
-                                    "length": lambda _, output: len(output) ,
-                                    "average_word_length": lambda _, output: sum(len(word) for word in output.split()) / len(output.split())})
-
+    eval = ell.evaluation.Evaluation(
+        name="poem_eval",
+        n_evals=25,
+        metrics={
+            "critic_score": score,
+            "length": lambda _, output: len(output),
+            "average_word_length": lambda _, output: sum(
+                len(word) for word in output.split()
+            )
+            / len(output.split()),
+        },
+    )
 
     print("EVALUATING GOOD POEM")
     start = time.time()
@@ -260,12 +259,13 @@ def test_poem_eval():
     # print("EVALUATING BAD POEM")
     run = eval.run(write_a_bad_poem, n_workers=10, verbose=False)
     print(f"Average length: {run.results.metrics['length'].mean():.2f}")
-    print(f"Average word length: {run.results.metrics['average_word_length'].mean():.2f}")
+    print(
+        f"Average word length: {run.results.metrics['average_word_length'].mean():.2f}"
+    )
     print(f"Average critic score: {run.results.metrics['critic_score'].mean():.2f}")
 
 
-
 if __name__ == "__main__":
-#    test_poem_eval()
-   ell.init(verbose=True, store="./logdir")
-   test_predictor_evaluation()
+    #    test_poem_eval()
+    ell.init(verbose=True, store="./logdir")
+    test_predictor_evaluation()
