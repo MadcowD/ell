@@ -1,4 +1,5 @@
 import ast
+import hashlib
 import importlib
 import os
 import black
@@ -158,3 +159,11 @@ def format_source(source: str) -> str:
     except:
         # If Black formatting fails, return the original source
         return source
+
+
+def ido(f):
+    return f.__ell_func__.__ell_hash__
+
+
+def hsh(x):
+    return hashlib.md5(x.encode()).hexdigest()

@@ -24,18 +24,20 @@ const MetricDisplay = ({ currentValue, previousValue, label, showTooltip = true 
   const [isHighlighted, setIsHighlighted] = React.useState(false);
   React.useEffect(() => {
     setIsHighlighted(true);
-    const timer = setTimeout(() => setIsHighlighted(false), 150);
+    // Reduce timeout from 150ms to 100ms
+    const timer = setTimeout(() => setIsHighlighted(false), 100);
     return () => clearTimeout(timer);
   }, [currentValue]);
 
   const content = (
     <div className="text-right min-w-[3rem]">
       <div className={`font-bold font-mono overflow-hidden`}>
-        <span className={`inline-block transition-all duration-100 ease-in-out ${isHighlighted ? `${trendColorClass} transform scale-105` : 'transform scale-100'}`}>
+        <span className={`inline-block transition-all duration-75 ease-in-out ${isHighlighted ? `${trendColorClass} transform scale-105` : 'transform scale-100'}`}>
           {currentValue.toFixed(2)}
         </span>
       </div>
-      <div className={`text-[10px] ${trendColorClass} whitespace-nowrap transition-opacity duration-300 ease-in-out ${isHighlighted ? 'opacity-100' : 'opacity-80'}`}>
+      {/* Reduce duration from 300ms to 150ms */}
+      <div className={`text-[10px] ${trendColorClass} whitespace-nowrap transition-opacity duration-150 ease-in-out ${isHighlighted ? 'opacity-100' : 'opacity-80'}`}>
         {trendIcon}{Math.abs(parseFloat(percentChange)).toFixed(1)}%
       </div>
     </div>

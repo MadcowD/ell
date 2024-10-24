@@ -61,6 +61,16 @@ const MetricGraphGrid = ({ evaluation, groupedRuns, onActiveIndexChange }) => {
       sharedConfig={{ 
         title: 'Evaluation Metrics', 
         options: {
+          animation: {
+            duration: 400 // Reduce from default 1000ms
+          },
+          transitions: {
+            active: {
+              animation: {
+                duration: 200 // Faster hover state transitions
+              }
+            }
+          },
           plugins: {
             title: { display: false },
             legend: { display: false },
