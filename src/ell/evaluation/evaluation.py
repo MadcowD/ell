@@ -12,34 +12,21 @@ from typing import (
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import uuid
 from ell.evaluation.results import _ResultDatapoint, EvaluationResults
+from ell.evaluation.serialization import write_evaluation
 from ell.evaluation.util import get_lmp_output
 from ell.types.studio import LMPType
-import openai
+
 from ell.evaluation.util import validate_callable_dict
 
-import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-from sqlmodel._compat import SQLModelConfig
-from ell.lmp._track import _track
 from ell.types.message import LMP
 import statistics
 from ell.util.closure_util import ido
 from ell.util.closure_util import hsh
 from ell.util.tqdm import tqdm
-import dill
 
 
 from ell.configurator import config
-
-from ell.types.studio.evaluations import (
-    EvaluationLabel,
-    SerializedEvaluation as SerializedEvaluation,
-    EvaluationLabeler,
-    EvaluationLabelerType,
-    SerializedEvaluationRun,
-    EvaluationResultDatapoint,
-    EvaluationRunLabelerSummary,
-)
 
 from ell.evaluation.results import *
 
@@ -68,92 +55,7 @@ class EvaluationRun(BaseModel):
     def invocation_ids(self) -> Optional[EvaluationResults[InvocationID]]:
         return self.results.invocation_ids
 
-    def write(self, evaluation_id: str):
-        if not config.store:
-            return
-
-        # Construct SerializedEvaluationRun
-        serialized_run = SerializedEvaluationRun(
-            evaluation_id=evaluation_id,
-            evaluated_lmp_id=ido(self.lmp),
-            api_params=self.api_params,
-            start_time=self.start_time,
-            end_time=self.end_time,
-            success=True,
-            error=None,
-        )
-        invocation_ids = self.results.invocation_ids
-
-        # Create EvaluationResultDatapoints
-        result_datapoints = []
-        for i, output in enumerate(self.results.outputs):
-            result_datapoint = EvaluationResultDatapoint(
-                invocation_being_labeled_id=ido(self.lmp),
-                evaluation_run_id=serialized_run.id,
-                invocation_ids=invocation_ids.outputs[i],
-            )
-
-            # Helper function to create labels
-            def create_labels(values_dict, labeler_type, invocation_ids_dict):
-                return [
-                    EvaluationLabel(
-                        labeled_datapoint_id=result_datapoint.id,
-                        labeler_id=EvaluationLabeler.generate_id(
-                            evaluation_id=evaluation_id, name=name, type=labeler_type
-                        ),
-                        label_invocation_id=invocation_ids_dict[name][i],
-                    )
-                    for name in values_dict
-                ]
-
-            # Create labels for metrics and annotations
-            result_datapoint.labels.extend(create_labels(
-                self.results.metrics, EvaluationLabelerType.METRIC, invocation_ids.metrics
-            ))
-            result_datapoint.labels.extend(create_labels(
-                self.results.annotations, EvaluationLabelerType.ANNOTATION, invocation_ids.annotations
-            ))
-
-            # Create criterion labels if present
-            if self.results.criterion is not None:
-                result_datapoint.labels.extend(create_labels(
-                    {"criterion": self.results.criterion},
-                    EvaluationLabelerType.CRITERION,
-                    {"criterion": invocation_ids.criterion}
-                ))
-
-            result_datapoints.append(result_datapoint)
-
-        serialized_run.results = result_datapoints
-
-        # Write summaries using a helper function
-        def create_summaries(data_dict, labeler_type):
-            return [
-                EvaluationRunLabelerSummary.from_labels(
-                    data=values,
-                    evaluation_run_id=id,
-                    evaluation_labeler_id=EvaluationLabeler.generate_id(
-                        evaluation_id=evaluation_id,
-                        name=name,
-                        type=labeler_type,
-                    ),
-                )
-                for name, values in data_dict.items()
-            ]
-
-        id = config.store.write_evaluation_run(serialized_run)
-
-        # Collect summaries for metrics, annotations, and criterion
-        summaries = create_summaries(self.results.metrics, EvaluationLabelerType.METRIC)
-        summaries += create_summaries(self.results.annotations, EvaluationLabelerType.ANNOTATION)
-        if self.results.criterion is not None:
-            summaries += create_summaries({"criterion": self.results.criterion}, EvaluationLabelerType.CRITERION)
-
-        config.store.write_evaluation_run_labeler_summaries(summaries)
-
-
 class Evaluation(BaseModel):
-
     model_config = ConfigDict(arbitrary_types_allowed=True)
     name: str
     dataset: Optional[Dataset] = Field(default=None)
@@ -173,7 +75,7 @@ class Evaluation(BaseModel):
     criterion: Optional[Criterion] = None
 
     default_api_params: Optional[Dict[str, Any]] = Field(default_factory=dict)
-    serialized: Optional[SerializedEvaluation] = Field(default=None)
+    has_serialized : bool = Field(default=False)
 
     id: Optional[str] = Field(default=None)
 
@@ -202,7 +104,7 @@ class Evaluation(BaseModel):
         elif callable(value) and not hasattr(value, "__ell_track__"):
             return function()(value)
         elif value is None:
-            return value
+            return value 
         else:
             raise ValueError(f"Expected dict, callable, or None, got {type(value)}")
 
@@ -216,73 +118,7 @@ class Evaluation(BaseModel):
     ) -> Annotations:
         return validate_callable_dict(annotations, "annotation")
 
-    def write(self, evaluation_run: EvaluationRun) -> None:
-        # Create a hash of the dataset and labelers
-        if not config.store:
-            return
-        if not self.serialized:
-            # Todo standardize this.
-            dataset_hash = hsh(str(dill.dumps(self.dataset) if self.dataset else str(self.n_evals)) + str(self.samples_per_datapoint))
-            metrics_ids = [ido(f) for f in self.metrics.values()]
-            annotation_ids = [ido(a) for a in self.annotations.values()]
-            criteiron_ids = [ido(self.criterion)] if self.criterion else []
-            
-            self.id = "evaluation-" + hsh(dataset_hash + "".join(sorted(metrics_ids) + sorted(annotation_ids) + criteiron_ids))
-
-            # get existing versions
-            existing_versions = config.store.get_eval_versions_by_name(self.name)
-            if any(v.id == self.id for v in existing_versions):
-                self.serialized = existing_versions[0]
-            else:
-                # TODO: Merge with other versioning code.
-                version_number = (
-                    max(
-                        itertools.chain(
-                            map(lambda x: x.version_number, existing_versions), [0]
-                        )
-                    )
-                    + 1
-                )
-
-                if config.autocommit:
-                    # TODO: Implement
-                    pass
-
-                # Create SerializedEvaluation
-                serialized_evaluation = SerializedEvaluation(
-                    id=self.id,
-                    name=self.name,
-                    dataset_hash=dataset_hash,
-                    n_evals=self.n_evals or len(self.dataset or []),
-                    version_number=version_number,
-                )
-
-                # Create EvaluationLabelers
-                def create_labelers(names, ids, labeler_type):
-                    return [
-                        EvaluationLabeler(
-                            name=name,
-                            type=labeler_type,
-                            evaluation_id=self.id,
-                            labeling_lmp_id=h,
-                        )
-                        for name, h in zip(names, ids)
-                    ]
-
-                labelers = (
-                    create_labelers(self.metrics.keys(), metrics_ids, EvaluationLabelerType.METRIC) +
-                    create_labelers(self.annotations.keys(), annotation_ids, EvaluationLabelerType.ANNOTATION) +
-                    (create_labelers(["criterion"], criteiron_ids, EvaluationLabelerType.CRITERION) if self.criterion else [])
-                )
-
-                # Add labelers to the serialized evaluation
-                serialized_evaluation.labelers = labelers
-                self.serialized = serialized_evaluation
-                config.store.write_evaluation(serialized_evaluation)
-
-        # Now serialize the evaluation run,
-        evaluation_run.write(evaluation_id=self.id)
-
+    
     # XXX: Dones't support partial params outside of the dataset like client??
     def run(
         self,
@@ -328,7 +164,6 @@ class Evaluation(BaseModel):
                 [],
             )
 
-        # we will try to run with n = samples_per_datapoint * n_evals first and if the api rejects n as a param then we need to do something will try the standard way with the thread pool executor.
 
         evaluation_run = EvaluationRun(
             lmp=lmp,
@@ -378,7 +213,7 @@ class Evaluation(BaseModel):
             # convert rowar results to evaluation results
             evaluation_run.results = EvaluationResults.from_rowar_results(rowar_results)
 
-            self.write(evaluation_run)
+            write_evaluation(self, evaluation_run)
 
             return evaluation_run
         finally:
@@ -413,6 +248,5 @@ class Evaluation(BaseModel):
             
 
         return [partial(process_rowar_results, output) for output in lmp_output]
-
 
 
