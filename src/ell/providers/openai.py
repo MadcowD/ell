@@ -123,7 +123,7 @@ try:
                 for _, message_stream in sorted(message_streams.items(), key=lambda x: x[0]):
                     text = "".join((choice.delta.content or "") for choice in message_stream)
                     messages.append(
-                        Message(role=role, 
+                        Message(role=role or "assistant",
                                 content=_lstr(content=text,origin_trace=origin_id)))
                     #XXX: Support streaming other types.
             else:
