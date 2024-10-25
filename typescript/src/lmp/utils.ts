@@ -1,9 +1,11 @@
 import * as sourceMapSupport from 'source-map-support'
-import { Kwargs } from "./types"
-import { config } from "../configurator"
-import { APICallResult } from "../provider"
-import { Message } from "../types/message"
+import { Kwargs } from './types'
+import { config } from '../configurator'
+import { Message } from '../types/message'
 import { callsites } from '../util/callsites'
+import * as logging from '../util/_logging'
+
+const logger = logging.getLogger('ell')
 
 export const getModelClient = async (args: Kwargs) => {
   if (args.client) {
@@ -13,17 +15,31 @@ export const getModelClient = async (args: Kwargs) => {
   return client
 }
 
-
 export const convertMultimodalResponseToLstr = (response: Message[]) => {
   if (response.length === 1 && response[0].content.length === 1 && response[0].content[0].text) {
     return response[0].content[0].text
   }
   return response
 }
-export function convertMultimodalResponseToString(response: APICallResult['response']): string | string[] {
-  return Array.isArray(response) ? response.map((x) => x.content[0].text) : response.content[0].text
-}
 
+export function convertMultimodalResponseToString(response: Message | Message[]): string | string[] {
+  if (Array.isArray(response)) {
+    return response.map((x) => {
+      const text = x.content[0].text
+      if (text) {
+        return text
+      }
+      logger.warn(`No text found in message: ${JSON.stringify(x)}`)
+      return ''
+    })
+  }
+  const text = response.content[0].text
+  if (text) {
+    return text
+  }
+  logger.warn(`No text found in message: ${JSON.stringify(response)}`)
+  return ''
+}
 
 export function getCallerFileLocation() {
   const callerSite = callsites()[2]
