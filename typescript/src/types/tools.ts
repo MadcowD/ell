@@ -49,28 +49,3 @@ export const toolFromZodFunction = <Args extends z.ZodTuple, Output extends z.Zo
   })
   return f
 }
-
-const mytool2 = toolFromZodFunction(
-  z
-    .function(
-      z.tuple([z.object({ hello: z.string() })]).describe('This is a test tool input'),
-      z.object({ world: z.string() }).describe('This is a test tool output')
-    )
-    .describe('This is a test tool'),
-
-  async (args) => {
-    return { world: 'world' }
-  }
-)
-
-const mytool = tool(
-  {
-    name: 'mytool',
-    input: z.object({ hello: z.string() }).describe('This is a test tool'),
-    output: z.object({ world: z.string() }).describe('This is a test tool'),
-    description: 'This is a test tool',
-  },
-  async (args) => {
-    return { world: 'world' }
-  }
-)
