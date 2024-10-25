@@ -114,6 +114,7 @@ class InvocationBase(SQLModel):
     completion_tokens: Optional[int] = Field(default=None)
     state_cache_key: Optional[str] = Field(default=None)
     created_at: datetime = UTCTimestampField(default=func.now(), nullable=False)
+    session_id: Optional[str] = Field(default=None)
     used_by_id: Optional[str] = Field(default=None, foreign_key="invocation.id", index=True)
     # global_vars and free_vars removed from here
 

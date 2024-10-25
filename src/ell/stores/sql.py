@@ -73,6 +73,10 @@ class SQLStore(ell.store.Store):
             session.commit()
             return None
         
+    def get_invocations_by_session_id(self, session_id: str) -> List[Invocation]:
+        with Session(self.engine) as session:
+            return self.get_invocations(session, lmp_filters={}, filters={"session_id": session_id})
+
     def get_cached_invocations(self, lmp_id :str, state_cache_key :str) -> List[Invocation]:
         with Session(self.engine) as session:
             return self.get_invocations(session, lmp_filters={"lmp_id": lmp_id}, filters={"state_cache_key": state_cache_key})

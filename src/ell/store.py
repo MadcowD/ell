@@ -53,6 +53,13 @@ class Store(ABC):
         pass
 
     @abstractmethod
+    def get_invocations_by_session_id(self, session_id: str) -> List[Invocation]:
+        """
+        Get all invocations for a given session ID.
+        """
+        pass
+
+    @abstractmethod
     def get_cached_invocations(self, lmp_id :str, state_cache_key :str) -> List[Invocation]:
         """
         Get cached invocations for a given LMP and state cache key.
