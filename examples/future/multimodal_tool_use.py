@@ -49,7 +49,7 @@ def get_ice_cream_flavors():
     return to_content_blocks([("1. Vanilla"), "2.", (generate_strawberry_image()), ("3. Coconut")])
 
 
-@ell.complex(model="claude-3-5-sonnet-20240620", tools=[get_user_name, get_ice_cream_flavors], max_tokens=1000)
+@ell.complex(model="claude-3-5-sonnet-20241022", tools=[get_user_name, get_ice_cream_flavors], max_tokens=1000)
 def f(message_history: list[ell.Message]) -> list[ell.Message]:
     return [
         ell.system(
