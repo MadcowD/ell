@@ -1,24 +1,17 @@
 from datetime import datetime, timedelta
-import json
 import os
-from typing import Any, Optional, Dict, List, Set, Union
-from pydantic import BaseModel
+from typing import Any, Optional, Dict, List, Set
 from sqlmodel import Session, SQLModel, create_engine, select
-import ell.store
-import cattrs
-import numpy as np
+import ell.stores.store
 from sqlalchemy.sql import text
-from ell.types import InvocationTrace, SerializedLMP, Invocation, InvocationContents
-from ell.types._lstr import _lstr
-from sqlalchemy import or_, func, and_, extract, FromClause
-from sqlalchemy.types import TypeDecorator, VARCHAR
-from ell.types.studio import SerializedLMPUses, utc_now
+from ell.stores.studio import InvocationTrace, SerializedLMP, Invocation
+from sqlalchemy import func, and_
 from ell.util.serialization import pydantic_ltype_aware_cattr
 import gzip
 import json
 
-class SQLStore(ell.store.Store):
-    def __init__(self, db_uri: str, blob_store: Optional[ell.store.BlobStore] = None):
+class SQLStore(ell.stores.store.Store):
+    def __init__(self, db_uri: str, blob_store: Optional[ell.stores.store.BlobStore] = None):
         self.engine = create_engine(db_uri,
                                     json_serializer=lambda obj: json.dumps(pydantic_ltype_aware_cattr.unstructure(obj), 
                                      sort_keys=True, default=repr, ensure_ascii=False))
@@ -218,7 +211,7 @@ class SQLiteStore(SQLStore):
         blob_store = SQLBlobStore(db_dir)
         super().__init__(f'sqlite:///{db_path}', blob_store=blob_store)
 
-class SQLBlobStore(ell.store.BlobStore):
+class SQLBlobStore(ell.stores.store.BlobStore):
     def __init__(self, db_dir: str):
         self.db_dir = db_dir
 

@@ -5,7 +5,7 @@ import logging
 from contextlib import contextmanager
 import threading
 from pydantic import BaseModel, ConfigDict, Field
-from ell.store import Store
+from ell.stores.store import Store
 from ell.provider import Provider
 from dataclasses import dataclass, field
 
