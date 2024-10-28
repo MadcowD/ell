@@ -25,13 +25,6 @@ def write_evaluation(evaluation, evaluation_run) -> None:
         return
     if not evaluation.has_serialized:
         # Todo standardize this.
-        dataset_hash = hsh(str(dill.dumps(evaluation.dataset) if evaluation.dataset else str(evaluation.n_evals)) + str(evaluation.samples_per_datapoint))
-        metrics_ids = [ido(f) for f in evaluation.metrics.values()]
-        annotation_ids = [ido(a) for a in evaluation.annotations.values()]
-        criteiron_ids = [ido(evaluation.criterion)] if evaluation.criterion else []
-        
-        evaluation.id = "evaluation-" + hsh(dataset_hash + "".join(sorted(metrics_ids) + sorted(annotation_ids) + criteiron_ids))
-
         # get existing versions
         existing_versions = config.store.get_eval_versions_by_name(evaluation.name)
         if any(v.id == evaluation.id for v in existing_versions):

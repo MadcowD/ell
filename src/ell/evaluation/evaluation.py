@@ -21,10 +21,11 @@ from ell.types.message import LMP
 from ell.util.tqdm import tqdm
 import inspect
 
-from ell.configurator import config
+from ell.util.closure_util import ido
+from ell.util.closure_util import hsh
 
 from ell.evaluation.results import *
-
+import dill
 
 class EvaluationRun(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -73,6 +74,16 @@ class Evaluation(BaseModel):
     has_serialized : bool = Field(default=False)
 
     id: Optional[str] = Field(default=None)
+    @field_validator("id")
+    def construct_id(self, v, values):
+        # XXX: Figure this out.
+        dataset_hash = hsh(str(dill.dumps(evaluation.dataset) if evaluation.dataset else str(evaluation.n_evals)) + str(evaluation.samples_per_datapoint))
+        metrics_ids = [ido(f) for f in evaluation.metrics.values()]
+        annotation_ids = [ido(a) for a in evaluation.annotations.values()]
+        criteiron_ids = [ido(evaluation.criterion)] if evaluation.criterion else []
+        
+        return  "evaluation-" + hsh(dataset_hash + "".join(sorted(metrics_ids) + sorted(annotation_ids) + criteiron_ids))
+        
 
     # XXX: Dones't support partial params outside of the dataset like client??
     def run(
