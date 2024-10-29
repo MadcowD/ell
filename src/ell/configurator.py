@@ -1,13 +1,18 @@
 from functools import lru_cache, wraps
-from typing import Dict, Any, Optional, Tuple, Union, Type
+from typing import Dict, Any, Optional, Tuple, Union, Type, TYPE_CHECKING
 import openai
 import logging
 from contextlib import contextmanager
 import threading
 from pydantic import BaseModel, ConfigDict, Field
-from ell.stores.store import Store
 from ell.provider import Provider
 from dataclasses import dataclass, field
+
+if TYPE_CHECKING:
+    from ell.stores import Store
+else:
+    Store = None
+
 
 _config_logger = logging.getLogger(__name__)
 
@@ -175,8 +180,11 @@ def init(
     config.lazy_versioning = lazy_versioning
 
     if isinstance(store, str):
-        from ell.stores.sql import SQLiteStore
-        config.store = SQLiteStore(store)
+        try:
+            from ell.stores.sql import SQLiteStore
+            config.store = SQLiteStore(store)
+        except ImportError:
+            raise ValueError("The SQLLite store  could not be imported. Did you install ell with storage support?")
     else:
         config.store = store
     config.autocommit = autocommit or config.autocommit

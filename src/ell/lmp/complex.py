@@ -4,7 +4,7 @@ from ell.provider import EllCallParams
 from ell.types._lstr import _lstr
 from ell.types import Message, ContentBlock
 from ell.types.message import LMP, MessageOrDict
-from ell.stores.studio import LMPType
+from ell.types.lmp import LMPType
 from ell.util._warnings import _no_api_key_warning, _warnings
 from ell.util.verbosity import model_usage_logger_pre
 

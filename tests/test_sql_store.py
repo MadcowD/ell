@@ -1,9 +1,9 @@
 import pytest
-from sqlmodel import Session, select
 from ell.stores.sql import SQLStore, SerializedLMP
+from sqlmodel import Session, select
 from sqlalchemy import Engine, create_engine, func
 
-from ell.stores.studio import LMPType
+from ell.types.lmp import LMPType
 from ell.stores.studio import utc_now
 
 @pytest.fixture
