@@ -134,3 +134,13 @@ def test_content_block_audio_validation():
     
     with pytest.raises(ValueError):
         ContentBlock.model_validate(ContentBlock(audio=invalid_audio))
+
+def test_message_json_serialization():
+    original_message = Message(role='assistant', content='Hello, this is a test message.')
+    
+    message_json = original_message.model_dump_json()
+    loaded_message = Message.model_validate_json(message_json)
+
+    assert loaded_message.role == original_message.role
+    assert len(loaded_message.content) == len(original_message.content)
+    assert str(loaded_message.content[0].text) == str(original_message.content[0].text)
