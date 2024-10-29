@@ -54,12 +54,8 @@ export function CodeSection({
     };
 
     return (
-      <div className="code-section mb-4">
-        <div onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            setShowCode(!showCode);
-          }
-        }}
+      <div className="code-section mb-4" onClick={() => setShowCode(!showCode)}>
+        <div 
           className="section-header flex items-center justify-between w-full text-sm text-gray-300 
           hover:text-white py-2 px-4 rounded-t-md bg-gray-800 hover:bg-gray-700 transition-colors 
           duration-200 cursor-pointer">
@@ -70,7 +66,7 @@ export function CodeSection({
             {showCode ? <FiChevronDown className="mr-2" /> : <FiChevronRight className="mr-2" />}
             {title}
           </button>
-          <div className="flex items-center">
+          <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
             {enableFormatToggle && (
               <button
                 onClick={toggleFormat}
