@@ -8,6 +8,7 @@ from ell.evaluation.results import _ResultDatapoint
 from ell.evaluation.util import needs_store
 from ell.lmp._track import serialize_lmp
 from ell.store import Store
+from ell.util._warnings import _autocommit_warning
 from ell.util.closure_util import ido
 from ell.util.closure_util import hsh
 import ell.util.closure
@@ -43,16 +44,20 @@ def write_evaluation(evaluation) -> None:
             evaluation.has_serialized = True
         else: 
             # TODO: Merge with other versioning code.
-            version_number = (
+            version_number, latest_version = (
                 max(
                     itertools.chain(
-                        map(lambda x: x.version_number, existing_versions), [-1]
-                    )
+                        map(lambda x: (x.version_number, x), existing_versions), 
+                        [(-1, None)]
+                    ),
+                    key=lambda x: x[0]
                 )
-            ) +1 
+            )
+            version_number += 1
+            commit_message = None
             if config.autocommit:
-                # TODO: Implement
-                pass
+                commit_message = generate_commit_message(evaluation, metrics_ids, annotation_ids, criteiron_ids, latest_version)
+                
 
             # Create SerializedEvaluation
             serialized_evaluation = SerializedEvaluation(
@@ -60,6 +65,7 @@ def write_evaluation(evaluation) -> None:
                 name=evaluation.name,
                 dataset_hash=dataset_hash,
                 n_evals=evaluation.n_evals or len(evaluation.dataset or []),
+                commit_message=commit_message,
                 version_number=version_number,
             )
 
@@ -85,6 +91,47 @@ def write_evaluation(evaluation) -> None:
             serialized_evaluation.labelers = labelers
             evaluation.has_serialized = True
             cast(Store, config.store).write_evaluation(serialized_evaluation) 
+
+def generate_commit_message(evaluation, metrics_ids, annotation_ids, criteiron_ids, latest_version):
+    # XXX
+    if not _autocommit_warning():
+        from ell.util.differ import write_commit_message_for_diff
+                    # Get source code for all metrics, annotations and criterion
+                    # In this case we actually dont want to automatically generate a commmit message using gpt-4o we can just detect a cahgne inthe lablers and use that as the primary mechanism.
+                    # Get labelers from latest version if it exists
+        if latest_version:
+            latest_labelers = latest_version.labelers
+                        
+                        # Group labelers by type
+            latest_metrics = {l.name: l.labeling_lmp_id for l in latest_labelers if l.type == EvaluationLabelerType.METRIC}
+            latest_annotations = {l.name: l.labeling_lmp_id for l in latest_labelers if l.type == EvaluationLabelerType.ANNOTATION}
+            latest_criterion = next((l.labeling_lmp_id for l in latest_labelers if l.type == EvaluationLabelerType.CRITERION), None)
+
+                        # Compare with current labelers
+            metrics_changed = {name: id for name, id in zip(evaluation.metrics.keys(), metrics_ids) 
+                                        if name not in latest_metrics or latest_metrics[name] != id}
+            annotations_changed = {name: id for name, id in zip(evaluation.annotations.keys(), annotation_ids)
+                                            if name not in latest_annotations or latest_annotations[name] != id}
+            criterion_changed = criteiron_ids[0] if criteiron_ids and (not latest_criterion or latest_criterion != criteiron_ids[0]) else None
+
+            # Generate commit message if there are changes
+            if metrics_changed or annotations_changed or criterion_changed:
+                changes = []
+                summary_parts = []
+                if metrics_changed:
+                    changes.append(f"Changed metrics: {', '.join(metrics_changed.keys())}")
+                    summary_parts.append(f"{len(metrics_changed)} metrics")
+                if annotations_changed:
+                    changes.append(f"Changed annotations: {', '.join(annotations_changed.keys())}")
+                    summary_parts.append(f"{len(annotations_changed)} annotations") 
+                if criterion_changed:
+                    changes.append("Changed criterion")
+                    summary_parts.append("criterion")
+                            
+                summary = f"Updated {', '.join(summary_parts)}"
+                details = " | ".join(changes)
+                commit_message = f"{summary}\n\n{details}"
+    return commit_message
 
 
 @needs_store

@@ -28,7 +28,7 @@ from ell.configurator import config
 from ell.evaluation.results import *
 import dill
 
-class EvaluationRun(BaseModel):
+class EvaluationRun(BaseModel):  
     model_config = ConfigDict(arbitrary_types_allowed=True)
     results: EvaluationResults = Field(default_factory=EvaluationResults)
     dataset: Optional[Dataset] = Field(default=None)
@@ -80,7 +80,6 @@ class Evaluation(BaseModel):
     id: Optional[str] = Field(default=None)
 
 
-    # XXX: Dones't support partial params outside of the dataset like client??
     def run(
         self,
         lmp,
