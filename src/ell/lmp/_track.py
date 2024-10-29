@@ -53,8 +53,10 @@ def _track(
     if not hasattr(func_to_track, "_has_serialized_lmp"):
         func_to_track._has_serialized_lmp = False
 
+    func_to_track.__ell_force_closure__ = lambda: ell.util.closure.lexically_closured_source(func_to_track, forced_dependencies)
     if not hasattr(func_to_track, "__ell_hash__") and not config.lazy_versioning:
-        ell.util.closure.lexically_closured_source(func_to_track, forced_dependencies)
+        func_to_track.__ell_force_closure__()
+    
 
     @wraps(func_to_track)
     def tracked_func(*fn_args, _get_invocation_id=False, **fn_kwargs) -> str:
@@ -155,7 +157,7 @@ def _track(
                 ell.util.closure.lexically_closured_source(
                     func_to_track, forced_dependencies
                 )
-            _serialize_lmp(func_to_track)
+            serialize_lmp(func_to_track)
 
             if not state_cache_key:
                 state_cache_key = compute_state_cache_key(
@@ -194,10 +196,11 @@ def _track(
     return tracked_func
 
 
-def _serialize_lmp(func):
+# XXX: Move this to a verisoning moduel.
+def serialize_lmp(func):
     # Serialize deptjh first all fo the used lmps.
     for f in func.__ell_uses__:
-        _serialize_lmp(f)
+        serialize_lmp(f)
 
     if getattr(func, "_has_serialized_lmp", False):
         return
@@ -250,6 +253,7 @@ def _serialize_lmp(func):
             serialized_lmp, [f.__ell_hash__ for f in func.__ell_uses__]
         )
     func._has_serialized_lmp = True
+    return func
 
 
 def _write_invocation(

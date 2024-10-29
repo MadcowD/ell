@@ -5,7 +5,7 @@ from typing import Any, Optional, Dict, List, Set, Union
 from ell.types._lstr import _lstr
 from ell.types import SerializedLMP, Invocation
 from ell.types.message import InvocableLM
-from ell.types.studio.evaluations import EvaluationRunLabelerSummary, SerializedEvaluation, SerializedEvaluationRun
+from ell.types.studio.evaluations import EvaluationResultDatapoint, EvaluationRunLabelerSummary, SerializedEvaluation, SerializedEvaluationRun
 # from ell.types.studio import SerializedEvaluation, SerializedEvaluationRun
 
 class BlobStore(ABC):
@@ -72,6 +72,20 @@ class Store(ABC):
 
         :param evaluation_run: EvaluationRun object containing all evaluation run details.
         :return: Optional return value.
+        """
+        pass
+
+    @abstractmethod
+    def write_evaluation_run_intermediate(self, row_result : EvaluationResultDatapoint) -> None:
+        """
+        Write an evaluation run intermediate result to the storage.
+        """
+        pass
+
+    @abstractmethod
+    def write_evaluation_run_end(self, evaluation_run_id : str, successful : bool, end_time : datetime, error : Optional[str], summaries: List[EvaluationRunLabelerSummary]) -> None:
+        """
+        Write an evaluation run end to the storage.
         """
         pass
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import partial
 from typing import (
     Any,
@@ -10,7 +10,7 @@ from typing import (
 )
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from ell.evaluation.results import _ResultDatapoint, EvaluationResults
-from ell.evaluation.serialization import write_evaluation
+from ell.evaluation.serialization import write_evaluation, write_evaluation_run_end, write_evaluation_run_intermediate, write_evaluation_run_start
 from ell.evaluation.util import get_lmp_output
 from ell.types.studio import LMPType
 
@@ -24,6 +24,7 @@ import inspect
 from ell.util.closure_util import ido
 from ell.util.closure_util import hsh
 
+from ell.configurator import config
 from ell.evaluation.results import *
 import dill
 
@@ -36,8 +37,11 @@ class EvaluationRun(BaseModel):
     lmp: Optional[LMP] = Field(default=None)
 
     api_params: Dict[str, Any] = Field(default_factory=dict)
-    start_time: datetime = Field(default_factory=datetime.now)
+    start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
+    id : Optional[str] = None
+    success: Optional[bool] = None
+    error: Optional[str] = None
 
     @property
     def inputs(self) -> List[Any]:
@@ -74,16 +78,7 @@ class Evaluation(BaseModel):
     has_serialized : bool = Field(default=False)
 
     id: Optional[str] = Field(default=None)
-    @field_validator("id")
-    def construct_id(self, v, values):
-        # XXX: Figure this out.
-        dataset_hash = hsh(str(dill.dumps(evaluation.dataset) if evaluation.dataset else str(evaluation.n_evals)) + str(evaluation.samples_per_datapoint))
-        metrics_ids = [ido(f) for f in evaluation.metrics.values()]
-        annotation_ids = [ido(a) for a in evaluation.annotations.values()]
-        criteiron_ids = [ido(evaluation.criterion)] if evaluation.criterion else []
-        
-        return  "evaluation-" + hsh(dataset_hash + "".join(sorted(metrics_ids) + sorted(annotation_ids) + criteiron_ids))
-        
+
 
     # XXX: Dones't support partial params outside of the dataset like client??
     def run(
@@ -100,16 +95,22 @@ class Evaluation(BaseModel):
         required_params, run_api_params, lmp_params = self.prepare_run_params(lmp, api_params, additional_lmp_params)
         dataset = self.prepare_run_dataset(use_api_batching, run_api_params)
 
+        assert len(dataset) > 0, "Dataset must contain at least one datapoint"
+
         evaluation_run = EvaluationRun(
             lmp=lmp,
             dataset=self.dataset,
             n_evals=self.n_evals,
             samples_per_datapoint=self.samples_per_datapoint,
             api_params=run_api_params,
-            start_time=datetime.now(),
+            start_time=datetime.now(timezone.utc),
         )
         original_verbose = config.verbose
         config.verbose = verbose
+        rowar_results = []
+        
+        write_evaluation(self)
+        evaluation_run.id = write_evaluation_run_start(self, evaluation_run)
         try:
             with ThreadPoolExecutor(max_workers=n_workers) as executor:
                 output_futures = [
@@ -129,8 +130,13 @@ class Evaluation(BaseModel):
                     desc=f"{self.name} outputs",
                 ):
                     get_outputs = future.result()
-                    metric_futures.extend([executor.submit(o) for o in get_outputs])
-                rowar_results = []
+                    import time; time.sleep(1.0)
+                    def written_result(o):
+                        write_evaluation_run_intermediate(self, evaluation_run, (res := o()))
+                        return res
+                
+                    metric_futures.extend([executor.submit(written_result, o) for o in get_outputs])
+
                 for result_future in (
                     pbar := tqdm(
                         as_completed(metric_futures),
@@ -138,21 +144,24 @@ class Evaluation(BaseModel):
                         desc=f"{self.name} results",
                     )
                 ):
-                    rowar_results.append(result_future.result())
+                    # We write the evaluation after the first datapoint.
+                    rowar_results.append((res :=result_future.result()))
                     pbar.set_description(
                         f"{self.name} (last={str(rowar_results[-1].output)[:10]})"
                     )
 
-            evaluation_run.end_time = datetime.now()
+            evaluation_run.end_time = datetime.now(timezone.utc)
+            evaluation_run.success = True
 
-            # convert rowar results to evaluation results
+            # Still want to compute metrics.
             evaluation_run.results = EvaluationResults.from_rowar_results(rowar_results)
-
-            write_evaluation(self, evaluation_run)
+            write_evaluation_run_end(self, evaluation_run)
 
             return evaluation_run
+            # TODO: add error handling and unsccessful runs.
         finally:
             config.verbose = original_verbose
+
 
     def _process_single(
         self,
@@ -217,8 +226,7 @@ class Evaluation(BaseModel):
                 [
                     [data_point] * self.samples_per_datapoint * (self.n_evals or 1)
                     for data_point in dataset
-                ],
-                [],
+                ], []
             )
             
         return dataset
@@ -239,7 +247,7 @@ class Evaluation(BaseModel):
         if isinstance(value, dict):
             return {
                 k: (
-                    function(type=LMPType.LABELR)(v)
+                    function(type=LMPType.LABELER)(v)
                     if callable(v) and not hasattr(v, "__ell_track__")
                     else v
                 )

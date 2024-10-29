@@ -1,4 +1,6 @@
+from functools import wraps
 from ell.evaluation.results import Any, Callable, Datapoint, Dict, List
+from ell.configurator import config
 
 from typing import Any, Dict, List, Union
 
@@ -51,3 +53,12 @@ def validate_callable_dict(
         raise ValueError(
             f"{item_type}s must be either a list of callables or a dictionary, got {type(items)}"
         )
+
+
+def needs_store(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not config.store:
+            return
+        return f(*args, **kwargs)
+    return wrapper

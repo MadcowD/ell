@@ -16,6 +16,7 @@ from sqlalchemy.types import TypeDecorator, VARCHAR
 from ell.types.studio import SerializedLMPUses, utc_now
 from ell.types.studio.evaluations import (
     EvaluationLabeler,
+    EvaluationResultDatapoint,
     EvaluationRunLabelerSummary,
     SerializedEvaluation,
     SerializedEvaluationRun,
@@ -162,6 +163,24 @@ class SQLStore(ell.store.Store):
             session.add(evaluation_run)
             session.commit()
             return evaluation_run.id
+        
+    def write_evaluation_run_intermediate(self, row_result : EvaluationResultDatapoint) -> None:
+        # add a new result datapoint        
+        with Session(self.engine) as session:
+            session.add(row_result)
+            session.commit()
+
+    def write_evaluation_run_end(self, evaluation_run_id : str, success : bool, end_time : datetime, error : Optional[str], summaries: List[EvaluationRunLabelerSummary]) -> None:
+        # Update hte evaluation run adn add summaries to it
+        with Session(self.engine) as session:
+            evaluation_run = session.exec(select(SerializedEvaluationRun).where(SerializedEvaluationRun.id == evaluation_run_id)).first()
+            assert evaluation_run is not None, "Evaluation run must exist to write end."
+            evaluation_run.success = success
+            evaluation_run.end_time = end_time
+            evaluation_run.error = error
+            evaluation_run.labeler_summaries.extend(summaries)
+            session.add(evaluation_run)
+            session.commit()
 
     def write_evaluation_run_labeler_summaries(
         self, summaries: List[EvaluationRunLabelerSummary]

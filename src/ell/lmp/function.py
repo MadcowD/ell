@@ -5,7 +5,7 @@ from ell.lmp._track import _track
 from ell.types.studio import LMPType
 from ell.util.verbosity import model_usage_logger_pre
 
-def function(*, exempt_from_tracking: bool = False, _exempt_from_logging: bool = False, lmp_type = LMPType.FUNCTION, **function_kwargs):
+def function(*, exempt_from_tracking: bool = False, _exempt_from_logging: bool = False, type = LMPType.FUNCTION, **function_kwargs):
     def function_decorator(fn: Callable[..., Any]):
         
         @wraps(fn)
@@ -19,7 +19,7 @@ def function(*, exempt_from_tracking: bool = False, _exempt_from_logging: bool =
             return result, {}, {}
 
         wrapper.__ell_func__ = fn
-        wrapper.__ell_type__ = lmp_type
+        wrapper.__ell_type__ = type
         wrapper.__ell_exempt_from_tracking = exempt_from_tracking
 
         if exempt_from_tracking:

@@ -202,7 +202,7 @@ class SerializedEvaluationRunBase(SQLModel):
     api_params: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     start_time: datetime = UTCTimestampField()
     end_time: Optional[datetime] = UTCTimestampField(default=None)
-    success: bool 
+    success: Optional[bool] = Field(default=None)
     error: Optional[str] = Field(default=None)
 
 class SerializedEvaluationRun(SerializedEvaluationRunBase, table=True):

@@ -63,7 +63,7 @@ def UTCTimestampField(index: bool = False, **kwargs: Any):
 class LMPType(str, enum.Enum):
     LM = "LM"
     TOOL = "TOOL"
-    LABELR = "LABELR"
+    LABELER = "LABELER"
     FUNCTION = "FUNCTION"
     OTHER = "OTHER"
 

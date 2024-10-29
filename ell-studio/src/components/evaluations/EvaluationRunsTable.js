@@ -5,6 +5,7 @@ import HierarchicalTable from '../HierarchicalTable';
 import { Card } from '../common/Card';
 import { getTimeAgo } from '../../utils/lmpUtils';
 import VersionBadge from '../VersionBadge';
+import { Spinner } from '../common/Spinner';
 
 const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSelectRun, currentlySelectedRun, activeIndex }) => {
   const navigate = useNavigate();
@@ -19,8 +20,8 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
       id: run.id,
       name: run.evaluated_lmp.name,
       version: run.evaluated_lmp.version_number + 1,
-      created_at: new Date(run.end_time),
-      runIndex: index, // Add this line to keep track of the run's index
+      created_at: run.end_time ? new Date(run.end_time) : null,
+      runIndex: index,
     }));
   }, [runs]);
 
@@ -32,9 +33,15 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
       key: summary.evaluation_labeler.id,
       render: (item) => {
         const metricSummary = item.labeler_summaries.find(s => s.evaluation_labeler_id === summary.evaluation_labeler_id);
+        const isRunning = !item.end_time && item.success === null;
+
         return (
           <div className="font-mono text-sm font-semibold">
-            {metricSummary ? metricSummary.data.mean.toFixed(2) : 'N/A'}
+            {isRunning ? (
+              <Spinner size="sm" />
+            ) : (
+              metricSummary ? metricSummary.data.mean.toFixed(2) : 'N/A'
+            )}
           </div>
         );
       },
@@ -82,10 +89,17 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
     { 
         header: 'Finished', 
         key: 'created_at', 
-        render: (item) => <span className="text-gray-400">{getTimeAgo(item.created_at)}</span>, 
+        render: (item) => {
+          const isRunning = !item.end_time && item.success === null;
+          return (
+            <span className="text-gray-400">
+              {isRunning ? 'Running...' : getTimeAgo(item.created_at)}
+            </span>
+          );
+        }, 
         maxWidth: 150,
         sortable: true
-      },
+    },
   ];
 
   const initialSortConfig = { key: 'created_at', direction: 'desc' };
