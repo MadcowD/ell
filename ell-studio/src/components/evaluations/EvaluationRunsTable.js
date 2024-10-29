@@ -6,6 +6,7 @@ import { Card } from '../common/Card';
 import { getTimeAgo } from '../../utils/lmpUtils';
 import VersionBadge from '../VersionBadge';
 import { Spinner } from '../common/Spinner';
+import { FiCheckCircle, FiXCircle } from 'react-icons/fi';
 
 const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSelectRun, currentlySelectedRun, activeIndex }) => {
   const navigate = useNavigate();
@@ -50,6 +51,24 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
     }));
   };
 
+  const statusColumn = {
+    header: '',
+    key: 'success',
+    render: (item) => {
+      const isRunning = !item.end_time && item.success === null;
+      
+      if (isRunning) {
+        return <Spinner size="sm" />;
+      }
+      
+      return item.success ? (
+        <FiCheckCircle className="text-emerald-400 w-5 h-5" />
+      ) : (
+        <FiXCircle className="text-rose-400 w-5 h-5" />
+      );
+    }
+  };
+
   const columns = [
     { 
       header: 'LMP', 
@@ -84,7 +103,6 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
       maxWidth: 150,
       sortable: true
     },
-
     ...getMetricColumns(),
     { 
         header: 'Finished', 
@@ -131,6 +149,8 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
       pageSize={pageSize}
       hasNextPage={hasNextPage}
       links={[]}
+      showHierarchical={false}
+      statusColumn={statusColumn}
     />
   );
 };
