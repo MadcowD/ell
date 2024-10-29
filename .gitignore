@@ -311,3 +311,4 @@ dist
 static/
 *.db-shm
 *.db-wal
+.aider*

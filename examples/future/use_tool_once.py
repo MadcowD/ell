@@ -21,7 +21,7 @@ def get_html_content(
     return soup.get_text()[:100]
 
 
-@ell.complex(model="claude-3-5-sonnet-20240620", tools=[get_html_content], max_tokens=200)
+@ell.complex(model="claude-3-5-sonnet-20241022", tools=[get_html_content], max_tokens=200)
 def summarize_website(website :str) -> str:
     """You are an agent that can summarize the contents of a website."""
     return f"Tell me whats on {website}"
