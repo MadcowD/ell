@@ -32,7 +32,6 @@ def write_evaluation(evaluation) -> None:
     
     if not evaluation.has_serialized:
         dataset_hash = hsh(str(dill.dumps(evaluation.dataset) if evaluation.dataset else str(evaluation.n_evals)) + str(evaluation.samples_per_datapoint))
-        
         metrics_ids = [ido((f)) for f in evaluation.metrics.values()]
         annotation_ids = [ido((a)) for a in evaluation.annotations.values()]
         criteiron_ids = [ido((evaluation.criterion))] if evaluation.criterion else []
@@ -54,9 +53,8 @@ def write_evaluation(evaluation) -> None:
                 )
             )
             version_number += 1
+            # Is updated at the end of the evaluation.
             commit_message = None
-            if config.autocommit:
-                commit_message = generate_commit_message(evaluation, metrics_ids, annotation_ids, criteiron_ids, latest_version)
                 
             # Create SerializedEvaluation
             serialized_evaluation = SerializedEvaluation(
@@ -83,48 +81,6 @@ def write_evaluation(evaluation) -> None:
             serialized_evaluation.labelers = labelers
             evaluation.has_serialized = True
             cast(Store, config.store).write_evaluation(serialized_evaluation) 
-
-def generate_commit_message(evaluation, metrics_ids, annotation_ids, criteiron_ids, latest_version):
-    return None
-    # XXX
-    if not _autocommit_warning():
-        from ell.util.differ import write_commit_message_for_diff
-                    # Get source code for all metrics, annotations and criterion
-                    # In this case we actually dont want to automatically generate a commmit message using gpt-4o we can just detect a cahgne inthe lablers and use that as the primary mechanism.
-                    # Get labelers from latest version if it exists
-        if latest_version:
-            latest_labelers = latest_version.labelers
-                        
-                        # Group labelers by type
-            latest_metrics = {l.name: l.labeling_lmp_id for l in latest_labelers if l.type == EvaluationLabelerType.METRIC}
-            latest_annotations = {l.name: l.labeling_lmp_id for l in latest_labelers if l.type == EvaluationLabelerType.ANNOTATION}
-            latest_criterion = next((l.labeling_lmp_id for l in latest_labelers if l.type == EvaluationLabelerType.CRITERION), None)
-
-                        # Compare with current labelers
-            metrics_changed = {name: id for name, id in zip(evaluation.metrics.keys(), metrics_ids) 
-                                        if name not in latest_metrics or latest_metrics[name] != id}
-            annotations_changed = {name: id for name, id in zip(evaluation.annotations.keys(), annotation_ids)
-                                            if name not in latest_annotations or latest_annotations[name] != id}
-            criterion_changed = criteiron_ids[0] if criteiron_ids and (not latest_criterion or latest_criterion != criteiron_ids[0]) else None
-
-            # Generate commit message if there are changes
-            if metrics_changed or annotations_changed or criterion_changed:
-                changes = []
-                summary_parts = []
-                if metrics_changed:
-                    changes.append(f"Changed metrics: {', '.join(metrics_changed.keys())}")
-                    summary_parts.append(f"{len(metrics_changed)} metrics")
-                if annotations_changed:
-                    changes.append(f"Changed annotations: {', '.join(annotations_changed.keys())}")
-                    summary_parts.append(f"{len(annotations_changed)} annotations") 
-                if criterion_changed:
-                    changes.append("Changed criterion")
-                    summary_parts.append("criterion")
-                            
-                summary = f"Updated {', '.join(summary_parts)}"
-                details = " | ".join(changes)
-        commit_message = f"{summary}\n\n{details}"
-        return commit_message
 
 
 @needs_store
@@ -160,6 +116,12 @@ def write_evaluation_run_intermediate(evaluation, evaluation_run, row_result : _
     
     cast(Store, config.store).write_evaluation_run_intermediate(result_datapoint)
 
+
+def generate_commit_message(evaluation, latest_version):
+    # TODO: Check the source code of al lthe metrics and see waht changed. Ideally we should generate the commit message based on the commit messages of all the metrics at the end of the evaluation.
+    pass
+
+
 @needs_store
 def write_evaluation_run_end(evaluation, evaluation_run) -> None:
     summaries = [
@@ -176,3 +138,4 @@ def write_evaluation_run_end(evaluation, evaluation_run) -> None:
     ]
 
     cast(Store, config.store).write_evaluation_run_end(evaluation_run.id, evaluation_run.success, evaluation_run.end_time, evaluation_run.error, summaries)
+
