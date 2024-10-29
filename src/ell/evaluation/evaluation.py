@@ -57,19 +57,7 @@ class EvaluationRun:
         return self.results.invocation_ids
 
 
-
-
-
-class Evaluation:
-    @property
-    def metrics(self) -> Dict[str, Callable]: return {l.name: l.label for l in self.labelers if l.type == EvaluationLabelerType.METRIC}
-
-    @property 
-    def annotations(self) -> Dict[str, Callable]: return {l.name: l.label for l in self.labelers if l.type == EvaluationLabelerType.ANNOTATION}
-
-    @property
-    def criterion(self) -> Optional[Callable]: return next((l.label for l in self.labelers if l.type == EvaluationLabelerType.CRITERION), None)
-
+class Evaluation(LabelListMixin):
     def __init__(self, name: str, *, metrics=None, annotations=None, criterion=None, 
                  dataset=None, n_evals=None, samples_per_datapoint=1,
                  default_api_params=None, has_serialized=False, id=None):
@@ -78,7 +66,7 @@ class Evaluation:
         self.dataset = dataset
         self.n_evals = n_evals
         self.samples_per_datapoint = samples_per_datapoint
-        self.labelers: List[Labeler] = []
+        self.labels: List[Labeler] = []
         self.default_api_params = default_api_params or {}
         self.has_serialized = has_serialized
         self.id = id
@@ -114,19 +102,19 @@ class Evaluation:
         criterion = wrap_callable(criterion)
 
         # Convert to labelers
-        self.labelers = []
+        self.labels = []
         if metrics:
-            self.labelers.extend([
+            self.labels.extend([
                 Labeler(name=name, type=EvaluationLabelerType.METRIC, label=labeler)
                 for name, labeler in metrics.items()
             ])
         if annotations:
-            self.labelers.extend([
+            self.labels.extend([
                 Labeler(name=name, type=EvaluationLabelerType.ANNOTATION, label=labeler)
                 for name, labeler in annotations.items()
             ])
         if criterion:
-            self.labelers.append(
+            self.labels.append(
                 Labeler(name="criterion", type=EvaluationLabelerType.CRITERION, label=criterion)
             )
 
@@ -230,7 +218,7 @@ class Evaluation:
                 output=output,
                 labels=[
                     Label(name=l.name, type=l.type, label=(l.label(data_point, output[0], _get_invocation_id=True)))
-                    for l in self.labelers
+                    for l in self.labels
                 ]
             )
             

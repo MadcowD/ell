@@ -1,6 +1,6 @@
 # A bit of rationale: While it's OOP to put serialization related code in the evaluation and evaliuation run classes it greatly muddies the interface for the purposes of downstream implementaitons therefore much of the bridge between evaluation <-> ell studio should be implemented in this file.
 
-# XXX: we could now move this to the store itself if we so thought. With the exception of ID creaiton.
+# XXX: We've duplicated the SQL model abstractions somewaht pointlessly unfortuantely. If we move to @alex-dixon's API ifciation of the backend then we won't have duplicated data models.
 from typing import cast
 from ell.configurator import config
 
@@ -58,7 +58,6 @@ def write_evaluation(evaluation) -> None:
             if config.autocommit:
                 commit_message = generate_commit_message(evaluation, metrics_ids, annotation_ids, criteiron_ids, latest_version)
                 
-
             # Create SerializedEvaluation
             serialized_evaluation = SerializedEvaluation(
                 id=evaluation.id,
@@ -69,23 +68,16 @@ def write_evaluation(evaluation) -> None:
                 version_number=version_number,
             )
 
-            # Create EvaluationLabelers
-            def create_labelers(names, ids, labeler_type):
-                return [
-                    EvaluationLabeler(
-                        name=name,
-                        type=labeler_type,
-                        evaluation_id=evaluation.id,
-                        labeling_lmp_id=h,
-                    )
-                    for name, h in zip(names, ids)
-                ]
 
-            labelers = (
-                create_labelers(evaluation.metrics.keys(), metrics_ids, EvaluationLabelerType.METRIC) +
-                create_labelers(evaluation.annotations.keys(), annotation_ids, EvaluationLabelerType.ANNOTATION) +
-                (create_labelers(["criterion"], criteiron_ids, EvaluationLabelerType.CRITERION) if evaluation.criterion else [])
-            )
+            labelers = [
+                EvaluationLabeler(
+                    name=labeler.name,
+                    type=labeler.type,
+                    evaluation_id=evaluation.id,
+                    labeling_lmp_id=ido(labeler.label),
+                )
+                for labeler in evaluation.labels
+            ]
 
             # Add labelers to the serialized evaluation
             serialized_evaluation.labelers = labelers
@@ -93,6 +85,7 @@ def write_evaluation(evaluation) -> None:
             cast(Store, config.store).write_evaluation(serialized_evaluation) 
 
 def generate_commit_message(evaluation, metrics_ids, annotation_ids, criteiron_ids, latest_version):
+    return None
     # XXX
     if not _autocommit_warning():
         from ell.util.differ import write_commit_message_for_diff
@@ -130,8 +123,8 @@ def generate_commit_message(evaluation, metrics_ids, annotation_ids, criteiron_i
                             
                 summary = f"Updated {', '.join(summary_parts)}"
                 details = " | ".join(changes)
-                commit_message = f"{summary}\n\n{details}"
-    return commit_message
+        commit_message = f"{summary}\n\n{details}"
+        return commit_message
 
 
 @needs_store
@@ -154,57 +147,32 @@ def write_evaluation_run_intermediate(evaluation, evaluation_run, row_result : _
             invocation_being_labeled_id=row_result.output[1],
     )
 
-    # Helper function to create labels
-    def create_labels(values_dict, labeler_type):
-        return [
-            EvaluationLabel(
-                labeled_datapoint_id=result_datapoint.id,
-                labeler_id=EvaluationLabeler.generate_id(
-                    evaluation_id=evaluation.id, name=name, type=labeler_type
-                ),
-                label_invocation_id=values_dict[name][1]
-            )
-            for name in values_dict
-        ]
-
-    # Create labels for metrics and annotations
-    result_datapoint.labels.extend(create_labels(
-        row_result.metrics, EvaluationLabelerType.METRIC
-    ))
-    result_datapoint.labels.extend(create_labels(
-        row_result.annotations, EvaluationLabelerType.ANNOTATION
-    ))
-
-    # Create criterion labels if present
-    if row_result.criterion is not None:
-        result_datapoint.labels.extend(create_labels(
-            {"criterion": row_result.criterion},
-            EvaluationLabelerType.CRITERION
-        ))
+    result_datapoint.labels = [ 
+        EvaluationLabel(
+            labeled_datapoint_id=result_datapoint.id,
+            labeler_id=EvaluationLabeler.generate_id(
+                evaluation_id=evaluation.id, name=label.name, type=label.type
+            ),
+            label_invocation_id=label.label[1]
+        )
+        for label in row_result.labels
+    ]
     
     cast(Store, config.store).write_evaluation_run_intermediate(result_datapoint)
 
 @needs_store
 def write_evaluation_run_end(evaluation, evaluation_run) -> None:
-    # Write summaries using a helper function
-    def create_summaries(data_dict, labeler_type):
-        return [
-            EvaluationRunLabelerSummary.from_labels(
-                data=values,
-                evaluation_run_id=evaluation_run.id,
-                evaluation_labeler_id=EvaluationLabeler.generate_id(
-                    evaluation_id=evaluation.id,
-                    name=name,
-                    type=labeler_type,
-                ),
-            )
-            for name, values in data_dict.items()
-        ]
-
-    # Collect summaries for metrics, annotations, and criterion
-    summaries = create_summaries(evaluation_run.results.metrics, EvaluationLabelerType.METRIC)
-    summaries += create_summaries(evaluation_run.results.annotations, EvaluationLabelerType.ANNOTATION)
-    if evaluation_run.results.criterion is not None:
-        summaries += create_summaries({"criterion": evaluation_run.results.criterion}, EvaluationLabelerType.CRITERION)
+    summaries = [
+        EvaluationRunLabelerSummary.from_labels(
+            data=label.label,
+            evaluation_run_id=evaluation_run.id,
+            evaluation_labeler_id=EvaluationLabeler.generate_id(
+                evaluation_id=evaluation.id,
+                name=label.name,
+                type=label.type,
+            ),
+        )
+        for label in evaluation_run.results.labels
+    ]
 
     cast(Store, config.store).write_evaluation_run_end(evaluation_run.id, evaluation_run.success, evaluation_run.end_time, evaluation_run.error, summaries)
