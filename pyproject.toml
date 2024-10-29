@@ -27,21 +27,25 @@ include = [
 
 [tool.poetry.dependencies]
 python = ">=3.9"
-fastapi = "^0.111.1"
 numpy = ">=1.26.0"
 dill = "^0.3.8"
 colorama = "^0.4.6"
 cattrs = "^23.2.3"
 openai = "^1.51.0"
-anthropic = { version = "^0.34.2", optional = true }
-groq = { version = "^0.11.0", optional = true }
-sqlmodel = "^0.0.21"
-uvicorn = "^0.30.3"
 requests = "^2.32.3"
 typing-extensions = "^4.12.2"
 black = "^24.8.0"
 pillow = "^10.4.0"
 psutil = "^5.9.0"
+# Providers
+anthropic = { version = "^0.34.2", optional = true }
+groq = { version = "^0.11.0", optional = true }
+# Storage
+psycopg2 = { version = ">=2.7", optional = true }
+sqlmodel = { version = "^0.0.21", optional = true }
+# Studio
+fastapi = { version = "^0.111.1", optional = true }
+uvicorn = { version = "^0.30.3", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
@@ -53,7 +57,18 @@ sphinx-rtd-theme = "^2.0.0"
 # causes poetry to mark it as optional = true (even if explicitly specified optional = false).
 anthropic = ["anthropic"]
 groq = ["groq"]
-all = ["anthropic", "groq"]
+sqlite = [ 'sqlmodel' ] # do we need a 'sqlite' dependency...?
+postgres = ['sqlmodel', 'psychopg2']
+studio = ['fastapi', 'uvicorn', 'sqlmodel']
+all = [
+    "anthropic",
+    "groq",
+    # default storage dependencies
+    'sqlmodel',
+    # allow running stduio by default
+    'fastapi',
+    'uvicorn',
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
