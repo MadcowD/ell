@@ -82,7 +82,16 @@ export const HierarchicalTableProvider = ({ children, data, onSelectionChange, i
 
   const sortedData = useMemo(() => {
     if (!sortConfig.key) return data;
+
     return [...data].sort((a, b) => {
+      // If a custom sort function is provided, use it
+      if (sortConfig.sortFn) {
+        return sortConfig.direction === 'asc' 
+          ? sortConfig.sortFn(a, b)
+          : sortConfig.sortFn(b, a);
+      }
+
+      // Otherwise fall back to default sorting by key
       if (a[sortConfig.key] < b[sortConfig.key]) {
         return sortConfig.direction === 'asc' ? -1 : 1;
       }
