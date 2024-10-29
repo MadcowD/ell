@@ -1,4 +1,5 @@
-from ell.evaluation.results import _ResultDatapoint, EvaluationResults
+from ell.evaluation.results import _ResultDatapoint, EvaluationResults, Label
+from ell.types.studio.evaluations import EvaluationLabelerType
 
 
 def test_evaluation_results_from_rowar_results():
@@ -6,15 +7,19 @@ def test_evaluation_results_from_rowar_results():
     rowar_results = [
         _ResultDatapoint(
             output=("output1", "id1"),
-            metrics={"metric1": (0.95, "id1")},
-            annotations={"annotation1": ("anno1", "id1")},
-            criterion=(True, "id1")
+            labels=[
+                Label(name="metric1", type=EvaluationLabelerType.METRIC, label=(0.95, "id1")),
+                Label(name="annotation1", type=EvaluationLabelerType.ANNOTATION, label=("anno1", "id1")),
+                Label(name="criterion", type=EvaluationLabelerType.CRITERION, label=(True, "id1"))
+            ]
         ),
         _ResultDatapoint(
             output=("output2", "id2"),
-            metrics={"metric1": (0.85, "id2")},
-            annotations={"annotation1": ("anno2", "id2")},
-            criterion=(False, "id2")
+            labels=[
+                Label(name="metric1", type=EvaluationLabelerType.METRIC, label=(0.85, "id2")),
+                Label(name="annotation1", type=EvaluationLabelerType.ANNOTATION, label=("anno2", "id2")),
+                Label(name="criterion", type=EvaluationLabelerType.CRITERION, label=(False, "id2"))
+            ]
         ),
     ]
     results = EvaluationResults.from_rowar_results(rowar_results)

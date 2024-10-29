@@ -1,3 +1,5 @@
+from dataclasses import field
+import dataclasses
 from datetime import datetime, timezone
 from functools import partial
 from typing import (
@@ -18,6 +20,7 @@ from ell.evaluation.util import validate_callable_dict
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from ell.types.message import LMP
+from ell.types.studio.evaluations import EvaluationLabelerType
 from ell.util.tqdm import tqdm
 import inspect
 
@@ -26,22 +29,20 @@ from ell.util.closure_util import hsh
 
 from ell.configurator import config
 from ell.evaluation.results import *
-import dill
 
-class EvaluationRun(BaseModel):  
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    results: EvaluationResults = Field(default_factory=EvaluationResults)
-    dataset: Optional[Dataset] = Field(default=None)
-    n_evals: Optional[int] = Field(default=None)
-    samples_per_datapoint: int = Field(default=1)
-    lmp: Optional[LMP] = Field(default=None)
-
-    api_params: Dict[str, Any] = Field(default_factory=dict)
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    id : Optional[str] = None
-    success: Optional[bool] = None
-    error: Optional[str] = None
+@dataclass
+class EvaluationRun:
+    results: EvaluationResults = field(default_factory=EvaluationResults)
+    dataset: Optional[Dataset] = field(default=None)
+    n_evals: Optional[int] = field(default=None)
+    samples_per_datapoint: int = field(default=1)
+    lmp: Optional[LMP] = field(default=None)
+    api_params: Dict[str, Any] = field(default_factory=dict)
+    start_time: Optional[datetime] = field(default=None)
+    end_time: Optional[datetime] = field(default=None)
+    id: Optional[str] = field(default=None)
+    success: Optional[bool] = field(default=None)
+    error: Optional[str] = field(default=None)
 
     @property
     def inputs(self) -> List[Any]:
@@ -55,30 +56,79 @@ class EvaluationRun(BaseModel):
     def invocation_ids(self) -> Optional[EvaluationResults[InvocationID]]:
         return self.results.invocation_ids
 
-class Evaluation(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    name: str
-    dataset: Optional[Dataset] = Field(default=None)
-    # XXX: Rename this for 0.1.0
-    n_evals: Optional[int] = Field(
-        default=None,
-        description="If set, this will run the LMP n_evals times and evaluate the outputs. This is useful for LMPs without inputs where you want to evaluate metrics a number of times. ",
-    )
 
-    samples_per_datapoint: int = Field(
-        default=1,
-        description="How many samples per datapoint to generate, equivalent to setting n in api params for LMPs which support this When no dataset is provided then the total nubmer of evalautiosn will be samples_per_datapoint * n_evals..",
-    )
-    
-    metrics: Metrics = Field(default_factory=dict)
-    annotations: Annotations = Field(default_factory=dict)
-    criterion: Optional[Criterion] = None
 
-    default_api_params: Optional[Dict[str, Any]] = Field(default_factory=dict)
-    has_serialized : bool = Field(default=False)
 
-    id: Optional[str] = Field(default=None)
 
+class Evaluation:
+    @property
+    def metrics(self) -> Dict[str, Callable]: return {l.name: l.label for l in self.labelers if l.type == EvaluationLabelerType.METRIC}
+
+    @property 
+    def annotations(self) -> Dict[str, Callable]: return {l.name: l.label for l in self.labelers if l.type == EvaluationLabelerType.ANNOTATION}
+
+    @property
+    def criterion(self) -> Optional[Callable]: return next((l.label for l in self.labelers if l.type == EvaluationLabelerType.CRITERION), None)
+
+    def __init__(self, name: str, *, metrics=None, annotations=None, criterion=None, 
+                 dataset=None, n_evals=None, samples_per_datapoint=1,
+                 default_api_params=None, has_serialized=False, id=None):
+        """Initialize with both class fields and additional parameters"""
+        self.name = name
+        self.dataset = dataset
+        self.n_evals = n_evals
+        self.samples_per_datapoint = samples_per_datapoint
+        self.labelers: List[Labeler] = []
+        self.default_api_params = default_api_params or {}
+        self.has_serialized = has_serialized
+        self.id = id
+
+        from ell.lmp.function import function
+
+        def wrap_callable(value):
+            if isinstance(value, dict):
+                return {
+                    k: (
+                        function(type=LMPType.LABELER)(v)
+                        if callable(v) and not hasattr(v, "__ell_track__")
+                        else v
+                    )
+                    for k, v in value.items()
+                }
+            elif callable(value) and not hasattr(value, "__ell_track__"):
+                return function()(value)
+            elif value is None:
+                return value
+            else:
+                raise ValueError(f"Expected dict, callable, or None, got {type(value)}")
+
+        # Validate dataset/n_evals
+        if self.dataset is None and self.n_evals is None:
+            raise ValueError("Either dataset or n_evals must be set")
+        if self.dataset is not None and self.n_evals is not None:
+            raise ValueError("Either dataset or n_evals must be set, not both")
+
+        # Wrap and validate metrics/annotations/criterion
+        metrics = validate_callable_dict(wrap_callable(metrics), "metric") if metrics else None
+        annotations = validate_callable_dict(wrap_callable(annotations), "annotation") if annotations else None
+        criterion = wrap_callable(criterion)
+
+        # Convert to labelers
+        self.labelers = []
+        if metrics:
+            self.labelers.extend([
+                Labeler(name=name, type=EvaluationLabelerType.METRIC, label=labeler)
+                for name, labeler in metrics.items()
+            ])
+        if annotations:
+            self.labelers.extend([
+                Labeler(name=name, type=EvaluationLabelerType.ANNOTATION, label=labeler)
+                for name, labeler in annotations.items()
+            ])
+        if criterion:
+            self.labelers.append(
+                Labeler(name="criterion", type=EvaluationLabelerType.CRITERION, label=criterion)
+            )
 
     def run(
         self,
@@ -129,7 +179,7 @@ class Evaluation(BaseModel):
                     desc=f"{self.name} outputs",
                 ):
                     get_outputs = future.result()
-                    import time; time.sleep(1.0)
+
                     def written_result(o):
                         write_evaluation_run_intermediate(self, evaluation_run, (res := o()))
                         return res
@@ -176,17 +226,12 @@ class Evaluation(BaseModel):
             lmp_output = [cast(Any, lmp_output)]
 
         def process_rowar_results(output):
-            def apply_labelers(labelers):
-                return {
-                    name: labeler(data_point, output[0], _get_invocation_id=True)
-                    for name, labeler in labelers.items()
-                }
-
             return _ResultDatapoint(
                 output=output,
-                metrics=apply_labelers(self.metrics),
-                annotations=apply_labelers(self.annotations),
-                criterion=apply_labelers({None: self.criterion})[None] if self.criterion else None
+                labels=[
+                    Label(name=l.name, type=l.type, label=(l.label(data_point, output[0], _get_invocation_id=True)))
+                    for l in self.labelers
+                ]
             )
             
 
@@ -229,44 +274,3 @@ class Evaluation(BaseModel):
             )
             
         return dataset
-    
-    @model_validator(mode="before")
-    @classmethod
-    def validate_dataset_or_n_evals(cls, values):
-        if "dataset" not in values and "n_evals" not in values:
-            raise ValueError("Either dataset or n_evals must be set")
-        if "dataset" in values and "n_evals" in values:
-            raise ValueError("Either dataset or n_evals must be set, not both")
-        return values
-
-    @field_validator("metrics", "annotations", "criterion", mode="before")
-    def wrap_callables_in_lmp_function(cls, value):
-        from ell.lmp.function import function
-
-        if isinstance(value, dict):
-            return {
-                k: (
-                    function(type=LMPType.LABELER)(v)
-                    if callable(v) and not hasattr(v, "__ell_track__")
-                    else v
-                )
-                for k, v in value.items()
-            }
-        elif callable(value) and not hasattr(value, "__ell_track__"):
-            return function()(value)
-        elif value is None:
-            return value 
-        else:
-            raise ValueError(f"Expected dict, callable, or None, got {type(value)}")
-
-    @field_validator("metrics")
-    def validate_metrics(cls, metrics: Union[Metric, List[Metrics]]) -> Metric:
-        return validate_callable_dict(metrics, "metric")
-
-    @field_validator("annotations")
-    def validate_annotations(
-        cls, annotations: Union[Annotations, List[Annotation]]
-    ) -> Annotations:
-        return validate_callable_dict(annotations, "annotation")
-
-    
