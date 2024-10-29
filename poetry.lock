@@ -2407,4 +2407,4 @@ studio = ["fastapi", "sqlmodel", "uvicorn"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9"
-content-hash = "952483f96d73ae6e9db89e429de3fe02c02baef0c0adfb3bc1741e71a491cea3"
+content-hash = "fc143199496a23947865b1dd9fae309d354ea4fff7f16005b6199c0183d7d7cd"
