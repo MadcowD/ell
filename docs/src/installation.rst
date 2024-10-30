@@ -10,19 +10,86 @@ Installing ell
 
    .. code-block:: bash
 
-      pip install -U ell-ai
+      pip install -U ell-ai[all]
 
-   By default, this installs only the OpenAI client SDK. If you want to include the Anthropic client SDK, use the "anthropic" extra like so:
-
-   .. code-block:: bash
-
-      pip install -U 'ell-ai[anthropic]'
+   This installs ``ell``, ``ell-studio``, versioning and tracing with SQLite, and the default provider clients.
 
 2. Verify installation:
 
    .. code-block:: bash
 
       python -c "import ell; print(ell.__version__)"
+
+Custom Installation
+-------------------
+
+You can create a custom ``ell`` installation with the following options.
+
+Install ``ell`` without storage or ``ell-studio`` and with the default OpenAI client:
+
+.. code-block:: bash
+
+   pip install -U ell-ai
+
+Supported options:
+
+``anthropic``
+~~~~~~~~~~~~~
+Adds the Anthropic client.
+
+.. code-block:: bash
+
+   pip install -U ell-ai[anthropic]
+
+
+``groq``
+~~~~~~~~
+Adds the Groq client.
+
+.. code-block:: bash
+
+   pip install -U ell-ai[groq]
+
+
+``studio``
+~~~~~~~~~~
+Adds ``ell-studio``.
+
+.. code-block:: bash
+
+   pip install -U ell-ai[studio]
+
+
+``sqlite``
+~~~~~~~~~~
+SQLite storage for versioning and tracing.
+
+.. code-block:: bash
+
+   pip install -U ell-ai[sqlite]
+
+
+``postgres``
+~~~~~~~~~~~~
+Postgres storage for versioning and tracing.
+
+Include this option if you'd like to use ``ell-studio`` with Postgres.
+
+.. code-block:: bash
+
+   pip install -U ell-ai[postgres]
+
+Combining options
+~~~~~~~~~~~~~~~~~
+
+All options are additive and can be combined as needed.
+
+Example: Install ``ell`` with ``ell-studio``, Postgres, and the Anthropic client:
+
+.. code-block:: bash
+
+   pip install -U ell-ai[studio, postgres, anthropic]
+
 
 API Key Setup
 -------------
