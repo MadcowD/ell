@@ -11,7 +11,7 @@ import ell.lmp.function
 
 
 def test_predictor_evaluation():
-    dataset: List[ell.evaluation.Datapoint] = [
+    dataset = [
         {
             "input": {"question": "What is the capital of france?"},
             "expected_output": "Paris",
@@ -53,7 +53,7 @@ def test_predictor_evaluation():
 
     def is_correct(datapoint, output):
         label = datapoint["expected_output"]
-        return float(output.lower() == label.lower())
+        return float(label.lower() in output.lower())
 
     eval = ell.evaluation.Evaluation(
         name="capital_prediction",
@@ -65,7 +65,7 @@ def test_predictor_evaluation():
     @ell.simple(model="gpt-4o", max_tokens=10)
     def predict_capital(question: str):
         """
-        Answer only with the populations of the country. If hotdog land, answer Banana.
+        If the quesiton is about hotdog land, answer Banana. Otherwise, answer the question.
         """
         # print(question[0])
         return f"Answer the following question. {question}"
@@ -269,3 +269,4 @@ if __name__ == "__main__":
     #    test_poem_eval()
     ell.init(verbose=True, store="./logdir")
     test_predictor_evaluation()
+
