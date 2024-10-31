@@ -123,6 +123,8 @@ class Store(ABC):
         """
         pass
 
+
+
     @contextmanager
     def freeze(self, *lmps: InvocableLM):
         """

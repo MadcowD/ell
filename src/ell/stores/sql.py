@@ -438,6 +438,31 @@ class SQLStore(ell.store.Store):
             )  # Convert to list to ensure it's a List[SerializedEvaluation]
 
 
+    def get_evaluation_run(self, session: Session, run_id: str) -> SerializedEvaluationRun:
+        query = select(SerializedEvaluationRun).where(
+                SerializedEvaluationRun.id == run_id,
+            
+        )
+        result = session.exec(query).one()
+
+        return result
+    
+    def get_evaluation_run_results(self, session: Session, run_id: str,  skip: int = 0, limit: int = 100, filters : Optional[Dict[str, Any]] = None) -> List[EvaluationResultDatapoint]:
+        query = select(EvaluationResultDatapoint).where(
+            EvaluationResultDatapoint.evaluation_run_id == run_id
+        )
+
+        if filters:
+            for key, value in filters.items():
+                query = query.where(getattr(EvaluationResultDatapoint, key) == value)
+
+        query = query.offset(skip).limit(limit)
+        
+        results = session.exec(query).all()
+        print(f"Found {len(results)} results for run {run_id}")
+        return list(results)
+
+
 class SQLiteStore(SQLStore):
     def __init__(self, db_dir: str):
         assert not db_dir.endswith(".db"), "Create store with a directory not a db."

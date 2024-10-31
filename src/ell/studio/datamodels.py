@@ -3,6 +3,7 @@ from typing import List, Optional, Dict, Any
 from sqlmodel import SQLModel
 from ell.types import SerializedLMPBase, InvocationBase, InvocationContentsBase
 from ell.types.studio.evaluations import (
+    EvaluationLabelBase,
     EvaluationLabelerBase,
     SerializedEvaluationBase,
     SerializedEvaluationRunBase,
@@ -24,6 +25,16 @@ class InvocationPublic(InvocationBase):
 class InvocationPublicWithConsumes(InvocationPublic):
     consumes: List[InvocationPublic]
     consumed_by: List[InvocationPublic]
+
+
+class InvocationPublicWithoutLMP(InvocationBase):
+    uses : List["InvocationPublicWithoutLMPAndConsumes"]
+    contents: InvocationContentsBase
+
+
+class InvocationPublicWithoutLMPAndConsumes(InvocationPublicWithoutLMP):
+    consumes: List[InvocationPublicWithoutLMP]
+    consumed_by: List[InvocationPublicWithoutLMP]
 
 
 from pydantic import BaseModel
@@ -61,4 +72,19 @@ class EvaluationPublic(SerializedEvaluationBase):
     labelers: List[EvaluationLabelerPublic]
     runs: List[EvaluationRunPublic]
 
+# XXXX
+class EvaluationPublicWithoutRuns(SerializedEvaluationBase):
+    labelers: List[EvaluationLabelerPublic]
 
+# XXXXXX
+class EvaluationLabelPublic(EvaluationLabelBase):
+    label_invocation: Optional[InvocationPublicWithoutLMP]
+
+class EvaluationResultDatapointPublic(EvaluationResultDatapointBase):
+    invocation_being_labeled: InvocationPublicWithoutLMP
+    labels: List[EvaluationLabelPublic]
+
+class SpecificEvaluationRunPublic(SerializedEvaluationRunBase):
+    evaluated_lmp: SerializedLMPBase
+    evaluation: EvaluationPublicWithoutRuns
+    labeler_summaries: List[EvaluationRunLabelerSummaryPublic]

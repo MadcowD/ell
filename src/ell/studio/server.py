@@ -9,7 +9,7 @@ import logging
 import json
 from ell.studio.config import Config
 from ell.studio.connection_manager import ConnectionManager
-from ell.studio.datamodels import InvocationPublicWithConsumes, SerializedLMPWithUses, EvaluationPublic
+from ell.studio.datamodels import EvaluationResultDatapointPublic, InvocationPublicWithConsumes, SerializedLMPWithUses, EvaluationPublic, SpecificEvaluationRunPublic
 
 from ell.types import SerializedLMP
 from datetime import datetime, timedelta
@@ -273,5 +273,30 @@ def create_app(config:Config):
         if not evaluation:
             raise HTTPException(status_code=404, detail="Evaluation not found")
         return evaluation[0]
+    
+    
 
+    @app.get("/api/evaluation-runs/{run_id}", response_model=SpecificEvaluationRunPublic)
+    def get_evaluation_run(
+        run_id: str,
+        session: Session = Depends(get_session)
+    ):
+        runs = serializer.get_evaluation_run(session, run_id)
+        return runs
+    
+    @app.get("/api/evaluation-runs/{run_id}/results", response_model=List[EvaluationResultDatapointPublic])
+    def get_evaluation_run_results(
+        run_id: str,
+        skip: int = Query(0, ge=0),
+        limit: int = Query(100, ge=1, le=100),
+        session: Session = Depends(get_session)
+    ):
+        results = serializer.get_evaluation_run_results(
+            session,
+            run_id,
+            skip=skip,
+            limit=limit,
+        )
+        return results
+    
     return app

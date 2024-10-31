@@ -69,7 +69,7 @@ const SmoothLine = ({ index, startX, startY, endX: endXPreprocess, special, endY
 
 
 const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWidth, rowClassName, setRowRef, links, linkColumn, showHierarchical, statusColumn }) => {
-  const { expandedRows, selectedRows, toggleRow, toggleSelection, isItemSelected, setHoveredRow, sortedData } = useHierarchicalTable();
+  const { expandedRows, selectedRows, toggleRow, toggleSelection, isItemSelected, setHoveredRow, sortedData, hoveredRow } = useHierarchicalTable();
   const hasChildren = item.children && item.children.length > 0;
   const isExpanded = expandedRows[item.id];
   const isSelected = isItemSelected(item);
@@ -160,7 +160,10 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
           ) : null}
         </td>
         {schema.columns.map((column, index) => {
-          const content = column.render ? column.render(item) : item[column.key];
+          const content = column.render ? column.render(item, index, { 
+            expanded: isExpanded,
+            isHovered: hoveredRow === item.id 
+          }) : item[column.key];
           const maxWidth = column.maxWidth || Infinity;
           return (
             <React.Fragment key={index}>
@@ -408,8 +411,7 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
             statusColumn={statusColumn}
           />
         </table>
-        
-        {/* Update SVG rendering for direct lines */}
+        { links && 
         <svg
           className="absolute top-0 left-0 w-full h-full pointer-events-none"
           style={{ overflow: 'visible' }}
@@ -418,8 +420,9 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
             links={links} 
             rowRefs={rowRefs} 
             tableOffset={tableOffset}
-          />
-        </svg>
+            />
+          </svg>
+        }
       </div>
       {onPageChange && (
         <PaginationControls

@@ -12,6 +12,7 @@ import './styles/globals.css';
 import './styles/sourceCode.css';
 import { useWebSocketConnection } from './hooks/useBackend';
 import { Toaster, toast } from 'react-hot-toast';
+import EvaluationRun from './pages/EvaluationRun';
 
 const WebSocketConnectionProvider = ({children}) => {
   const { isConnected } = useWebSocketConnection();
@@ -95,6 +96,7 @@ function App() {
                   <Route path="/invocations" element={<Invocations />} />
                   <Route path="/evaluations" element={<Evaluations />} />
                   <Route path="/evaluations/:id" element={<Evaluation />} />
+                  <Route path="/evaluation-runs/:id" element={<EvaluationRun />} />
                 </Routes>
               </main>
             </div>

@@ -15,6 +15,13 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
     navigate(`/lmp/${run.evaluated_lmp.name}/${run.evaluated_lmp.lmp_id}`);
   };
 
+  const handleRowClick = (run) => {
+    // if (onSelectRun) {
+    //   onSelectRun(run);
+    // }
+    navigate(`/evaluation-runs/${run.id}`);
+  };
+
   const runsTableData = useMemo(() => {
     return runs.map((run, index) => ({
       ...run,
@@ -130,7 +137,7 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
         columns: columns
       }}
       data={runsTableData}
-      onRowClick={onSelectRun}
+      onRowClick={handleRowClick}
       initialSortConfig={initialSortConfig}
       rowClassName={(item) => {
         let className = '';

@@ -196,6 +196,7 @@ class EvaluationRunLabelerSummary(EvaluationRunLabelerSummaryBase, table=True):
         )
 
 class SerializedEvaluationRunBase(SQLModel):
+    # XXX: This needs to be a string id.
     id: Optional[int] = Field(default=None, primary_key=True)
     evaluation_id: str = Field(foreign_key="serializedevaluation.id", index=True)
     evaluated_lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)
