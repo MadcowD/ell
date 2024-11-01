@@ -184,7 +184,7 @@ def init(
             from ell.stores.sql import SQLiteStore
             config.store = SQLiteStore(store)
         except ImportError:
-            raise ValueError("The SQLLite store  could not be imported. Did you install ell with storage support?")
+            raise ImportError("Failed importing SQLiteStore. Install with `pip install -U ell-ai[all]`. More info: https://docs.ell.so/installation")
     else:
         config.store = store
     config.autocommit = autocommit or config.autocommit
