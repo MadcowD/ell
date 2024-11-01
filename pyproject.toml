@@ -42,7 +42,7 @@ anthropic = { version = "^0.34.2", optional = true }
 groq = { version = "^0.11.0", optional = true }
 # Storage
 psycopg2 = { version = ">=2.7", optional = true }
-sqlmodel = { version = "^0.0.21", optional = true }
+sqlmodel = { version = ">=0.0.21, <0.1.0", optional = true }
 # Studio
 fastapi = { version = "^0.111.1", optional = true }
 uvicorn = { version = "^0.30.3", optional = true }
@@ -57,7 +57,7 @@ sphinx-rtd-theme = "^2.0.0"
 # causes poetry to mark it as optional = true (even if explicitly specified optional = false).
 anthropic = ["anthropic"]
 groq = ["groq"]
-sqlite = [ 'sqlmodel' ] # do we need a 'sqlite' dependency...?
+sqlite = [ 'sqlmodel' ]
 postgres = ['sqlmodel', 'psychopg2']
 studio = ['fastapi', 'uvicorn', 'sqlmodel']
 all = [
