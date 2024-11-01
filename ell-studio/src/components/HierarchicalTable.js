@@ -132,7 +132,7 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
           ${customRowClassName}
           ${isNew ? 'animate-fade-in bg-green-900/30' : ''}`}
         onClick={() => {
-          if (onRowClick) onRowClick(item);
+          if (onRowClick) onRowClick(item, toggleRow);
         }}
         onMouseEnter={() => setHoveredRow(item.id)}
         onMouseLeave={() => setHoveredRow(null)}

@@ -185,8 +185,12 @@ const EvaluationRunResultsTable = ({
     ...labelerColumns,
   ];
 
-  const handleRowClick = (item) => {
-    if (!item.isGroup) {
+  const handleRowClick = (item, toggleRow) => {
+    if (item.isGroup) {
+      // If it's a parent row, toggle its expanded state using the provided toggleRow function
+      toggleRow(item.id);
+    } else {
+      // If it's a child row, set the selected trace
       setSelectedTrace(item.invocation);
     }
   };
