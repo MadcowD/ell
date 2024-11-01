@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import HierarchicalTable from '../HierarchicalTable';
 import { Card } from '../common/Card';
 import { ContentsRenderer } from '../invocations/ContentsRenderer';
+import LabelDisplay from './LabelDisplay';
 
 const MAX_PREVIEW_ITEMS = 3;
 
@@ -58,7 +59,7 @@ const EvaluationRunResultsTable = ({ results, currentPage, setCurrentPage, pageS
       return acc;
     }, {});
 
-    // Calculate mean values for each group and structure the data
+    // Calculate mean values and stats for each group
     return Object.entries(groupedByInput).map(([inputHash, group]) => {
       const children = group.items.map(result => ({
         id: result.id,
@@ -70,8 +71,8 @@ const EvaluationRunResultsTable = ({ results, currentPage, setCurrentPage, pageS
         children: []
       }));
 
-      // Calculate mean values for the group
-      const meanLabels = {};
+      // Calculate stats for the group
+      const labelStats = {};
       if (children.length > 0) {
         const firstChild = children[0];
         Object.keys(firstChild.labels).forEach(labelerId => {
@@ -80,8 +81,16 @@ const EvaluationRunResultsTable = ({ results, currentPage, setCurrentPage, pageS
             .filter(value => typeof value === 'number');
           
           if (values.length > 0) {
-            const sum = values.reduce((a, b) => a + b, 0);
-            meanLabels[labelerId] = sum / values.length;
+            const mean = values.reduce((a, b) => a + b, 0) / values.length;
+            const stdDev = Math.sqrt(
+              values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / values.length
+            );
+            labelStats[labelerId] = {
+              mean,
+              stdDev,
+              min: Math.min(...values),
+              max: Math.max(...values)
+            };
           }
         });
       }
@@ -96,31 +105,35 @@ const EvaluationRunResultsTable = ({ results, currentPage, setCurrentPage, pageS
         invocation: {
           contents: {
             params: group.input,
-            results: outputs // Store all outputs for the preview
+            results: outputs
           }
         },
-        labels: meanLabels,
+        labels: Object.fromEntries(
+          Object.entries(labelStats).map(([key, stats]) => [key, stats.mean])
+        ),
+        labelStats,
         children: children,
         isGroup: true
       };
     });
   }, [results]);
 
-  // Get unique labeler IDs from the first result
   const labelerColumns = useMemo(() => {
     if (!results?.[0]?.labels) return [];
     
     return results[0].labels.map(label => ({
-      header: label.labeler_id.split('-')[3] || 'Label', // Extract metric name from ID
+      header: label.labeler_id.split('-')[3] || 'Label',
       key: label.labeler_id,
       render: (item) => (
-        <div className="font-mono text-sm">
-          {typeof item.labels[label.labeler_id] === 'number' 
-            ? item.isGroup 
-              ? `${item.labels[label.labeler_id].toFixed(2)}`
-              : item.labels[label.labeler_id].toFixed(2)
-            : item.labels[label.labeler_id]}
-        </div>
+        <LabelDisplay 
+          value={item.labels[label.labeler_id]} 
+          isAggregate={item.isGroup}
+          stats={item.isGroup ? {
+            min: item.labelStats[label.labeler_id]?.min,
+            max: item.labelStats[label.labeler_id]?.max,
+            stdDev: item.labelStats[label.labeler_id]?.stdDev
+          } : null}
+        />
       ),
       maxWidth: 150,
       sortable: true,

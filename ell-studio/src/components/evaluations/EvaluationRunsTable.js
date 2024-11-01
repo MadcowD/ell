@@ -6,7 +6,9 @@ import { Card } from '../common/Card';
 import { getTimeAgo } from '../../utils/lmpUtils';
 import VersionBadge from '../VersionBadge';
 import { Spinner } from '../common/Spinner';
-import { FiCheckCircle, FiXCircle } from 'react-icons/fi';
+import { FiXCircle } from 'react-icons/fi';
+import LabelDisplay from './LabelDisplay';
+import { IoCheckmarkCircleOutline } from 'react-icons/io5';
 
 const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSelectRun, currentlySelectedRun, activeIndex }) => {
   const navigate = useNavigate();
@@ -43,14 +45,22 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
         const metricSummary = item.labeler_summaries.find(s => s.evaluation_labeler_id === summary.evaluation_labeler_id);
         const isRunning = !item.end_time && item.success === null;
 
+        if (isRunning) {
+          return <Spinner size="sm" />;
+        }
+
+        if (!metricSummary?.data) return null;
+
         return (
-          <div className="font-mono text-sm font-semibold">
-            {isRunning ? (
-              <Spinner size="sm" />
-            ) : (
-              metricSummary ? metricSummary.data.mean.toFixed(2) : 'N/A'
-            )}
-          </div>
+          <LabelDisplay 
+            value={metricSummary.data.mean}
+            isAggregate={true}
+            stats={{
+              min: metricSummary.data.min,
+              max: metricSummary.data.max,
+              stdDev: metricSummary.data.std
+            }}
+          />
         );
       },
       maxWidth: 150,
@@ -69,7 +79,7 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
       }
       
       return item.success ? (
-        <FiCheckCircle className="text-emerald-400 w-5 h-5" />
+        <IoCheckmarkCircleOutline className="text-emerald-400/75 w-5 h-5" />
       ) : (
         <FiXCircle className="text-rose-400 w-5 h-5" />
       );
