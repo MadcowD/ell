@@ -48,9 +48,9 @@ function EvaluationDetailsSidebar({ evaluation }) {
             <div className="text-right">{evaluation?.labelers.length}</div>
           </div>
         </div>
-
+        {/* TODO ADD MROE INFO. */}
         <div className="bg-card p-2 rounded">
-          <h3 className="text-sm font-semibold text-card-foreground mb-1">Metrics</h3>
+          {/* <h3 className="text-sm font-semibold text-card-foreground mb-1">Metrics</h3> */}
           {/* {evaluation && (
             // <MetricTable 
             //   summaries={evaluation.runs[evaluation.runs.length - 1].labeler_summaries.filter(summary => summary.is_scalar)}

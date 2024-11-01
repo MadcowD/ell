@@ -3,6 +3,7 @@ import HierarchicalTable from '../HierarchicalTable';
 import { Card } from '../common/Card';
 import { ContentsRenderer } from '../invocations/ContentsRenderer';
 import LabelDisplay from './LabelDisplay';
+import InvocationDetailsPopover from '../invocations/details/InvocationDetailsPopover';
 
 const MAX_PREVIEW_ITEMS = 3;
 
@@ -42,7 +43,14 @@ const OutputPreview = ({ outputs, invocation, isExpanded }) => {
   );
 };
 
-const EvaluationRunResultsTable = ({ results, currentPage, setCurrentPage, pageSize }) => {
+const EvaluationRunResultsTable = ({ 
+  results, 
+  currentPage, 
+  setCurrentPage, 
+  pageSize,
+  selectedTrace,
+  setSelectedTrace 
+}) => {
   const resultsTableData = useMemo(() => {
     if (!results) return [];
     
@@ -177,6 +185,12 @@ const EvaluationRunResultsTable = ({ results, currentPage, setCurrentPage, pageS
     ...labelerColumns,
   ];
 
+  const handleRowClick = (item) => {
+    if (!item.isGroup) {
+      setSelectedTrace(item.invocation);
+    }
+  };
+
   const hasNextPage = resultsTableData.length === pageSize;
 
   return (
@@ -190,6 +204,7 @@ const EvaluationRunResultsTable = ({ results, currentPage, setCurrentPage, pageS
       showHierarchical={true}
       expandAll={false}
       initialSortConfig={{ key: 'id', direction: 'desc' }}
+      onRowClick={handleRowClick}
     />
   );
 };

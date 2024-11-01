@@ -9,16 +9,37 @@ const GenericPageLayout = ({
   setSelectedTrace,
   sidebarContent,
   showSidebar = true,
+  minimizeSidebar = false,
 }) => {
   const [sidebarVisible, setSidebarVisible] = useState(!selectedTrace && showSidebar);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   useEffect(() => {
-    setSidebarVisible(!selectedTrace && showSidebar);
-  }, [selectedTrace, showSidebar]);
+    // Function to check window size
+    const checkWindowSize = () => {
+      setIsSmallScreen(window.innerWidth < 1024); // 1024px is typical laptop width
+    };
+
+    // Initial check
+    checkWindowSize();
+
+    // Add event listener
+    window.addEventListener('resize', checkWindowSize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkWindowSize);
+  }, []);
+
+  useEffect(() => {
+    setSidebarVisible(!selectedTrace && showSidebar && !(minimizeSidebar && isSmallScreen));
+  }, [selectedTrace, showSidebar, minimizeSidebar, isSmallScreen]);
 
   return (
     <ResizablePanelGroup direction="horizontal" className="w-full h-screen bg-background">
-      <ResizablePanel defaultSize={sidebarVisible ? 70 : 100} minSize={30}>
+      <ResizablePanel 
+        defaultSize={sidebarVisible ? (minimizeSidebar ? 80 : 70) : 100} 
+        minSize={30}
+      >
         <InvocationsLayout
           selectedTrace={selectedTrace}
           setSelectedTrace={setSelectedTrace}
@@ -30,12 +51,20 @@ const GenericPageLayout = ({
           </div>
         </InvocationsLayout>
       </ResizablePanel>
-      <ResizableHandle withHandle className="my-handle bg-border" />
-      <ResizablePanel defaultSize={30} minSize={20} className="bg-background" style={{ display: sidebarVisible ? 'block' : 'none' }}>
-        <ScrollArea className="h-full bg-background">
-          {sidebarContent}
-        </ScrollArea>
-      </ResizablePanel>
+      {sidebarVisible && (
+        <>
+          <ResizableHandle withHandle className="my-handle bg-border" />
+          <ResizablePanel 
+            defaultSize={minimizeSidebar ? 20 : 30} 
+            minSize={20} 
+            className="bg-background"
+          >
+            <ScrollArea className="h-full bg-background">
+              {sidebarContent}
+            </ScrollArea>
+          </ResizablePanel>
+        </>
+      )}
     </ResizablePanelGroup>
   );
 };

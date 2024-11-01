@@ -7,12 +7,16 @@ import InvocationDataPane from './InvocationDataPane';
 import { motion } from 'framer-motion';
 import { LMPCardTitle } from "../../depgraph/LMPCardTitle";
 import { Card } from "../../common/Card";
+import { useLMPs } from "../../../hooks/useBackend";
 
-const InvocationDetailsPopover = ({ invocation, onClose, onResize }) => {
+const InvocationDetailsPopover = ({ invocation : invocationWithoutLMP, onClose, onResize }) => {
   const [activeTab, setActiveTab] = useState("I/O");
   const [sidebarWidth, setSidebarWidth] = useState(window.innerWidth / 2);
   const [isExpanded, setIsExpanded] = useState(false);
+  const { data: lmpData } = useLMPs(null, invocationWithoutLMP.lmp_id);
+  const lmp = lmpData && lmpData.length > 0 ? lmpData[0] : invocationWithoutLMP.lmp;
 
+  const invocation = { ...invocationWithoutLMP, lmp };
   const handleResize = (newWidth) => {
     setSidebarWidth(newWidth);
     onResize(newWidth);
@@ -33,6 +37,10 @@ const InvocationDetailsPopover = ({ invocation, onClose, onResize }) => {
   const location = useLocation();
   const isLmpPage = location.pathname.startsWith('/lmp');
 
+  if(!invocation.lmp) {
+    return null;
+  }
+
   return (
     <ResizableSidebar onResize={handleResize} isExpanded={isExpanded}>
       <motion.div 
@@ -43,22 +51,24 @@ const InvocationDetailsPopover = ({ invocation, onClose, onResize }) => {
         transition={{ duration: 0.3 }}
       >
         <div className="flex items-center justify-between p-4 bg-card">
-          <div className="flex items-center space-x-4 flex-grow">
+          <div className="flex items-center space-x-4 min-w-0 flex-1">
             {!isLmpPage && (
-              <Card className="bg-card text-card-foreground">
-                <LMPCardTitle lmp={invocation.lmp} displayVersion shortVersion={true}/>
-              </Card>
+              <div className="flex-shrink-0">
+                <Card className="bg-card text-card-foreground">
+                  <LMPCardTitle lmp={invocation.lmp} displayVersion shortVersion={true}/>
+                </Card>
+              </div>
             )}
-            <div className="flex items-center">
-              <div className="flex items-center bg-secondary/20 rounded-md overflow-hidden border border-secondary/30">
-                <span className="text-sm font-mono font-medium text-secondary-foreground px-3 py-1.5">
+            <div className="flex items-center min-w-0">
+              <div className="flex items-center bg-secondary/20 rounded-md overflow-hidden border border-secondary/30 min-w-0">
+                <span className="text-sm font-mono font-medium text-secondary-foreground px-3 py-1.5 truncate">
                   {isNarrowForInfo
                     ? `${invocation.id.slice(0, 8)}...`
                     : invocation.id}
                 </span>
                 <button
                   onClick={copyInvocationId}
-                  className="bg-secondary/30 hover:bg-secondary/40 text-secondary-foreground px-2 py-1.5 transition-colors duration-200"
+                  className="flex-shrink-0 bg-secondary/30 hover:bg-secondary/40 text-secondary-foreground px-2 py-1.5 transition-colors duration-200"
                   title="Copy Invocation ID"
                 >
                   <FiCopy size={12} />
@@ -66,9 +76,11 @@ const InvocationDetailsPopover = ({ invocation, onClose, onResize }) => {
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-
-            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors duration-200">
+          <div className="flex-shrink-0 ml-4">
+            <button 
+              onClick={onClose} 
+              className="text-muted-foreground hover:text-foreground transition-colors duration-200"
+            >
               <FiX />
             </button>
           </div>
