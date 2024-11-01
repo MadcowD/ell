@@ -312,12 +312,11 @@ def to_content_blocks(
 class Message(BaseModel):
     role: str
     content: List[ContentBlock]
-    
+    tool_call_id: Optional[_lstr_generic] = Field(default=None)
 
-    def __init__(self, role: str, content: Union[AnyContent, List[AnyContent], None] = None, **content_block_kwargs):
+    def __init__(self, role: str, content: Union[AnyContent, List[AnyContent], None] = None, tool_call_id: Optional[_lstr_generic] = None, **content_block_kwargs):
         content_blocks = to_content_blocks(content, **content_block_kwargs)
-        
-        super().__init__(role=role, content=content_blocks)
+        super().__init__(role=role, content=content_blocks, tool_call_id=tool_call_id)
 
     # XXX: This choice of naming is unfortunate, but it is what it is.
     @property
@@ -452,6 +451,8 @@ class Message(BaseModel):
                     else:
                         content_blocks.append(ContentBlock.coerce(block))
                 obj['content'] = content_blocks
+            if 'tool_call_id' in obj:
+                obj['tool_call_id'] = _lstr(obj['tool_call_id'])
         return super().model_validate(obj)
 
     @classmethod
