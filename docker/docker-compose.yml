@@ -1,8 +1,10 @@
 services:
   api:
     build:
-      context: .
-      dockerfile: Dockerfile.api
+      context: ..
+      dockerfile: docker/Dockerfile.api
+      args:
+        ELL_EXTRAS: api-server postgres mqtt
       tags:
         - ell-api
 
@@ -20,8 +22,10 @@ services:
 
   studio:
     build:
-      context: .
-      dockerfile: Dockerfile.studio
+      context: ..
+      dockerfile: docker/Dockerfile.studio
+      args:
+        ELL_EXTRAS: studio postgres mqtt
       tags:
         - ell-studio
     ports:
