@@ -1,10 +1,17 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from datetime import datetime
-from typing import Any, Optional, Dict, List, Set, Union
+from typing import Any, Optional, Dict, List, Set, Union, TYPE_CHECKING
+
 from ell.types._lstr import _lstr
 from ell.stores.studio import SerializedLMP, Invocation
 from ell.types.message import InvocableLM
+
+if TYPE_CHECKING:
+    from sqlmodel import Session
+else:
+    Session = None
+
 
 class BlobStore(ABC):
     @abstractmethod
@@ -66,6 +73,12 @@ class Store(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_lmp(self, lmp_id: str, session: Optional[Session] = None) -> Optional[SerializedLMP]:
+        """
+        Get an LMP by its id.
+        """
+        pass
 
     @contextmanager
     def freeze(self, *lmps: InvocableLM):
