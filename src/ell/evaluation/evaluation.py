@@ -101,6 +101,7 @@ class Evaluation(LabelListMixin):
         annotations = validate_callable_dict(wrap_callable(annotations), "annotation") if annotations else None
         criterion = wrap_callable(criterion)
 
+
         # Convert to labelers
         self.labels = []
         if metrics:
@@ -117,6 +118,9 @@ class Evaluation(LabelListMixin):
             self.labels.append(
                 Labeler(name="criterion", type=EvaluationLabelerType.CRITERION, label=criterion)
             )
+        assert self.labels, "No labels found, labeless evaluations coming soon!"
+        assert not annotations, "Annotations are not supported yet."
+        
 
     def run(
         self,
