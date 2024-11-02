@@ -79,6 +79,7 @@ class EvaluationPublicWithoutRuns(SerializedEvaluationBase):
 # XXXXXX
 class EvaluationLabelPublic(EvaluationLabelBase):
     label_invocation: Optional[InvocationPublicWithoutLMP]
+    labeler : EvaluationLabelerBase
 
 class EvaluationResultDatapointPublic(EvaluationResultDatapointBase):
     invocation_being_labeled: InvocationPublicWithoutLMP

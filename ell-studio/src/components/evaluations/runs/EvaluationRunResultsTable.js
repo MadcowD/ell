@@ -53,6 +53,14 @@ const EvaluationRunResultsTable = ({
   searchQuery,
   onFilteredResultsChange 
 }) => {
+  const createInvocationWithLabels = (item, results) => {
+    const result = results.find(r => r.id === item.id);
+    return {
+      ...item.invocation,
+      labels: result?.labels || []
+    };
+  };
+
   const resultsTableData = useMemo(() => {
     if (!results) return [];
     
@@ -265,11 +273,9 @@ const EvaluationRunResultsTable = ({
 
   const handleRowClick = (item, toggleRow) => {
     if (item.isGroup) {
-      // If it's a parent row, toggle its expanded state using the provided toggleRow function
       toggleRow(item.id);
     } else {
-      // If it's a child row, set the selected trace
-      setSelectedTrace(item.invocation);
+      setSelectedTrace(createInvocationWithLabels(item, results));
     }
   };
 
@@ -283,14 +289,15 @@ const EvaluationRunResultsTable = ({
       }
 
       if (selectedTrace) {
-        // Find all leaf nodes (non-group items) in the current data
         const leafNodes = resultsTableData.flatMap(group => group.children);
         const currentIndex = leafNodes.findIndex(item => item.invocation.id === selectedTrace.id);
 
         if (e.key === 'ArrowUp' && currentIndex > 0) {
-          setSelectedTrace(leafNodes[currentIndex - 1].invocation);
+          const prevItem = leafNodes[currentIndex - 1];
+          setSelectedTrace(createInvocationWithLabels(prevItem, results));
         } else if (e.key === 'ArrowDown' && currentIndex < leafNodes.length - 1) {
-          setSelectedTrace(leafNodes[currentIndex + 1].invocation);
+          const nextItem = leafNodes[currentIndex + 1];
+          setSelectedTrace(createInvocationWithLabels(nextItem, results));
         }
       }
     };
@@ -299,7 +306,7 @@ const EvaluationRunResultsTable = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [resultsTableData, selectedTrace, setSelectedTrace]);
+  }, [resultsTableData, selectedTrace, setSelectedTrace, results]);
 
   return (
     <HierarchicalTable

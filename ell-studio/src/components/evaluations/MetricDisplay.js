@@ -14,7 +14,8 @@ const getTrendIcon = (trend) => {
   return <FiMinus className="inline-block mr-1" />;
 };
 
-const MetricDisplay = ({ currentValue, previousValue, label, showTooltip = true }) => {
+const MetricDisplay = ({ currentValue : nonFloatCurrentValue, previousValue, label, showTooltip = true, showTrend = true }) => {
+  const currentValue = Number(nonFloatCurrentValue);
   const percentChange = previousValue !== undefined && previousValue !== 0
     ? ((currentValue - previousValue) / Math.abs(previousValue) * 100).toFixed(1)
     : (currentValue !== 0 ? '100.0' : '0.0');
@@ -36,10 +37,11 @@ const MetricDisplay = ({ currentValue, previousValue, label, showTooltip = true 
           {currentValue.toFixed(2)}
         </span>
       </div>
-      {/* Reduce duration from 300ms to 150ms */}
-      <div className={`text-[10px] ${trendColorClass} whitespace-nowrap transition-opacity duration-150 ease-in-out ${isHighlighted ? 'opacity-100' : 'opacity-80'}`}>
-        {trendIcon}{Math.abs(parseFloat(percentChange)).toFixed(1)}%
-      </div>
+      {showTrend && (
+        <div className={`text-[10px] ${trendColorClass} whitespace-nowrap transition-opacity duration-150 ease-in-out ${isHighlighted ? 'opacity-100' : 'opacity-80'}`}>
+          {trendIcon}{Math.abs(parseFloat(percentChange)).toFixed(1)}%
+        </div>
+      )}
     </div>
   );
 

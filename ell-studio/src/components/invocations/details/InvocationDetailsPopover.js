@@ -16,7 +16,12 @@ const InvocationDetailsPopover = ({ invocation : invocationWithoutLMP, onClose, 
   const { data: lmpData } = useLMPs(null, invocationWithoutLMP.lmp_id);
   const lmp = lmpData && lmpData.length > 0 ? lmpData[0] : invocationWithoutLMP.lmp;
 
-  const invocation = { ...invocationWithoutLMP, lmp };
+  const invocation = { 
+    ...invocationWithoutLMP, 
+    lmp,
+    labels: invocationWithoutLMP.labels
+  };
+
   const handleResize = (newWidth) => {
     setSidebarWidth(newWidth);
     onResize(newWidth);
@@ -115,7 +120,9 @@ const InvocationDetailsPopover = ({ invocation : invocationWithoutLMP, onClose, 
           >
             {activeTab === "I/O" && (
               <div className="h-full">
-                <InvocationDataPane invocation={invocation} />
+                <InvocationDataPane 
+                  invocation={invocation}
+                />
               </div>
             )}
             {(activeTab === "Info" || isNarrowForInfo) && (
