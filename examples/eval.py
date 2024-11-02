@@ -238,7 +238,7 @@ def test_poem_eval():
 
     eval = ell.evaluation.Evaluation(
         name="poem_eval",
-        n_evals=25,
+        n_evals=100,
         metrics={
             "critic_score": score,
             "length": lambda _, output: len(output),

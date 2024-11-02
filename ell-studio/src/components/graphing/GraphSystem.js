@@ -118,6 +118,7 @@ export const GraphRenderer = ({ graphId }) => {
     datasets: graph.metrics.map(metric => ({
       label: metric.label,
       data: metric.yData,
+      xData: metric.xData,
       borderColor: metric.color,
       backgroundColor: chartType === 'line' ? metric.color : `${metric.color}80`,
       errorBars: metric.errorBars,
@@ -188,7 +189,20 @@ export const GraphRenderer = ({ graphId }) => {
         callbacks: {
           label: function(context) {
             const value = context.parsed.y;
-            let label = `${context.dataset.label}: ${value.toFixed(2)}`;
+            const chartType = context.chart.config.type;
+            const metricLabel = context.dataset.label || '';
+            
+            if (chartType === 'histogram' || chartType === 'bar') {
+              // For histograms, show the bin range and count
+              const binLabel = context.label;
+              const binWidth = parseFloat(context.dataset.xData?.[1]) - parseFloat(context.dataset.xData?.[0]);
+              const binStart = parseFloat(binLabel) - (binWidth / 2);
+              const binEnd = parseFloat(binLabel) + (binWidth / 2);
+              return `${metricLabel} ${value} samples`;
+            }
+            
+            // For line charts, keep the existing logic
+            let label = `${metricLabel}: ${value.toFixed(2)}`;
             
             const chartErrorBarData = context.chart.errorBarData;
             const errorData = chartErrorBarData?.[context.datasetIndex]?.[context.dataIndex];

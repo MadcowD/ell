@@ -7,12 +7,15 @@ import EvaluationRunResultsTable from '../components/evaluations/runs/Evaluation
 import EvaluationRunDetailsSidebar from '../components/evaluations/runs/EvaluationRunDetailsSidebar';
 import EvaluationRunOverview from '../components/evaluations/runs/EvaluationRunOverview';
 import EvaluationRunMetrics from '../components/evaluations/runs/EvaluationRunMetrics';
+import SearchAndFiltersBar from '../components/evaluations/runs/SearchAndFiltersBar';
 
 function EvaluationRun() {
   const { id } = useParams();
   const [page, setPage] = React.useState(0);
   const pageSize = 100;
   const [selectedTrace, setSelectedTrace] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredResults, setFilteredResults] = useState(null);
   
   const { data: run, isLoading: isRunLoading } = useEvaluationRun(id);
   const { 
@@ -24,10 +27,9 @@ function EvaluationRun() {
     return <div className="flex items-center justify-center h-screen">Loading evaluation run...</div>;
   }
 
-
   return (
     <GenericPageLayout
-      sidebarContent={<EvaluationRunDetailsSidebar run={run} results={results} />}
+      sidebarContent={<EvaluationRunDetailsSidebar run={run} results={filteredResults || results} />}
       minimizeSidebar={true}
       selectedTrace={selectedTrace}
       setSelectedTrace={setSelectedTrace}
@@ -35,10 +37,18 @@ function EvaluationRun() {
       <div className="bg-background text-foreground">
         <EvaluationRunOverview run={run} />
         
-        <EvaluationRunMetrics run={run} results={results} />
+        <EvaluationRunMetrics 
+          run={run} 
+          results={filteredResults || results}
+          fullResults={results}
+        />
 
         <div>
           <h2 className="text-lg font-semibold mb-4">Results</h2>
+          <SearchAndFiltersBar 
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
           <Card>
             <EvaluationRunResultsTable
               results={results}
@@ -47,6 +57,8 @@ function EvaluationRun() {
               pageSize={pageSize}
               selectedTrace={selectedTrace}
               setSelectedTrace={setSelectedTrace}
+              searchQuery={searchQuery}
+              onFilteredResultsChange={setFilteredResults}
             />
           </Card>
         </div>

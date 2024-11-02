@@ -49,7 +49,9 @@ const EvaluationRunResultsTable = ({
   setCurrentPage, 
   pageSize,
   selectedTrace,
-  setSelectedTrace 
+  setSelectedTrace,
+  searchQuery,
+  onFilteredResultsChange 
 }) => {
   const resultsTableData = useMemo(() => {
     if (!results) return [];
@@ -68,7 +70,7 @@ const EvaluationRunResultsTable = ({
     }, {});
 
     // Calculate mean values and stats for each group
-    return Object.entries(groupedByInput).map(([inputHash, group]) => {
+    let tableData = Object.entries(groupedByInput).map(([inputHash, group]) => {
       const children = group.items.map(result => ({
         id: result.id,
         invocation: result.invocation_being_labeled,
@@ -124,7 +126,64 @@ const EvaluationRunResultsTable = ({
         isGroup: true
       };
     });
-  }, [results]);
+
+    // Apply search filter if there's a search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      
+      // Helper function to check if an item matches the search query
+      const itemMatches = (item) => {
+        // For leaf nodes (children)
+        if (!item.isGroup) {
+          const inputMatch = JSON.stringify(item.invocation.contents.params)
+            .toLowerCase()
+            .includes(query);
+
+          const outputMatch = JSON.stringify(item.invocation.contents.results)
+            .toLowerCase()
+            .includes(query);
+
+          const labelMatch = Object.values(item.labels).some(value => 
+            String(value).toLowerCase().includes(query)
+          );
+
+          return inputMatch || outputMatch || labelMatch;
+        }
+        
+        // For group nodes, check if any children match
+        return item.children.some(child => itemMatches(child));
+      };
+
+      // Filter the table data, keeping groups that have matching children
+      tableData = tableData.map(group => {
+        const matchingChildren = group.children.filter(itemMatches);
+        
+        if (matchingChildren.length > 0) {
+          return {
+            ...group,
+            children: matchingChildren
+          };
+        }
+        return null;
+      }).filter(Boolean);
+
+      // Create filtered results array for metrics
+      const filteredResults = tableData.flatMap(group => 
+        group.children.map(child => {
+          // Find original result that matches this child
+          return results.find(result => result.id === child.id);
+        })
+      );
+      
+      // Notify parent component of filtered results
+      onFilteredResultsChange(filteredResults);
+    } else {
+      // If no search query, reset filtered results
+      onFilteredResultsChange(null);
+    }
+
+    return tableData;
+  }, [results, searchQuery, onFilteredResultsChange]);
 
   const labelerColumns = useMemo(() => {
     if (!results?.[0]?.labels) return [];

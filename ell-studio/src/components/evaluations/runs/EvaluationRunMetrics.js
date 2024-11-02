@@ -6,19 +6,19 @@ import Graph from '../../graphing/Graph';
 import { GraphProvider } from '../../graphing/GraphSystem';
 import MetricDisplay from '../MetricDisplay';
 
-function EvaluationRunMetrics({ run, results }) {
-  // Cache histogram data for all labelers
-  const histogramDataMap = useMemo(() => {
-    // if (!results) return new Map();
-    if(!results) return null;
+function EvaluationRunMetrics({ run, results, fullResults }) {
+  // Use fullResults (unfiltered) to determine axis scales
+  const { histogramDataMap, axisScales } = useMemo(() => {
+    if(!results) return { histogramDataMap: null, axisScales: null };
     
     const dataMap = new Map();
+    const scales = new Map();
     
     run?.labeler_summaries?.forEach(summary => {
       const labelerId = summary.evaluation_labeler_id;
       
-      // Extract all numeric values for this labeler
-      const values = results
+      // Get values from the full dataset to determine scales
+      const allValues = (fullResults || results)
         .flatMap(result => 
           result.labels
             .filter(label => label.labeler_id === labelerId)
@@ -26,23 +26,43 @@ function EvaluationRunMetrics({ run, results }) {
         )
         .filter(value => typeof value === 'number' || typeof value === 'boolean');
 
-      if (values.length === 0) return;
+      if (allValues.length === 0) return;
 
-      // Calculate min and max from actual values
-      const min = Math.min(...values);
-      const max = Math.max(...values);
+      // Calculate global min and max from full dataset
+      const globalMin = Math.min(...allValues);
+      const globalMax = Math.max(...allValues);
       
-      // Create 10 bins spanning the range
+      scales.set(labelerId, { min: globalMin, max: globalMax });
+
+      // Now get values from filtered results for the histogram
+      const filteredValues = results
+        .flatMap(result => 
+          result.labels
+            .filter(label => label.labeler_id === labelerId)
+            .map(label => label.label_invocation?.contents?.results)
+        )
+        .filter(value => typeof value === 'number' || typeof value === 'boolean');
+
+      if (filteredValues.length === 0) return;
+
+      // Use global min/max for binning, even with filtered data
+      if (globalMin === globalMax) {
+        const padding = Math.abs(globalMin * 0.1) || 0.1;
+        dataMap.set(labelerId, {
+          binLabels: [(globalMin - padding).toFixed(2), globalMin.toFixed(2), (globalMin + padding).toFixed(2)],
+          counts: [0, filteredValues.length, 0]
+        });
+        return;
+      }
+
       const numBins = 10;
-      const binWidth = (max - min) / numBins;
+      const binWidth = (globalMax - globalMin) / numBins;
       
-      // Initialize histogram data
       const histogramData = Array(numBins).fill(0);
       
-      // Count values in each bin
-      values.forEach(value => {
+      filteredValues.forEach(value => {
         const binIndex = Math.min(
-          Math.floor((value - min) / binWidth),
+          Math.floor((value - globalMin) / binWidth),
           numBins - 1
         );
         if (binIndex >= 0 && binIndex < numBins) {
@@ -50,9 +70,8 @@ function EvaluationRunMetrics({ run, results }) {
         }
       });
 
-      // Create bin labels
       const binLabels = Array.from({ length: numBins }, (_, i) => {
-        const binStart = min + (i * binWidth);
+        const binStart = globalMin + (i * binWidth);
         return ((binStart + (binStart + binWidth)) / 2).toFixed(2);
       });
 
@@ -62,9 +81,8 @@ function EvaluationRunMetrics({ run, results }) {
       });
     });
 
-    return dataMap;
-  }, [results, run?.labeler_summaries]); // Only recalculate when results or summaries change
-  console.log(histogramDataMap)
+    return { histogramDataMap: dataMap, axisScales: scales };
+  }, [results, fullResults, run?.labeler_summaries]);
 
   if(!results) return null;
   return (
@@ -87,7 +105,11 @@ function EvaluationRunMetrics({ run, results }) {
                   display: true,
                   text: 'Value'
                 },
-                grid: { display: false }
+                grid: { display: false },
+                offset: true,
+                ticks: {
+                  autoSkip: false
+                }
               },
               y: {
                 display: true,
@@ -104,9 +126,9 @@ function EvaluationRunMetrics({ run, results }) {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {run?.labeler_summaries?.map((summary, index) => {
-            const histogramData = histogramDataMap.get(summary.evaluation_labeler_id);
-            console.log(histogramData)
-            // Skip if we don't have histogram data
+            const histogramData = histogramDataMap?.get(summary.evaluation_labeler_id);
+            const scale = axisScales?.get(summary.evaluation_labeler_id);
+            
             if (!histogramData) return null;
             
             return (
@@ -145,6 +167,14 @@ function EvaluationRunMetrics({ run, results }) {
                         }
                       }
                     ]}
+                    options={{
+                      scales: {
+                        x: {
+                          min: scale.min,
+                          max: scale.max
+                        }
+                      }
+                    }}
                   />
                 </div>
               </Card>
