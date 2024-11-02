@@ -58,7 +58,7 @@ sphinx-rtd-theme = "^2.0.0"
 anthropic = ["anthropic"]
 groq = ["groq"]
 sqlite = [ 'sqlmodel' ]
-postgres = ['sqlmodel', 'psychopg2']
+postgres = ['sqlmodel', 'psycopg2']
 studio = ['fastapi', 'uvicorn', 'sqlmodel']
 all = [
     "anthropic",
