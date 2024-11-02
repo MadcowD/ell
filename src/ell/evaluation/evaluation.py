@@ -118,9 +118,9 @@ class Evaluation(LabelListMixin):
             self.labels.append(
                 Labeler(name="criterion", type=EvaluationLabelerType.CRITERION, label=criterion)
             )
-        assert self.labels, "No labels found, labeless evaluations coming soon!"
+        assert len(self.labels) > 0, "No labels found, labeless evaluations coming soon!"
         assert not annotations, "Annotations are not supported yet."
-        
+
 
     def run(
         self,

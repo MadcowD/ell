@@ -22,7 +22,7 @@ def mock_evaluation():
         n_evals=10,
         samples_per_datapoint=2,
         metrics={"mock_metric": lambda x, y: 1.0},
-        annotations={"mock_annotation": lambda x, y: "annotation"},
+        # annotations={"mock_annotation": lambda x, y: "annotation"},
         criterion=lambda x, y: True
     )
 
@@ -32,7 +32,7 @@ def test_evaluation_initialization(mock_evaluation):
     assert mock_evaluation.n_evals == 10
     assert mock_evaluation.samples_per_datapoint == 2
     assert "mock_metric" in mock_evaluation.metrics
-    assert "mock_annotation" in mock_evaluation.annotations
+    # assert "mock_annotation" in mock_evaluation.annotations
 
 
 def test_evaluation_run_process_single(mock_evaluation):
