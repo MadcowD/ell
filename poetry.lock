@@ -2428,13 +2428,14 @@ type = ["pytest-mypy"]
 [extras]
 all = ["anthropic", "fastapi", "groq", "sqlmodel", "uvicorn"]
 anthropic = ["anthropic"]
-api-server = ["aiomqtt", "fastapi", "uvicorn"]
+api-server = ["fastapi", "uvicorn"]
 groq = ["groq"]
-postgres = ["sqlmodel"]
+mqtt = ["aiomqtt"]
+postgres = ["psycopg2", "sqlmodel"]
 sqlite = ["sqlmodel"]
 studio = ["fastapi", "sqlmodel", "uvicorn"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<4.0"
-content-hash = "49a283549a81a5b13eade523c0cae915a003660185f199a60b21fee249a9e184"
+content-hash = "5e05acc71c0666a38c06b7837fa7ecb02e5615dd4bfd5ed7573541730e904456"
