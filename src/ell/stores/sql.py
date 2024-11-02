@@ -5,17 +5,25 @@ from sqlmodel import Session, SQLModel, create_engine, select
 import ell.stores.store
 from sqlalchemy.sql import text
 from ell.stores.studio import InvocationTrace, SerializedLMP, Invocation
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, Engine
 from ell.util.serialization import pydantic_ltype_aware_cattr
 import gzip
 import json
 
 class SQLStore(ell.stores.store.Store):
-    def __init__(self, db_uri: str, blob_store: Optional[ell.stores.store.BlobStore] = None):
-        self.engine = create_engine(db_uri,
-                                    json_serializer=lambda obj: json.dumps(pydantic_ltype_aware_cattr.unstructure(obj), 
-                                     sort_keys=True, default=repr, ensure_ascii=False))
-        
+    def __init__(self, db_uri: str = None, blob_store: Optional[ell.stores.store.BlobStore] = None,
+                 engine: Optional[Engine] = None, ):
+        if engine is not None:
+            self.engine = engine
+        elif db_uri is None:
+            raise ValueError(
+                "db_uri cannot be None when engine is not provided as an argument")
+        else:
+            self.engine = create_engine(db_uri,
+                                        json_serializer=lambda obj: json.dumps(
+                                            pydantic_ltype_aware_cattr.unstructure(obj),
+                                            sort_keys=True, default=repr, ensure_ascii=False))
+
         SQLModel.metadata.create_all(self.engine)
         self.open_files: Dict[str, Dict[str, Any]] = {}
         super().__init__(blob_store)
@@ -92,7 +100,13 @@ class SQLStore(ell.stores.store.Store):
         
         return self.get_lmps(session, skip=skip, limit=limit, subquery=subquery, **filters)
 
-        
+    def get_lmp(self, lmp_id: str, session: Optional[Session] = None) -> Optional[SerializedLMP]:
+        if session is None:
+            with Session(self.engine) as session:
+                return session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == lmp_id)).first()
+        else:
+            return session.exec(select(SerializedLMP).where(SerializedLMP.lmp_id == lmp_id)).first()
+
     def get_lmps(self, session: Session, skip: int = 0, limit: int = 10, subquery=None, **filters: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
         query = select(SerializedLMP)
@@ -204,7 +218,23 @@ class SQLStore(ell.stores.store.Store):
 class SQLiteStore(SQLStore):
     def __init__(self, db_dir: str):
         assert not db_dir.endswith('.db'), "Create store with a directory not a db."
-    
+        if ":memory:" in db_dir:
+            from sqlalchemy.pool import StaticPool
+            # todo. set up blob store for in-memory
+            engine = create_engine(
+                'sqlite://',
+                connect_args={'check_same_thread': False},
+                poolclass=StaticPool,
+                json_serializer=lambda obj:
+                json.dumps(pydantic_ltype_aware_cattr.unstructure(obj),
+                           sort_keys=True,
+                           default=repr,
+                           ensure_ascii=False
+                           )
+            )
+            super().__init__(engine=engine)
+            return
+
         os.makedirs(db_dir, exist_ok=True)
         self.db_dir = db_dir
         db_path = os.path.join(db_dir, 'ell.db')
