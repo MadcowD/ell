@@ -3,8 +3,7 @@ from datetime import datetime, timezone
 from functools import cached_property
 from typing import Any, Dict, List, Optional, Union
 
-from openai import BaseModel
-from pydantic import AwareDatetime, Field
+from pydantic import BaseModel, AwareDatetime, Field
 
 from ell.types.lmp import LMPType
 from ell.types.message import Message
