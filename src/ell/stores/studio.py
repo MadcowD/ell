@@ -1,3 +1,4 @@
+# todo. rename this file sqlmodels because it is not unique to studio
 from datetime import datetime, timezone
 import enum
 from functools import cached_property
@@ -19,6 +20,9 @@ from sqlmodel import Field, SQLModel, Relationship, JSON, Column
 from sqlalchemy import Index, func
 
 from typing import TypeVar, Any
+import ell.types.serialize
+
+
 
 def utc_now() -> datetime:
     """
@@ -86,6 +90,23 @@ class SerializedLMP(SerializedLMPBase, table=True):
         ),
     )
 
+    @staticmethod
+    def from_api(input: ell.types.serialize.WriteLMPInput):
+        return SerializedLMP(
+            lmp_id=input.lmp_id,
+            lmp_type=input.lmp_type,
+            name=input.name,
+            source=input.source,
+            dependencies=input.dependencies,
+            api_params=input.api_params,
+            version_number=input.version_number,
+            initial_global_vars=input.initial_global_vars,
+            initial_free_vars=input.initial_free_vars,
+            commit_message=input.commit_message,
+            created_at=cast(datetime, input.created_at)
+        )
+
+
     class Config:
         table_name = "serializedlmp"
         unique_together = [("version_number", "name")]
@@ -142,6 +163,10 @@ class InvocationContentsBase(SQLModel):
 class InvocationContents(InvocationContentsBase, table=True):
     invocation: "Invocation" = Relationship(back_populates="contents")
 
+    @classmethod
+    def from_api(cls, input: ell.types.serialize.InvocationContents):
+        return cls(**input.model_dump())
+
 class Invocation(InvocationBase, table=True):
     lmp: SerializedLMP = Relationship(back_populates="invocations")
     consumed_by: List["Invocation"] = Relationship(
@@ -169,3 +194,10 @@ class Invocation(InvocationBase, table=True):
         Index('ix_invocation_created_at_latency_ms', 'created_at', 'latency_ms'),
         Index('ix_invocation_created_at_tokens', 'created_at', 'prompt_tokens', 'completion_tokens'),
     )
+
+    @classmethod
+    def from_api(cls, input: ell.types.serialize.Invocation):
+        return cls(
+            **input.model_dump(exclude={"contents"}),
+            contents=InvocationContents.from_api(input.contents)
+        )
