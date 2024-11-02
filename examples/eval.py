@@ -268,5 +268,6 @@ def test_poem_eval():
 if __name__ == "__main__":
     #    test_poem_eval()
     ell.init(verbose=True, store="./logdir")
-    test_predictor_evaluation()
+    # test_predictor_evaluation()
+    test_poem_eval()
 

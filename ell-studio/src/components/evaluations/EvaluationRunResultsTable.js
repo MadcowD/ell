@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import HierarchicalTable from '../HierarchicalTable';
 import { Card } from '../common/Card';
 import { ContentsRenderer } from '../invocations/ContentsRenderer';
@@ -86,7 +86,7 @@ const EvaluationRunResultsTable = ({
         Object.keys(firstChild.labels).forEach(labelerId => {
           const values = children
             .map(child => child.labels[labelerId])
-            .filter(value => typeof value === 'number');
+            .filter(value => typeof value === 'number' || typeof value === 'boolean');
           
           if (values.length > 0) {
             const mean = values.reduce((a, b) => a + b, 0) / values.length;
@@ -132,17 +132,19 @@ const EvaluationRunResultsTable = ({
     return results[0].labels.map(label => ({
       header: label.labeler_id.split('-')[3] || 'Label',
       key: label.labeler_id,
-      render: (item) => (
-        <LabelDisplay 
-          value={item.labels[label.labeler_id]} 
+      render: (item) => {
+        return (
+          <LabelDisplay 
+            value={item.labels[label.labeler_id]} 
           isAggregate={item.isGroup}
           stats={item.isGroup ? {
             min: item.labelStats[label.labeler_id]?.min,
             max: item.labelStats[label.labeler_id]?.max,
             stdDev: item.labelStats[label.labeler_id]?.stdDev
           } : null}
-        />
-      ),
+          />
+        );
+      },
       maxWidth: 150,
       sortable: true,
     }));
@@ -197,6 +199,32 @@ const EvaluationRunResultsTable = ({
 
   const hasNextPage = resultsTableData.length === pageSize;
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedTrace(null);
+        return;
+      }
+
+      if (selectedTrace) {
+        // Find all leaf nodes (non-group items) in the current data
+        const leafNodes = resultsTableData.flatMap(group => group.children);
+        const currentIndex = leafNodes.findIndex(item => item.invocation.id === selectedTrace.id);
+
+        if (e.key === 'ArrowUp' && currentIndex > 0) {
+          setSelectedTrace(leafNodes[currentIndex - 1].invocation);
+        } else if (e.key === 'ArrowDown' && currentIndex < leafNodes.length - 1) {
+          setSelectedTrace(leafNodes[currentIndex + 1].invocation);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [resultsTableData, selectedTrace, setSelectedTrace]);
+
   return (
     <HierarchicalTable
       schema={{ columns }}
@@ -209,6 +237,9 @@ const EvaluationRunResultsTable = ({
       expandAll={false}
       initialSortConfig={{ key: 'id', direction: 'desc' }}
       onRowClick={handleRowClick}
+      rowClassName={(item) => 
+        !item.isGroup && item.invocation.id === selectedTrace?.id ? 'bg-blue-600 bg-opacity-30' : ''
+      }
     />
   );
 };

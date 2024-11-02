@@ -172,6 +172,11 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onSelectTrace(null);
+        return;
+      }
+
       if (currentlySelectedTrace) {
         const currentIndex = invocationTableData.findIndex(trace => trace.id === currentlySelectedTrace.id);
         if (e.key === 'ArrowUp' && currentIndex > 0) {

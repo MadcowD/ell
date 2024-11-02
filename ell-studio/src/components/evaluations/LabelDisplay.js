@@ -1,10 +1,12 @@
 import React from 'react';
 
 const LabelDisplay = ({ 
-  value, // This is the mean
+  value : valueNumberish, // This is the mean
   isAggregate = false, 
   stats = null // { min, max, stdDev }
 }) => {
+    const value = typeof valueNumberish === 'boolean' ? Number(valueNumberish) : valueNumberish;
+
   if (typeof value !== 'number') {
     return <div className="font-mono text-sm">{value}</div>;
   }
