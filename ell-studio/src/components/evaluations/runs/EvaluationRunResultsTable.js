@@ -1,9 +1,9 @@
 import React, { useMemo, useEffect } from 'react';
-import HierarchicalTable from '../HierarchicalTable';
-import { Card } from '../common/Card';
-import { ContentsRenderer } from '../invocations/ContentsRenderer';
-import LabelDisplay from './LabelDisplay';
-import InvocationDetailsPopover from '../invocations/details/InvocationDetailsPopover';
+import HierarchicalTable from '../../HierarchicalTable';
+import { Card } from '../../common/Card';
+import { ContentsRenderer } from '../../invocations/ContentsRenderer';
+import LabelDisplay from '../LabelDisplay';
+import InvocationDetailsPopover from '../../invocations/details/InvocationDetailsPopover';
 
 const MAX_PREVIEW_ITEMS = 3;
 

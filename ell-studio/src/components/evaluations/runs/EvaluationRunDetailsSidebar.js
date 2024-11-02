@@ -1,9 +1,9 @@
 import React from 'react';
 import { FiZap, FiClock, FiActivity, FiCpu, FiCheck, FiAlertCircle } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import SidePanel from '../common/SidePanel';
-import { Card } from '../common/Card';
-import { getTimeAgo } from '../../utils/lmpUtils';
+import SidePanel from '../../common/SidePanel';
+import { Card } from '../../common/Card';
+import { getTimeAgo } from '../../../utils/lmpUtils';
 
 function EvaluationRunDetailsSidebar({ run, results }) {
   const totalInvocations = results?.length || 0;

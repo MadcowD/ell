@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LMPCardTitle } from '../depgraph/LMPCardTitle';
-import HierarchicalTable from '../HierarchicalTable';
-import { Card } from '../common/Card';
-import { getTimeAgo } from '../../utils/lmpUtils';
-import VersionBadge from '../VersionBadge';
-import { Spinner } from '../common/Spinner';
+import { LMPCardTitle } from '../../depgraph/LMPCardTitle';
+import HierarchicalTable from '../../HierarchicalTable';
+import { Card } from '../../common/Card';
+import { getTimeAgo } from '../../../utils/lmpUtils';
+import VersionBadge from '../../VersionBadge';
+import { Spinner } from '../../common/Spinner';
 import { FiXCircle } from 'react-icons/fi';
-import LabelDisplay from './LabelDisplay';
+import LabelDisplay from '../LabelDisplay';
 import { IoCheckmarkCircleOutline } from 'react-icons/io5';
 
 const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSelectRun, currentlySelectedRun, activeIndex }) => {

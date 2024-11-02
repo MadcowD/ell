@@ -4,7 +4,7 @@ import { useEvaluation } from '../hooks/useBackend';
 import GenericPageLayout from '../components/layouts/GenericPageLayout';
 import { Card, CardContent } from '../components/common/Card';
 import VersionHistoryPane from '../components/VersionHistoryPane';
-import EvaluationRunsTable from '../components/evaluations/EvaluationRunsTable';
+import EvaluationRunsTable from '../components/evaluations/runs/EvaluationRunsTable';
 import EvaluationDetailsSidebar from '../components/evaluations/EvaluationDetailsSidebar';
 import { EvaluationCardTitle } from '../components/evaluations/EvaluationCardTitle';
 import EvaluationOverview from '../components/evaluations/EvaluationOverview';

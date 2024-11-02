@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent } from '../common/Card';
-import { EvaluationCardTitle } from './EvaluationCardTitle';
-import { LMPCardTitle } from '../depgraph/LMPCardTitle';
-import LMPSourceView from '../source/LMPSourceView';
+import { Card, CardContent } from '../../common/Card';
+import { EvaluationCardTitle } from '../EvaluationCardTitle';
+import { LMPCardTitle } from '../../depgraph/LMPCardTitle';
+import LMPSourceView from '../../source/LMPSourceView';
 
 function EvaluationRunOverview({ run }) {
   return (

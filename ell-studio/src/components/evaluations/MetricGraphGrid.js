@@ -45,7 +45,7 @@ const MetricGraphGrid = ({ evaluation, groupedRuns, onActiveIndexChange }) => {
   const xData = Array.from({ length: getHistoricalData(evaluation.labelers?.[0]).means.length}, (_, i) => `${i + 1}`);
 
   const handleHover = useCallback((index) => {
-    setActiveIndex(index);
+    setActiveIndex(index); 
     onActiveIndexChange(index);
   }, [onActiveIndexChange]);
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { FiZap, FiClock, FiHash, FiUsers, FiPercent, FiBox } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import SidePanel from '../common/SidePanel';
-import MetricChart from '../graphing/MetricChart';
+import MetricChart from '../oldgraph/OldMetricChart';
 import { motion } from 'framer-motion';
 import { LMPCardTitle } from '../depgraph/LMPCardTitle';
 import { Card } from '../common/Card';

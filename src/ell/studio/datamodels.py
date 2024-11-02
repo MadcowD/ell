@@ -62,7 +62,7 @@ class EvaluationLabelerPublic(EvaluationLabelerBase):
     labeling_lmp: Optional[SerializedLMPBase]
 
 class EvaluationRunLabelerSummaryPublic(EvaluationRunLabelerSummaryBase):
-    evaluation_labeler: EvaluationLabelerBase
+    evaluation_labeler: EvaluationLabelerPublic
 
 class EvaluationRunPublic(SerializedEvaluationRunBase):
     evaluated_lmp: SerializedLMPBase
