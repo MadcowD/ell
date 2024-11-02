@@ -136,17 +136,22 @@ const EvaluationRunResultsTable = ({
         return (
           <LabelDisplay 
             value={item.labels[label.labeler_id]} 
-          isAggregate={item.isGroup}
-          stats={item.isGroup ? {
-            min: item.labelStats[label.labeler_id]?.min,
-            max: item.labelStats[label.labeler_id]?.max,
-            stdDev: item.labelStats[label.labeler_id]?.stdDev
-          } : null}
+            isAggregate={item.isGroup}
+            stats={item.isGroup ? {
+              min: item.labelStats[label.labeler_id]?.min,
+              max: item.labelStats[label.labeler_id]?.max,
+              stdDev: item.labelStats[label.labeler_id]?.stdDev
+            } : null}
           />
         );
       },
       maxWidth: 150,
       sortable: true,
+      sortFn: (a, b) => {
+        const aValue = a.labels[label.labeler_id] ?? -Infinity;
+        const bValue = b.labels[label.labeler_id] ?? -Infinity;
+        return aValue - bValue;
+      }
     }));
   }, [results]);
 
@@ -164,6 +169,12 @@ const EvaluationRunResultsTable = ({
         </div>
       ),
       maxWidth: 300,
+      sortable: true,
+      sortFn: (a, b) => {
+        const aInput = JSON.stringify(a.invocation.contents.params);
+        const bInput = JSON.stringify(b.invocation.contents.params);
+        return aInput.localeCompare(bInput);
+      }
     },
     { 
       header: 'Output', 
@@ -183,6 +194,12 @@ const EvaluationRunResultsTable = ({
         )
       ),
       maxWidth: 300,
+      sortable: true,
+      sortFn: (a, b) => {
+        const aOutput = JSON.stringify(a.invocation.contents.results);
+        const bOutput = JSON.stringify(b.invocation.contents.results);
+        return aOutput.localeCompare(bOutput);
+      }
     },
     ...labelerColumns,
   ];
@@ -237,6 +254,7 @@ const EvaluationRunResultsTable = ({
       expandAll={false}
       initialSortConfig={{ key: 'id', direction: 'desc' }}
       onRowClick={handleRowClick}
+      hierarchicalSort={true}
       rowClassName={(item) => 
         !item.isGroup && item.invocation.id === selectedTrace?.id ? 'bg-blue-600 bg-opacity-30' : ''
       }

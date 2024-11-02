@@ -324,7 +324,26 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, pageSize, t
   );
 };
 
-const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName, currentPage, onPageChange, pageSize, totalItems, omitColumns, expandAll, links, expandedLinkColumn, collapsedLinkColumn, showHierarchical = true, statusColumn = null }) => {
+const HierarchicalTable = ({ 
+  schema, 
+  data, 
+  onRowClick, 
+  onSelectionChange, 
+  initialSortConfig, 
+  rowClassName, 
+  currentPage, 
+  onPageChange, 
+  pageSize, 
+  totalItems, 
+  omitColumns, 
+  expandAll, 
+  links, 
+  expandedLinkColumn, 
+  collapsedLinkColumn, 
+  showHierarchical = true, 
+  statusColumn = null,
+  hierarchicalSort = false
+}) => {
   const [columnWidths, setColumnWidths] = useState({});
   const [isExpanded, setIsExpanded] = useState(false);
   const [rowRefs, setRowRefs] = useState({});
@@ -384,10 +403,12 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
   return (
     <HierarchicalTableProvider 
       data={data} 
+      schema={schema} 
       onSelectionChange={onSelectionChange}
       initialSortConfig={initialSortConfig}
       setIsExpanded={setIsExpanded}
       expandAll={expandAll}
+      hierarchicalSort={hierarchicalSort}
     >
       <div className="overflow-x-auto hide-scrollbar relative" ref={tableRef}>
         <table className="w-full">
