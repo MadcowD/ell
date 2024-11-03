@@ -55,7 +55,6 @@ async def setup_pubsub(config: Config, exit_stack: AsyncExitStack):
                 "Received mqtt_connection_string but dependencies missing. Install with `pip install -U ell-ai[mqtt]. More info: https://docs.ell.so/installation") from e
 
         pubsub, mqtt_client = await setup(config.mqtt_connection_string)
-        # await exit_stack.enter_async_context(mqtt_client)
         exit_stack.push_async_exit(mqtt_client)
         logger.info("Connected to MQTT")
 
