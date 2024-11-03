@@ -3,8 +3,6 @@ FROM node:20 AS client-builder
 
 WORKDIR /app/ell-studio
 
-ARG ELL_EXTRAS="studio postgres mqtt"
-
 # Copy package.json and package-lock.json (if available)
 COPY ell-studio/package.json ell-studio/package-lock.json* ./
 
@@ -20,7 +18,12 @@ RUN npm run build
 # Now, start with the Python base image
 FROM python:3.12
 
+ARG ELL_EXTRAS=""
+
+RUN echo "ELL_EXTRAS=${ELL_EXTRAS}"
+
 WORKDIR /app
+
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -35,7 +38,7 @@ COPY pyproject.toml poetry.lock* ./
 
 # Project initialization:
 RUN poetry config virtualenvs.create false \
-    && poetry install --extras "${ELL_EXTRAS}" --no-interaction --no-ansi
+    && poetry install --extras="studio ${ELL_EXTRAS}" --no-interaction --no-ansi
 
 # Copy the Python project
 COPY src .

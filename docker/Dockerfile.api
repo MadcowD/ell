@@ -17,7 +17,7 @@ COPY pyproject.toml poetry.lock* ./
 
 # Project initialization:
 RUN poetry config virtualenvs.create false \
-    && poetry install --extras="${ELL_EXTRAS}" --no-interaction --no-ansi
+    && poetry install --extras="api-server ${ELL_EXTRAS}" --no-interaction --no-ansi
 
 # Copy project
 COPY src .

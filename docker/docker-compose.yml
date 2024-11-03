@@ -1,10 +1,12 @@
+name: ell
+version: "3.9"
 services:
   api:
     build:
       context: ..
       dockerfile: docker/Dockerfile.api
       args:
-        ELL_EXTRAS: api-server postgres mqtt
+        ELL_EXTRAS: postgres mqtt
       tags:
         - ell-api
 
@@ -25,7 +27,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.studio
       args:
-        ELL_EXTRAS: studio postgres mqtt
+        ELL_EXTRAS: postgres mqtt
       tags:
         - ell-studio
     ports:
