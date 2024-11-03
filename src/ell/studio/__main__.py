@@ -36,7 +36,9 @@ def main():
                         help="Directory for filesystem serializer storage (default: current directory)")
     parser.add_argument("--pg-connection-string", default=None,
                         help="PostgreSQL connection string (default: None)")
-    parser.add_argument("--host", default="127.0.0.1", help="Host to run the server on (default: localhost)")
+    parser.add_argument("--mqtt-connection-string", default=None,
+                        help="MQTT connection string (default: None)")
+    parser.add_argument("--host", default="0.0.0.0", help="Host to run the server on (default: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=5555, help="Port to run the server on (default: 5555)")
     parser.add_argument("--dev", action="store_true", help="Run in development mode")
     parser.add_argument("--dev-static-dir", default=None, help="Directory to serve static files from in development mode")
@@ -50,7 +52,8 @@ def main():
         assert args.port == 5555, "Port must be 5000 in development mode"
 
     config = Config.create(storage_dir=args.storage_dir,
-                    pg_connection_string=args.pg_connection_string)
+                    pg_connection_string=args.pg_connection_string,
+                    mqtt_connection_string=args.mqtt_connection_string)
     app = create_app(config)
 
     if not args.dev:

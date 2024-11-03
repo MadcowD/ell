@@ -18,12 +18,14 @@ def ell_home() -> str:
 class Config(BaseModel):
     pg_connection_string: Optional[str] = None
     storage_dir: Optional[str] = None
+    mqtt_connection_string: Optional[str] = None
 
     @classmethod
     def create(
         cls,
         storage_dir: Optional[str] = None,
         pg_connection_string: Optional[str] = None,
+        mqtt_connection_string: Optional[str] = None,
     ) -> 'Config':
         pg_connection_string = pg_connection_string or os.getenv("ELL_PG_CONNECTION_STRING")
         storage_dir = storage_dir or os.getenv("ELL_STORAGE_DIR")
@@ -37,4 +39,6 @@ class Config(BaseModel):
             # This intends to honor the default we had set in the CLI
             storage_dir = os.getcwd()
 
-        return cls(pg_connection_string=pg_connection_string, storage_dir=storage_dir)
+        mqtt_connection_string = mqtt_connection_string or os.getenv("ELL_MQTT_CONNECTION_STRING")
+
+        return cls(pg_connection_string=pg_connection_string, storage_dir=storage_dir, mqtt_connection_string=mqtt_connection_string)
