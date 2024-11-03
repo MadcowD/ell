@@ -6,7 +6,7 @@ from typing import Any, Dict
 from fastapi.testclient import TestClient
 
 from ell.api.client import EllSqliteClient
-from ell.api.server import NoopPublisher, create_app, get_publisher, get_serializer
+from ell.api.server import create_app, get_pubsub, get_serializer
 from ell.api.config import Config
 from ell.api.logger import setup_logging
 from ell.types.serialize import utc_now
@@ -92,7 +92,7 @@ def create_test_app(sql_store: EllSqliteClient):
     config = Config(storage_dir=":memory:")
     app = create_app(config)
 
-    publisher = NoopPublisher()
+    publisher = None
 
     async def get_publisher_override():
         yield publisher
@@ -101,7 +101,7 @@ def create_test_app(sql_store: EllSqliteClient):
     def get_serializer_override():
         return sql_store
 
-    app.dependency_overrides[get_publisher] = get_publisher_override
+    app.dependency_overrides[get_pubsub] = get_publisher_override
     app.dependency_overrides[get_serializer] = get_serializer_override
 
     client = TestClient(app)

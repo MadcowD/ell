@@ -4,7 +4,8 @@ import logging
 
 import aiomqtt
 
-from ell.studio.pubsub import WebSocketPubSub, Subscriber
+from ell.api.pubsub.abc import Subscriber
+from ell.api.pubsub.websocket import WebSocketPubSub
 
 logger = logging.getLogger(__name__)
 
@@ -60,11 +61,15 @@ class MqttWebSocketPubSub(WebSocketPubSub):
         super().subscribe(topic, subscriber)
 
 
-async def setup(mqtt_connection_string: str) -> tuple[MqttWebSocketPubSub, aiomqtt.Client]:  # type: ignore
-    """Setup MQTT PubSub with retry logic."""
-    retry_interval_seconds = 1
-    retry_max_attempts = 5
-
+async def setup(
+        mqtt_connection_string: str,
+        retry_interval_seconds: int = 1,
+        retry_max_attempts: int = 5
+) -> tuple[MqttWebSocketPubSub, aiomqtt.Client]:  # type: ignore
+    """
+    Connect to the MQTT broker at `mqtt_connection_string` using the provided retry policy.
+    Returns the client and the open connection which should be handled by an AsyncExitStack or similar.
+    """
     for attempt in range(retry_max_attempts):
         try:
             host, port = mqtt_connection_string.split("://")[1].split(":")
@@ -72,6 +77,8 @@ async def setup(mqtt_connection_string: str) -> tuple[MqttWebSocketPubSub, aiomq
 
             # Create the client - it will connect when used as context manager
             mqtt_client = aiomqtt.Client(hostname=host, port=int(port) if port else 1883)
+            # We call __aenter__ here in order to connect and retry on failure
+            # The client is passed back and must be handled with __aclose__()
             await mqtt_client.__aenter__()
             return MqttWebSocketPubSub(mqtt_client), mqtt_client
 

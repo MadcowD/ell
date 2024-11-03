@@ -1,26 +1,43 @@
 # todo. under ell.api.server.___main___
 import asyncio
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, AsyncExitStack
 import json
 import logging
 from typing import List, Optional
 
-# fixme. get this out of here
-import aiomqtt
 from fastapi import Depends, FastAPI, HTTPException
 
-from ell.api.client import EllClient, EllPostgresClient, EllSqliteClient
+from ell.api.client import EllClient
 from ell.api.config import Config
-from ell.api.publisher import NoopPublisher, Publisher
+from ell.api.pubsub.abc import PubSub
 from ell.types.serialize import GetLMPResponse, LMPInvokedEvent, WriteInvocationInput, WriteLMPInput, LMP
 
 logger = logging.getLogger(__name__)
 
-publisher: Optional[Publisher] = None
+pubsub: Optional[PubSub] = None
 
 
-async def get_publisher():
-    yield publisher
+async def get_pubsub():
+    yield pubsub
+
+async def init_pubsub(config: Config, exit_stack: AsyncExitStack):
+    """Set up the appropriate pubsub client based on configuration."""
+    if config.mqtt_connection_string is not None:
+        try:
+            from ell.api.pubsub.mqtt import setup
+        except ImportError as e:
+            raise ImportError(
+                "Received mqtt_connection_string but dependencies missing. Install with `pip install -U ell-ai[mqtt]. More info: https://docs.ell.so/installation") from e
+
+        pubsub, mqtt_client = await setup(config.mqtt_connection_string)
+
+        exit_stack.push_async_exit(mqtt_client)
+
+        loop = asyncio.get_event_loop()
+        return pubsub, pubsub.listen(loop)
+
+    return None, None
+
 
 
 serializer: Optional[EllClient] = None
@@ -57,50 +74,38 @@ def get_serializer():
     return serializer
 
 
-# def get_session():
-#     if serializer is None:
-#         raise ValueError("Serializer not initialized")
-#     with Session(serializer.engine) as session:
-#         yield session
-
-
 def create_app(config: Config):
     # setup_logging(config.log_level)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         global serializer
-        global publisher
+        global pubsub
+        exit_stack = AsyncExitStack()
+        pubsub_task = None
 
         logger.info("Starting lifespan")
 
         serializer = init_serializer(config)
 
-        if config.mqtt_connection_string is not None:
-            try:
-                from ell.api.mqtt_publisher import MqttPub
-            except ImportError:
-                raise ImportError("Missing MQTT dependencies. Install them with `pip install -U ell-ai[mqtt]")
+        try:
+            pubsub, pubsub_task = await init_pubsub(config, exit_stack)
+            yield
 
-            # fixme. have the class do all of this if possible
-            host, port = config.mqtt_connection_string.split("://")[1].split(":")
+        finally:
+            if pubsub_task and not pubsub_task.done():
+                pubsub_task.cancel()
+                try:
+                    await pubsub_task
+                except asyncio.CancelledError:
+                    pass
 
-            logger.info(f"Connecting to MQTT broker at {host}:{port}")
-            try:
-                async with aiomqtt.Client(host, int(port) if port else 1883) as mqtt:
-                    logger.info("Connected to MQTT")
-                    publisher = MqttPub(mqtt)
-                    yield  # Allow the app to run
-            except aiomqtt.MqttError as e:
-                logger.error(f"Failed to connect to MQTT", exc_info=e)
-                publisher = None
-        else:
-            publisher = NoopPublisher()
-            yield  # allow the app to run
+            await exit_stack.aclose()
+            pubsub = None
 
     app = FastAPI(
         title="ELL API",
-        description="API server for ELL",
+        description="Ell API Server",
         version="0.1.0",
         lifespan=lifespan
     )
@@ -127,44 +132,47 @@ def create_app(config: Config):
             lmp: WriteLMPInput,
             # fixme. what is this type supposed to be?
             uses: List[str],  # SerializedLMPUses,
-            publisher: Publisher = Depends(get_publisher),
+            pubsub: PubSub = Depends(get_pubsub),
             serializer: EllClient = Depends(get_serializer)
     ):
         await serializer.write_lmp(lmp, uses)
 
-        loop = asyncio.get_event_loop()
-        loop.create_task(
-            publisher.publish(
-                f"lmp/{lmp.lmp_id}/created",
-                json.dumps({
-                    "lmp": lmp.model_dump(),
-                    "uses": uses
-                }, default=str)
+        if pubsub:
+            loop = asyncio.get_event_loop()
+            loop.create_task(
+                pubsub.publish(
+                    f"lmp/{lmp.lmp_id}/created",
+                    json.dumps({
+                        "lmp": lmp.model_dump(),
+                        "uses": uses
+                    }, default=str)
+                )
             )
-        )
 
     @app.post("/invocation", response_model=WriteInvocationInput)
     async def write_invocation(
             input: WriteInvocationInput,
-            publisher: Publisher = Depends(get_publisher),
+            pubsub: PubSub = Depends(get_pubsub),
             serializer: EllClient = Depends(get_serializer)
     ):
         logger.info(f"Writing invocation {input.invocation.lmp_id}")
         # TODO: return anything this might create like invocation id
         result = await serializer.write_invocation(input)
 
-        loop = asyncio.get_event_loop()
-        loop.create_task(
-            publisher.publish(
-                f"lmp/{input.invocation.lmp_id}/invoked",
-                LMPInvokedEvent(
-                    lmp_id=input.invocation.lmp_id,
-                    # invocation_id=invo.id,
-                    # todo. return data from write invocation
-                    consumes=[]
-                ).model_dump_json()
+        if pubsub:
+            loop = asyncio.get_event_loop()
+            loop.create_task(
+                pubsub.publish(
+                    f"lmp/{input.invocation.lmp_id}/invoked",
+                    LMPInvokedEvent(
+                        lmp_id=input.invocation.lmp_id,
+                        # invocation_id=invo.id,
+                        # todo. return data from write invocation
+                        consumes=[]
+                    ).model_dump_json()
+                )
             )
-        )
+
         return input
 
     return app

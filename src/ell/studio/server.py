@@ -10,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 import json
 from ell.studio.config import Config
-from ell.studio.connection_manager import ConnectionManager
 from ell.studio.datamodels import InvocationPublicWithConsumes, SerializedLMPWithUses
 
 from ell.stores.studio import SerializedLMP
@@ -19,7 +18,8 @@ from sqlmodel import select
 from contextlib import AsyncExitStack
 
 
-from ell.studio.pubsub import WebSocketPubSub, PubSub
+from ell.api.pubsub.abc import PubSub
+from ell.api.pubsub.websocket import WebSocketPubSub
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ async def setup_pubsub(config: Config, exit_stack: AsyncExitStack):
 
     if config.mqtt_connection_string is not None:
         try:
-            from ell.studio.mqtt_pubsub import setup
+            from ell.api.pubsub.mqtt import setup
         except ImportError as e:
             raise ImportError(
                 "Received mqtt_connection_string but dependencies missing. Install with `pip install -U ell-ai[mqtt]. More info: https://docs.ell.so/installation") from e
