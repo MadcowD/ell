@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException
 
-from ell.api.client import EllClient
+from ell.api.client.abc import EllClient
 from ell.api.config import Config
 from ell.api.pubsub.abc import PubSub
 from ell.types.serialize import GetLMPResponse, LMPInvokedEvent, WriteInvocationInput, WriteLMPInput, LMP
@@ -49,7 +49,7 @@ def init_serializer(config: Config) -> EllClient:
         return serializer
     elif config.pg_connection_string:
         try:
-            from ell.api.client import EllPostgresClient
+            from ell.api.client.postgres import EllPostgresClient
             return EllPostgresClient(config.pg_connection_string)
         except ImportError:
             # todo. centralize this in util or something, we have it everywhere
@@ -57,8 +57,8 @@ def init_serializer(config: Config) -> EllClient:
                 "Postgres storage is not enabled. Enable it with `pip install -U ell-api[postgres]`. More info: https://docs.ell.so/installation")
     elif config.storage_dir:
         try:
-            from ell.api.client import EllSqliteClient
-            return EllSqliteClient(config.pg_connection_string)
+            from ell.api.client.sqlite import EllSqliteClient
+            return EllSqliteClient(config.storage_dir)
         except ImportError:
             raise ImportError(
                 "SQLite storage is not enabled. Enable it with `pip install -U ell-api[sqlite]`. More info: https://docs.ell.so/installation"

@@ -5,7 +5,7 @@ import pytest
 from typing import Any, Dict
 from fastapi.testclient import TestClient
 
-from ell.api.client import EllSqliteClient
+from ell.api.client.sqlite import EllSqliteClient
 from ell.api.server import create_app, get_pubsub, get_serializer
 from ell.api.config import Config
 from ell.api.logger import setup_logging
