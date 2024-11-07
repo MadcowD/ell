@@ -1,0 +1,41 @@
+{
+  "name": "ell-ai",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": "./dist/index.js",
+    "./*": "./dist/*.js"
+  },
+  "scripts": {
+    "build": "node scripts/build.js",
+    "clean": "rimraf dist",
+    "test": "mocha && vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.8",
+    "@types/node": "^22.5.4",
+    "@types/source-map-support": "^0.5.10",
+    "mocha": "^10.7.3",
+    "prettier": "^3.3.3",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.1"
+  },
+  "dependencies": {
+    "async-lock": "^1.4.1",
+    "openai": "^4.67.0",
+    "sharp": "^0.33.5",
+    "source-map-support": "^0.5.21",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "zod": "^3.23.8"
+  }
+}

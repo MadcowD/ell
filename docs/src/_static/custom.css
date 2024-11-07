@@ -1,0 +1,57 @@
+/* Improve tab appearance */
+div.sphinx-tabs.docutils.container {
+    margin:0;
+    padding:0;
+    border: none;
+    display: flex; 
+    flex-direction: column;
+}
+
+div.sphinx-tabs.docutils.container > div[role="tablist"] {
+    display: flex; 
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 0.4em;
+    /* offset the space created by the <pre> element and re-establish it with the tab buttons inside */
+    margin-bottom: -15px;
+    margin-top: 18px;
+}
+
+
+.sphinx-tabs-tab {
+    border: none;
+    border-bottom: none;
+    padding: 0;
+    margin:0;
+    cursor: pointer;
+    background-color: inherit;
+    border-color: inherit;
+    color: inherit;
+    font-size: 0.75em;
+}
+
+.sphinx-tabs-tab[aria-selected="true"] {
+    border-bottom: none;
+    background-color: inherit;
+    border-color: inherit;
+    color: inherit;
+}
+.sphinx-tabs-tab[aria-selected="false"] {
+    border-bottom: none;
+    background-color: inherit;
+    border-color: inherit;
+    color: inherit;
+    opacity: 0.65;
+    font-weight: normal;
+    text-decoration: none;
+}
+
+
+
+.sphinx-tabs-panel {
+    border: none;
+    background-color: inherit;
+    border-color: inherit;
+    color: inherit;
+}
+
