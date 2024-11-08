@@ -8,8 +8,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from ell.provider import Provider
 from dataclasses import dataclass, field
 
+from ell.util.errors import missing_ell_extras
+
 if TYPE_CHECKING:
-    from ell.stores import Store
+    from ell.stores.store import Store
 else:
     Store = None
 
@@ -184,7 +186,10 @@ def init(
             from ell.stores.sql import SQLiteStore
             config.store = SQLiteStore(store)
         except ImportError:
-            raise ImportError("Failed importing SQLiteStore. Install with `pip install -U ell-ai[all]`. More info: https://docs.ell.so/installation")
+            raise missing_ell_extras(
+                message="Failed importing SQLiteStore",
+                extras=["all"]
+            )
     else:
         config.store = store
     config.autocommit = autocommit or config.autocommit

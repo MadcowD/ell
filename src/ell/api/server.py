@@ -11,6 +11,7 @@ from ell.api.client.abc import EllClient
 from ell.api.config import Config
 from ell.api.pubsub.abc import PubSub
 from ell.types.serialize import GetLMPResponse, LMPInvokedEvent, WriteInvocationInput, WriteLMPInput, LMP
+from ell.util.errors import missing_ell_extras
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,10 @@ async def init_pubsub(config: Config, exit_stack: AsyncExitStack):
         try:
             from ell.api.pubsub.mqtt import setup
         except ImportError as e:
-            raise ImportError(
-                "Received mqtt_connection_string but dependencies missing. Install with `pip install -U ell-ai[mqtt]. More info: https://docs.ell.so/installation") from e
+            raise missing_ell_extras(
+                message="Received mqtt_connection_string but dependencies missing.",
+                extras=["mqtt"]
+            ) from e
 
         pubsub, mqtt_client = await setup(config.mqtt_connection_string)
 
@@ -52,16 +55,16 @@ def init_serializer(config: Config) -> EllClient:
             from ell.api.client.postgres import EllPostgresClient
             return EllPostgresClient(config.pg_connection_string)
         except ImportError:
-            # todo. centralize this in util or something, we have it everywhere
-            raise ImportError(
-                "Postgres storage is not enabled. Enable it with `pip install -U ell-api[postgres]`. More info: https://docs.ell.so/installation")
+            raise missing_ell_extras(
+                message="Postgres storage is not enabled.", extras=["postgres"]
+            )
     elif config.storage_dir:
         try:
             from ell.api.client.sqlite import EllSqliteClient
             return EllSqliteClient(config.storage_dir)
         except ImportError:
-            raise ImportError(
-                "SQLite storage is not enabled. Enable it with `pip install -U ell-api[sqlite]`. More info: https://docs.ell.so/installation"
+            raise missing_ell_extras(
+                message="SQLite storage is not enabled.", extras=["sqlite"]
             )
 
     else:
