@@ -103,7 +103,7 @@ class SerializedLMP(SerializedLMPBase, table=True):
             initial_global_vars=input.initial_global_vars,
             initial_free_vars=input.initial_free_vars,
             commit_message=input.commit_message,
-            created_at=cast(datetime, input.created_at)
+            created_at=input.created_at
         )
 
 
