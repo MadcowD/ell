@@ -9,7 +9,7 @@ from fastapi import Depends, FastAPI, HTTPException
 
 from ell.api.config import Config
 from ell.api.pubsub.abc import PubSub
-from ell.serialize.client import get_async_serializer
+from ell.serialize.serializer import get_async_serializer
 from ell.serialize.config import SerializeConfig
 from ell.serialize.protocol import EllAsyncSerializer
 from ell.types.serialize import GetLMPOutput, LMPInvokedEvent, WriteInvocationInput, WriteLMPInput, LMP, WriteBlobInput

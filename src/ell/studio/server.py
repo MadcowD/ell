@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any
 
 from sqlmodel import Session
 
-from ell.serialize.client import get_serializer, get_blob_store
+from ell.serialize.serializer import get_serializer, get_blob_store
 from ell.serialize.config import SerializeConfig
 from ell.stores.sql import PostgresStore, SQLiteStore
 from ell import __version__
