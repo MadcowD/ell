@@ -29,12 +29,14 @@ class WriteLMPInput(BaseModel):
     api_params: Optional[Dict[str, Any]] = None
     initial_free_vars: Optional[Dict[str, Any]] = None
     initial_global_vars: Optional[Dict[str, Any]] = None
+    # TODO. dict or list?
+    # uses: List[str] = Field(default_factory=list)
 
     # this is omitted so as to not confuse whether the number should be incremented (should always happen at the db level)
     # num_invocations: Optional[int] = None
     commit_message: Optional[str] = None
     version_number: Optional[int] = None
-    created_at:  Optional[AwareDatetime] = Field(default_factory=utc_now)
+    created_at: Optional[AwareDatetime] = Field(default_factory=utc_now)
 
 
 class LMP(BaseModel):
@@ -52,7 +54,10 @@ class LMP(BaseModel):
     num_invocations: int
 
 
-GetLMPResponse = Optional[LMP]
+class GetLMPInput(BaseModel):
+    id: str
+
+GetLMPOutput = Optional[LMP]
 
 InvocationResults = Union[List[Message], Any]
 
@@ -79,7 +84,9 @@ class InvocationContents(BaseModel):
             self.global_vars,
             self.free_vars
         ]
-        return sum(len(json.dumps(field, default=(lambda x: x.model_dump_json() if isinstance(x, BaseModel) else str(x))).encode('utf-8')) for field in json_fields if field is not None)
+        return sum(len(json.dumps(field, default=(
+            lambda x: x.model_dump_json() if isinstance(x, BaseModel) else str(x))).encode('utf-8')) for field in
+                   json_fields if field is not None)
 
     @cached_property
     def should_externalize(self) -> bool:
@@ -113,3 +120,26 @@ class LMPInvokedEvent(BaseModel):
     lmp_id: str
     # invocation_id: str
     consumes: List[str]
+
+
+class WriteBlobInput(BaseModel):
+    """
+    Arguments to write a blob to a blob store
+    """
+    blob_id: str
+    blob: bytes
+    metadata: Optional[Dict[str, Any]] = None
+
+
+
+# class Blob(BaseModel):
+#     blob_id: str
+#     blob: bytes
+#     content_type: str
+#     metadata: Optional[Dict[str, Any]] = None
+#
+#     @cached_property
+#     def size_bytes(self) -> int:
+#         return len(self.blob)
+#
+#

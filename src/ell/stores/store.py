@@ -15,12 +15,24 @@ else:
 
 class BlobStore(ABC):
     @abstractmethod
-    def store_blob(self, blob: bytes, blob_id  : str) -> str:
+    def store_blob(self, blob: bytes, blob_id  : str, metadata: Optional[Dict[str, Any]] = None) -> str:
         """Store a blob and return its identifier."""
         pass
 
     @abstractmethod
     def retrieve_blob(self, blob_id: str) -> bytes:
+        """Retrieve a blob by its identifier."""
+        pass
+
+
+class AsyncBlobStore(BlobStore):
+    @abstractmethod
+    async def store_blob(self, blob: bytes, blob_id: str, metadata: Optional[Dict[str, Any]] = None) -> str:
+        """Store a blob and return its identifier."""
+        pass
+
+    @abstractmethod
+    async def retrieve_blob(self, blob_id: str) -> bytes:
         """Retrieve a blob by its identifier."""
         pass
 

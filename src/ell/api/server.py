@@ -7,10 +7,12 @@ from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException
 
-from ell.api.client.abc import EllClient
 from ell.api.config import Config
 from ell.api.pubsub.abc import PubSub
-from ell.types.serialize import GetLMPResponse, LMPInvokedEvent, WriteInvocationInput, WriteLMPInput, LMP
+from ell.serialize.client import get_async_serializer
+from ell.serialize.config import SerializeConfig
+from ell.serialize.protocol import EllAsyncSerializer
+from ell.types.serialize import GetLMPOutput, LMPInvokedEvent, WriteInvocationInput, WriteLMPInput, LMP, WriteBlobInput
 from ell.util.errors import missing_ell_extras
 
 logger = logging.getLogger(__name__)
@@ -43,32 +45,18 @@ async def init_pubsub(config: Config, exit_stack: AsyncExitStack):
 
 
 
-serializer: Optional[EllClient] = None
+serializer: Optional[EllAsyncSerializer] = None
 
 
-def init_serializer(config: Config) -> EllClient:
+def init_serializer(config: Config) -> EllAsyncSerializer:
     global serializer
     if serializer is not None:
         return serializer
-    elif config.pg_connection_string:
-        try:
-            from ell.api.client.postgres import EllPostgresClient
-            return EllPostgresClient(config.pg_connection_string)
-        except ImportError:
-            raise missing_ell_extras(
-                message="Postgres storage is not enabled.", extras=["postgres"]
-            )
-    elif config.storage_dir:
-        try:
-            from ell.api.client.sqlite import EllSqliteClient
-            return EllSqliteClient(config.storage_dir)
-        except ImportError:
-            raise missing_ell_extras(
-                message="SQLite storage is not enabled.", extras=["sqlite"]
-            )
-
-    else:
-        raise ValueError("No storage configuration found")
+    serializer = get_async_serializer(config=SerializeConfig(
+        **config.model_dump()
+    ))
+    
+    return serializer
 
 
 def get_serializer():
@@ -107,8 +95,8 @@ def create_app(config: Config):
             pubsub = None
 
     app = FastAPI(
-        title="ELL API",
-        description="Ell API Server",
+        title="ell api",
+        description="ell api server",
         version="0.1.0",
         lifespan=lifespan
     )
@@ -116,12 +104,12 @@ def create_app(config: Config):
     @app.get("/lmp/versions", response_model=List[LMP])
     async def get_lmp_versions(
             fqn: str,
-            serializer: EllClient = Depends(get_serializer)):
-        return serializer.get_lmp_versions(fqn)
+            serializer: EllAsyncSerializer = Depends(get_serializer)):
+        return await serializer.get_lmp_versions(fqn)
 
-    @app.get("/lmp/{lmp_id}", response_model=GetLMPResponse)
+    @app.get("/lmp/{lmp_id}", response_model=GetLMPOutput)
     async def get_lmp(lmp_id: str,
-                      serializer: EllClient = Depends(get_serializer),
+                      serializer: EllAsyncSerializer = Depends(get_serializer),
                       # todo. figure out the ramifications of doing this here
                       # session: Session = Depends(get_session)
                       ):
@@ -136,7 +124,7 @@ def create_app(config: Config):
             # fixme. what is this type supposed to be?
             uses: List[str],  # SerializedLMPUses,
             pubsub: PubSub = Depends(get_pubsub),
-            serializer: EllClient = Depends(get_serializer)
+            serializer: EllAsyncSerializer = Depends(get_serializer)
     ):
         await serializer.write_lmp(lmp, uses)
 
@@ -156,7 +144,7 @@ def create_app(config: Config):
     async def write_invocation(
             input: WriteInvocationInput,
             pubsub: PubSub = Depends(get_pubsub),
-            serializer: EllClient = Depends(get_serializer)
+            serializer: EllAsyncSerializer = Depends(get_serializer)
     ):
         logger.info(f"Writing invocation {input.invocation.lmp_id}")
         # TODO: return anything this might create like invocation id
@@ -177,5 +165,15 @@ def create_app(config: Config):
             )
 
         return input
+
+    @app.post("/blob")
+    async def store_blob(
+            input: WriteBlobInput,
+            serializer: EllAsyncSerializer = Depends(get_serializer)
+    ):
+        if not serializer.supports_blobs:
+            raise HTTPException(status_code=400, detail="Blob support is not enabled.")
+        return await serializer.store_blob(**input.model_dump())
+
 
     return app

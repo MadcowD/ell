@@ -5,7 +5,7 @@ import pytest
 from typing import Any, Dict
 from fastapi.testclient import TestClient
 
-from ell.api.client.sqlite import EllSqliteClient
+from ell.serialize.sqlite import SQLiteSerializer
 from ell.api.server import create_app, get_pubsub, get_serializer
 from ell.api.config import Config
 from ell.api.logger import setup_logging
@@ -16,8 +16,8 @@ from ell.types.serialize import WriteLMPInput
 
 
 @pytest.fixture
-def sql_store() -> EllSqliteClient:
-    return EllSqliteClient(":memory:")
+def sql_store() -> SQLiteSerializer:
+    return SQLiteSerializer(":memory:")
 
 
 def test_construct_serialized_lmp():
@@ -87,7 +87,7 @@ def test_write_lmp_input():
     assert input2.created_at.tzinfo == timezone.utc
 
 
-def create_test_app(sql_store: EllSqliteClient):
+def create_test_app(sql_store: SQLiteSerializer):
     setup_logging(DEBUG)
     config = Config(storage_dir=":memory:")
     app = create_app(config)
@@ -109,7 +109,7 @@ def create_test_app(sql_store: EllSqliteClient):
     return app, client, publisher, config
 
 
-def test_write_lmp(sql_store: EllSqliteClient):
+def test_write_lmp(sql_store: SQLiteSerializer):
     _app, client, *_ = create_test_app(sql_store)
 
     # fime. figure out what's going on with `uses`
@@ -145,7 +145,7 @@ def test_write_lmp(sql_store: EllSqliteClient):
     assert lmp.json() == {**lmp_data, "num_invocations": 0}
 
 
-def test_write_invocation(sql_store: EllSqliteClient):
+def test_write_invocation(sql_store: SQLiteSerializer):
     _app, client, *_ = create_test_app(sql_store)
 
     lmp_id = uuid4().hex

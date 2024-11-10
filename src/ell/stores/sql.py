@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 import os
 from typing import Any, Optional, Dict, List, Set
@@ -9,6 +10,8 @@ from sqlalchemy import func, and_, Engine
 from ell.util.serialization import pydantic_ltype_aware_cattr
 import gzip
 import json
+
+logger = logging.getLogger(__name__)
 
 class SQLStore(ell.stores.store.Store):
     def __init__(self, db_uri: str = None, blob_store: Optional[ell.stores.store.BlobStore] = None,
@@ -216,7 +219,7 @@ class SQLStore(ell.stores.store.Store):
         }
 
 class SQLiteStore(SQLStore):
-    def __init__(self, db_dir: str):
+    def __init__(self, db_dir: str, blob_store: Optional[ell.stores.store.BlobStore] = None):
         assert not db_dir.endswith('.db'), "Create store with a directory not a db."
         if ":memory:" in db_dir:
             from sqlalchemy.pool import StaticPool
@@ -238,7 +241,7 @@ class SQLiteStore(SQLStore):
         os.makedirs(db_dir, exist_ok=True)
         self.db_dir = db_dir
         db_path = os.path.join(db_dir, 'ell.db')
-        blob_store = SQLBlobStore(db_dir)
+        blob_store = SQLBlobStore(db_dir) if blob_store is None else blob_store
         super().__init__(f'sqlite:///{db_path}', blob_store=blob_store)
 
 class SQLBlobStore(ell.stores.store.BlobStore):
@@ -266,6 +269,7 @@ class SQLBlobStore(ell.stores.store.BlobStore):
         return os.path.join(self.db_dir, *dirs, file_name)
 
 class PostgresStore(SQLStore):
-    def __init__(self, db_uri: str):
-        super().__init__(db_uri)
+    def __init__(self, db_uri: str, blob_store: Optional[ell.stores.store.BlobStore] = None):
+        super().__init__(db_uri, blob_store)
+        logger.debug("Postgres store initialized")
     

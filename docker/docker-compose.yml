@@ -6,40 +6,50 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.api
       args:
-        ELL_EXTRAS: postgres mqtt
+        ELL_EXTRAS: postgres mqtt minio
       tags:
         - ell-api
 
     ports:
       - "8081:8081"
     environment:
-      - HOST=0.0.0.0
-      - PORT=8081
+      - ELL_API_HOST=0.0.0.0
+      - ELL_API_PORT=8081
       - ELL_PG_CONNECTION_STRING=postgresql://ell_user:ell_password@postgres:5432/ell_db
       - ELL_MQTT_CONNECTION_STRING=mqtt://mqtt:1883
-      - LOG_LEVEL=DEBUG
+      - LOG_LEVEL=10 # debug
+      - ELL_MINIO_ENDPOINT=minio:9000
+      - ELL_MINIO_ACCESS_KEY=minio_user
+      - ELL_MINIO_SECRET_KEY=minio_password
+      - ELL_MINIO_BUCKET=ell-bucket
     depends_on:
       - postgres
       - mqtt
+      - minio
 
   studio:
     build:
       context: ..
       dockerfile: docker/Dockerfile.studio
       args:
-        ELL_EXTRAS: postgres mqtt
+        ELL_EXTRAS: postgres mqtt minio
       tags:
         - ell-studio
     ports:
       - "8080:8080"
     environment:
-      - HOST=0.0.0.0
-      - PORT=8080 # currently doesn't take effect -- cli defaults it
+      - ELL_STUDIO_HOST=0.0.0.0
+      - ELL_STUDIO_PORT=8080
       - ELL_PG_CONNECTION_STRING=postgresql://ell_user:ell_password@postgres:5432/ell_db
       - ELL_MQTT_CONNECTION_STRING=mqtt://mqtt:1883
+      - ELL_MINIO_ENDPOINT=minio:9000
+      - ELL_MINIO_ACCESS_KEY=minio_user
+      - ELL_MINIO_SECRET_KEY=minio_password
+      - ELL_MINIO_BUCKET=ell-bucket
     depends_on:
       - postgres
       - mqtt
+      - minio
     develop:
       watch:
         - action: sync+restart
@@ -75,6 +85,31 @@ services:
     ports:
       - "5432:5432"
 
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"  # API port
+      - "9001:9001"  # Console port
+    environment:
+      - MINIO_ROOT_USER=minio_user
+      - MINIO_ROOT_PASSWORD=minio_password
+    volumes:
+      - minio_data:/data
+    command: server --console-address ":9001" --address ":9000" /data
+
+  minio-init:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc alias set myminio http://minio:9000 minio_user minio_password --api S3v4;
+      /usr/bin/mc mb myminio/ell-bucket;
+      exit 0;
+      "
+
 volumes:
   postgres_data:
   mosquitto_config:
+  minio_data:

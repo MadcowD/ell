@@ -3,6 +3,9 @@ from contextlib import asynccontextmanager
 from typing import Optional, Dict, Any
 
 from sqlmodel import Session
+
+from ell.serialize.client import get_serializer, get_blob_store
+from ell.serialize.config import SerializeConfig
 from ell.stores.sql import PostgresStore, SQLiteStore
 from ell import __version__
 from fastapi import FastAPI, Query, HTTPException, Depends, Response, WebSocket, WebSocketDisconnect
@@ -28,10 +31,12 @@ from ell.studio.datamodels import InvocationsAggregate
 
 
 def get_serializer(config: Config):
+    serialize_config = SerializeConfig(**config.model_dump())
+    blob_store = get_blob_store(serialize_config)
     if config.pg_connection_string:
-        return PostgresStore(config.pg_connection_string)
+        return PostgresStore(config.pg_connection_string, blob_store)
     elif config.storage_dir:
-        return SQLiteStore(config.storage_dir)
+        return SQLiteStore(config.storage_dir, blob_store)
     else:
         raise ValueError("No storage configuration found")
 
