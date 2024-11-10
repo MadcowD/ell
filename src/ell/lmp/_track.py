@@ -2,6 +2,7 @@ import json
 import logging
 import threading
 from ell.types.lmp import LMPType
+from ell.types.serialize import Invocation, InvocationContents, WriteInvocationInput, utc_now, WriteLMPInput
 from ell.util._warnings import _autocommit_warning
 import ell.util.closure
 from ell.configurator import config
@@ -16,10 +17,6 @@ from ell.util.serialization import get_immutable_vars
 from ell.util.serialization import compute_state_cache_key
 from ell.util.serialization import prepare_invocation_params
 
-try:
-    from ell.stores.studio import SerializedLMP, Invocation, InvocationContents, utc_now
-except ImportError:
-    SerializedLMP = Invocation =  InvocationContents = utc_now = None
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +58,7 @@ def _track(func_to_track: Callable, *, forced_dependencies: Optional[Dict[str, A
         invocation_id = "invocation-" + secrets.token_hex(16)
 
         state_cache_key : str = None
-        if not config.store:
+        if not config.serializer:
             return func_to_track(*fn_args, **fn_kwargs, _invocation_origin=invocation_id)[0]
 
         parent_invocation_id = get_current_invocation()
@@ -169,7 +166,7 @@ def _serialize_lmp(func):
     name = func.__qualname__
     api_params = getattr(func, "__ell_api_params__", None)
 
-    lmps = config.store.get_versions_by_fqn(fqn=name)
+    lmps = config.serializer.get_lmp_versions(fqn=name)
     version = 0
     already_in_store = any(lmp.lmp_id == func.__ell_hash__ for lmp in lmps)
     
@@ -186,7 +183,7 @@ def _serialize_lmp(func):
                     f"{latest_lmp.dependencies}\n\n{latest_lmp.source}", 
                         f"{fn_closure[1]}\n\n{fn_closure[0]}")[0])
 
-        serialized_lmp = SerializedLMP(
+        serialized_lmp = WriteLMPInput(
             lmp_id=func.__ell_hash__,
             name=name,
             created_at=utc_now(),
@@ -199,7 +196,7 @@ def _serialize_lmp(func):
             api_params=api_params if api_params else None,
             version_number=version,
         )
-        config.store.write_lmp(serialized_lmp, [f.__ell_hash__ for f in func.__ell_uses__])
+        config.serializer.write_lmp(serialized_lmp, [f.__ell_hash__ for f in func.__ell_uses__])
     func._has_serialized_lmp = True
 
 def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
@@ -214,14 +211,14 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         free_vars=get_immutable_vars(func.__ell_closure__[3])
     )
 
-    if invocation_contents.should_externalize and config.store.has_blob_storage:
+    if invocation_contents.should_externalize and config.serializer.supports_blobs:
         invocation_contents.is_external = True
         
         # Write to the blob store 
-        blob_id = config.store.blob_store.store_blob(
-            json.dumps(invocation_contents.model_dump(
+        blob_id = config.serializer.store_blob(
+            blob_id=invocation_id,
+            blob=json.dumps(invocation_contents.model_dump(
             ), default=str, ensure_ascii=False).encode('utf-8'),
-            invocation_id
         )
         invocation_contents = InvocationContents(
             invocation_id=invocation_id,
@@ -240,5 +237,5 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         contents=invocation_contents
     )
 
-    config.store.write_invocation(invocation, consumes)
+    config.serializer.write_invocation(WriteInvocationInput(invocation=invocation, consumes=consumes))
 

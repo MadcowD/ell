@@ -1,7 +1,6 @@
 import json
-import os
 from typing import Any, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, computed_field
 
 import logging
 
@@ -9,9 +8,9 @@ logger = logging.getLogger(__name__)
 
 
 class SerializeConfig(BaseModel):
-    storage_dir: Optional[str] = None
+    storage_dir: Optional[str] = Field(default=None, description="Filesystem path used for SQLite and local blob storage")
     pg_connection_string: Optional[str] = None
-    mqtt_connection_string: Optional[str] = None
+    api_server_endpoint: Optional[str] = Field(default=None, description="Ell API server endpoint")
     minio_endpoint: Optional[str] = None
     minio_access_key: Optional[str] = None
     minio_secret_key: Optional[str] = None
@@ -23,15 +22,12 @@ class SerializeConfig(BaseModel):
         super().__init__(**kwargs)
 
     def model_post_init(self, __context: Any):
-        # Enforce that we use either sqlite or postgres, but not both
+        # Enforce that we use 1 storage backend (for now)
         if self.pg_connection_string is not None and self.storage_dir is not None:
             raise ValueError("Cannot use both sqlite and postgres")
+        logger.debug(f"Resolved config: {json.dumps(self.model_dump(exclude_none=True), indent=2)}")
 
-        # Fall back to sqlite if no PostgreSQL connection string is provided
-        if self.pg_connection_string is None and self.storage_dir is None:
-            # This intends to honor the default we had set in the CLI
-            # todo. better default?
-            self.storage_dir = os.getcwd()
-
-        logger.info(f"Resolved config: {json.dumps(self.model_dump(exclude_none=True), indent=2)}")
+    @computed_field
+    def is_enabled(self) -> bool:
+        return bool(self.api_server_endpoint or self.pg_connection_string or self.storage_dir or self.minio_endpoint)
 

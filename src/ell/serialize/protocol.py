@@ -1,8 +1,9 @@
-from typing import Protocol, Optional, List, Dict, Any
+from typing import Protocol, Optional, List, Dict, Any, runtime_checkable
 
 from ell.types.serialize import GetLMPOutput, WriteLMPInput, WriteInvocationInput, LMP
 
 
+@runtime_checkable
 class EllSerializer(Protocol):
     supports_blobs: bool
 
@@ -28,6 +29,7 @@ class EllSerializer(Protocol):
         ...
 
 
+@runtime_checkable
 class EllAsyncSerializer(Protocol):
     supports_blobs: bool
 
