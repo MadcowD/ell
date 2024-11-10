@@ -5,7 +5,7 @@ import pytest
 from typing import Any, Dict
 from fastapi.testclient import TestClient
 
-from ell.serialize.sqlite import SQLiteSerializer
+from ell.serialize.sqlite import SQLiteSerializer, AsyncSQLiteSerializer
 from ell.api.server import create_app, get_pubsub, get_serializer
 from ell.api.config import Config
 from ell.api.logger import setup_logging
@@ -16,9 +16,12 @@ from ell.types.serialize import WriteLMPInput
 
 
 @pytest.fixture
-def sql_store() -> SQLiteSerializer:
+def sqlite_serializer() -> SQLiteSerializer:
     return SQLiteSerializer(":memory:")
 
+@pytest.fixture
+def async_sqlite_serializer() -> AsyncSQLiteSerializer:
+    return AsyncSQLiteSerializer(":memory:")
 
 def test_construct_serialized_lmp():
     serialized_lmp = SerializedLMP(
@@ -87,7 +90,7 @@ def test_write_lmp_input():
     assert input2.created_at.tzinfo == timezone.utc
 
 
-def create_test_app(sql_store: SQLiteSerializer):
+def create_test_app(serializer: AsyncSQLiteSerializer):
     setup_logging(DEBUG)
     config = Config(storage_dir=":memory:")
     app = create_app(config)
@@ -99,7 +102,7 @@ def create_test_app(sql_store: SQLiteSerializer):
 
 
     def get_serializer_override():
-        return sql_store
+        return serializer
 
     app.dependency_overrides[get_pubsub] = get_publisher_override
     app.dependency_overrides[get_serializer] = get_serializer_override
@@ -109,8 +112,8 @@ def create_test_app(sql_store: SQLiteSerializer):
     return app, client, publisher, config
 
 
-def test_write_lmp(sql_store: SQLiteSerializer):
-    _app, client, *_ = create_test_app(sql_store)
+def test_write_lmp(async_sqlite_serializer: AsyncSQLiteSerializer):
+    _app, client, *_ = create_test_app(async_sqlite_serializer)
 
     # fime. figure out what's going on with `uses`
     lmp_data: Dict[str, Any] = {
@@ -145,8 +148,8 @@ def test_write_lmp(sql_store: SQLiteSerializer):
     assert lmp.json() == {**lmp_data, "num_invocations": 0}
 
 
-def test_write_invocation(sql_store: SQLiteSerializer):
-    _app, client, *_ = create_test_app(sql_store)
+def test_write_invocation(async_sqlite_serializer: AsyncSQLiteSerializer):
+    _app, client, *_ = create_test_app(async_sqlite_serializer)
 
     lmp_id = uuid4().hex
     lmp_data: Dict[str, Any] = {
