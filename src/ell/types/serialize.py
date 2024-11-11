@@ -84,9 +84,11 @@ class InvocationContents(BaseModel):
             self.global_vars,
             self.free_vars
         ]
-        return sum(len(json.dumps(field, default=(
-            lambda x: x.model_dump_json() if isinstance(x, BaseModel) else str(x))).encode('utf-8')) for field in
-                   json_fields if field is not None)
+        return sum(
+            len(json.dumps(field, default=(lambda x: json.dumps(x.model_dump(), default=str, ensure_ascii=False)
+                                           if isinstance(x, BaseModel) else str(x)), ensure_ascii=False).encode('utf-8'))
+            for field in json_fields if field is not None
+        )
 
     @cached_property
     def should_externalize(self) -> bool:
