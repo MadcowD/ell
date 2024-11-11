@@ -11,7 +11,7 @@ from ell.studio.config import Config
 from ell.studio.connection_manager import ConnectionManager
 from ell.studio.datamodels import InvocationPublicWithConsumes, SerializedLMPWithUses
 
-from ell.types import SerializedLMP
+from ell.stores.studio import SerializedLMP
 from datetime import datetime, timedelta
 from sqlmodel import select
 

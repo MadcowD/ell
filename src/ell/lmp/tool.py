@@ -1,6 +1,6 @@
 from functools import wraps
 import json
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 from pydantic import Field, create_model
 from pydantic.fields import FieldInfo
@@ -9,11 +9,10 @@ from ell.lmp._track import _track
 # from ell.util.verbosity import compute_color, tool_usage_logger_pre
 from ell.configurator import config
 from ell.types._lstr import _lstr
-from ell.types.studio import LMPType
+from ell.types.lmp import LMPType
 import inspect
 
-from ell.types.message import ContentBlock, InvocableTool, ToolResult, to_content_blocks
-
+from ell.types.message import ContentBlock, InvocableTool, ToolResult
 
 
 def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):

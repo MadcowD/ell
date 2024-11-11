@@ -1,24 +1,25 @@
 import json
 import logging
 import threading
-from ell.types import SerializedLMP, Invocation, InvocationTrace, InvocationContents
-from ell.types.studio import LMPType, utc_now
+from ell.types.lmp import LMPType
 from ell.util._warnings import _autocommit_warning
 import ell.util.closure
 from ell.configurator import config
-from ell.types._lstr import _lstr
 
 import inspect
 
 import secrets
-import time
-from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Dict, Iterable, Optional, OrderedDict, Tuple
+from typing import Any, Callable, Dict, Optional
 
 from ell.util.serialization import get_immutable_vars
 from ell.util.serialization import compute_state_cache_key
 from ell.util.serialization import prepare_invocation_params
+
+try:
+    from ell.stores.studio import SerializedLMP, Invocation, InvocationContents, utc_now
+except ImportError:
+    SerializedLMP = Invocation =  InvocationContents = utc_now = None
 
 logger = logging.getLogger(__name__)
 

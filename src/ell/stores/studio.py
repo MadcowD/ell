@@ -4,9 +4,9 @@ from functools import cached_property
 
 import sqlalchemy.types as types
 
+from ell.types.lmp import LMPType
 from ell.types.message import Any, Any, Field, Message, Optional
 
-from sqlmodel import Column, Field, SQLModel
 from typing import Optional
 from dataclasses import dataclass
 from typing import Dict, List, Literal, Union, Any, Optional
@@ -49,14 +49,6 @@ class UTCTimestamp(types.TypeDecorator[datetime]):
 def UTCTimestampField(index:bool=False, **kwargs:Any):
     return Field(
         sa_column=Column(UTCTimestamp(timezone=True), index=index, **kwargs))
-
-
-class LMPType(str, enum.Enum):
-    LM = "LM"
-    TOOL = "TOOL"
-    MULTIMODAL = "MULTIMODAL"
-    OTHER = "OTHER"
-
 
 
 class SerializedLMPBase(SQLModel):

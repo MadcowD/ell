@@ -1,11 +1,10 @@
 import pytest
-from datetime import datetime, timezone
-from sqlmodel import Session, select
 from ell.stores.sql import SQLStore, SerializedLMP
+from sqlmodel import Session, select
 from sqlalchemy import Engine, create_engine, func
 
-from ell.types.studio import LMPType
-from ell.types.studio import utc_now
+from ell.types.lmp import LMPType
+from ell.stores.studio import utc_now
 
 @pytest.fixture
 def in_memory_db():

@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from typing import Any, Optional, Dict, List, Set, Union
 from ell.types._lstr import _lstr
-from ell.types import SerializedLMP, Invocation
+from ell.stores.studio import SerializedLMP, Invocation
 from ell.types.message import InvocableLM
 
 class BlobStore(ABC):

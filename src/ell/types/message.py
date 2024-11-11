@@ -7,8 +7,7 @@ import base64
 from io import BytesIO
 from PIL import Image as PILImage
 
-from pydantic import BaseModel, ConfigDict, model_validator, field_serializer
-from sqlmodel import Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator, field_serializer
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
