@@ -313,3 +313,14 @@ export const useEvaluationRunResults = (runId, page = 0, pageSize = 100, filters
     enabled: !!runId,
   });
 };
+
+export const useDataset = (datasetId) => {
+  return useQuery({
+    queryKey: ["dataset", datasetId],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/api/dataset/${datasetId}`);
+      return response.data;
+    },
+    enabled: !!datasetId,
+  });
+};

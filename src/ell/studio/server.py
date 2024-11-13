@@ -310,4 +310,40 @@ def create_app(config:Config):
         results = session.exec(query).all()
         return list(results)
     
+    @app.get("/api/dataset/{dataset_id}")
+    def get_dataset(
+        dataset_id: str,
+        session: Session = Depends(get_session)
+    ):
+        if not serializer.blob_store:
+            raise HTTPException(status_code=400, detail="Blob storage not configured")
+        
+        try:
+            # Get the blob data
+            blob_data = serializer.blob_store.retrieve_blob(dataset_id)
+
+            
+            # Check if size is under 5MB
+            if len(blob_data) > 5 * 1024 * 1024:  # 5MB in bytes
+                raise HTTPException(
+                    status_code=413,
+                    detail="Dataset too large to preview (>5MB)"
+                )
+            
+            # Decode and parse JSON
+            dataset_json = json.loads(blob_data.decode('utf-8'))
+            
+            return {
+                "size": len(blob_data),
+                "data": dataset_json
+            }
+            
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="Dataset not found")
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Invalid JSON data")
+        except Exception as e:
+            logger.error(f"Error retrieving dataset: {str(e)}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+    
     return app

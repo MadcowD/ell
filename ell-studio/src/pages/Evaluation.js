@@ -12,6 +12,7 @@ import VersionBadge from '../components/VersionBadge';
 import LMPSourceView from '../components/source/LMPSourceView';
 import { FiCopy } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import EvaluationDataset from '../components/evaluations/EvaluationDataset';
 
 const evaluationConfig = {
   getPath: (version) => `/evaluations/${version.id}`,
@@ -163,13 +164,7 @@ function Evaluation() {
                 </div>
               )}
               {activeTab === 'dataset' && (
-                <div className="bg-card rounded-lg p-4">
-                  <h2 className="text-md font-semibold mb-4">Dataset Information</h2>
-                  {/* Add dataset information here */}
-                  <div className="text-sm text-muted-foreground">
-                    Dataset details will be displayed here
-                  </div>
-                </div>
+                <EvaluationDataset evaluation={evaluation} />
               )}
               {activeTab === 'version_history' && (
                 <VersionHistoryPane 
