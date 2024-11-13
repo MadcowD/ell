@@ -83,7 +83,7 @@ def lexical_closure(
     while hasattr(func, "__ell_func__"):
         func = func.__ell_func__
 
-    source = getsource(func, lstrip=True)
+    source = getsource(func, lstrip=True, force=True)
     already_closed.add(hash(func))
 
     globals_and_frees = _get_globals_and_frees(func)
