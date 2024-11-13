@@ -39,6 +39,56 @@ const Evaluations = () => {
     return <div>Loading...</div>;
   }
 
+  if (!evaluations || evaluations.length === 0) {
+    return (
+      <GenericPageLayout showSidebar={false}>
+        <div className="bg-background text-foreground p-6">
+          <Card className="w-3/4 max-w-2xl mx-auto">
+            <CardHeader>
+              <h2 className="text-2xl font-semibold text-foreground">No Evaluations Found</h2>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                It looks like you don't have any evaluations set up yet.
+              </p>
+              <p className="text-muted-foreground mb-4">
+                To get started with evaluating your LMPs, try the following example:
+              </p>
+              <pre className="bg-muted p-4 rounded-md overflow-x-auto">
+                <code className="text-sm">
+{`import ell
+from ell import Evaluation
+
+@ell.simple(model="gpt-4o")
+def mylmp(greeting: str):
+    return f"Say hi there!"
+
+def metric(datapoint, output):
+    return 1 if output == "Hi there!" else 0
+
+# Initialize your evaluation
+eval = Evaluation(
+    name="basic-eval",
+    dataset=[{"input": "Hello", "expected": "Hi there!"}],
+    n_evals=10,
+    metrics={"score": metric}
+)
+
+
+# Run the evaluation
+results = eval.run(mylmp)`}
+                </code>
+              </pre>
+              <p className="text-muted-foreground mt-4">
+                Run this script, then refresh this page to see your first evaluation.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </GenericPageLayout>
+    );
+  }
+
   return (
     <GenericPageLayout showSidebar={false}>
       <div className="bg-background text-foreground p-6">

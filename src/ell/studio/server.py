@@ -242,8 +242,6 @@ def create_app(config:Config):
             limit=limit
         )
 
-        if not evaluations:
-            raise HTTPException(status_code=404, detail="Evaluations not found")
 
         return evaluations
     
@@ -258,9 +256,6 @@ def create_app(config:Config):
             skip=skip,
             limit=limit
         )
-
-        if not evaluations:
-            raise HTTPException(status_code=404, detail="No evaluations found")
 
         return evaluations
 

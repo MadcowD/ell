@@ -65,7 +65,7 @@ const EvaluationCard = ({ evaluation, isGraphMode = false }) => {
                 </div>
                 <div className="flex items-center">
                   <FiDatabase className="mr-1 h-3 w-3" />
-                  <span>Dataset: {evaluation.dataset_hash.substring(0, 8)}</span>
+                  <span>Dataset: {evaluation.dataset_id.substring(0, 8)}</span>
                 </div>
                 <div className="flex items-center">
                   <FiTag className="mr-1 h-3 w-3" />

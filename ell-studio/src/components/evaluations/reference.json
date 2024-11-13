@@ -3,7 +3,7 @@
       "id": "evaluation-e0ec6b331a8c820b280f39650ad87eca",
       "name": "poem_eval",
       "created_at": "2024-10-10T22:29:35Z",
-      "dataset_hash": "38b3eff8baf56627478ec76a704e9b52",
+      "dataset_id": "38b3eff8baf56627478ec76a704e9b52",
       "n_evals": 10,
       "version_number": 2,
       "commit_message": null,

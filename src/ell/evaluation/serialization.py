@@ -31,12 +31,13 @@ def write_evaluation(evaluation) -> None:
     # Create a hash of the dataset and labelers
     
     if not evaluation.has_serialized:
-        dataset_hash = hsh(str(dill.dumps(evaluation.dataset) if evaluation.dataset else str(evaluation.n_evals)) + str(evaluation.samples_per_datapoint))
+        # XXX: Need to change htis so we serialize differently.
+        dataset_id = hsh(str(dill.dumps(evaluation.dataset) if evaluation.dataset else str(evaluation.n_evals)) + str(evaluation.samples_per_datapoint))
         metrics_ids = [ido((f)) for f in evaluation.metrics.values()]
         annotation_ids = [ido((a)) for a in evaluation.annotations.values()]
         criteiron_ids = [ido((evaluation.criterion))] if evaluation.criterion else []
         
-        evaluation.id = "evaluation-" + hsh(dataset_hash + "".join(sorted(metrics_ids) + sorted(annotation_ids) + criteiron_ids))
+        evaluation.id = "evaluation-" + hsh(dataset_id + "".join(sorted(metrics_ids) + sorted(annotation_ids) + criteiron_ids))
         
         existing_versions = config.store.get_eval_versions_by_name(evaluation.name)
         if any(v.id == evaluation.id for v in existing_versions):
@@ -60,7 +61,7 @@ def write_evaluation(evaluation) -> None:
             serialized_evaluation = SerializedEvaluation(
                 id=evaluation.id,
                 name=evaluation.name,
-                dataset_hash=dataset_hash,
+                dataset_id=dataset_id,
                 n_evals=evaluation.n_evals or len(evaluation.dataset or []),
                 commit_message=commit_message,
                 version_number=version_number,

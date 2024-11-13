@@ -216,7 +216,7 @@ class SerializedEvaluationBase(SQLModel):
     id: str = Field(primary_key=True)
     name: str
     created_at: datetime = UTCTimestampField(default=func.now())
-    dataset_hash: str
+    dataset_id: str
     n_evals: int
     version_number: int = Field(default=0)
     commit_message: Optional[str] = Field(default=None)

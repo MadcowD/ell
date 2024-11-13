@@ -40,7 +40,7 @@ function EvaluationDetailsSidebar({ evaluation }) {
               <FiHash className="mr-1 text-muted-foreground" size={12} />
               <span className="text-muted-foreground">Dataset:</span>
             </div>
-            <div className="text-right">{evaluation?.dataset_hash.substring(0, 8)}</div>
+            <div className="text-right">{evaluation?.dataset_id.substring(0, 8)}</div>
             <div className="flex items-center">
               <FiTag className="mr-1 text-muted-foreground" size={12} />
               <span className="text-muted-foreground">Metrics:</span>

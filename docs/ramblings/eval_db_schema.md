@@ -555,7 +555,7 @@ class Criterion(SQLModel, table=True):
 class Evaluation(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
-    dataset_hash: str
+    dataset_id: str
     dataset_pickle : bytes
 
     criteria: List[Criterion] = Relationship(back_populates="evaluation")

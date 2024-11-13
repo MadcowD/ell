@@ -122,7 +122,7 @@ class SQLStore(ell.store.Store):
                 if existing_evaluation:
                     # Update the existing evaluation
                     existing_evaluation.name = evaluation.name
-                    existing_evaluation.dataset_hash = evaluation.dataset_hash
+                    existing_evaluation.dataset_id = evaluation.dataset_id
                     existing_evaluation.n_evals = evaluation.n_evals
                     existing_evaluation.version_number = evaluation.version_number
                     existing_evaluation.commit_message = evaluation.commit_message
