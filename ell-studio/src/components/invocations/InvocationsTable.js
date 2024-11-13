@@ -180,8 +180,10 @@ const InvocationsTable = ({ invocations, currentPage, setCurrentPage, pageSize, 
       if (currentlySelectedTrace) {
         const currentIndex = invocationTableData.findIndex(trace => trace.id === currentlySelectedTrace.id);
         if (e.key === 'ArrowUp' && currentIndex > 0) {
+          e.preventDefault();
           onSelectTrace(invocationTableData[currentIndex - 1]);
         } else if (e.key === 'ArrowDown' && currentIndex < invocationTableData.length - 1) {
+          e.preventDefault();
           onSelectTrace(invocationTableData[currentIndex + 1]);
         }
       }

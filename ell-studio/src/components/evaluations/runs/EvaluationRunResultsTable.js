@@ -227,7 +227,7 @@ const EvaluationRunResultsTable = ({
       header: 'Input', 
       key: 'input',     
       render: (item, _, { expanded, isHovered }) => (
-        item.isGroup && <div className={!item.isGroup ? ( isHovered ? 'opacity-75' : 'opacity-30' ) : ''}>
+        <div className={item.isGroup ? '' : (isHovered ? 'opacity-75' : 'opacity-30')}>
           <ContentsRenderer 
             item={item.invocation} 
             field="params"
@@ -293,9 +293,11 @@ const EvaluationRunResultsTable = ({
         const currentIndex = leafNodes.findIndex(item => item.invocation.id === selectedTrace.id);
 
         if (e.key === 'ArrowUp' && currentIndex > 0) {
+          e.preventDefault();
           const prevItem = leafNodes[currentIndex - 1];
           setSelectedTrace(createInvocationWithLabels(prevItem, results));
         } else if (e.key === 'ArrowDown' && currentIndex < leafNodes.length - 1) {
+          e.preventDefault();
           const nextItem = leafNodes[currentIndex + 1];
           setSelectedTrace(createInvocationWithLabels(nextItem, results));
         }

@@ -91,7 +91,7 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
       header: 'LMP', 
       key: 'name', 
       render: (item) => (
-        <Card noMinW={true}>
+        
           <LMPCardTitle 
             lmp={item.evaluated_lmp} 
             paddingClassOverride='pl-2'
@@ -102,7 +102,6 @@ const EvaluationRunsTable = ({ runs, currentPage, setCurrentPage, pageSize, onSe
             }} 
             showInvocationCount={false}
           />
-        </Card>
       ), 
       sortable: true,
       maxWidth: 200,
