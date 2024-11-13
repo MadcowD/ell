@@ -299,4 +299,20 @@ def create_app(config:Config):
         )
         return results
     
+    @app.get("/api/all-evaluations", response_model=List[EvaluationPublic])
+    def get_all_evaluations(
+        skip: int = Query(0, ge=0),
+        limit: int = Query(100, ge=1, le=100),
+        session: Session = Depends(get_session)
+    ):
+        # Get all evaluations ordered by creation date, without deduplication
+        query = (
+            select(SerializedEvaluation)
+            .order_by(SerializedEvaluation.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+        results = session.exec(query).all()
+        return list(results)
+    
     return app

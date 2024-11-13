@@ -12,10 +12,15 @@ const Evaluations = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
+  const [showAllVersions, setShowAllVersions] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 10;
 
-  const { data: evaluations, isLoading } = useLatestEvaluations(currentPage, pageSize);
+  const { data: allEvaluations, isLoading: isLoadingAll } = useEvaluations(currentPage, pageSize);
+  const { data: latestEvaluations, isLoading: isLoadingLatest } = useLatestEvaluations(currentPage, pageSize);
+
+  const evaluations = showAllVersions ? allEvaluations : latestEvaluations;
+  const isLoading = showAllVersions ? isLoadingAll : isLoadingLatest;
 
   const filteredEvaluations = useMemo(() => {
     if (!evaluations) return [];
@@ -39,7 +44,7 @@ const Evaluations = () => {
       <div className="bg-background text-foreground p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold">Evaluations</h1>
-          <Button onClick={handleCreateEvaluation} className="bg-primary text-primary-foreground">
+          <Button  className="disabled bg-primary text-primary-foreground opacity-50 cursor-not-allowed">
             <FiPlusCircle className="mr-2" />
             Create Evaluation
           </Button>
@@ -66,6 +71,18 @@ const Evaluations = () => {
             <option value="Completed">Completed</option>
             <option value="Draft">Draft</option>
           </select>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="showAllVersions"
+              checked={showAllVersions}
+              onChange={(e) => setShowAllVersions(e.target.checked)}
+              className="rounded border-input"
+            />
+            <label htmlFor="showAllVersions" className="text-sm">
+              Show all versions
+            </label>
+          </div>
         </div>
 
         <ScrollArea className="h-[calc(100vh-200px)]">
