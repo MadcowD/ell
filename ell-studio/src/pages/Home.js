@@ -45,7 +45,7 @@ function Home() {
   const memoizedLMPs = useMemo(() => firstLMPs, [firstLMPs]);
   const memoizedEvals = useMemo(() => evals, [evals]);
 
-  if (isLoadingLMPs || isLoadingTraces || isLoadingEvals) {
+  if (isLoadingLMPs || isLoadingTraces) {
     return (
       <div className={`bg-background min-h-screen flex items-center justify-center`}>
         <p className={`text-foreground`}>Loading...</p>
@@ -110,7 +110,12 @@ print(greeting)`}
               </div>
             </div>
             <div className="w-full h-full">
-              <MemoizedDependencyGraph lmps={memoizedLMPs} traces={memoizedTraces} key={memoizedLMPs.length + memoizedTraces.length } evals={memoizedEvals}/>
+              <MemoizedDependencyGraph 
+                lmps={memoizedLMPs} 
+                traces={memoizedTraces} 
+                evals={memoizedEvals || []} 
+                key={memoizedLMPs.length + memoizedTraces.length} 
+              />
             </div>
           </div>
         </ResizablePanel>

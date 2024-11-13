@@ -37,14 +37,14 @@ const calculateNodeDimensions = (nodeType, data) => {
  * @param {Array} evals - List of evaluation objects.
  * @returns {Object} - Contains initial nodes and edges.
  */
-export const getInitialGraph = (lmps, traces, evals) => {
-  if(!lmps || !traces || !evals) return { initialNodes: [], initialEdges: [] };
+export const getInitialGraph = (lmps, traces, evals = []) => {
+  if(!lmps || !traces) return { initialNodes: [], initialEdges: [] };
   const lmpIds = new Set(lmps.map(lmp => lmp.lmp_id));
   const evalLmpIds = new Set();
   const lmpToEvalMap = new Map();
 
   // Create evaluation nodes and map LMPs to their evaluations
-  const evalNodes = evals.map(eval_ => {
+  const evalNodes = (evals || []).map(eval_ => {
     eval_.labelers.forEach(labeler => {
       evalLmpIds.add(labeler.labeling_lmp_id);
       lmpToEvalMap.set(labeler.labeling_lmp_id, eval_.id);

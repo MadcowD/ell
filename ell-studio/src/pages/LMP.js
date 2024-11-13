@@ -237,7 +237,7 @@ function LMP() {
                     producingLmp={lmp}
                     onSelectTrace={(trace) => {
                       setSelectedTrace(trace);
-                      setSearchParams({ i: trace.id });
+                      setSearchParams(trace ? { i: trace.id } : {});
                     }}
                     currentlySelectedTrace={selectedTrace}
                     omitColumns={omitColumns}
