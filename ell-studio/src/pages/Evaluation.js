@@ -64,6 +64,9 @@ function Evaluation() {
     console.log('Active index in Evaluation:', index);
   };
 
+  // Update the tabs array to include all tabs
+  const tabs = ['Runs', 'Metrics', 'Dataset', 'Version History'];
+
   if (isLoadingEvaluation || !evaluation?.labelers?.length) {
     return <div className="flex items-center justify-center h-screen">Loading evaluation...</div>;
   }
@@ -77,7 +80,7 @@ function Evaluation() {
       <div className="bg-background text-foreground">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-lg flex items-center">
-            <Link to={`/evaluation/${evaluation.id}`}>
+            <Link to={`/evaluations/${evaluation.id}`}>
               <Card className="bg-card text-card-foreground">
                 <div className="p-2 flex items-center space-x-2">
                   <EvaluationCardTitle 
@@ -103,7 +106,7 @@ function Evaluation() {
 
           <div className="mb-6">
             <div className="flex border-b border-border">
-              {['Runs', 'Version History'].map((tab) => (
+              {tabs.map((tab) => (
                 <button
                   key={tab}
                   className={`px-4 py-2 focus:outline-none ${
@@ -157,6 +160,15 @@ function Evaluation() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+              {activeTab === 'dataset' && (
+                <div className="bg-card rounded-lg p-4">
+                  <h2 className="text-md font-semibold mb-4">Dataset Information</h2>
+                  {/* Add dataset information here */}
+                  <div className="text-sm text-muted-foreground">
+                    Dataset details will be displayed here
+                  </div>
                 </div>
               )}
               {activeTab === 'version_history' && (

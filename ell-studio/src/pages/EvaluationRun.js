@@ -19,6 +19,7 @@ function EvaluationRun() {
   const [selectedTrace, setSelectedTrace] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredResults, setFilteredResults] = useState(null);
+  const [activeTab, setActiveTab] = useState("results");
   
   const { data: run, isLoading: isRunLoading } = useEvaluationRun(id);
   const { 
@@ -54,30 +55,50 @@ function EvaluationRun() {
       <div className="bg-background text-foreground">
         <EvaluationRunOverview run={run} />
         
-        <EvaluationRunMetrics 
-          run={run} 
-          results={filteredResults || results}
-          fullResults={results}
-        />
+        <div className="mb-6">
+          <EvaluationRunMetrics 
+            run={run} 
+            results={filteredResults || results}
+            fullResults={results}
+          />
+        </div>
 
         <div>
-          <h2 className="text-lg font-semibold mb-4">Results</h2>
-          <SearchAndFiltersBar 
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-          />
-          <Card>
-            <EvaluationRunResultsTable
-              results={results}
-              currentPage={page}
-              setCurrentPage={setPage}
-              pageSize={pageSize}
-              selectedTrace={selectedTrace}
-              setSelectedTrace={handleTraceSelect}
-              searchQuery={searchQuery}
-              onFilteredResultsChange={setFilteredResults}
-            />
-          </Card>
+          <div className="flex border-b border-border">
+            <button
+              className={`px-4 py-2 focus:outline-none ${
+                activeTab === "results"
+                  ? "text-primary border-b-2 border-primary font-medium"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setActiveTab("results")}
+            >
+              Results
+            </button>
+          </div>
+
+          <div className="mt-4">
+            {activeTab === "results" && (
+              <>
+                <SearchAndFiltersBar 
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                />
+                <Card>
+                  <EvaluationRunResultsTable
+                    results={results}
+                    currentPage={page}
+                    setCurrentPage={setPage}
+                    pageSize={pageSize}
+                    selectedTrace={selectedTrace}
+                    setSelectedTrace={handleTraceSelect}
+                    searchQuery={searchQuery}
+                    onFilteredResultsChange={setFilteredResults}
+                  />
+                </Card>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </GenericPageLayout>
