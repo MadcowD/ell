@@ -69,6 +69,9 @@ def predict_capital(question: str):
     # print(question[0])
     return f"Answer the following question. {question}"
 
-result = eval.run(predict_capital, n_workers=10)
-print(result.results.metrics["score"].mean())
+
+if __name__ == "__main__":  
+    ell.init(store="./logdir")
+    result = eval.run(predict_capital, n_workers=10)
+    print(result.results.metrics["score"].mean())
 

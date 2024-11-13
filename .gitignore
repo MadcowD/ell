@@ -311,3 +311,5 @@ dist
 static/
 *.db-shm
 *.db-wal
+
+logdir/

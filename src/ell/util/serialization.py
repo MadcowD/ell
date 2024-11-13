@@ -95,13 +95,19 @@ def compute_state_cache_key(ipstr, fn_closure):
     return state_cache_key
 
 
+
+
+def serialize_object(obj):
+    serialized_obj = pydantic_ltype_aware_cattr.unstructure(obj)
+    jstr = json.dumps(serialized_obj, sort_keys=True, default=repr, ensure_ascii=False)
+    return jstr
+
+
 def prepare_invocation_params(params):
     invocation_params = params
-
-    cleaned_invocation_params = pydantic_ltype_aware_cattr.unstructure(invocation_params)
     
     # Thisis because we wneed the caching to work on the hash of a cleaned and serialized object.
-    jstr = json.dumps(cleaned_invocation_params, sort_keys=True, default=repr, ensure_ascii=False)
+    jstr = serialize_object(invocation_params)
 
     consumes = set()
     import re

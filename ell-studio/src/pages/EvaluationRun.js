@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useEvaluationRun, useEvaluationRunResults } from '../hooks/useBackend';
 import GenericPageLayout from '../components/layouts/GenericPageLayout';
 import { Card, CardContent } from '../components/common/Card';
@@ -11,6 +11,9 @@ import SearchAndFiltersBar from '../components/evaluations/runs/SearchAndFilters
 
 function EvaluationRun() {
   const { id } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedInvocationId = searchParams.get("i");
+  
   const [page, setPage] = React.useState(0);
   const pageSize = 100;
   const [selectedTrace, setSelectedTrace] = useState(null);
@@ -23,6 +26,20 @@ function EvaluationRun() {
     isLoading: isResultsLoading 
   } = useEvaluationRunResults(id, page, pageSize);
 
+  useEffect(() => {
+    if (requestedInvocationId && results) {
+      const requestedResult = results.find(r => r.invocation_being_labeled.id === requestedInvocationId);
+      if (requestedResult) {
+        setSelectedTrace(requestedResult.invocation_being_labeled);
+      }
+    }
+  }, [requestedInvocationId, results]);
+
+  const handleTraceSelect = (trace) => {
+    setSelectedTrace(trace);
+    setSearchParams(trace ? { i: trace.id } : {});
+  };
+
   if (isRunLoading || isResultsLoading) {
     return <div className="flex items-center justify-center h-screen">Loading evaluation run...</div>;
   }
@@ -32,7 +49,7 @@ function EvaluationRun() {
       sidebarContent={<EvaluationRunDetailsSidebar run={run} results={filteredResults || results} />}
       minimizeSidebar={true}
       selectedTrace={selectedTrace}
-      setSelectedTrace={setSelectedTrace}
+      setSelectedTrace={handleTraceSelect}
     >
       <div className="bg-background text-foreground">
         <EvaluationRunOverview run={run} />
@@ -56,7 +73,7 @@ function EvaluationRun() {
               setCurrentPage={setPage}
               pageSize={pageSize}
               selectedTrace={selectedTrace}
-              setSelectedTrace={setSelectedTrace}
+              setSelectedTrace={handleTraceSelect}
               searchQuery={searchQuery}
               onFilteredResultsChange={setFilteredResults}
             />

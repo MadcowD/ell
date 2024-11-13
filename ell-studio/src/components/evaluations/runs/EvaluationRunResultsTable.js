@@ -79,6 +79,21 @@ const EvaluationRunResultsTable = ({
 
     // Calculate mean values and stats for each group
     let tableData = Object.entries(groupedByInput).map(([inputHash, group]) => {
+      // If there's only one item in the group, return it directly without grouping
+      if (group.items.length === 1) {
+        const result = group.items[0];
+        return {
+          id: result.id,
+          invocation: result.invocation_being_labeled,
+          labels: result.labels.reduce((acc, label) => {
+            acc[label.labeler_id] = label.label_invocation.contents.results;
+            return acc;
+          }, {}),
+          children: []
+        };
+      }
+
+      // Rest of the existing grouping logic for multiple items
       const children = group.items.map(result => ({
         id: result.id,
         invocation: result.invocation_being_labeled,
@@ -275,7 +290,8 @@ const EvaluationRunResultsTable = ({
     if (item.isGroup) {
       toggleRow(item.id);
     } else {
-      setSelectedTrace(createInvocationWithLabels(item, results));
+      const trace = createInvocationWithLabels(item, results);
+      setSelectedTrace(trace);
     }
   };
 
@@ -289,17 +305,25 @@ const EvaluationRunResultsTable = ({
       }
 
       if (selectedTrace) {
-        const leafNodes = resultsTableData.flatMap(group => group.children);
-        const currentIndex = leafNodes.findIndex(item => item.invocation.id === selectedTrace.id);
+        // Get all navigable items - both ungrouped items and children of grouped items
+        const allItems = resultsTableData.flatMap(item => 
+          item.isGroup ? item.children : [item]
+        );
+        
+        const currentIndex = allItems.findIndex(item => 
+          item.invocation.id === selectedTrace.id
+        );
 
         if (e.key === 'ArrowUp' && currentIndex > 0) {
           e.preventDefault();
-          const prevItem = leafNodes[currentIndex - 1];
-          setSelectedTrace(createInvocationWithLabels(prevItem, results));
-        } else if (e.key === 'ArrowDown' && currentIndex < leafNodes.length - 1) {
+          const prevItem = allItems[currentIndex - 1];
+          const trace = createInvocationWithLabels(prevItem, results);
+          setSelectedTrace(trace);
+        } else if (e.key === 'ArrowDown' && currentIndex < allItems.length - 1) {
           e.preventDefault();
-          const nextItem = leafNodes[currentIndex + 1];
-          setSelectedTrace(createInvocationWithLabels(nextItem, results));
+          const nextItem = allItems[currentIndex + 1];
+          const trace = createInvocationWithLabels(nextItem, results);
+          setSelectedTrace(trace);
         }
       }
     };

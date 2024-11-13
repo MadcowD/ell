@@ -1,6 +1,7 @@
 # A bit of rationale: While it's OOP to put serialization related code in the evaluation and evaliuation run classes it greatly muddies the interface for the purposes of downstream implementaitons therefore much of the bridge between evaluation <-> ell studio should be implemented in this file.
 
 # XXX: We've duplicated the SQL model abstractions somewaht pointlessly unfortuantely. If we move to @alex-dixon's API ifciation of the backend then we won't have duplicated data models.
+import json
 from typing import cast
 from ell.configurator import config
 
@@ -11,7 +12,7 @@ from ell.store import Store
 from ell.util._warnings import _autocommit_warning
 from ell.util.closure_util import ido
 from ell.util.closure_util import hsh
-import ell.util.closure
+from ell.util.serialization import serialize_object
 import dill
 
 import itertools
@@ -26,13 +27,18 @@ from ell.types.studio.evaluations import (
     EvaluationRunLabelerSummary,
 )
 
+
+
 @needs_store
 def write_evaluation(evaluation) -> None:
     # Create a hash of the dataset and labelers
     
     if not evaluation.has_serialized:
         # XXX: Need to change htis so we serialize differently.
-        dataset_id = hsh(str(dill.dumps(evaluation.dataset) if evaluation.dataset else str(evaluation.n_evals)) + str(evaluation.samples_per_datapoint))
+        serialized_dataset = serialize_object(evaluation.dataset)
+        dataset_id = "dataset-" + hsh(serialized_dataset)
+        if config.store.has_blob_storage:
+            config.store.blob_store.store_blob(serialized_dataset.encode("utf-8"), dataset_id)
         metrics_ids = [ido((f)) for f in evaluation.metrics.values()]
         annotation_ids = [ido((a)) for a in evaluation.annotations.values()]
         criteiron_ids = [ido((evaluation.criterion))] if evaluation.criterion else []
