@@ -158,12 +158,13 @@ def test_tool_call_json_serialization():
     original_message = Message(role='assistant', content=[
         ToolCall(
             tool=my_sample_tool,
-            tool_call_id=uuid4().hex,
-            params=MySampleToolInput(sample_property="test"),
+            tool_call_id=f'call_{uuid4().hex}',
+            params={'args': MySampleToolInput(sample_property="test")},
         )])
 
     message_json = original_message.model_dump_json()
     loaded_message = Message.model_validate_json(message_json)
+    assert loaded_message.tool_calls[0].params == {'args': {'sample_property': 'test'}}
 
     assert loaded_message.role == original_message.role
     assert len(loaded_message.content) == len(original_message.content)

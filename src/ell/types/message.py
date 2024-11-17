@@ -1,19 +1,17 @@
 # todo: implement tracing for structured outs. this a v2 feature.
-import json
-from ell.types._lstr import _lstr
-from functools import cached_property
-import numpy as np
 import base64
-from io import BytesIO
-from PIL import Image as PILImage
-from types import FunctionType
-
-from pydantic import BaseModel, ConfigDict, Field, model_validator, field_serializer, field_validator
-
+import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import cached_property
+from io import BytesIO
+from types import FunctionType
+from typing import Any, Callable, Dict, List, Optional, Union
 
-from typing import Any, Callable, Dict, List, Optional, Union, Type
+import numpy as np
+from PIL import Image as PILImage
+from pydantic import BaseModel, ConfigDict, Field, model_validator, field_serializer, model_serializer
 
+from ell.types._lstr import _lstr
 from ell.util.serialization import serialize_image, unstructure_lstr
 
 _lstr_generic = Union[_lstr, str]
@@ -45,9 +43,15 @@ class ToolResult(BaseModel):
 class ToolCall(BaseModel):
     tool: Union[InvocableTool, str] = Field(description="The tool function to call or a reference to it when serialized")
     tool_call_id: Optional[_lstr_generic] = Field(default=None)
-    # todo. If we include BaseModel in this union instead of Any, then pydantic
-    # constructs `BaseModel()` when we call super().__init__ with a dictionary
-    params: Union[Any, Dict[str, Any]]
+    params: Union[Dict[str, Any], BaseModel]
+
+    def __init__(self, tool, params: Optional[Union[BaseModel, Dict[str, Any]]], tool_call_id: Optional[_lstr_generic]=None):
+        if (not isinstance(params, BaseModel)) and isinstance(tool, FunctionType) and hasattr(tool, '__ell_params_model__'):
+             params = tool.__ell_params_model__(**params)
+        if isinstance(tool_call_id, dict):
+            tool_call_id = _lstr(content=tool_call_id['content'], origin_trace=tool_call_id.get('__origin_trace__'), logits=tool_call_id.get('logits'))
+
+        super().__init__(tool=tool, tool_call_id=tool_call_id, params=params)
 
     # TODO. This should reference a tool fqn + version if possible
     # ell should have an InvocableTool with __ properties that have this info at serialization time
@@ -55,10 +59,11 @@ class ToolCall(BaseModel):
     def serialize_tool(self, tool: InvocableTool, _info):
         return tool.__name__ if hasattr(tool, '__name__') else str(tool)
 
-    # @field_serializer('params')
-    # def serialize_params(self, params: BaseModel, _info):
-    #     # Explicitly serialize the params BaseModel
-    #     return params.model_dump(exclude_none=True)
+    @field_serializer('params')
+    def serialize_params(self, params: Union[Dict[str,Any],BaseModel], _info):
+        if isinstance(params, dict):
+            return params
+        return params.model_dump(exclude_none=True, exclude_unset=True)
 
     @field_serializer('tool_call_id')
     def serialize_tool_call_id(self, tool_call_id: _lstr_generic):
@@ -69,17 +74,9 @@ class ToolCall(BaseModel):
             return unstructure_lstr(tool_call_id)
         return tool_call_id
 
-    def __init__(self, tool, params : Union[BaseModel, Dict[str, Any]],  tool_call_id=None):
-        if isinstance(tool, FunctionType) and hasattr(tool, '__ell_params_model__'):
-            params = tool.__ell_params_model__(**params) #convenience.
-        if isinstance(tool_call_id, dict):
-            tool_call_id = _lstr(content=tool_call_id['content'],
-                                 origin_trace=tool_call_id.get('__origin_trace__'),
-                                 logits=tool_call_id.get('logits'))
-        super().__init__(tool=tool, tool_call_id=tool_call_id, params=params)
-
     def __call__(self, **kwargs):
         assert not kwargs, "Unexpected arguments provided. Calling a tool uses the params provided in the ToolCall."
+        assert not isinstance(self.tool, str), "ToolCall.tool is a string. Tools are not invocable once serialized."
 
         # XXX: TODO: MOVE TRACKING CODE TO _TRACK AND OUT OF HERE AND API.
         return self.tool(**self.params.model_dump())
@@ -99,7 +96,7 @@ class ToolCall(BaseModel):
         return Message(role="user", content=[self.call_and_collect_as_message_block()])
     
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.tool.__name__}({self.params}), tool_call_id='{self.tool_call_id}')"
+        return f"{self.__class__.__name__}({self.tool.__name__ if hasattr(self.tool, '__name__') else str(self.tool)}({self.params}), tool_call_id='{self.tool_call_id}')"
     
 
 class ImageContent(BaseModel):
