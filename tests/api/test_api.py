@@ -4,12 +4,16 @@ from uuid import uuid4
 import pytest
 from typing import Any, Dict
 from fastapi.testclient import TestClient
+from pydantic import BaseModel, Field, ValidationError
 
+import ell
+from ell import Message
 from ell.serialize.sqlite import SQLiteSerializer, AsyncSQLiteSerializer
 from ell.api.server import create_app, get_pubsub, get_serializer
 from ell.api.config import Config
 from ell.api.logger import setup_logging
-from ell.types.serialize import utc_now
+from ell.types import ToolCall
+from ell.types.serialize import utc_now, Invocation, InvocationContents
 from ell.stores.studio import SerializedLMP
 from ell.types.lmp import LMPType
 from ell.types.serialize import WriteLMPInput
@@ -19,9 +23,11 @@ from ell.types.serialize import WriteLMPInput
 def sqlite_serializer() -> SQLiteSerializer:
     return SQLiteSerializer(":memory:")
 
+
 @pytest.fixture
 def async_sqlite_serializer() -> AsyncSQLiteSerializer:
     return AsyncSQLiteSerializer(":memory:")
+
 
 def test_construct_serialized_lmp():
     serialized_lmp = SerializedLMP(
@@ -100,7 +106,6 @@ def create_test_app(serializer: AsyncSQLiteSerializer):
     async def get_publisher_override():
         yield publisher
 
-
     def get_serializer_override():
         return serializer
 
@@ -151,6 +156,7 @@ def test_write_lmp(async_sqlite_serializer: AsyncSQLiteSerializer):
 def test_write_invocation(async_sqlite_serializer: AsyncSQLiteSerializer):
     _app, client, *_ = create_test_app(async_sqlite_serializer)
 
+    # first write an lmp..
     lmp_id = uuid4().hex
     lmp_data: Dict[str, Any] = {
         "lmp_id": lmp_id,
@@ -178,8 +184,12 @@ def test_write_invocation(async_sqlite_serializer: AsyncSQLiteSerializer):
         "global_vars": {"global_var1": "value1"},
         "free_vars": {"free_var1": "value2"},
         "latency_ms": 100.0,
-        "invocation_kwargs": {"model": "gpt-4o", "messages": [{"role": "system", "content": "You are a JSON parser. You respond only in JSON. Do not format using markdown."}, {"role": "user", "content": "You are given the following task: \"What is two plus two?\"\n            Parse the task into the following type:\n            {'$defs': {'Add': {'properties': {'op': {'const': '+', 'enum': ['+'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Add', 'type': 'object'}, 'Div': {'properties': {'op': {'const': '/', 'enum': ['/'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Div', 'type': 'object'}, 'Mul': {'properties': {'op': {'const': '*', 'enum': ['*'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Mul', 'type': 'object'}, 'Sub': {'properties': {'op': {'const': '-', 'enum': ['-'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Sub', 'type': 'object'}}, 'anyOf': [{'$ref': '#/$defs/Add'}, {'$ref': '#/$defs/Sub'}, {'$ref': '#/$defs/Mul'}, {'$ref': '#/$defs/Div'}]}\n            "}], "lm_kwargs": {"temperature": 0.1}, "client": None},
-        "contents": { }
+        "invocation_kwargs": {"model": "gpt-4o", "messages": [{"role": "system",
+                                                               "content": "You are a JSON parser. You respond only in JSON. Do not format using markdown."},
+                                                              {"role": "user",
+                                                               "content": "You are given the following task: \"What is two plus two?\"\n            Parse the task into the following type:\n            {'$defs': {'Add': {'properties': {'op': {'const': '+', 'enum': ['+'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Add', 'type': 'object'}, 'Div': {'properties': {'op': {'const': '/', 'enum': ['/'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Div', 'type': 'object'}, 'Mul': {'properties': {'op': {'const': '*', 'enum': ['*'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Mul', 'type': 'object'}, 'Sub': {'properties': {'op': {'const': '-', 'enum': ['-'], 'title': 'Op', 'type': 'string'}, 'a': {'title': 'A', 'type': 'number'}, 'b': {'title': 'B', 'type': 'number'}}, 'required': ['op', 'a', 'b'], 'title': 'Sub', 'type': 'object'}}, 'anyOf': [{'$ref': '#/$defs/Add'}, {'$ref': '#/$defs/Sub'}, {'$ref': '#/$defs/Mul'}, {'$ref': '#/$defs/Div'}]}\n            "}],
+                              "lm_kwargs": {"temperature": 0.1}, "client": None},
+        "contents": {}
     }
     consumes_data = []
 
@@ -195,6 +205,106 @@ def test_write_invocation(async_sqlite_serializer: AsyncSQLiteSerializer):
     print(response.json())
     assert response.status_code == 200
     # assert response.json() == input
+
+
+class MySampleToolInput(BaseModel):
+    sample_property: str = Field("A thing")
+
+
+@ell.tool()
+def my_sample_tool(args: MySampleToolInput = Field(
+    description="The full name of a city and country, e.g. San Francisco, CA, USA")):
+    return '42'
+
+
+def test_invocation_json_round_trip():
+    invocation_id = "invocation-" + uuid4().hex
+    tool_call = ToolCall(
+        tool=my_sample_tool,
+        tool_call_id=uuid4().hex,
+        params=MySampleToolInput(sample_property="test"),
+    )
+    invocation_contents = InvocationContents(
+        invocation_id=invocation_id,
+        results=[Message(role='user', content=[tool_call])]
+    )
+    invocation = Invocation(
+        id=invocation_id,
+        lmp_id=uuid4().hex,
+        latency_ms=42.0,
+        contents=invocation_contents,
+        created_at=utc_now()
+    )
+
+    # Serialize
+    result = invocation.model_dump()
+
+    # Deserialize
+    _invocation=None
+    try:
+        _invocation = Invocation.model_validate(result)
+    except ValidationError as e:
+        import json
+        print("\nJSON errors:")
+        print(json.dumps(e.errors(), default=str,indent=2))
+
+    # Should be equal
+    # Except that:
+    # ToolCall before / after serialization:
+    # 1. `tool` is a function vs a string
+    # 2. `params` is a BaseModel (in userland) vs a dictionary
+    # These are not equivalent
+
+    # What should be equivalent: deserialized forms of serialized forms
+    assert _invocation.model_dump() == result
+
+def test_write_invocation_tool_call(async_sqlite_serializer: AsyncSQLiteSerializer):
+    _app, client, *_ = create_test_app(async_sqlite_serializer)
+
+    # first write an lmp..
+    lmp_id = uuid4().hex
+    lmp_data: Dict[str, Any] = {
+        "lmp_id": lmp_id,
+        "name": "Test LMP",
+        "source": "def test_function(): pass",
+        "dependencies": str(["dep1", "dep2"]),
+        "lmp_type": LMPType.LM,
+        "api_params": {"param1": "value1"},
+    }
+    response = client.post(
+        "/lmp",
+        json={'lmp': lmp_data, 'uses': []}
+    )
+    try:
+        assert response.status_code == 200
+    except Exception as e:
+        print(response.json())
+        raise e
+
+    invocation_id = "invocation-" + uuid4().hex
+    tool_call = ToolCall(
+        tool=my_sample_tool,
+        tool_call_id=uuid4().hex,
+        params=MySampleToolInput(sample_property="test"),
+    )
+    invocation_contents = InvocationContents(
+        invocation_id=invocation_id,
+        results=[Message(role='user', content=[tool_call])]
+    )
+    invocation = Invocation(
+        id=invocation_id,
+        lmp_id=lmp_id,
+        latency_ms=42.0,
+        contents=invocation_contents,
+        created_at=utc_now()
+    )
+
+    response = client.post(
+        "/invocation",
+        json={'invocation':invocation.model_dump(),'consumes':[]}
+    )
+    print(response.json())
+    assert response.status_code == 200
 
 
 if __name__ == "__main__":

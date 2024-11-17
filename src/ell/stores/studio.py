@@ -197,7 +197,12 @@ class Invocation(InvocationBase, table=True):
 
     @classmethod
     def from_api(cls, input: ell.types.serialize.Invocation):
+        fields = {
+            field: getattr(input, field)
+            for field in input.model_fields
+            if field != "contents"
+        }
         return cls(
-            **input.model_dump(exclude={"contents"}),
+            **fields,
             contents=InvocationContents.from_api(input.contents)
         )

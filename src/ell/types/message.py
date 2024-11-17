@@ -6,14 +6,16 @@ import numpy as np
 import base64
 from io import BytesIO
 from PIL import Image as PILImage
+from types import FunctionType
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, model_validator, field_serializer, field_validator
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union, Type
 
-from ell.util.serialization import serialize_image
+from ell.util.serialization import serialize_image, unstructure_lstr
+
 _lstr_generic = Union[_lstr, str]
 InvocableTool = Callable[..., Union["ToolResult", _lstr_generic, List["ContentBlock"], ]]
 
@@ -22,8 +24,8 @@ AnyContent = Union["ContentBlock", str, "ToolCall", "ToolResult", "ImageContent"
 
 
 class ToolResult(BaseModel):
-    tool_call_id: _lstr_generic
-    result: List["ContentBlock"]
+    tool_call_id: _lstr_generic = Field(description="Id of the tool call from the model that led the tool to be called (`'call_{id}'`)")
+    result: List["ContentBlock"] = Field(description="Tool call output as a list of ell ContentBlocks")
 
     @property
     def text(self) -> str:
@@ -41,13 +43,39 @@ class ToolResult(BaseModel):
         return f"{self.__class__.__name__}(tool_call_id={self.tool_call_id}, result={_content_to_text(self.result)})"
 
 class ToolCall(BaseModel):
-    tool : InvocableTool
-    tool_call_id : Optional[_lstr_generic] = Field(default=None)
-    params : BaseModel
+    tool: Union[InvocableTool, str] = Field(description="The tool function to call or a reference to it when serialized")
+    tool_call_id: Optional[_lstr_generic] = Field(default=None)
+    # todo. If we include BaseModel in this union instead of Any, then pydantic
+    # constructs `BaseModel()` when we call super().__init__ with a dictionary
+    params: Union[Any, Dict[str, Any]]
+
+    # TODO. This should reference a tool fqn + version if possible
+    # ell should have an InvocableTool with __ properties that have this info at serialization time
+    @field_serializer('tool')
+    def serialize_tool(self, tool: InvocableTool, _info):
+        return tool.__name__ if hasattr(tool, '__name__') else str(tool)
+
+    # @field_serializer('params')
+    # def serialize_params(self, params: BaseModel, _info):
+    #     # Explicitly serialize the params BaseModel
+    #     return params.model_dump(exclude_none=True)
+
+    @field_serializer('tool_call_id')
+    def serialize_tool_call_id(self, tool_call_id: _lstr_generic):
+        if tool_call_id is None:
+            return None
+        origin_trace = tool_call_id.__dict__['__origin_trace__']
+        if origin_trace:
+            return unstructure_lstr(tool_call_id)
+        return tool_call_id
 
     def __init__(self, tool, params : Union[BaseModel, Dict[str, Any]],  tool_call_id=None):
-        if not isinstance(params, BaseModel):
+        if isinstance(tool, FunctionType) and hasattr(tool, '__ell_params_model__'):
             params = tool.__ell_params_model__(**params) #convenience.
+        if isinstance(tool_call_id, dict):
+            tool_call_id = _lstr(content=tool_call_id['content'],
+                                 origin_trace=tool_call_id.get('__origin_trace__'),
+                                 logits=tool_call_id.get('logits'))
         super().__init__(tool=tool, tool_call_id=tool_call_id, params=params)
 
     def __call__(self, **kwargs):
@@ -61,7 +89,10 @@ class ToolCall(BaseModel):
         raise DeprecationWarning("call_and_collect_as_message_block is deprecated. Use collect_as_content_block instead.")
     
     def call_and_collect_as_content_block(self):
-        res = self.tool(**self.params.model_dump(), _tool_call_id=self.tool_call_id)
+        if isinstance(self.tool, str):
+            raise ValueError("Cannot call a tool that is a string reference.")
+        res = self.tool(**(self.params.model_dump() if isinstance(self.params, BaseModel) else self.params), 
+                        _tool_call_id=self.tool_call_id)
         return ContentBlock(tool_result=res)
 
     def call_and_collect_as_message(self):
@@ -135,7 +166,7 @@ class ContentBlock(BaseModel):
     # This breaks us maintaing parity with the openai python client in some sen but so does image.
 
     def __init__(self, *args, **kwargs):
-        if "image" in kwargs and not isinstance(kwargs["image"], ImageContent):
+        if "image" in kwargs and kwargs['image'] is not None and not isinstance(kwargs["image"], ImageContent): # todo(alex). are we looking for dict here?
             im = kwargs["image"] = ImageContent.coerce(kwargs["image"])
             # XXX: Backwards compatibility, Deprecate.
             if (d := kwargs.get("image_detail", None)): im.detail = d
@@ -255,8 +286,10 @@ class ContentBlock(BaseModel):
             return cls(image=ImageContent.coerce(content))
         if isinstance(content, BaseModel):
             return cls(parsed=content)
+        if isinstance(content, dict):
+            return cls(**content)
 
-        raise ValueError(f"Invalid content type: {type(content)}")
+        raise ValueError(f"Invalid ContentBlock content type: {type(content)}")
     
     @field_serializer('parsed')
     def serialize_parsed(self, value: Optional[BaseModel], _info):
@@ -303,7 +336,7 @@ def to_content_blocks(
 
     if not isinstance(content, list):
         content = [content]
-    
+
     return [ContentBlock.model_validate(ContentBlock.coerce(c)) for c in content]
 
 
@@ -437,22 +470,7 @@ class Message(BaseModel):
             for block in content
         ]
 
-    @classmethod
-    def model_validate(cls, obj: Any) -> 'Message':
-        """Custom validation to handle deserialization"""
-        if isinstance(obj, dict):
-            if 'content' in obj and isinstance(obj['content'], list):
-                content_blocks = []
-                for block in obj['content']:
-                    if isinstance(block, dict):
-                        if 'text' in block:
-                            block['text'] = str(block['text']) if block['text'] is not None else None
-                        content_blocks.append(ContentBlock.model_validate(block))
-                    else:
-                        content_blocks.append(ContentBlock.coerce(block))
-                obj['content'] = content_blocks
-        return super().model_validate(obj)
-
+    #todo(alex): needed?
     @classmethod
     def model_validate_json(cls, json_str: str) -> 'Message':  
         """Custom validation to handle deserialization from JSON string"""

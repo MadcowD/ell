@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from functools import cached_property
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, AwareDatetime, Field
+from pydantic import BaseModel, AwareDatetime, Field, field_serializer, field_validator
 
 from ell.types.lmp import LMPType
 from ell.types.message import Message
@@ -57,19 +57,18 @@ class LMP(BaseModel):
 class GetLMPInput(BaseModel):
     id: str
 
-GetLMPOutput = Optional[LMP]
 
-InvocationResults = Union[List[Message], Any]
+GetLMPOutput = Optional[LMP]
 
 
 class InvocationContents(BaseModel):
-    invocation_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    params: Optional[Dict[str, Any]] = None
-    results: Optional[InvocationResults] = None
-    invocation_api_params: Optional[Dict[str, Any]] = None
-    global_vars: Optional[Dict[str, Any]] = None
-    free_vars: Optional[Dict[str, Any]] = None
-    is_external: bool = Field(default=False)
+    invocation_id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="ID of the invocation the contents belong to")
+    params: Optional[Dict[str, Any]] = Field(description="The parameters of the LMP at the time of the invocation", default=None)
+    results: Optional[List[Message]] = Field(description="The output of the invocation as a list of ell Messages", default=None)
+    invocation_api_params: Optional[Dict[str, Any]] = Field(description="Arguments the model API was called with", default=None)
+    global_vars: Optional[Dict[str, Any]] = Field(description="Global variable bindings and their values at the time of the invocation", default=None)
+    free_vars: Optional[Dict[str, Any]] = Field(description="Free variable bindings and their values at the time of the invocation", default=None)
+    is_external: bool = Field(default=False, description="Whether the invocation contents are stored externally in a blob store. If they are they can be retrieved by 'invocation-{invocation_id}'.")
 
     @cached_property
     def total_size_bytes(self) -> int:
@@ -84,6 +83,7 @@ class InvocationContents(BaseModel):
             self.global_vars,
             self.free_vars
         ]
+        # todo(alex): we may want to bring this in line with other json serialization
         return sum(
             len(json.dumps(field, default=(lambda x: json.dumps(x.model_dump(), default=str, ensure_ascii=False)
                                            if isinstance(x, BaseModel) else str(x)), ensure_ascii=False).encode('utf-8'))
@@ -101,13 +101,31 @@ class Invocation(BaseModel):
     """
     id: Optional[str] = None
     lmp_id: str
-    latency_ms: int
+    latency_ms: float
     prompt_tokens: Optional[int] = None
     completion_tokens: Optional[int] = None
     state_cache_key: Optional[str] = None
     created_at: AwareDatetime = Field(default_factory=utc_now)
     used_by_id: Optional[str] = None
     contents: InvocationContents
+
+    # Note: we must set to always right now, because the global json serializer calls model_dump instead of
+    # model_dump_json and then json.dumps with default of repr. would prefer when_used=json but
+    # tbh it's probably not needed as i think pydantic already handles this for json
+
+    @field_serializer('created_at', when_used='always')
+    def serialize_date(self, created_at: AwareDatetime):
+        return str(created_at)
+
+    @field_validator('created_at', mode="before")
+    def deserialize_and_validate_date(cls, created_at: Union[str, AwareDatetime]):
+        if isinstance(created_at, str):
+            dt = datetime.fromisoformat(created_at)
+            if dt.tzinfo is None:
+                raise ValueError(
+                    "Datetime string must include timezone information")
+            return dt
+        return created_at
 
 
 class WriteInvocationInput(BaseModel):
@@ -131,7 +149,6 @@ class WriteBlobInput(BaseModel):
     blob_id: str
     blob: bytes
     metadata: Optional[Dict[str, Any]] = None
-
 
 
 # class Blob(BaseModel):

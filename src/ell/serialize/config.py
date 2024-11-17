@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 class SerializeConfig(BaseModel):
     storage_dir: Optional[str] = Field(default=None, description="Filesystem path used for SQLite and local blob storage")
+    api_url: Optional[str] = Field(default=None, description="ell API server endpoint")
     pg_connection_string: Optional[str] = None
-    api_server_endpoint: Optional[str] = Field(default=None, description="Ell API server endpoint")
     minio_endpoint: Optional[str] = None
     minio_access_key: Optional[str] = None
     minio_secret_key: Optional[str] = None
@@ -29,5 +29,5 @@ class SerializeConfig(BaseModel):
 
     @computed_field
     def is_enabled(self) -> bool:
-        return bool(self.api_server_endpoint or self.pg_connection_string or self.storage_dir or self.minio_endpoint)
+        return bool(self.api_url or self.pg_connection_string or self.storage_dir or self.minio_endpoint)
 

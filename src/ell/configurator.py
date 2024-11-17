@@ -162,7 +162,7 @@ def init(
     default_api_params: Optional[Dict[str, Any]] = None,
     default_client: Optional[Any] = None,
     autocommit_model: str = "gpt-4o-mini",
-    api_server_url: Optional[str] = None,
+    api_url: Optional[str] = None,
     serializer: Optional[EllSerializer] = None,
 ) -> None:
     """
@@ -191,7 +191,7 @@ def init(
     config.verbose = verbose
     config.lazy_versioning = lazy_versioning
 
-    if not isinstance(store, str):
+    if store and not isinstance(store, str):
         try:
             from ell.serialize.sql import SQLSerializer
             config.serializer = SQLSerializer(store)
@@ -206,7 +206,7 @@ def init(
             config.serializer = serializer
         else:
             serialize_config = SerializeConfig(
-                api_server_url=api_server_url,
+                api_url=api_url,
                 storage_dir=store,
                 # ...other options
                 log_level=20 if verbose else 0,

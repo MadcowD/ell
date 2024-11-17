@@ -37,10 +37,10 @@ def get_serializer(config: SerializeConfig) -> EllSerializer:
             return SQLiteSerializer(config.storage_dir, blob_store)
         except ImportError:
             raise missing_ell_extras(message="SQLite storage is not enabled.", extras=["sqlite"])
-    if config.api_server_endpoint:
+    if config.api_url:
         try:
             from ell.serialize.http import EllHTTPSerializer
-            return EllHTTPSerializer(config.api_server_endpoint)
+            return EllHTTPSerializer(config.api_url)
         except ImportError:
             raise missing_ell_extras(message="HTTP serialization is not enabled.", extras=["sqlite"])
 

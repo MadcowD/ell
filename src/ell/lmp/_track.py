@@ -1,6 +1,8 @@
 import json
 import logging
 import threading
+
+from ell.types import Message, ContentBlock, ToolResult
 from ell.types.lmp import LMPType
 from ell.types.serialize import Invocation, InvocationContents, WriteInvocationInput, utc_now, WriteLMPInput
 from ell.util._warnings import _autocommit_warning
@@ -201,11 +203,22 @@ def _serialize_lmp(func):
 
 def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 
                      state_cache_key, invocation_api_params, cleaned_invocation_params, consumes, result, parent_invocation_id):
-    
+
+    # print(result)
+    # todo(alex). figure out what's going on here, looks like we're getting result as a tool result / single message sometimes
+
+    results = None
+    if isinstance(result, list):
+        results = result
+    elif isinstance(result, ToolResult):
+        results = [Message(role='tool', content=[ContentBlock(tool_result=result)])]
+    else:
+        results = [result]
+
     invocation_contents = InvocationContents(
         invocation_id=invocation_id,
         params=cleaned_invocation_params,
-        results=result,
+        results=results,
         invocation_api_params=invocation_api_params,
         global_vars=get_immutable_vars(func.__ell_closure__[2]),
         free_vars=get_immutable_vars(func.__ell_closure__[3])
@@ -217,6 +230,7 @@ def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion
         # Write to the blob store 
         blob_id = config.serializer.store_blob(
             blob_id=invocation_id,
+            #todo(alex): normalize serialization
             blob=json.dumps(invocation_contents.model_dump(
             ), default=str, ensure_ascii=False).encode('utf-8'),
         )

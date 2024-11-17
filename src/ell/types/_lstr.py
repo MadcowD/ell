@@ -99,6 +99,7 @@ class _lstr(str):
         instance = super(_lstr, cls).__new__(cls, content)
         # instance._logits = logits
         if isinstance(origin_trace, str):
+            # TODO. pydantic validation splits on ',', it would be good to have this in one place or standardize on a list for the serialized format unless ',' denotes something else
             instance.__origin_trace__ = frozenset({origin_trace})
         else:
             instance.__origin_trace__ = (
@@ -116,8 +117,8 @@ class _lstr(str):
         def validate_lstr(value):
             if isinstance(value, dict) and value.get("__lstr", False):
                 content = value["content"]
-                origin_trace = value["__origin_trace__"].split(",")
-                return cls(content, origin_trace=origin_trace)
+                origin_trace = value["__origin_trace__"].split(",") if isinstance(value["__origin_trace__"], str) else frozenset(value["__origin_trace__"])
+                return cls(content, origin_trace=origin_trace) # type: ignore
             elif isinstance(value, str):
                 return cls(value)
             elif isinstance(value, cls):
