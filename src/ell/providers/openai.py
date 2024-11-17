@@ -64,7 +64,7 @@ try:
                                 type="function",
                                 function=dict(
                                     name=tool_call.tool.__name__,
-                                    arguments=json.dumps(tool_call.params.model_dump(), ensure_ascii=False)
+                                    arguments=tool_call.params.model_dump_json() if isinstance(tool_call.params,BaseModel) else json.dumps(tool_call.params, ensure_ascii=False)
                                 )
                             ) for tool_call in tool_calls ],
                         role="assistant",

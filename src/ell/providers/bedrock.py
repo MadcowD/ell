@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
+
+from pydantic import BaseModel
+
 from ell.provider import  EllCallParams, Metadata, Provider
 from ell.types import Message, ContentBlock, ToolCall, ImageContent
 from ell.types._lstr import _lstr
@@ -199,7 +202,7 @@ def content_block_to_bedrock_format(content_block: ContentBlock) -> Dict[str, An
             "toolUse": {
                 "toolUseId": content_block.tool_call.tool_call_id,
                 "name": content_block.tool_call.tool.__name__,
-                "input": content_block.tool_call.params.model_dump()
+                "input": content_block.tool_call.params.model_dump() if isinstance(content_block.tool_call.params, BaseModel) else content_block.tool_call.params,
             }
         }
     elif content_block.tool_result:

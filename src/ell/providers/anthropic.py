@@ -1,4 +1,7 @@
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type, Union, cast
+
+from pydantic import BaseModel
+
 from ell.provider import  EllCallParams, Metadata, Provider
 from ell.types import Message, ContentBlock, ToolCall, ImageContent
 
@@ -194,7 +197,7 @@ def _content_block_to_anthropic_format(content_block: ContentBlock):
                 type="tool_use",
                 id=tool_call.tool_call_id,
                 name=tool_call.tool.__name__,
-                input=tool_call.params.model_dump()
+                input=tool_call.params.model_dump() if isinstance(tool_call.params, BaseModel) else tool_call.params,
             )
         elif (tool_result := content_block.tool_result):
             return dict(
