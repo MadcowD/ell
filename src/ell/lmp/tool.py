@@ -97,7 +97,7 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
             
             # Determine the type annotation
             if param.annotation == inspect.Parameter.empty:
-                raise ValueError(f"Parameter {param_name} has no type annotation, and cannot be converted into a tool schema for OpenAI and other provisders. Should OpenAI produce a string or an integer, etc, for this parameter?")
+                raise ValueError(f"Parameter {param_name} has no type annotation, and cannot be converted into a tool schema for OpenAI and other providers. Should OpenAI produce a string or an integer, etc, for this parameter?")
             annotation = param.annotation 
             
             # Determine the default value
