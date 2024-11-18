@@ -197,7 +197,7 @@ def _content_block_to_anthropic_format(content_block: ContentBlock):
                 type="tool_use",
                 id=tool_call.tool_call_id,
                 name=tool_call.tool.__name__,
-                input=tool_call.params.model_dump() if isinstance(tool_call.params, BaseModel) else tool_call.params,
+                input=tool_call.serialize_params(),
             )
         elif (tool_result := content_block.tool_result):
             return dict(

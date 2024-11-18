@@ -202,7 +202,7 @@ def content_block_to_bedrock_format(content_block: ContentBlock) -> Dict[str, An
             "toolUse": {
                 "toolUseId": content_block.tool_call.tool_call_id,
                 "name": content_block.tool_call.tool.__name__,
-                "input": content_block.tool_call.params.model_dump() if isinstance(content_block.tool_call.params, BaseModel) else content_block.tool_call.params,
+                "input": content_block.tool_call.serialize_params(),
             }
         }
     elif content_block.tool_result:

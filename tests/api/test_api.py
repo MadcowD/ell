@@ -218,6 +218,8 @@ def my_sample_tool(args: MySampleToolInput = Field(
 
 
 def test_invocation_json_round_trip():
+    # pretend it's being tracked
+    my_sample_tool.__ell_hash__ = "lmp-123"
     invocation_id = "invocation-" + uuid4().hex
     tool_call = ToolCall(
         tool=my_sample_tool,
@@ -281,6 +283,8 @@ def test_write_invocation_tool_call(async_sqlite_serializer: AsyncSQLiteSerializ
         print(response.json())
         raise e
 
+    # pretend it's being tracked
+    my_sample_tool.__ell_hash__ = "lmp-123"
     invocation_id = "invocation-" + uuid4().hex
     tool_call = ToolCall(
         tool=my_sample_tool,
