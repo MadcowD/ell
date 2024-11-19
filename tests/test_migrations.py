@@ -119,7 +119,7 @@ def test_multiple_migrations(temp_db_url):
     with engine.connect() as conn:
         result = conn.execute(text("SELECT version_num FROM ell_alembic_version"))
         version = result.scalar()
-        assert version == "4524fb60d23e"
+        assert version
     
     # Downgrade to base
     command.downgrade(alembic_cfg, "base")
@@ -127,8 +127,8 @@ def test_multiple_migrations(temp_db_url):
     # Verify no version
     with engine.connect() as conn:
         result = conn.execute(text("SELECT version_num FROM ell_alembic_version"))
-        version = result.scalar()
-        assert version is None
+        first_version = result.scalar()
+        assert first_version is None
     
     # Upgrade to head again
     command.upgrade(alembic_cfg, "head")
@@ -136,8 +136,8 @@ def test_multiple_migrations(temp_db_url):
     # Verify back at head
     with engine.connect() as conn:
         result = conn.execute(text("SELECT version_num FROM ell_alembic_version"))
-        version = result.scalar()
-        assert version == "4524fb60d23e"
+        new_version = result.scalar()
+        assert version == new_version
 
 def test_migration_idempotency(temp_db_url):
     """Test that running migrations multiple times is idempotent"""

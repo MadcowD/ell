@@ -86,14 +86,12 @@ class SerializedLMP(SerializedLMPBase, table=True):
             secondaryjoin="SerializedLMP.lmp_id==SerializedLMPUses.lmp_user_id",
         ),
     )
-
+    
     class Config:
         table_name = "serializedlmp"
+        # XXX: THis is not a real constraint.
         unique_together = [("version_number", "name")]
 
-    __table_args__ = (
-        sa.UniqueConstraint('version_number', 'name', name='uq_serializedlmp_version_number_name'),
-    )
 
 class InvocationTrace(SQLModel, table=True):
     invocation_consumer_id: str = Field(foreign_key="invocation.id", primary_key=True, index=True)
