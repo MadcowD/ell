@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict, Field
 import numpy as np
 from dataclasses import dataclass, field
 
-from ell.types.studio.evaluations import EvaluationLabelerType
+from ell.stores.models.evaluations import EvaluationLabelerType
 
 Datapoint = Dict[str, Any]
 Dataset = List[Dict[str, Any]]

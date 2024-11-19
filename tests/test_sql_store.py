@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 from sqlalchemy import Engine, create_engine, func
 
 from ell.types.lmp import LMPType
-from ell.types.studio.core import utc_now
+from ell.stores.models.core import utc_now
 
 
 @pytest.fixture

@@ -3,9 +3,9 @@ from contextlib import contextmanager
 from datetime import datetime
 from typing import Any, Optional, Dict, List, Set, Union
 from ell.types._lstr import _lstr
-from ell.types.studio.core import SerializedLMP, Invocation
+from ell.stores.models.core import SerializedLMP, Invocation
 from ell.types.message import InvocableLM
-from ell.types.studio.evaluations import EvaluationResultDatapoint, EvaluationRunLabelerSummary, SerializedEvaluation, SerializedEvaluationRun
+from ell.stores.models.evaluations import EvaluationResultDatapoint, EvaluationRunLabelerSummary, SerializedEvaluation, SerializedEvaluationRun
 # from ell.types.studio import SerializedEvaluation, SerializedEvaluationRun
 
 class BlobStore(ABC):

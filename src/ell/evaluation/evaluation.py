@@ -14,13 +14,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from ell.evaluation.results import _ResultDatapoint, EvaluationResults
 from ell.evaluation.serialization import write_evaluation, write_evaluation_run_end, write_evaluation_run_intermediate, write_evaluation_run_start
 from ell.evaluation.util import get_lmp_output
-from ell.types.studio import LMPType
+from ell.stores.models import LMPType
 
 from ell.evaluation.util import validate_callable_dict
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from ell.types.message import LMP
-from ell.types.studio.evaluations import EvaluationLabelerType
+from ell.stores.models.evaluations import EvaluationLabelerType
 from ell.util.tqdm import tqdm
 import inspect
 

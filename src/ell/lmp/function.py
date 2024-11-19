@@ -2,7 +2,7 @@ from functools import wraps
 from typing import Any, Callable
 from ell.configurator import config
 from ell.lmp._track import _track
-from ell.types.studio import LMPType
+from ell.stores.models import LMPType
 from ell.util.verbosity import model_usage_logger_pre
 
 def function(*, exempt_from_tracking: bool = False, _exempt_from_logging: bool = False, type = LMPType.FUNCTION, **function_kwargs):

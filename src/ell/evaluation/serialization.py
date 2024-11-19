@@ -17,7 +17,7 @@ import dill
 
 import itertools
 
-from ell.types.studio.evaluations import (
+from ell.stores.models.evaluations import (
     EvaluationLabel,
     SerializedEvaluation as SerializedEvaluation,
     EvaluationLabeler,

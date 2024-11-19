@@ -10,7 +10,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 import sqlmodel
-import ell.types.studio.core
+import ell.stores.models.core
 ${imports if imports else ""}
 
 # revision identifiers, used by Alembic.

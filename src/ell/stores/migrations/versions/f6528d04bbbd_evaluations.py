@@ -1,8 +1,8 @@
 """evaluations
 
-Revision ID: b3aff868f213
+Revision ID: f6528d04bbbd
 Revises: 4524fb60d23e
-Create Date: 2024-11-19 18:51:57.273837+00:00
+Create Date: 2024-11-19 19:31:38.381105+00:00
 
 """
 from typing import Sequence, Union
@@ -10,11 +10,11 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 import sqlmodel
-import ell.types.studio.core
+import ell.stores.models.core
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'b3aff868f213'
+revision: str = 'f6528d04bbbd'
 down_revision: Union[str, None] = '4524fb60d23e'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,7 +25,7 @@ def upgrade() -> None:
     op.create_table('serializedevaluation',
     sa.Column('id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('created_at', ell.types.studio.core.UTCTimestamp(timezone=True), nullable=False),
+    sa.Column('created_at', ell.stores.models.core.UTCTimestamp(timezone=True), nullable=False),
     sa.Column('dataset_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('n_evals', sa.Integer(), nullable=False),
     sa.Column('version_number', sa.Integer(), nullable=False),
@@ -49,8 +49,8 @@ def upgrade() -> None:
     sa.Column('evaluation_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('evaluated_lmp_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('api_params', sa.JSON(), nullable=True),
-    sa.Column('start_time', ell.types.studio.core.UTCTimestamp(timezone=True), nullable=True),
-    sa.Column('end_time', ell.types.studio.core.UTCTimestamp(timezone=True), nullable=True),
+    sa.Column('start_time', ell.stores.models.core.UTCTimestamp(timezone=True), nullable=True),
+    sa.Column('end_time', ell.stores.models.core.UTCTimestamp(timezone=True), nullable=True),
     sa.Column('success', sa.Boolean(), nullable=True),
     sa.Column('error', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.ForeignKeyConstraint(['evaluated_lmp_id'], ['serializedlmp.lmp_id'], ),
@@ -70,9 +70,9 @@ def upgrade() -> None:
     op.create_table('evaluationrunlabelersummary',
     sa.Column('evaluation_labeler_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('evaluation_run_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', ell.types.studio.core.UTCTimestamp(timezone=True), nullable=True),
-    sa.Column('updated_at', ell.types.studio.core.UTCTimestamp(timezone=True), nullable=True),
-    sa.Column('finalized_at', ell.types.studio.core.UTCTimestamp(timezone=True), nullable=True),
+    sa.Column('created_at', ell.stores.models.core.UTCTimestamp(timezone=True), nullable=True),
+    sa.Column('updated_at', ell.stores.models.core.UTCTimestamp(timezone=True), nullable=True),
+    sa.Column('finalized_at', ell.stores.models.core.UTCTimestamp(timezone=True), nullable=True),
     sa.Column('is_scalar', sa.Boolean(), nullable=False),
     sa.Column('data', sa.JSON(), nullable=True),
     sa.Column('count', sa.Integer(), nullable=False),

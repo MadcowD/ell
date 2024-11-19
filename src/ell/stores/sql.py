@@ -12,15 +12,15 @@ from sqlalchemy.sql import text
 from ell.types._lstr import _lstr
 from sqlalchemy import or_, func, and_, extract, FromClause
 from sqlalchemy.types import TypeDecorator, VARCHAR
-from ell.types.studio import SerializedLMPUses, utc_now
-from ell.types.studio.evaluations import (
+from ell.stores.models import SerializedLMPUses, utc_now
+from ell.stores.models.evaluations import (
     EvaluationLabeler,
     EvaluationResultDatapoint,
     EvaluationRunLabelerSummary,
     SerializedEvaluation,
     SerializedEvaluationRun,
 )
-from ell.types.studio.core import InvocationTrace, SerializedLMP, Invocation, InvocationContents
+from ell.stores.models.core import InvocationTrace, SerializedLMP, Invocation, InvocationContents
 from sqlalchemy import func, and_
 from ell.util.serialization import pydantic_ltype_aware_cattr
 import gzip

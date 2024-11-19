@@ -116,7 +116,7 @@ def test_existing_tables_no_alembic(temp_db_url):
         result = conn.execute(text("SELECT version_num FROM ell_alembic_version"))
         version = result.scalar()
         # Get current head version from alembic config
-        assert version == "b3aff868f213"
+        assert version == "f6528d04bbbd"
 
 def test_multiple_migrations(temp_db_url):
     """Test running multiple migrations in sequence"""

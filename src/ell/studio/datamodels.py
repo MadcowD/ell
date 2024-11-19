@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlmodel import SQLModel
-from ell.types.studio.evaluations import (
+from ell.stores.models.evaluations import (
     EvaluationLabelBase,
     EvaluationLabelerBase,
     SerializedEvaluationBase,
@@ -9,7 +9,7 @@ from ell.types.studio.evaluations import (
     EvaluationRunLabelerSummaryBase,
     EvaluationResultDatapointBase,
 )
-from ell.types.studio.core import SerializedLMPBase, InvocationBase, InvocationContentsBase
+from ell.stores.models.core import SerializedLMPBase, InvocationBase, InvocationContentsBase
 
 
 class SerializedLMPWithUses(SerializedLMPBase):

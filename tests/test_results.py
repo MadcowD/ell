@@ -1,5 +1,5 @@
 from ell.evaluation.results import _ResultDatapoint, EvaluationResults, Label
-from ell.types.studio.evaluations import EvaluationLabelerType
+from ell.stores.models.evaluations import EvaluationLabelerType
 import numpy as np
 
 def test_evaluation_results_from_rowar_results():
