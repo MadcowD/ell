@@ -1,8 +1,8 @@
 """evaluations
 
-Revision ID: c1eb23233c5f
+Revision ID: b3aff868f213
 Revises: 4524fb60d23e
-Create Date: 2024-11-19 01:52:47.724385+00:00
+Create Date: 2024-11-19 18:51:57.273837+00:00
 
 """
 from typing import Sequence, Union
@@ -14,7 +14,7 @@ import ell.types.studio.core
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'c1eb23233c5f'
+revision: str = 'b3aff868f213'
 down_revision: Union[str, None] = '4524fb60d23e'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,7 +25,7 @@ def upgrade() -> None:
     op.create_table('serializedevaluation',
     sa.Column('id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('created_at', ell.types.studio.core.UTCTimestamp(timezone=True), nullable=True),
+    sa.Column('created_at', ell.types.studio.core.UTCTimestamp(timezone=True), nullable=False),
     sa.Column('dataset_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('n_evals', sa.Integer(), nullable=False),
     sa.Column('version_number', sa.Integer(), nullable=False),
@@ -62,14 +62,14 @@ def upgrade() -> None:
     op.create_table('evaluationresultdatapoint',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('invocation_being_labeled_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('evaluation_run_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('evaluation_run_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['evaluation_run_id'], ['serializedevaluationrun.id'], ),
     sa.ForeignKeyConstraint(['invocation_being_labeled_id'], ['invocation.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('evaluationrunlabelersummary',
-    sa.Column('evaluation_run_id', sa.Integer(), nullable=False),
     sa.Column('evaluation_labeler_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('evaluation_run_id', sa.Integer(), nullable=False),
     sa.Column('created_at', ell.types.studio.core.UTCTimestamp(timezone=True), nullable=True),
     sa.Column('updated_at', ell.types.studio.core.UTCTimestamp(timezone=True), nullable=True),
     sa.Column('finalized_at', ell.types.studio.core.UTCTimestamp(timezone=True), nullable=True),
@@ -78,17 +78,17 @@ def upgrade() -> None:
     sa.Column('count', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['evaluation_labeler_id'], ['evaluationlabeler.id'], ),
     sa.ForeignKeyConstraint(['evaluation_run_id'], ['serializedevaluationrun.id'], ),
-    sa.PrimaryKeyConstraint('evaluation_run_id', 'evaluation_labeler_id')
+    sa.PrimaryKeyConstraint('evaluation_labeler_id', 'evaluation_run_id')
     )
     op.create_table('evaluationlabel',
-    sa.Column('labeled_datapoint_id', sa.Integer(), nullable=False),
     sa.Column('labeler_id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('labeled_datapoint_id', sa.Integer(), nullable=False),
     sa.Column('label_invocation_id', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('manual_label', sa.JSON(), nullable=True),
     sa.ForeignKeyConstraint(['label_invocation_id'], ['invocation.id'], ),
     sa.ForeignKeyConstraint(['labeled_datapoint_id'], ['evaluationresultdatapoint.id'], ),
     sa.ForeignKeyConstraint(['labeler_id'], ['evaluationlabeler.id'], ),
-    sa.PrimaryKeyConstraint('labeled_datapoint_id', 'labeler_id')
+    sa.PrimaryKeyConstraint('labeler_id', 'labeled_datapoint_id')
     )
     # ### end Alembic commands ###
 

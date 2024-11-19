@@ -37,6 +37,7 @@ def init_or_migrate_database(engine) -> None:
     # Check database state
     our_tables_v1 = {'serializedlmp', 'invocation', 'invocationcontents', 
                   'invocationtrace', 'serializedlmpuses'}
+    our_tables_v2 = {'evaluationlabeler', 'evaluationresultdatapoint', 'evaluationrunlabelersummary', 'evaluationlabel'}
     existing_tables = set(inspector.get_table_names())
     has_our_tables = bool(our_tables_v1 & existing_tables)  # Intersection
     has_alembic = 'ell_alembic_version' in existing_tables
@@ -47,18 +48,19 @@ def init_or_migrate_database(engine) -> None:
             # Case 1: Existing database with our tables but no Alembic
             # This is likely a database from version <= 0.14
             logger.debug("Found existing tables but no Alembic - stamping with initial migration")
-
-            command.stamp(alembic_cfg, "4524fb60d23e")
+            is_v1 = has_our_tables and not bool(our_tables_v2 & existing_tables)
+            command.stamp(alembic_cfg, "4524fb60d23e" if is_v1 else "head")
+         
             # Verify table was created
             after_tables = set(inspect(engine).get_table_names())
             logger.debug(f"Tables after stamp: {after_tables}")
-
-            # Check if version table has our stamp
-            with engine.connect() as connection:
-                version_result = connection.execute(text("SELECT version_num FROM ell_alembic_version")).first()
-                if not version_result or version_result[0] != "4524fb60d23e":
-                    raise RuntimeError("Failed to stamp database - version table empty or incorrect version")
-                logger.debug(f"Successfully stamped database with version {version_result[0]}")
+            if is_v1:
+                # Check if version table has our stamp
+                with engine.connect() as connection:
+                    version_result = connection.execute(text("SELECT version_num FROM ell_alembic_version")).first()
+                    if not version_result or version_result[0] != "4524fb60d23e":
+                        raise RuntimeError("Failed to stamp database - version table empty or incorrect version")
+                    logger.debug(f"Successfully stamped database with version {version_result[0]}")
 
             has_alembic = True
 

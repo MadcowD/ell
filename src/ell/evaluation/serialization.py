@@ -8,7 +8,7 @@ from ell.configurator import config
 from ell.evaluation.results import _ResultDatapoint
 from ell.evaluation.util import needs_store
 from ell.lmp._track import serialize_lmp
-from ell.store import Store
+from ell.stores.store import Store
 from ell.util._warnings import _autocommit_warning
 from ell.util.closure_util import ido
 from ell.util.closure_util import hsh

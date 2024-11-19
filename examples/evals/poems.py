@@ -8,6 +8,9 @@ import ell.evaluation
 import numpy as np
 
 import ell.lmp.function
+import logging
+
+
 
 @ell.simple(model="gpt-4o")
 def write_a_bad_poem():
@@ -28,10 +31,10 @@ def score(datapoint, output):
     return "yes" in is_good_poem(output).lower()
 
 ell.init(verbose=True, store="./logdir")
-
+# exit()
 eval = ell.evaluation.Evaluation(
     name="poem_eval",
-    n_evals=100,
+    n_evals=10,
     metrics={
         "critic_score": score,
         "length": lambda _, output: len(output),
@@ -41,6 +44,7 @@ eval = ell.evaluation.Evaluation(
         / len(output.split()),
     },
 )
+
 
 print("EVALUATING GOOD POEM")
 start = time.time()

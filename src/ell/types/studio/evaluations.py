@@ -24,12 +24,16 @@ class EvaluationLabelerType(str, Enum):
     CRITERION = "criterion"
 
 class EvaluationLabelerBase(SQLModel):
-    id: str = Field(default=None, primary_key=True)
+    id: str = Field(primary_key=True)
     name: str
     type: EvaluationLabelerType
-    labeling_lmp_id: Optional[str] = Field(default=None, foreign_key="serializedlmp.lmp_id", index=True)
-    evaluation_id: str = Field(default=None, foreign_key="serializedevaluation.id")
-    labeling_rubric: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    labeling_lmp_id: Optional[str] = Field(
+        default=None, foreign_key="serializedlmp.lmp_id", index=True
+    )
+    evaluation_id: str = Field(foreign_key="serializedevaluation.id")
+    labeling_rubric: Optional[Dict[str, Any]] = Field(
+        default=None, sa_column=Column(JSON)
+    )
 
 class EvaluationLabeler(EvaluationLabelerBase, table=True):
     evaluation: "SerializedEvaluation" = Relationship(back_populates="labelers")
@@ -63,10 +67,21 @@ class EvaluationLabeler(EvaluationLabelerBase, table=True):
         return v
 
 class EvaluationLabelBase(SQLModel):
-    labeled_datapoint_id: int = Field(foreign_key="evaluationresultdatapoint.id", primary_key=True)
-    labeler_id: str = Field(foreign_key="evaluationlabeler.id", primary_key=True)
-    label_invocation_id: Optional[str] = Field(default=None, foreign_key="invocation.id")
-    manual_label: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+
+    labeler_id: str = Field(
+        foreign_key="evaluationlabeler.id", 
+        primary_key=True,
+    )
+    labeled_datapoint_id: int = Field(
+        foreign_key="evaluationresultdatapoint.id", 
+        primary_key=True,
+    )
+    label_invocation_id: Optional[str] = Field(
+        default=None, foreign_key="invocation.id"
+    )
+    manual_label: Optional[Dict[str, Any]] = Field(
+        default=None, sa_column=Column(JSON)
+    )
 
 class EvaluationLabel(EvaluationLabelBase, table=True):
     labeled_datapoint: "EvaluationResultDatapoint" = Relationship(back_populates="labels")
@@ -75,8 +90,10 @@ class EvaluationLabel(EvaluationLabelBase, table=True):
 
 class EvaluationResultDatapointBase(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
-    invocation_being_labeled_id: str = Field(foreign_key="invocation.id")
-    evaluation_run_id: str = Field(foreign_key="serializedevaluationrun.id")
+    invocation_being_labeled_id: str = Field(
+        foreign_key="invocation.id"
+    )
+    evaluation_run_id: int = Field(foreign_key="serializedevaluationrun.id")
 
 class EvaluationResultDatapoint(EvaluationResultDatapointBase, table=True):
     invocation_being_labeled: Invocation = Relationship(back_populates="evaluation_result_datapoints")
@@ -84,8 +101,8 @@ class EvaluationResultDatapoint(EvaluationResultDatapointBase, table=True):
     labels: List[EvaluationLabel] = Relationship(back_populates="labeled_datapoint")
 
 class EvaluationRunLabelerSummaryBase(SQLModel):
-    evaluation_run_id: int = Field(foreign_key="serializedevaluationrun.id", primary_key=True)
     evaluation_labeler_id: str = Field(foreign_key="evaluationlabeler.id", primary_key=True)
+    evaluation_run_id: int = Field(foreign_key="serializedevaluationrun.id", primary_key=True)
     created_at: datetime = UTCTimestampField(default=func.now())
     updated_at: Optional[datetime] = UTCTimestampField(default=None)
     finalized_at: Optional[datetime] = UTCTimestampField(default=None)
@@ -196,26 +213,31 @@ class EvaluationRunLabelerSummary(EvaluationRunLabelerSummaryBase, table=True):
         )
 
 class SerializedEvaluationRunBase(SQLModel):
-    # XXX: This needs to be a string id.
     id: Optional[int] = Field(default=None, primary_key=True)
-    evaluation_id: str = Field(foreign_key="serializedevaluation.id", index=True)
-    evaluated_lmp_id: str = Field(foreign_key="serializedlmp.lmp_id", index=True)
-    api_params: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    evaluation_id: str = Field(
+        foreign_key="serializedevaluation.id", index=True
+    )
+    evaluated_lmp_id: str = Field(
+        foreign_key="serializedlmp.lmp_id", index=True
+    )
+    api_params: Optional[Dict[str, Any]] = Field(
+        default=None, sa_column=Column(JSON)
+    )
     start_time: datetime = UTCTimestampField()
     end_time: Optional[datetime] = UTCTimestampField(default=None)
     success: Optional[bool] = Field(default=None)
     error: Optional[str] = Field(default=None)
 
 class SerializedEvaluationRun(SerializedEvaluationRunBase, table=True):
-    evaluation: "SerializedEvaluation" = Relationship(back_populates="runs")
     evaluated_lmp: SerializedLMP = Relationship(back_populates="evaluation_runs")
+    evaluation: "SerializedEvaluation" = Relationship(back_populates="runs")
     results: List[EvaluationResultDatapoint] = Relationship(back_populates="evaluation_run")
     labeler_summaries: List[EvaluationRunLabelerSummary] = Relationship(back_populates="evaluation_run")
 
 class SerializedEvaluationBase(SQLModel):
     id: str = Field(primary_key=True)
     name: str
-    created_at: datetime = UTCTimestampField(default=func.now())
+    created_at: datetime = UTCTimestampField(default=func.now(), nullable=False)
     dataset_id: str
     n_evals: int
     version_number: int = Field(default=0)

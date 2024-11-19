@@ -17,7 +17,7 @@ from ell.util.serialization import compute_state_cache_key
 from ell.util.serialization import prepare_invocation_params
 
 try:
-    from ell.stores.studio import SerializedLMP, Invocation, InvocationContents, utc_now
+    from ell.types.studio.core import SerializedLMP, Invocation, InvocationContents, utc_now
 except ImportError:
     SerializedLMP = Invocation =  InvocationContents = utc_now = None
 

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Optional, Dict, List, Set
 from sqlmodel import Session, SQLModel, create_engine, select
 from ell.stores.migrations import init_or_migrate_database
-import ell.store
+import ell.stores.store
 from sqlalchemy.sql import text
 from ell.types._lstr import _lstr
 from sqlalchemy import or_, func, and_, extract, FromClause
@@ -32,8 +32,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class SQLStore(ell.store.Store):
-    def __init__(self, db_uri: str, blob_store: Optional[ell.store.BlobStore] = None):
+class SQLStore(ell.stores.store.Store):
+    def __init__(self, db_uri: str, blob_store: Optional[ell.stores.store.BlobStore] = None):
         # XXX: Use Serialization serialzie_object in incoming PR.
         self.engine = create_engine(
             db_uri,
@@ -480,7 +480,7 @@ class SQLiteStore(SQLStore):
         super().__init__(f"sqlite:///{db_path}", blob_store=blob_store)
 
 
-class SQLBlobStore(ell.store.BlobStore):
+class SQLBlobStore(ell.stores.store.BlobStore):
     def __init__(self, db_dir: str):
         self.db_dir = db_dir
 
