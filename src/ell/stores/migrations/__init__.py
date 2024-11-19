@@ -40,8 +40,8 @@ def init_or_migrate_database(engine) -> None:
     existing_tables = set(inspector.get_table_names())
     has_our_tables = bool(our_tables_v1 & existing_tables)  # Intersection
     has_alembic = 'ell_alembic_version' in existing_tables
-    
-    alembic_cfg = get_alembic_config(engine.url)
+
+    alembic_cfg = get_alembic_config(engine.url.render_as_string(hide_password=False))
     try:
         if has_our_tables and not has_alembic:
             # Case 1: Existing database with our tables but no Alembic
