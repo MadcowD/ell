@@ -20,7 +20,7 @@ client = instructor.from_openai(OpenAI())
 
 class InstructorProvider(OpenAIProvider):
     def translate_to_provider(self, *args, **kwargs):
-        """ This translates ell call param,eters to the provider call parameters.  IN this case instructor is jsut an openai client. 
+        """ This translates ell call parameters to the provider call parameters. In this case instructor is just an openai client, 
         so we can use the openai provider to do the translation. We just need to modify a few parameters because instructor doesn't support streaming."""
         api_params= super().translate_to_provider(*args, **kwargs)
         # Streaming is not allowed by instructor.

@@ -10,6 +10,7 @@ from ell.types.studio.evaluations import (
     EvaluationRunLabelerSummaryBase,
     EvaluationResultDatapointBase,
 )
+from ell.stores.studio import SerializedLMPBase, InvocationBase, InvocationContentsBase
 
 
 class SerializedLMPWithUses(SerializedLMPBase):

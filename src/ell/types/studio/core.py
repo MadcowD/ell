@@ -7,10 +7,13 @@ from types import NoneType
 import numpy as np
 import sqlalchemy.types as types
 
+from ell.types.lmp import LMPType
 from ell.types.message import Any, Any, Field, Message, Optional
 
 from sqlmodel import Column, Field, SQLModel
 from typing import Optional, cast
+
+from typing import Optional
 from dataclasses import dataclass
 from typing import Dict, List, Literal, Union, Any, Optional
 
@@ -20,6 +23,7 @@ from datetime import datetime
 from typing import Any, List, Optional
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column
 from sqlalchemy import Index, func
+import sqlalchemy as sa
 
 from typing import TypeVar, Any
 
@@ -58,14 +62,6 @@ class UTCTimestamp(types.TypeDecorator[datetime]):
 
 def UTCTimestampField(index: bool = False, **kwargs: Any):
     return Field(sa_column=Column(UTCTimestamp(timezone=True), index=index, **kwargs))
-
-
-class LMPType(str, enum.Enum):
-    LM = "LM"
-    TOOL = "TOOL"
-    LABELER = "LABELER"
-    FUNCTION = "FUNCTION"
-    OTHER = "OTHER"
 
 
 class SerializedLMPBase(SQLModel):
@@ -111,8 +107,10 @@ class SerializedLMP(SerializedLMPBase, table=True):
 
     evaluation_runs: List["SerializedEvaluationRun"] = Relationship(back_populates="evaluated_lmp")
 
+
     class Config:
         table_name = "serializedlmp"
+        # XXX: THis is not a real constraint.
         unique_together = [("version_number", "name")]
 
 

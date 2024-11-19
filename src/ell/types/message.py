@@ -7,8 +7,7 @@ import base64
 from io import BytesIO
 from PIL import Image as PILImage
 
-from pydantic import BaseModel, ConfigDict, model_validator, field_serializer
-from sqlmodel import Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator, field_serializer
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -422,6 +421,46 @@ class Message(BaseModel):
         else:
             content = [c.tool_call.call_and_collect_as_content_block() for c in self.content if c.tool_call]
         return Message(role="user", content=content)
+
+    @field_serializer('content')
+    def serialize_content(self, content: List[ContentBlock]):  
+        """Serialize content blocks to a format suitable for JSON"""
+        return [
+            {k: v for k, v in {
+                'text': str(block.text) if block.text is not None else None,
+                'image': block.image.model_dump() if block.image is not None else None,
+                'audio': block.audio.tolist() if isinstance(block.audio, np.ndarray) else block.audio,
+                'tool_call': block.tool_call.model_dump() if block.tool_call is not None else None,
+                'parsed': block.parsed.model_dump() if block.parsed is not None else None,
+                'tool_result': block.tool_result.model_dump() if block.tool_result is not None else None,
+            }.items() if v is not None} 
+            for block in content
+        ]
+
+    @classmethod
+    def model_validate(cls, obj: Any) -> 'Message':
+        """Custom validation to handle deserialization"""
+        if isinstance(obj, dict):
+            if 'content' in obj and isinstance(obj['content'], list):
+                content_blocks = []
+                for block in obj['content']:
+                    if isinstance(block, dict):
+                        if 'text' in block:
+                            block['text'] = str(block['text']) if block['text'] is not None else None
+                        content_blocks.append(ContentBlock.model_validate(block))
+                    else:
+                        content_blocks.append(ContentBlock.coerce(block))
+                obj['content'] = content_blocks
+        return super().model_validate(obj)
+
+    @classmethod
+    def model_validate_json(cls, json_str: str) -> 'Message':  
+        """Custom validation to handle deserialization from JSON string"""
+        try:
+            data = json.loads(json_str)
+            return cls.model_validate(data)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON: {str(e)}")
 
 # HELPERS 
 def system(content: Union[AnyContent, List[AnyContent]]) -> Message:

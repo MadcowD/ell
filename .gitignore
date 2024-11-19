@@ -39,6 +39,7 @@ wheels/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
+dataset/*
 *.egg
 MANIFEST
 
@@ -313,3 +314,5 @@ static/
 *.db-wal
 
 logdir/
+.aider*
+examples/logdir

@@ -3,10 +3,10 @@ from ell.lmp._track import _track
 from ell.provider import EllCallParams
 from ell.types._lstr import _lstr
 from ell.types import Message, ContentBlock
-from ell.types.message import LMP, InvocableLM, LMPParams, MessageOrDict, _lstr_generic
-from ell.types.studio import LMPType
+from ell.types.message import LMP, MessageOrDict
+from ell.types.lmp import LMPType
 from ell.util._warnings import _no_api_key_warning, _warnings
-from ell.util.verbosity import compute_color, model_usage_logger_pre
+from ell.util.verbosity import model_usage_logger_pre
 
 from ell.util.verbosity import model_usage_logger_post_end, model_usage_logger_post_intermediate, model_usage_logger_post_start
 

@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { LMPCardTitle } from "../../depgraph/LMPCardTitle";
 import { Card } from "../../common/Card";
 import { useLMPs } from "../../../hooks/useBackend";
+import { ScrollArea } from "@radix-ui/react-scroll-area";
 
 const InvocationDetailsPopover = ({ invocation : invocationWithoutLMP, onClose, onResize }) => {
   const [activeTab, setActiveTab] = useState("I/O");
@@ -119,16 +120,14 @@ const InvocationDetailsPopover = ({ invocation : invocationWithoutLMP, onClose, 
             transition={{ duration: 0.2 }}
           >
             {activeTab === "I/O" && (
-              <div className="h-full">
-                <InvocationDataPane 
-                  invocation={invocation}
-                />
-              </div>
+              <ScrollArea>
+                <InvocationDataPane invocation={invocation} />
+              </ScrollArea>
             )}
             {(activeTab === "Info" || isNarrowForInfo) && (
-              <div className="h-full">
+              <ScrollArea>
                 <InvocationInfoPane invocation={invocation} isFullWidth={true} />
-              </div>
+              </ScrollArea>
             )}
           </motion.div>
           {!isNarrowForInfo && activeTab === "I/O" && (

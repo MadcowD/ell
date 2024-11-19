@@ -148,17 +148,9 @@ try:
                 if logger:
                     logger(tracked_results[0].text)
 
-
-                # usage = call_result.response.usage.dict() if call_result.response.get('usage') else {}
-                # metadata = call_result.response.model_dump()
-                # del metadata["content"]
-
-            # process metadata for ell
-            # XXX: Unify an ell metadata format for ell studio.
-            usage = {} if not usage else usage
-            usage["prompt_tokens"] = usage.get("inputTokens", 0)
-            usage["completion_tokens"] = usage.get("outputTokens", 0)
-            usage["total_tokens"] = usage['prompt_tokens'] + usage['completion_tokens']
+                usage["prompt_tokens"] = provider_response.get('usage').get("inputTokens", 0)
+                usage["completion_tokens"] = provider_response.get('usage').get("outputTokens", 0)
+                usage["total_tokens"] = usage['prompt_tokens'] + usage['completion_tokens']
 
             metadata["usage"] = usage
             return tracked_results, metadata

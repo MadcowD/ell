@@ -83,7 +83,7 @@ def lexical_closure(
     while hasattr(func, "__ell_func__"):
         func = func.__ell_func__
 
-    source = getsource(func, lstrip=True)
+    source = getsource(func, lstrip=True, force=True)
     already_closed.add(hash(func))
 
     globals_and_frees = _get_globals_and_frees(func)
@@ -240,9 +240,9 @@ def _process_other_variable(var_name, var_value, dependencies, uses):
     if isinstance(var_value, str) and '\n' in var_value:
         dependencies.append(f"{var_name} = '''{var_value}'''")
     elif is_immutable_variable(var_value):
-        dependencies.append(f"#<BV>\n{var_name} = {repr(var_value)}\n#</BV>")
+        dependencies.append(f"# <BV>\n{var_name} = {repr(var_value)}\n# </BV>")
     else:
-        dependencies.append(f"#<BmV>\n{var_name} = <{type(var_value).__name__} object>\n#</BmV>")
+        dependencies.append(f"# <BmV>\n{var_name} = <{type(var_value).__name__} object>\n# </BmV>")
 
 def _build_initial_source(imports, dependencies, source):
     """Build the initial source code."""
@@ -327,11 +327,11 @@ def get_referenced_names(code: str, module_name: str):
     Returns:
     list: A list of all attributes of the module that are referenced in the code.
     """
-    # Remove content between #<BV> and #</BV> tags
-    code = re.sub(r'#<BV>\n.*?\n#</BV>', '', code, flags=re.DOTALL)
+    # Remove content between # <BV> and # </BV> tags
+    code = re.sub(r'# <BV>\n.*?\n# </BV>', '', code, flags=re.DOTALL)
     
-    # Remove content between #<BmV> and #</BmV> tags
-    code = re.sub(r'#<BmV>\n.*?\n#</BmV>', '', code, flags=re.DOTALL)
+    # Remove content between # <BmV> and # </BmV> tags
+    code = re.sub(r'# <BmV>\n.*?\n# </BmV>', '', code, flags=re.DOTALL)
 
     tree = ast.parse(code)
     referenced_names = []
