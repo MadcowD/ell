@@ -1,7 +1,6 @@
 from collections import UserDict
 import time
 import random
-from types import NoneType
 from typing import Any, Dict, Iterable, Optional, Protocol, List, Union
 import ell
 import ell.evaluation
