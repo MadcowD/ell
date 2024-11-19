@@ -313,3 +313,4 @@ static/
 *.db-shm
 *.db-wal
 .aider*
+examples/logdir
