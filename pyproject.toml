@@ -47,6 +47,7 @@ sqlmodel = { version = ">=0.0.21, <0.1.0", optional = true }
 fastapi = { version = "^0.111.1", optional = true }
 uvicorn = { version = "^0.30.3", optional = true }
 
+alembic = { version = "^1.14.0", optional = true }
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
 sphinx = "<8.0.0"
@@ -57,9 +58,9 @@ sphinx-rtd-theme = "^2.0.0"
 # causes poetry to mark it as optional = true (even if explicitly specified optional = false).
 anthropic = ["anthropic"]
 groq = ["groq"]
-sqlite = [ 'sqlmodel' ]
-postgres = ['sqlmodel', 'psycopg2']
-studio = ['fastapi', 'uvicorn', 'sqlmodel']
+sqlite = [ 'sqlmodel', 'alembic' ]
+postgres = ['sqlmodel', 'psycopg2', 'alembic']
+studio = ['fastapi', 'uvicorn', 'sqlmodel', 'alembic']
 all = [
     "anthropic",
     "groq",
@@ -68,6 +69,7 @@ all = [
     # allow running stduio by default
     'fastapi',
     'uvicorn',
+    'alembic'
 ]
 
 [build-system]

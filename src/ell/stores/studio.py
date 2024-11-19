@@ -17,6 +17,7 @@ from datetime import datetime
 from typing import Any, List, Optional
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column
 from sqlalchemy import Index, func
+import sqlalchemy as sa
 
 from typing import TypeVar, Any
 
@@ -85,10 +86,12 @@ class SerializedLMP(SerializedLMPBase, table=True):
             secondaryjoin="SerializedLMP.lmp_id==SerializedLMPUses.lmp_user_id",
         ),
     )
-
+    
     class Config:
         table_name = "serializedlmp"
+        # XXX: THis is not a real constraint.
         unique_together = [("version_number", "name")]
+
 
 class InvocationTrace(SQLModel, table=True):
     invocation_consumer_id: str = Field(foreign_key="invocation.id", primary_key=True, index=True)

@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 import os
+from pathlib import Path
 from typing import Any, Optional, Dict, List, Set
 from sqlmodel import Session, SQLModel, create_engine, select
+from ell.stores.migrations import init_or_migrate_database
 import ell.stores.store
 from sqlalchemy.sql import text
 from ell.stores.studio import InvocationTrace, SerializedLMP, Invocation
@@ -10,13 +12,18 @@ from ell.util.serialization import pydantic_ltype_aware_cattr
 import gzip
 import json
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class SQLStore(ell.stores.store.Store):
     def __init__(self, db_uri: str, blob_store: Optional[ell.stores.store.BlobStore] = None):
+        # XXX: Use Serialization serialzie_object in incoming PR.
         self.engine = create_engine(db_uri,
                                     json_serializer=lambda obj: json.dumps(pydantic_ltype_aware_cattr.unstructure(obj), 
                                      sort_keys=True, default=repr, ensure_ascii=False))
         
-        SQLModel.metadata.create_all(self.engine)
+        init_or_migrate_database(self.engine)
         self.open_files: Dict[str, Dict[str, Any]] = {}
         super().__init__(blob_store)
 
