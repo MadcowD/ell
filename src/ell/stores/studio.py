@@ -91,9 +91,9 @@ class SerializedLMP(SerializedLMPBase, table=True):
         ),
     )
 
-    @staticmethod
-    def from_api(input: ell.types.serialize.WriteLMPInput):
-        return SerializedLMP(
+    @classmethod
+    def coerce(cls, input: ell.types.serialize.WriteLMPInput):
+        return cls(
             lmp_id=input.lmp_id,
             lmp_type=input.lmp_type,
             name=input.name,
@@ -167,7 +167,7 @@ class InvocationContents(InvocationContentsBase, table=True):
     invocation: "Invocation" = Relationship(back_populates="contents")
 
     @classmethod
-    def from_api(cls, input: ell.types.serialize.InvocationContents):
+    def coerce(cls, input: ell.types.serialize.InvocationContents):
         return cls(**input.model_dump())
 
 class Invocation(InvocationBase, table=True):
@@ -199,7 +199,7 @@ class Invocation(InvocationBase, table=True):
     )
 
     @classmethod
-    def from_api(cls, input: ell.types.serialize.Invocation):
+    def coerce(cls, input: ell.types.serialize.Invocation):
         fields = {
             field: getattr(input, field)
             for field in input.model_fields
@@ -207,5 +207,5 @@ class Invocation(InvocationBase, table=True):
         }
         return cls(
             **fields,
-            contents=InvocationContents.from_api(input.contents)
+            contents=InvocationContents.coerce(input.contents)
         )

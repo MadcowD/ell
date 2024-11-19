@@ -22,11 +22,11 @@ class SQLSerializer(EllSerializer):
         return [LMP(**slmp.model_dump()) for slmp in slmps]
 
     def write_lmp(self, lmp: WriteLMPInput, uses: List[str]) -> None:
-        model = SerializedLMP.from_api(lmp)
+        model = SerializedLMP.coerce(lmp)
         self.store.write_lmp(model, uses)
 
     def write_invocation(self, input: WriteInvocationInput) -> None:
-        invocation = Invocation.from_api(input.invocation)
+        invocation = Invocation.coerce(input.invocation)
         self.store.write_invocation(invocation, set(input.consumes))
         return None
 
@@ -61,11 +61,11 @@ class AsyncSQLSerializer(EllAsyncSerializer):
         return [LMP(**slmp.model_dump()) for slmp in slmps]
 
     async def write_lmp(self, lmp: WriteLMPInput, uses: List[str]) -> None:
-        model = SerializedLMP.from_api(lmp)
+        model = SerializedLMP.coerce(lmp)
         self.store.write_lmp(model, uses)
 
     async def write_invocation(self, input: WriteInvocationInput) -> None:
-        invocation = Invocation.from_api(input.invocation)
+        invocation = Invocation.coerce(input.invocation)
         self.store.write_invocation(
             invocation,
             set(input.consumes)
