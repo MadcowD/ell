@@ -57,18 +57,18 @@ def write_a_chord_progression_for_song(genre: Optional[str], key : Optional[str]
 
 import os
 
-if os.environ.get("OPENAI_API_KEY"):
-    from ell.util.differ import write_commit_message_for_diff
-    ell.init(verbose=True, autocommit_model="gpt-4o-mini")
-    # ell.init(verbose=True, autocommit_model="claude-3-haiku-20240307")
-    def test_commit_message_1():
-        # test 1
-        (response, *args) = write_commit_message_for_diff(test1_v1, test1_v2)
-        print(response)
+# if os.environ.get("OPENAI_API_KEY"):
+#     from ell.util.differ import write_commit_message_for_diff
+#     ell.init(verbose=True, autocommit_model="gpt-4o-mini")
+#     # ell.init(verbose=True, autocommit_model="claude-3-haiku-20240307")
+#     def test_commit_message_1():
+#         # test 1
+#         (response, *args) = write_commit_message_for_diff(test1_v1, test1_v2)
+#         print(response)
 
-        # test 2
-        (response, *args) = write_commit_message_for_diff(test2_v1, test2_v2)
-        print(response)
+#         # test 2
+#         (response, *args) = write_commit_message_for_diff(test2_v1, test2_v2)
+#         print(response)
 
     ### --BEFORE PROMPT CHANGES-- ###
 

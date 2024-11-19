@@ -5,11 +5,14 @@ import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import LMP from './pages/LMP';
 import Invocations from './pages/Invocations';
+import Evaluations from './pages/Evaluations';
+import Evaluation from './pages/Evaluation';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './styles/globals.css';
 import './styles/sourceCode.css';
 import { useWebSocketConnection } from './hooks/useBackend';
 import { Toaster, toast } from 'react-hot-toast';
+import EvaluationRun from './pages/EvaluationRun';
 
 const WebSocketConnectionProvider = ({children}) => {
   const { isConnected } = useWebSocketConnection();
@@ -86,11 +89,14 @@ function App() {
           <div className="flex min-h-screen max-h-screen bg-gray-900 text-gray-100">
             <Sidebar />
             <div className="flex-1 flex flex-col max-h-screen overflow-hidden">
-              <main className="flex-1 max-h-screen overflow-auto hide-scrollbar">
+              <main className="flex-1 max-h-screen overflow-auto hide-scrollbar ">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/lmp/:name/:id?" element={<LMP />} />
                   <Route path="/invocations" element={<Invocations />} />
+                  <Route path="/evaluations" element={<Evaluations />} />
+                  <Route path="/evaluations/:id" element={<Evaluation />} />
+                  <Route path="/evaluation-runs/:id" element={<EvaluationRun />} />
                 </Routes>
               </main>
             </div>

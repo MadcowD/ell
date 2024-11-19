@@ -44,7 +44,7 @@ export function InvocationInfoPane({ invocation, isFullWidth }) {
             </div>
             <div className="text-right">
               <span className="text-gray-300 bg-blue-900 inline-block px-2 py-0.5 rounded text-xs">
-                {invocation.lmp.is_lm ? "LM" : "LMP"}
+                {invocation.lmp?.is_lm ? "LM" : "LMP"}
               </span>
             </div>
 

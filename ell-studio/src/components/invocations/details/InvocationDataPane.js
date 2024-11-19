@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { CodeSection } from '../../source/CodeSection';
 import IORenderer from '../../IORenderer';
-
+import MetricDisplay from '../../evaluations/MetricDisplay';
+import { FiBarChart2 } from 'react-icons/fi';
 const SkeletonLoader = () => (
   <div className="animate-pulse space-y-2">
     <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -30,6 +31,20 @@ const InvocationDataPane = ({ invocation }) => {
            invocation.contents?.results !== undefined;
   }, [invocation.contents?.results]);
 
+  const metrics = useMemo(() => {
+    console.log('InvocationDataPane metrics calculation:', {
+      hasLabels: !!invocation.labels,
+      labels: invocation.labels
+    });
+
+    if (!invocation.labels?.length) return null;
+    return invocation.labels.map(label => ({
+      labelerId: label.labeler_id,
+      value: label.label_invocation?.contents?.results,
+      name: label.labeler_name || label.labeler_id.split('-')[3] || 'Score'
+    }));
+  }, [invocation.labels]);
+
   const renderCodeSection = (title, content, expanded, setExpanded, typeMatchLevel) => (
     <CodeSection
       title={title}
@@ -55,6 +70,38 @@ const InvocationDataPane = ({ invocation }) => {
 
   return (
     <div className="flex-grow p-4 overflow-y-auto w-[fullpx] hide-scrollbar">
+      {/* Metrics Section */}
+      {metrics && metrics.length > 0 && (
+        <div className="mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {metrics.map((metric, index) => (
+              <>
+                <div 
+                  key={metric.labelerId}
+                  className="flex flex-row items-center justify-between text-xs py-1 hover:bg-accent/50 transition-colors duration-100 pr-1"
+                >
+                  <div className="font-medium truncate flex items-center" title={metric.name}>
+                    <FiBarChart2 className="mr-1 h-3 w-3 text-muted-foreground flex-shrink-0" />
+                    <code className="metric-label text-xs font-medium  max-w-[calc(100%-1.5rem)]">
+                      {metric.name}
+                    </code>
+                  </div>
+                  <MetricDisplay
+                    currentValue={metric.value}
+                    label={metric.name}
+                    showTooltip={false}
+                    showTrend={false}
+                  />
+                </div>
+                {index < metrics.length - 1 && (
+                  <div className="border-b border-gray-900 my-0 md:hidden" />
+                )}
+              </>
+            ))}
+          </div>
+        </div>
+      )}
+
       {(hasKwargs || isExternalLoading) && renderCodeSection(
         "Input",
         invocation.contents?.params,
