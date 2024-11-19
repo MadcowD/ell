@@ -12,14 +12,14 @@ import secrets
 from functools import wraps
 from typing import Any, Callable, Dict, Optional
 
-from ell.util.serialization import get_immutable_vars
+from ell.util.serialization import get_immutable_vars, utc_now
 from ell.util.serialization import compute_state_cache_key
 from ell.util.serialization import prepare_invocation_params
 
 try:
-    from ell.stores.models.core import SerializedLMP, Invocation, InvocationContents, utc_now
+    from ell.stores.models.core import SerializedLMP, Invocation, InvocationContents
 except ImportError:
-    SerializedLMP = Invocation =  InvocationContents = utc_now = None
+    SerializedLMP = Invocation =  InvocationContents = None
 
 logger = logging.getLogger(__name__)
 

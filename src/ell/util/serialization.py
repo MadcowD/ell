@@ -1,6 +1,7 @@
 
 # Global converter
 import base64
+from datetime import datetime, timezone
 import hashlib
 from io import BytesIO
 import json
@@ -163,5 +164,13 @@ def is_immutable_variable(value):
         return all(is_immutable_variable(item) for item in value)
 
     return False
+
+
+def utc_now() -> datetime:
+    """
+    Returns the current UTC timestamp.
+    Serializes to ISO-8601.
+    """
+    return datetime.now(tz=timezone.utc)
 
 

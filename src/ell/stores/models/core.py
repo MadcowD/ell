@@ -27,14 +27,6 @@ import sqlalchemy as sa
 
 from typing import TypeVar, Any
 
-def utc_now() -> datetime:
-    """
-    Returns the current UTC timestamp.
-    Serializes to ISO-8601.
-    """
-    return datetime.now(tz=timezone.utc)
-
-
 class SerializedLMPUses(SQLModel, table=True):
     """
     Represents the many-to-many relationship between SerializedLMPs.

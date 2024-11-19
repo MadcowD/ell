@@ -12,7 +12,7 @@ from sqlalchemy.sql import text
 from ell.types._lstr import _lstr
 from sqlalchemy import or_, func, and_, extract, FromClause
 from sqlalchemy.types import TypeDecorator, VARCHAR
-from ell.stores.models import SerializedLMPUses, utc_now
+from ell.stores.models import SerializedLMPUses
 from ell.stores.models.evaluations import (
     EvaluationLabeler,
     EvaluationResultDatapoint,
@@ -22,7 +22,7 @@ from ell.stores.models.evaluations import (
 )
 from ell.stores.models.core import InvocationTrace, SerializedLMP, Invocation, InvocationContents
 from sqlalchemy import func, and_
-from ell.util.serialization import pydantic_ltype_aware_cattr
+from ell.util.serialization import pydantic_ltype_aware_cattr, utc_now
 import gzip
 import json
 from sqlalchemy.exc import IntegrityError
