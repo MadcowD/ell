@@ -1,13 +1,13 @@
 from typing import List, Optional, Dict, Any
 
-import ell.stores.store
+from ell.stores.store import Store
 from ell.stores.studio import Invocation, SerializedLMP
 from ell.types.serialize import LMP, WriteLMPInput, WriteInvocationInput
 from ell.serialize.protocol import EllSerializer, EllAsyncSerializer
 
 
 class SQLSerializer(EllSerializer):
-    def __init__(self, store: ell.stores.store.Store ):
+    def __init__(self, store: Store):
         self.store = store
         self.supports_blobs = store.has_blob_storage
 
@@ -46,7 +46,7 @@ class SQLSerializer(EllSerializer):
 
 # todo(async): the underlying store and blob store is not async-aware
 class AsyncSQLSerializer(EllAsyncSerializer):
-    def __init__(self, store: ell.stores.store.Store):
+    def __init__(self, store: Store):
         self.store = store
         self.supports_blobs = store.has_blob_storage
 
@@ -78,7 +78,7 @@ class AsyncSQLSerializer(EllAsyncSerializer):
         return self.store.blob_store.store_blob(blob=blob, blob_id=blob_id)
 
     async def retrieve_blob(self, blob_id: str) -> bytes:
-        if self.blob_store is None:
+        if self.store.blob_store is None:
             raise ValueError("Blob store is not enabled")
         return self.store.blob_store.retrieve_blob(blob_id)
 
