@@ -41,6 +41,7 @@ psutil = "^5.9.0"
 anthropic = { version = "^0.34.2", optional = true }
 groq = { version = "^0.11.0", optional = true }
 # Storage
+alembic = { version = "^1.14.0", optional = true }
 psycopg2 = { version = ">=2.7", optional = true }
 sqlmodel = { version = ">=0.0.21, <0.1.0", optional = true }
 minio = { version = "7.2.10", optional = true }
@@ -61,9 +62,9 @@ sphinx-rtd-theme = "^2.0.0"
 # causes poetry to mark it as optional = true (even if explicitly specified optional = false).
 anthropic = ["anthropic"]
 groq = ["groq"]
-sqlite = [ 'sqlmodel' ]
-postgres = ['sqlmodel', 'psycopg2']
-studio = ['fastapi', 'uvicorn', 'sqlmodel']
+sqlite = [ 'sqlmodel', 'alembic' ]
+postgres = ['sqlmodel', 'psycopg2', 'alembic']
+studio = ['fastapi', 'uvicorn', 'sqlmodel', 'alembic']
 api-server = ["fastapi", "uvicorn"]
 mqtt = ["aiomqtt"]
 minio = ["minio"]
@@ -75,6 +76,7 @@ all = [
     # allow running stduio by default
     'fastapi',
     'uvicorn',
+    'alembic'
 ]
 
 [build-system]

@@ -4,6 +4,7 @@ import os
 from typing import Any, Optional, Dict, List, Set
 from sqlmodel import Session, SQLModel, create_engine, select
 import ell.stores.store
+from ell.stores.migrations import init_or_migrate_database
 from sqlalchemy.sql import text
 from ell.stores.studio import InvocationTrace, SerializedLMP, Invocation
 from sqlalchemy import func, and_, Engine
@@ -22,12 +23,13 @@ class SQLStore(ell.stores.store.Store):
             raise ValueError(
                 "db_uri cannot be None when engine is not provided as an argument")
         else:
+            # XXX: Use Serialization serialzie_object in incoming PR.
             self.engine = create_engine(db_uri,
                                         json_serializer=lambda obj: json.dumps(
                                             pydantic_ltype_aware_cattr.unstructure(obj),
                                             sort_keys=True, default=repr, ensure_ascii=False))
 
-        SQLModel.metadata.create_all(self.engine)
+        init_or_migrate_database(self.engine)
         self.open_files: Dict[str, Dict[str, Any]] = {}
         super().__init__(blob_store)
 
