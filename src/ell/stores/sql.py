@@ -52,31 +52,34 @@ def init_or_migrate_database(engine) -> None:
     has_alembic = 'ell_alembic_version' in existing_tables
     
     alembic_cfg = get_alembic_config(engine.url)
-    
     try:
         if has_our_tables and not has_alembic:
             # Case 1: Existing database with our tables but no Alembic
             # This is likely a database from version <= 0.14
-            logger.info("Found existing ell tables without Alembic. Stamping with initial migration.")
-
+            logger.debug("Found existing tables but no Alembic - stamping with initial migration")
 
             command.stamp(alembic_cfg, "4524fb60d23e")
             # Verify table was created
             after_tables = set(inspect(engine).get_table_names())
-            # import code; code.interact(local=dict(globals(), **locals()))
+            logger.debug(f"Tables after stamp: {after_tables}")
+
             # Check if version table has our stamp
             with engine.connect() as connection:
                 version_result = connection.execute(text("SELECT version_num FROM ell_alembic_version")).first()
                 if not version_result or version_result[0] != "4524fb60d23e":
                     raise RuntimeError("Failed to stamp database - version table empty or incorrect version")
+                logger.debug(f"Successfully stamped database with version {version_result[0]}")
 
-            
-        elif has_alembic:
+            has_alembic = True
+
+        if has_alembic:
             # Case 2: Database has Alembic - run any pending migrations
+            logger.debug("Running any pending Alembic migrations")
             command.upgrade(alembic_cfg, "head")
             
         else:
             # Case 3: New database or database without our tables
+            logger.debug("New database detected - creating schema and stamping with latest migration")
             # Create all tables according to current schema
             SQLModel.metadata.create_all(engine)
             # Stamp with latest migration
@@ -85,7 +88,6 @@ def init_or_migrate_database(engine) -> None:
     except Exception as e:
         logger.error(f"Failed to initialize/migrate database: {e}")
         raise
-        
 
 class SQLStore(ell.stores.store.Store):
     def __init__(self, db_uri: str, blob_store: Optional[ell.stores.store.BlobStore] = None):
