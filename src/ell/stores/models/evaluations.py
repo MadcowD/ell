@@ -55,8 +55,8 @@ class EvaluationLabeler(EvaluationLabelerBase, table=True):
             assert type in EvaluationLabelerType.__members__
             return v
 
-    @lru_cache(maxsize=128)
     @staticmethod
+    @lru_cache(maxsize=128)
     def generate_id(evaluation_id: str, name: str, type: EvaluationLabelerType) -> str:
         return f"labeler-{evaluation_id}-{name}-{type.name}"
 
