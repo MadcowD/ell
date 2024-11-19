@@ -29,6 +29,7 @@ class WriteLMPInput(BaseModel):
     api_params: Optional[Dict[str, Any]] = None
     initial_free_vars: Optional[Dict[str, Any]] = None
     initial_global_vars: Optional[Dict[str, Any]] = None
+    created_at: AwareDatetime = Field(default_factory=utc_now)
     # TODO. dict or list?
     # uses: List[str] = Field(default_factory=list)
 
@@ -36,7 +37,6 @@ class WriteLMPInput(BaseModel):
     # num_invocations: Optional[int] = None
     commit_message: Optional[str] = None
     version_number: Optional[int] = None
-    created_at: Optional[AwareDatetime] = Field(default_factory=utc_now)
 
 
 class LMP(BaseModel):
