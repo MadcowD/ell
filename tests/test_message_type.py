@@ -169,3 +169,15 @@ def test_tool_call_json_serialization():
     assert loaded_message.role == original_message.role
     assert len(loaded_message.content) == len(original_message.content)
     assert str(loaded_message.content[0].text) == str(original_message.content[0].text)
+
+def test_parsed_json_serialization():
+    class DummyFormattedResponse(BaseModel):
+        field1: str
+        field2: int
+
+    original_message = Message(role='assistant', content=[ContentBlock(parsed=DummyFormattedResponse(field1="test", field2=42))])
+    message_json = original_message.model_dump_json()
+    loaded_message = Message.model_validate_json(message_json)
+    assert loaded_message.content[0].parsed == {'field1': 'test', 'field2': 42}
+
+    

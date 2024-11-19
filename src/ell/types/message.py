@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
 from PIL import Image as PILImage
-from pydantic import BaseModel, ConfigDict, Field, model_validator, field_serializer, model_serializer
+from pydantic import BaseModel, ConfigDict, Field, model_validator, field_serializer, field_validator
 
 from ell.types._lstr import _lstr
 from ell.util.serialization import serialize_image, unstructure_lstr
@@ -169,7 +169,7 @@ class ContentBlock(BaseModel):
     image: Optional[ImageContent] = Field(default=None)
     audio: Optional[Union[np.ndarray, List[float]]] = Field(default=None)
     tool_call: Optional[ToolCall] = Field(default=None)
-    parsed: Optional[BaseModel] = Field(default=None)
+    parsed: Optional[Union[Dict[str, Any], BaseModel]] = Field(default=None)
     tool_result: Optional[ToolResult] = Field(default=None)
     # TODO: Add a JSON type? This would be nice for response_format. This is different than resposne_format = model. Or we could be opinionated and automatically parse the json response. That might be nice.
     # This breaks us maintaing parity with the openai python client in some sen but so does image.
@@ -305,6 +305,15 @@ class ContentBlock(BaseModel):
         if value is None:
             return None
         return value.model_dump(exclude_none=True, exclude_unset=True)
+
+    @field_validator('parsed' ,mode='wrap')
+    def deserialize_parsed(cls, value: Optional[Union[Dict[str, Any],BaseModel]], _info):
+        # Why must we do this? 
+        # pydantic returns an empty BaseModel() whenever parsed is a dict
+        if value is None or isinstance(value, (dict,BaseModel)):
+            return value
+        raise ValueError(f"Invalid ContentBlock.parsed value: {type(value)}")
+
     
 
 def to_content_blocks(
