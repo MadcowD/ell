@@ -1,6 +1,6 @@
 import argparse
 from sqlalchemy import create_engine
-from ell.stores.sql import get_alembic_config
+from ell.stores.migrations import get_alembic_config
 from alembic import command
 
 def main():

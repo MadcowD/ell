@@ -42,6 +42,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
+    #XXX: These are currently untested and unused.
     url = config.get_main_option("sqlalchemy.url")
     version_table = config.get_main_option("version_table", "ell_alembic_version")
     
@@ -68,6 +69,8 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+
+    #XXX: These are currently untested and unused.
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",

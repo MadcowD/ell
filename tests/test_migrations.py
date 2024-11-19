@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy import inspect, MetaData, create_engine, text
 from sqlmodel import SQLModel
 
-from ell.stores.sql import init_or_migrate_database, get_alembic_config
+from ell.stores.migrations import init_or_migrate_database, get_alembic_config
 from alembic import command
 from alembic.config import Config
 
