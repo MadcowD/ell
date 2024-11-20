@@ -1,7 +1,6 @@
 # todo. under ell.api.server.___main___
 import asyncio
 from contextlib import asynccontextmanager, AsyncExitStack
-import json
 import logging
 from typing import List, Optional
 
@@ -108,11 +107,7 @@ def create_app(config: Config):
         return await serializer.get_lmp_versions(fqn)
 
     @app.get("/lmp/{lmp_id}", response_model=GetLMPOutput)
-    async def get_lmp(lmp_id: str,
-                      serializer: EllAsyncSerializer = Depends(get_serializer),
-                      # todo. figure out the ramifications of doing this here
-                      # session: Session = Depends(get_session)
-                      ):
+    async def get_lmp(lmp_id: str, serializer: EllAsyncSerializer = Depends(get_serializer)):
         lmp = await serializer.get_lmp(lmp_id=lmp_id)
         if lmp is None:
             raise HTTPException(status_code=404, detail="LMP not found")
@@ -121,22 +116,17 @@ def create_app(config: Config):
     @app.post("/lmp")
     async def write_lmp(
             lmp: WriteLMPInput,
-            # fixme. what is this type supposed to be?
-            uses: List[str],  # SerializedLMPUses,
             pubsub: PubSub = Depends(get_pubsub),
             serializer: EllAsyncSerializer = Depends(get_serializer)
     ):
-        await serializer.write_lmp(lmp, uses)
+        await serializer.write_lmp(lmp)
 
         if pubsub:
             loop = asyncio.get_event_loop()
             loop.create_task(
                 pubsub.publish(
                     f"lmp/{lmp.lmp_id}/created",
-                    json.dumps({
-                        "lmp": lmp.model_dump(),
-                        "uses": uses
-                    }, default=str)
+                    lmp.model_dump_json(exclude_none=True, exclude_unset=True),
                 )
             )
 

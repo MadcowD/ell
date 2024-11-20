@@ -45,9 +45,10 @@ def make_handle_http_error(logger: logging.Logger):
 
 
 class EllHTTPSerializer(EllSerializer):
-    def __init__(self, base_url: str):
+    def __init__(self, base_url: Optional[str] = None, client: Optional[httpx.Client] = None):
+        assert base_url is not None or client is not None, "Either base_url or client must be provided"
         self.base_url = base_url
-        self.client = httpx.Client(base_url=base_url)
+        self.client = client or httpx.Client(base_url=base_url) # type: ignore
         self.supports_blobs = True  # we assume the server does, if not will find out later
         self.logger = logging.getLogger(__name__).getChild(self.__class__.__name__)
         self._handle_http_error = make_handle_http_error(self.logger)
@@ -62,14 +63,11 @@ class EllHTTPSerializer(EllSerializer):
             self._handle_http_error(error=e, span="get_lmp", message="Failed to get LMP", extra={lmp_id: lmp_id})
             raise
 
-    def write_lmp(self, lmp: WriteLMPInput, uses: List[str]) -> None:
+    def write_lmp(self, lmp: WriteLMPInput) -> None:
         try:
-            response = self.client.post("/lmp", json={
-                # todo. restructure so model_dump_json
-                # todo. because pydantic doesn't have a sane default for this we should consider a single place to specify exclude_none, exclude_unset like we had with unstructure for basemodel...
-                "lmp": lmp.model_dump(mode='json', exclude_none=True, exclude_unset=True),
-                "uses": uses
-            })
+            response = self.client.post("/lmp", 
+            headers={"Content-Type": "application/json"},
+            content=lmp.model_dump_json(exclude_none=True, exclude_unset=True))
             response.raise_for_status()
         except HTTPStatusError as e:
             self._handle_http_error(

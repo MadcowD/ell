@@ -30,15 +30,12 @@ class WriteLMPInput(BaseModel):
     initial_free_vars: Optional[Dict[str, Any]] = None
     initial_global_vars: Optional[Dict[str, Any]] = None
     created_at: AwareDatetime = Field(default_factory=utc_now)
-    # TODO. dict or list?
-    # uses: List[str] = Field(default_factory=list)
-
-    # this is omitted so as to not confuse whether the number should be incremented (should always happen at the db level)
-    # num_invocations: Optional[int] = None
+    uses: List[str] = Field(default_factory=list)
     commit_message: Optional[str] = None
     version_number: Optional[int] = None
 
 
+# todo. see if we can get rid of this...the only difference with writelmpinput is some properties are read only
 class LMP(BaseModel):
     lmp_id: str
     name: str

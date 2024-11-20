@@ -197,8 +197,9 @@ def _serialize_lmp(func):
             lmp_type=lmp_type,
             api_params=api_params if api_params else None,
             version_number=version,
+            uses=[f.__ell_hash__ for f in func.__ell_uses__],
         )
-        config.serializer.write_lmp(serialized_lmp, [f.__ell_hash__ for f in func.__ell_uses__])
+        config.serializer.write_lmp(serialized_lmp)
     func._has_serialized_lmp = True
 
 def _write_invocation(func, invocation_id, latency_ms, prompt_tokens, completion_tokens, 

@@ -10,7 +10,7 @@ class EllSerializer(Protocol):
     def get_lmp(self, lmp_id: str) -> GetLMPOutput:
         ...
 
-    def write_lmp(self, lmp: WriteLMPInput, uses: List[str]) -> None:
+    def write_lmp(self, lmp: WriteLMPInput) -> None:
         ...
 
     def write_invocation(self, input: WriteInvocationInput) -> None:
@@ -36,7 +36,7 @@ class EllAsyncSerializer(Protocol):
     async def get_lmp(self, lmp_id: str) -> GetLMPOutput:
         ...
 
-    async def write_lmp(self, lmp: WriteLMPInput, uses: List[str]) -> None:
+    async def write_lmp(self, lmp: WriteLMPInput) -> None:
         ...
 
     async def write_invocation(self, input: WriteInvocationInput) -> None:

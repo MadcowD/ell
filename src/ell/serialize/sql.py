@@ -21,9 +21,9 @@ class SQLSerializer(EllSerializer):
         slmps = self.store.get_versions_by_fqn(fqn)
         return [LMP(**slmp.model_dump()) for slmp in slmps]
 
-    def write_lmp(self, lmp: WriteLMPInput, uses: List[str]) -> None:
+    def write_lmp(self, lmp: WriteLMPInput) -> None:
         model = SerializedLMP.coerce(lmp)
-        self.store.write_lmp(model, uses)
+        self.store.write_lmp(model, lmp.uses)
 
     def write_invocation(self, input: WriteInvocationInput) -> None:
         invocation = Invocation.coerce(input.invocation)
@@ -60,9 +60,9 @@ class AsyncSQLSerializer(EllAsyncSerializer):
         slmps = self.store.get_versions_by_fqn(fqn)
         return [LMP(**slmp.model_dump()) for slmp in slmps]
 
-    async def write_lmp(self, lmp: WriteLMPInput, uses: List[str]) -> None:
+    async def write_lmp(self, lmp: WriteLMPInput) -> None:
         model = SerializedLMP.coerce(lmp)
-        self.store.write_lmp(model, uses)
+        self.store.write_lmp(model, lmp.uses)
 
     async def write_invocation(self, input: WriteInvocationInput) -> None:
         invocation = Invocation.coerce(input.invocation)
