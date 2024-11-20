@@ -1,269 +1,143 @@
-import {
-  forceSimulation,
-  forceLink,
-  forceManyBody,
-  forceX,
-  forceY,
-} from "d3-force";
-
 import { useMemo } from "react";
-
 import ReactFlow, {
-  Panel,
-  useNodesState,
-  useEdgesState,
   useReactFlow,
-  Background,
-  Controls,
-  Handle,
   useStore,
-  Position,
-  ReactFlowProvider,
   MarkerType,
 } from "reactflow";
 
-import collide from "./collide";
+import { computeLayout } from "./layoutUtils";
 
-const simulation = forceSimulation()
-  .force("charge", forceManyBody().strength(-1000))
-  .force("x", forceX().x(0).strength(0.03))
-  .force("y", forceY().y(0).strength(0.03))
-  .force("collide", collide())
-  .alphaTarget(0.05)
-  .stop();
-
-function getLayout(nodes, edges) {
-  const nodeMap = nodes.reduce((map, node) => {
-    map[node.id] = node;
-    return map;
-  }, {});
-
-  /* An algorithm that counts the number of references each node has:
-      For each ndoe get all of its children and add 1
-      Then we can put the y coordinate as the number of references
-      as for X we're going to determien its sort order using the trace order
-    */
-
-  // Create a map to store the number of references each node has
-  const referenceCount = nodes.reduce((map, node) => {
-    map[node.id] = 0;
-    return map;
-  }, {});
-
-  function increaseReferenceCountOfFamilyTree(node, visited = null) {
-    if (!visited) visited = new Set();
-    if (visited.has(node.id)) return;
-    visited.add(node.id);
-    edges
-      .filter(
-        (edge) => edge.source === node.id && edge.sourceHandle !== "outputs"
-      )
-      .forEach((edge) => {
-        referenceCount[edge.target] += 1;
-        increaseReferenceCountOfFamilyTree(nodeMap[edge.target], visited);
-      });
+// Add this new function at the top of the file
+const calculateNodeDimensions = (nodeType, data) => {
+  switch (nodeType) {
+    case 'evaluation':
+      // EvaluationCard has a fixed width of 400px and variable height
+      // We'll estimate the height based on the content
+      const baseHeight = 160; // Base height for an evaluation with 2 metrics
+      const labelerCount = data.labelers?.length || 0;
+      const heightPerMetric = (288 - 190 - 2*baseHeight) / (3 - 1); // Slope: (height difference) / (metric difference)
+      const estimatedHeight = baseHeight + (labelerCount * heightPerMetric);
+      return { width: 400, height: Math.round(estimatedHeight) };
+    case 'lmp':
+      // LMPNode is more compact, using a Card component
+      // The size might vary based on the LMP name length
+      const nameLength = data.name?.length || 0;
+      const lmpWidth = Math.max(180, (80 + nameLength * 15)); // Min 180px, max 300px
+      return { width: lmpWidth, height: 100 };
+    default:
+      // Default size for unknown node types
+      return { width: 150, height: 60 };
   }
-  nodes.forEach((node) => {
-    increaseReferenceCountOfFamilyTree(node);
-  });
+};
 
-  // Now get hte  trace order (if a traces into b a < b. for cycles  just put them at the end so)
-  // if a < b < c < d < a then the order should be (a,b,c,d) that is we should have order within a local order
-  // Implement cycle-aware topological sorting
-  const traceOrder = [];
-  const visited = new Set();
-  const tempVisited = new Set();
+/**
+ * Generates the initial graph structure from LMPs, traces, and evaluations.
+ * @param {Array} lmps - List of LMP objects.
+ * @param {Array} traces - List of trace objects.
+ * @param {Array} evals - List of evaluation objects.
+ * @returns {Object} - Contains initial nodes and edges.
+ */
+export const getInitialGraph = (lmps, traces, evals = []) => {
+  if(!lmps || !traces) return { initialNodes: [], initialEdges: [] };
+  const lmpIds = new Set(lmps.map(lmp => lmp.lmp_id));
+  const evalLmpIds = new Set();
+  const lmpToEvalMap = new Map();
 
-  function dfs(nodeId) {
-    if (tempVisited.has(nodeId)) {
-      // Cycle detected, skip this node
-      return;
-    }
-    if (visited.has(nodeId)) {
-      return;
-    }
-    tempVisited.add(nodeId);
-
-    const outgoingEdges = edges.filter(
-      (edge) => edge.source === nodeId && edge.sourceHandle === "outputs"
-    );
-    for (const edge of outgoingEdges) {
-      dfs(edge.target);
-    }
-
-    tempVisited.delete(nodeId);
-    visited.add(nodeId);
-    traceOrder.unshift(nodeId);
-  }
-
-  // Perform DFS for each node
-  nodes.forEach((node) => {
-    if (!visited.has(node.id)) {
-      dfs(node.id);
-    }
-  });
-
-  // Assign x-coordinates based on the trace order
-  traceOrder.forEach((nodeId, index) => {
-    nodeMap[nodeId].position.x = index * 60;
-  });
-
-  // Group nodes by all the unique reference count levels
-  const referenceCountLevels = new Set(Object.values(referenceCount));
-  referenceCountLevels.forEach((level) => {
-    // get all the nodes at this level
-    const nodesAtLevel = Object.entries(referenceCount)
-      .filter(([id, count]) => count === level)
-      .map(([id, count]) => nodeMap[id]);
-    // for each node at this level, set its x coordinate to be the index of the node
-
-    nodesAtLevel.forEach((node, i) => {
-      node.position.y = (-level * 100 + Math.random() * 10);
+  // Create evaluation nodes and map LMPs to their evaluations
+  const evalNodes = (evals || []).map(eval_ => {
+    eval_.labelers.forEach(labeler => {
+      evalLmpIds.add(labeler.labeling_lmp_id);
+      lmpToEvalMap.set(labeler.labeling_lmp_id, eval_.id);
     });
+    const dimensions = calculateNodeDimensions('evaluation', eval_);
+    return {
+      id: `${eval_.id}`,
+      type: "evaluation",
+      data: { 
+        label: eval_.name, 
+        evaluation: eval_,
+        ...dimensions
+      },
+      position: { x: 0, y: 0 },
+    };
   });
-}
 
-export const useLayoutedElements = () => {
-  const { getNodes, setNodes, getEdges, fitView } = useReactFlow();
-  const initialised = useStore((store) =>
-    [...store.nodeInternals.values()].every((node) => node.width && node.height)
+  // Create LMP nodes, excluding those that are part of evaluations and those of type "metric"
+  const lmpNodes = lmps.filter(Boolean)
+    .filter(lmp => !evalLmpIds.has(lmp.lmp_id) && lmp.lmp_type !== "LABELER")
+    .map(lmp => {
+      const dimensions = calculateNodeDimensions('lmp', lmp);
+      console.log(lmp);
+      return {
+        id: `${lmp.lmp_id}`,
+        type: "lmp",
+        data: { 
+          label: lmp.name, 
+          lmp,
+          isEvalLabeler: evalLmpIds.has(lmp.lmp_id),
+          ...dimensions
+        },
+        position: { x: 0, y: 0 },
+      };
+    });
+
+  const deadNodes = lmps.flatMap(lmp => 
+    (lmp.uses || [])
+      .filter(use => !lmpIds.has(use.lmp_id) && !evalLmpIds.has(use.lmp_id))
+      .map(use => {
+        const dimensions = calculateNodeDimensions('lmp', use);
+        return {
+          id: `${use.lmp_id}`,
+          type: "lmp",
+          data: {
+            label: `Outdated LMP ${use.name}`,
+            lmp: {
+              lmp_id: use.lmp_id,
+              name: `Outdated LMP (${use.name})`,
+              version_number: use.version_number,
+            },
+            ...dimensions
+          },
+          position: { x: 0, y: 0 },
+          style: { opacity: 0.5 },
+        };
+      })
   );
 
-  return useMemo(() => {
-    let nodes = getNodes().map((node) => ({
-      ...node,
-      x: node.position.x,
-      y: node.position.y,
-    }));
-    let edges = getEdges().map((edge) => edge);
-    let running = false;
+  const initialNodes = [...evalNodes, ...lmpNodes, ...deadNodes];
 
-    // If React Flow hasn't initialised our nodes with a width and height yet, or
-    // if there are no nodes in the flow, then we can't run the simulation!
-    if (!initialised || nodes.length === 0) return [false, {}];
+  const initialEdges = lmps.flatMap(lmp => 
+    lmp.is_old ? [] : (lmp.uses || []).map(use => {
+      const sourceId = evalLmpIds.has(use.lmp_id) ? lmpToEvalMap.get(use.lmp_id) : `${use.lmp_id}`;
+      const targetId = evalLmpIds.has(lmp.lmp_id) ? lmpToEvalMap.get(lmp.lmp_id) : `${lmp.lmp_id}`;
+      return {
+        id: `uses-${sourceId}-${targetId}`,
+        source: sourceId,
+        sourceHandle: "uses",
+        target: targetId,
+        targetHandle: "usedby",
+        animated: false,
+        type: "default",
+      };
+    })
+  );
 
-    simulation.nodes(nodes).force(
-      "link",
-      forceLink(edges)
-        .id((d) => d.id)
-        .strength(0.10)
-        .distance(100)
-    );
-
-    // The tick function is called every animation frame while the simulation is
-    // running and progresses the simulation one step forward each time.
-    const tick = () => {
-      getNodes().forEach((node, i) => {
-        const dragging = Boolean(
-          document.querySelector(`[data-id="${node.lmp_id}"].dragging`)
-        );
-
-        // Setting the fx/fy properties of a node tells the simulation to "fix"
-        // the node at that position and ignore any forces that would normally
-        // cause it to move.
-        nodes[i].fx = dragging ? node.position.x : null;
-        nodes[i].fy = dragging ? node.position.y : null;
-      });
-
-      simulation.tick();
-      setNodes(
-        nodes.map((node) => ({ ...node, position: { x: node.x, y: node.y } }))
-      );
-
-      window.requestAnimationFrame(() => {
-        // Give React and React Flow a chance to update and render the new node
-        // positions before we fit the viewport to the new layout.
-        // fitView();
-
-        // If the simulation hasn't be stopped, schedule another tick.
-        if (running) tick();
-      });
-    };
-
-    const toggle = () => {
-      running = !running;
-      running && window.requestAnimationFrame(tick);
-    };
-
-    const isRunning = () => running;
-
-    return [true, { toggle, isRunning }];
-  }, [initialised]);
-};
-export function getInitialGraph(lmps, traces) {
-  const lmpIds = new Set(lmps.map(lmp => lmp.lmp_id));
-
-  const initialNodes =
-    lmps
-      .filter((x) => !!x)
-      .map((lmp) => {
-        return {
-          id: `${lmp.lmp_id}`,
-          type: "lmp",
-          data: { label: lmp.name, lmp },
-          position: { x: 0, y: 0 },
-        };
-      }) || [];
-
-  // Create dead nodes for missing LMPs
-  const deadNodes = lmps
-    .filter((x) => !!x)
-    .flatMap((lmp) => 
-      (lmp.uses || []).filter(use => !lmpIds.has(use.lmp_id)).map(use => ({
-        id: `${use.lmp_id}`,
-        type: "lmp",
-        data: { label: `Outdated LMP ${use.name}`, lmp: { lmp_id: use.lmp_id, name: `Outdated LMP (${use.name})`, version_number: use.version_number } },
-        position: { x: 0, y: 0 },
-        style: { opacity: 0.5 }, // Make dead nodes visually distinct
-      }))
-    );
-
-  initialNodes.push(...deadNodes);
-
-  const initialEdges =
-    lmps
-      .filter((x) => !!x)
-      .flatMap((lmp) => {
-        if (lmp.is_old) return [];
-        return (
-          lmp?.uses?.map((use) => {
-            return {
-              id: `uses-${lmp.lmp_id}-${use.lmp_id}`,
-              target: `${lmp.lmp_id}`,
-              source: `${use.lmp_id}`,
-              animated: false,
-              type: "default",
-            };
-          }) || []
-        );
-      }) || [];
-
-  // Add horizontal trace edges
-  if (traces && traces.length > 0) {
-    traces.forEach((trace, index) => {
-      initialEdges.push({
-        id: `trace-${trace.consumed}-${trace.consumer}`,
-        source: `${trace.consumed}`,
-        sourceHandle: "outputs",
-        target: `${trace.consumer}`,
-        targetHandle: "inputs",
-        animated: true,
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          width: 30,
-          height: 30,
-        },
-        style: {
-          stroke: "#ff7f50", // Coral color
-          strokeWidth: 1,
-        },
-        labelStyle: { fill: "#ff7f50", fontWeight: 700 },
-        // label: 'Trace',
-      });
+  traces?.forEach(trace => {
+    const sourceId = evalLmpIds.has(trace.consumed) ? lmpToEvalMap.get(trace.consumed) : `${trace.consumed}`;
+    const targetId = evalLmpIds.has(trace.consumer) ? lmpToEvalMap.get(trace.consumer) : `${trace.consumer}`;
+    initialEdges.push({
+      id: `trace-${sourceId}-${targetId}`,
+      source: sourceId,
+      sourceHandle: "outputs",
+      target: targetId,
+      targetHandle: "inputs",
+      animated: true,
+      markerEnd: { type: MarkerType.ArrowClosed, width: 30, height: 30 },
+      style: { stroke: "#ff7f50", strokeWidth: 1 },
+      labelStyle: { fill: "#ff7f50", fontWeight: 700 },
     });
-  }
+  });
 
-  getLayout(initialNodes, initialEdges);
-
-  return { initialEdges, initialNodes };
-}
+  computeLayout(initialNodes, initialEdges);
+  return { initialNodes, initialEdges };
+};

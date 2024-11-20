@@ -3,8 +3,10 @@ from contextlib import contextmanager
 from datetime import datetime
 from typing import Any, Optional, Dict, List, Set, Union
 from ell.types._lstr import _lstr
-from ell.stores.studio import SerializedLMP, Invocation
+from ell.stores.models.core import SerializedLMP, Invocation
 from ell.types.message import InvocableLM
+from ell.stores.models.evaluations import EvaluationResultDatapoint, EvaluationRunLabelerSummary, SerializedEvaluation, SerializedEvaluationRun
+# from ell.types.studio import SerializedEvaluation, SerializedEvaluationRun
 
 class BlobStore(ABC):
     @abstractmethod
@@ -53,6 +55,51 @@ class Store(ABC):
         pass
 
     @abstractmethod
+    def write_evaluation(self, evaluation: SerializedEvaluation) -> str:
+        """
+        Write an evaluation to the storage.
+
+        :param evaluation: Evaluation object containing all evaluation details.
+        :param runs: List of EvaluationRun objects representing the evaluation runs.
+        :return: Optional return value.
+        """
+        pass
+
+    @abstractmethod
+    def write_evaluation_run(self, evaluation_run: SerializedEvaluationRun) -> int:
+        """
+        Write an evaluation run to the storage.
+
+        :param evaluation_run: EvaluationRun object containing all evaluation run details.
+        :return: Optional return value.
+        """
+        pass
+
+    @abstractmethod
+    def write_evaluation_run_intermediate(self, row_result : EvaluationResultDatapoint) -> None:
+        """
+        Write an evaluation run intermediate result to the storage.
+        """
+        pass
+
+    @abstractmethod
+    def write_evaluation_run_end(self, evaluation_run_id : str, successful : bool, end_time : datetime, error : Optional[str], summaries: List[EvaluationRunLabelerSummary]) -> None:
+        """
+        Write an evaluation run end to the storage.
+        """
+        pass
+
+    @abstractmethod
+    def write_evaluation_run_labeler_summaries(self, summaries: List[EvaluationRunLabelerSummary]) -> int:
+        """
+        Write evaluation run labeler summaries to the storage.
+
+        :param summaries: List of EvaluationRunLabelerSummary objects containing all evaluation run labeler summary details.
+        :return: Optional return value.
+        """
+        pass
+
+    @abstractmethod
     def get_cached_invocations(self, lmp_id :str, state_cache_key :str) -> List[Invocation]:
         """
         Get cached invocations for a given LMP and state cache key.
@@ -65,6 +112,17 @@ class Store(ABC):
         Get all versions of an LMP by its fully qualified name.
         """
         pass
+
+    @abstractmethod
+    def get_eval_versions_by_name(self, name: str) -> List[SerializedEvaluation]:
+        """
+        Get all versions of an evaluation by its name.
+
+        :param name: The name of the evaluation.
+        :return: A list of SerializedEvaluation objects representing all versions of the evaluation.
+        """
+        pass
+
 
 
     @contextmanager

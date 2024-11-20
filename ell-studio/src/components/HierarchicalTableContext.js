@@ -4,18 +4,18 @@ const HierarchicalTableContext = createContext();
 
 export const useHierarchicalTable = () => useContext(HierarchicalTableContext);
 
-export const HierarchicalTableProvider = ({ children, data, onSelectionChange, initialSortConfig, setIsExpanded, expandAll}) => {
+export const HierarchicalTableProvider = ({ children, data, schema, onSelectionChange, initialSortConfig, setIsExpanded, expandAll, hierarchicalSort }) => {
   const [expandedRows, setExpandedRows] = useState({});
   const [selectedRows, setSelectedRows] = useState({});
   const [sortConfig, setSortConfig] = useState(initialSortConfig || { key: null, direction: 'asc' });
   const [hoveredRow, setHoveredRow] = useState(null);
+
   useEffect(() => {
     const allParentRowsCollapsed = data.every(item => !expandedRows[item.id]);
     setIsExpanded(!allParentRowsCollapsed);
   }, [expandedRows, setIsExpanded, data]);
-  // expandall specifies if the initial state of row is expanded.
 
-  // if a rows expansion state is not specified, it is set to expanded if expandAll is true.
+  // expandall specifies if the initial state of row is expanded.
   useEffect(() => {
     if (expandAll) {
       data.forEach(item => {
@@ -32,6 +32,14 @@ export const HierarchicalTableProvider = ({ children, data, onSelectionChange, i
       [rowId]: !prev[rowId]
     }));
   }, []);
+
+  const isItemSelected = useCallback((item) => {
+    if (!selectedRows[item.id]) return false;
+    if (item.children) {
+      return item.children.every(child => isItemSelected(child));
+    }
+    return true;
+  }, [selectedRows]);
 
   const toggleSelection = useCallback((item, isSelected) => {
     setSelectedRows(prev => {
@@ -63,15 +71,7 @@ export const HierarchicalTableProvider = ({ children, data, onSelectionChange, i
 
   const isAllSelected = useCallback(() => {
     return data.every(item => isItemSelected(item));
-  }, [data, selectedRows]);
-
-  const isItemSelected = useCallback((item) => {
-    if (!selectedRows[item.id]) return false;
-    if (item.children) {
-      return item.children.every(child => isItemSelected(child));
-    }
-    return true;
-  }, [selectedRows]);
+  }, [data, isItemSelected]);
 
   const onSort = useCallback((key) => {
     setSortConfig((prevConfig) => ({
@@ -82,7 +82,27 @@ export const HierarchicalTableProvider = ({ children, data, onSelectionChange, i
 
   const sortedData = useMemo(() => {
     if (!sortConfig.key) return data;
-    return [...data].sort((a, b) => {
+
+    const sortItems = (items) => {
+      return [...items].sort((a, b) => {
+        const column = schema?.columns?.find(col => col.key === sortConfig.key);
+        const sortFn = column?.sortFn;
+
+        const comparison = sortFn
+          ? (sortConfig.direction === 'asc' ? sortFn(a, b) : sortFn(b, a))
+          : defaultCompare(a, b);
+
+        return comparison;
+      }).map(item => ({
+        ...item,
+        // Recursively sort children if hierarchicalSort is enabled
+        children: hierarchicalSort && item.children 
+          ? sortItems(item.children)
+          : item.children
+      }));
+    };
+
+    const defaultCompare = (a, b) => {
       if (a[sortConfig.key] < b[sortConfig.key]) {
         return sortConfig.direction === 'asc' ? -1 : 1;
       }
@@ -90,10 +110,12 @@ export const HierarchicalTableProvider = ({ children, data, onSelectionChange, i
         return sortConfig.direction === 'asc' ? 1 : -1;
       }
       return 0;
-    });
-  }, [data, sortConfig]);
+    };
 
-  React.useEffect(() => {
+    return sortItems(data);
+  }, [data, sortConfig, schema, hierarchicalSort]);
+
+  useEffect(() => {
     if (onSelectionChange) {
       onSelectionChange(selectedRows);
     }

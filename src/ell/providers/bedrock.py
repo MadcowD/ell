@@ -13,8 +13,10 @@ import requests
 from PIL import Image as PILImage
 
 try:
-    from botocore.client import BaseClient
+
     from botocore.eventstream import (EventStream)
+    from botocore.client import BaseClient
+
     class BedrockProvider(Provider):
         dangerous_disable_validation = True
 
@@ -145,7 +147,6 @@ try:
                 tracked_results.append(Message(role="assistant", content=cbs))
                 if logger:
                     logger(tracked_results[0].text)
-
 
                 usage["prompt_tokens"] = provider_response.get('usage').get("inputTokens", 0)
                 usage["completion_tokens"] = provider_response.get('usage').get("outputTokens", 0)

@@ -1,4 +1,6 @@
 import ast
+from functools import lru_cache
+import hashlib
 import importlib
 import os
 import black
@@ -158,3 +160,13 @@ def format_source(source: str) -> str:
     except:
         # If Black formatting fails, return the original source
         return source
+
+
+def ido(f):
+    if not hasattr( f.__ell_func__, "__ell_hash__"):
+        f.__ell_force_closure__()
+    return f.__ell_func__.__ell_hash__
+
+@lru_cache(maxsize=128)
+def hsh(x):
+    return hashlib.md5(x.encode()).hexdigest()

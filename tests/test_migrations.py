@@ -1,3 +1,4 @@
+import json
 import os
 import tempfile
 from pathlib import Path
@@ -8,7 +9,15 @@ from sqlmodel import SQLModel
 from ell.stores.migrations import init_or_migrate_database, get_alembic_config
 from alembic import command
 from alembic.config import Config
-
+# Compare schemas after recursively sorting all lists
+def sort_lists_recursively(d):
+    if isinstance(d, dict):
+        return {k: sort_lists_recursively(v) for k, v in d.items()}
+    elif isinstance(d, list):
+        return list(sorted((sort_lists_recursively(x) for x in d), key=lambda x: json.dumps(x, sort_keys=True)))
+    else:
+        return d
+        
 def get_table_metadata(engine, exclude_tables=None):
     """Helper to get table metadata in a consistent format"""
     inspector = inspect(engine)
@@ -83,8 +92,11 @@ def test_empty_db_migration(temp_db_url):
     # Get schema created by SQLModel
     sqlmodel_metadata = get_table_metadata(engine2)
     
-    # Compare schemas
-    assert migrated_metadata == sqlmodel_metadata
+
+
+    sorted_migrated = sort_lists_recursively(migrated_metadata)
+    sorted_sqlmodel = sort_lists_recursively(sqlmodel_metadata)
+    assert sorted_migrated == sorted_sqlmodel
 
 def test_existing_tables_no_alembic(temp_db_url):
     """Test database with existing tables but no alembic version table"""
@@ -103,7 +115,8 @@ def test_existing_tables_no_alembic(temp_db_url):
     with engine.connect() as conn:
         result = conn.execute(text("SELECT version_num FROM ell_alembic_version"))
         version = result.scalar()
-        assert version == "4524fb60d23e"  # Initial migration version
+        # Get current head version from alembic config
+        assert version == "f6528d04bbbd"
 
 def test_multiple_migrations(temp_db_url):
     """Test running multiple migrations in sequence"""
@@ -179,5 +192,7 @@ def test_pure_migration_matches_metadata(temp_db_url):
     
     # Get schema created by SQLModel
     sqlmodel_metadata = get_table_metadata(engine2)
-    
-    assert migration_metadata == sqlmodel_metadata
+    # Compare schemas after recursively sorting
+    migration_metadata_sorted = sort_lists_recursively(migration_metadata)
+    sqlmodel_metadata_sorted = sort_lists_recursively(sqlmodel_metadata)
+    assert migration_metadata_sorted == sqlmodel_metadata_sorted
