@@ -33,8 +33,7 @@ from sqlalchemy.exc import IntegrityError
 logger = logging.getLogger(__name__)
 
 class SQLStore(ell.stores.store.Store):
-    def __init__(self, db_uri: str, blob_store: Optional[ell.stores.store.BlobStore] = None,
-                 engine: Optional[Engine] = None, ):
+    def __init__(self, db_uri: str = None, blob_store: Optional[ell.stores.store.BlobStore] = None, engine: Optional[Engine] = None):
         if engine is not None:
             self.engine = engine
         elif db_uri is None:
