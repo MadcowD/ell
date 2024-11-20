@@ -576,7 +576,7 @@ To simplify this process, ell provides a helper function <code class="docutils l
 </span></code></pre></div>
 </div>
 <p>This is accomplished by a language model program that takes the source code of a tool function as input and generates the corresponding tool specification.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"claude-3-5-sonnet"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"claude-3-5-sonnet-20241022"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 </span><span id="line-2"><span class="k">def</span> <span class="nf">generate_tool_spec</span><span class="p">(</span><span class="n">tool_source</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">'''</span>
 </span><span id="line-4"><span class="sd">    You are a helpful assistant that takes in source code for a python function and produces a JSON schema for the function.</span>

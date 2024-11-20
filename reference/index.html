@@ -354,6 +354,1171 @@ nav a {
 <p>Automatically generated API reference for <code class="docutils literal notranslate"><span class="pre">ell</span></code>.</p>
 <p id="module-ell">ell is a Python library for language model programming (LMP). It provides a simple
 and intuitive interface for working with large language models.</p>
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="ell.Config">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">Config</span></span><a class="headerlink" href="#ell.Config" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config'">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Configuration class for ELL.</p>
+<p><details class="autodoc_pydantic_collapsable_json">
+<summary>Show JSON schema</summary><div class="highlight-json notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="p">{</span>
+</span><span id="line-2"><span class="w">   </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Config"</span><span class="p">,</span>
+</span><span id="line-3"><span class="w">   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span>
+</span><span id="line-4"><span class="w">   </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-5"><span class="w">      </span><span class="nt">"registry"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-6"><span class="w">         </span><span class="nt">"additionalProperties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-7"><span class="w">            </span><span class="nt">"$ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#/$defs/_Model"</span>
+</span><span id="line-8"><span class="w">         </span><span class="p">},</span>
+</span><span id="line-9"><span class="w">         </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"A dictionary mapping model names to their configurations."</span><span class="p">,</span>
+</span><span id="line-10"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Registry"</span><span class="p">,</span>
+</span><span id="line-11"><span class="w">         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span>
+</span><span id="line-12"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-13"><span class="w">      </span><span class="nt">"verbose"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-14"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+</span><span id="line-15"><span class="w">         </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"If True, enables verbose logging."</span><span class="p">,</span>
+</span><span id="line-16"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Verbose"</span><span class="p">,</span>
+</span><span id="line-17"><span class="w">         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span>
+</span><span id="line-18"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-19"><span class="w">      </span><span class="nt">"wrapped_logging"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-20"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+</span><span id="line-21"><span class="w">         </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"If True, enables wrapped logging for better readability."</span><span class="p">,</span>
+</span><span id="line-22"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Wrapped Logging"</span><span class="p">,</span>
+</span><span id="line-23"><span class="w">         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span>
+</span><span id="line-24"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-25"><span class="w">      </span><span class="nt">"override_wrapped_logging_width"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-26"><span class="w">         </span><span class="nt">"anyOf"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="line-27"><span class="w">            </span><span class="p">{</span>
+</span><span id="line-28"><span class="w">               </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"integer"</span>
+</span><span id="line-29"><span class="w">            </span><span class="p">},</span>
+</span><span id="line-30"><span class="w">            </span><span class="p">{</span>
+</span><span id="line-31"><span class="w">               </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"null"</span>
+</span><span id="line-32"><span class="w">            </span><span class="p">}</span>
+</span><span id="line-33"><span class="w">         </span><span class="p">],</span>
+</span><span id="line-34"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="line-35"><span class="w">         </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"If set, overrides the default width for wrapped logging."</span><span class="p">,</span>
+</span><span id="line-36"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Override Wrapped Logging Width"</span>
+</span><span id="line-37"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-38"><span class="w">      </span><span class="nt">"store"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-39"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="line-40"><span class="w">         </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"An optional Store instance for persistence."</span><span class="p">,</span>
+</span><span id="line-41"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Store"</span><span class="p">,</span>
+</span><span id="line-42"><span class="w">         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"null"</span>
+</span><span id="line-43"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-44"><span class="w">      </span><span class="nt">"autocommit"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-45"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+</span><span id="line-46"><span class="w">         </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"If True, enables automatic committing of changes to the store."</span><span class="p">,</span>
+</span><span id="line-47"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Autocommit"</span><span class="p">,</span>
+</span><span id="line-48"><span class="w">         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span>
+</span><span id="line-49"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-50"><span class="w">      </span><span class="nt">"lazy_versioning"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-51"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+</span><span id="line-52"><span class="w">         </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"If True, enables lazy versioning for improved performance."</span><span class="p">,</span>
+</span><span id="line-53"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Lazy Versioning"</span><span class="p">,</span>
+</span><span id="line-54"><span class="w">         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span>
+</span><span id="line-55"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-56"><span class="w">      </span><span class="nt">"default_api_params"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-57"><span class="w">         </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Default parameters for language models."</span><span class="p">,</span>
+</span><span id="line-58"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Default Api Params"</span><span class="p">,</span>
+</span><span id="line-59"><span class="w">         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span>
+</span><span id="line-60"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-61"><span class="w">      </span><span class="nt">"default_client"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-62"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="line-63"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Default Client"</span>
+</span><span id="line-64"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-65"><span class="w">      </span><span class="nt">"autocommit_model"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-66"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="s2">"gpt-4o-mini"</span><span class="p">,</span>
+</span><span id="line-67"><span class="w">         </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"When set, changes the default autocommit model from GPT 4o mini."</span><span class="p">,</span>
+</span><span id="line-68"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Autocommit Model"</span><span class="p">,</span>
+</span><span id="line-69"><span class="w">         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span>
+</span><span id="line-70"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-71"><span class="w">      </span><span class="nt">"providers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-72"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="line-73"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Providers"</span>
+</span><span id="line-74"><span class="w">      </span><span class="p">}</span>
+</span><span id="line-75"><span class="w">   </span><span class="p">},</span>
+</span><span id="line-76"><span class="w">   </span><span class="nt">"$defs"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-77"><span class="w">      </span><span class="nt">"_Model"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-78"><span class="w">         </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-79"><span class="w">            </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-80"><span class="w">               </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Name"</span><span class="p">,</span>
+</span><span id="line-81"><span class="w">               </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span>
+</span><span id="line-82"><span class="w">            </span><span class="p">},</span>
+</span><span id="line-83"><span class="w">            </span><span class="nt">"default_client"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-84"><span class="w">               </span><span class="nt">"anyOf"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="line-85"><span class="w">                  </span><span class="p">{},</span>
+</span><span id="line-86"><span class="w">                  </span><span class="p">{</span>
+</span><span id="line-87"><span class="w">                     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"null"</span>
+</span><span id="line-88"><span class="w">                  </span><span class="p">}</span>
+</span><span id="line-89"><span class="w">               </span><span class="p">],</span>
+</span><span id="line-90"><span class="w">               </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="line-91"><span class="w">               </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Default Client"</span>
+</span><span id="line-92"><span class="w">            </span><span class="p">},</span>
+</span><span id="line-93"><span class="w">            </span><span class="nt">"supports_streaming"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-94"><span class="w">               </span><span class="nt">"anyOf"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="line-95"><span class="w">                  </span><span class="p">{</span>
+</span><span id="line-96"><span class="w">                     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span>
+</span><span id="line-97"><span class="w">                  </span><span class="p">},</span>
+</span><span id="line-98"><span class="w">                  </span><span class="p">{</span>
+</span><span id="line-99"><span class="w">                     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"null"</span>
+</span><span id="line-100"><span class="w">                  </span><span class="p">}</span>
+</span><span id="line-101"><span class="w">               </span><span class="p">],</span>
+</span><span id="line-102"><span class="w">               </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="line-103"><span class="w">               </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Supports Streaming"</span>
+</span><span id="line-104"><span class="w">            </span><span class="p">}</span>
+</span><span id="line-105"><span class="w">         </span><span class="p">},</span>
+</span><span id="line-106"><span class="w">         </span><span class="nt">"required"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="line-107"><span class="w">            </span><span class="s2">"name"</span>
+</span><span id="line-108"><span class="w">         </span><span class="p">],</span>
+</span><span id="line-109"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"_Model"</span><span class="p">,</span>
+</span><span id="line-110"><span class="w">         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span>
+</span><span id="line-111"><span class="w">      </span><span class="p">}</span>
+</span><span id="line-112"><span class="w">   </span><span class="p">}</span>
+</span><span id="line-113"><span class="p">}</span>
+</span></code></pre></div>
+</div>
+</details></p><dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>arbitrary_types_allowed</strong>: <em>bool = True</em></p></li>
+<li><p><strong>protected_namespaces</strong>: <em>tuple = (‘protect_’,)</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">autocommit</span> <span class="pre">(bool)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">autocommit_model</span> <span class="pre">(str)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_api_params</span> <span class="pre">(Dict[str,</span> <span class="pre">Any])</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_client</span> <span class="pre">(openai.OpenAI</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">lazy_versioning</span> <span class="pre">(bool)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">override_wrapped_logging_width</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">providers</span> <span class="pre">(Dict[Type,</span> <span class="pre">ell.provider.Provider])</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">registry</span> <span class="pre">(Dict[str,</span> <span class="pre">ell.configurator._Model])</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">store</span> <span class="pre">(None)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">verbose</span> <span class="pre">(bool)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">wrapped_logging</span> <span class="pre">(bool)</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Config.autocommit">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">autocommit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#ell.Config.autocommit" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.autocommit'">¶</a></dt>
+<dd><p>If True, enables automatic committing of changes to the store.</p>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Config.autocommit_model">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">autocommit_model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'gpt-4o-mini'</span></em><a class="headerlink" href="#ell.Config.autocommit_model" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.autocommit_model'">¶</a></dt>
+<dd><p>When set, changes the default autocommit model from GPT 4o mini.</p>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Config.default_api_params">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_api_params</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Optional]</span></em><a class="headerlink" href="#ell.Config.default_api_params" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.default_api_params'">¶</a></dt>
+<dd><p>Default parameters for language models.</p>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Config.default_client">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">default_client</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">OpenAI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#ell.Config.default_client" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.default_client'">¶</a></dt>
+<dd><p>The default OpenAI client used when a specific model client is not found.</p>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Config.lazy_versioning">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lazy_versioning</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#ell.Config.lazy_versioning" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.lazy_versioning'">¶</a></dt>
+<dd><p>If True, enables lazy versioning for improved performance.</p>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Config.override_wrapped_logging_width">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">override_wrapped_logging_width</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#ell.Config.override_wrapped_logging_width" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.override_wrapped_logging_width'">¶</a></dt>
+<dd><p>If set, overrides the default width for wrapped logging.</p>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Config.providers">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">providers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Type</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Provider</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Optional]</span></em><a class="headerlink" href="#ell.Config.providers" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.providers'">¶</a></dt>
+<dd><p>A dictionary mapping client types to provider classes.</p>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Config.registry">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">registry</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_Model</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Optional]</span></em><a class="headerlink" href="#ell.Config.registry" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.registry'">¶</a></dt>
+<dd><p>A dictionary mapping model names to their configurations.</p>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Config.store">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">store</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#ell.Config.store" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.store'">¶</a></dt>
+<dd><p>An optional Store instance for persistence.</p>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Config.verbose">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">verbose</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#ell.Config.verbose" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.verbose'">¶</a></dt>
+<dd><p>If True, enables verbose logging.</p>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Config.wrapped_logging">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wrapped_logging</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#ell.Config.wrapped_logging" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.wrapped_logging'">¶</a></dt>
+<dd><p>If True, enables wrapped logging for better readability.</p>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ell.Config.get_client_for">
+<span class="sig-name descname"><span class="pre">get_client_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">OpenAI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ell.Config.get_client_for" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.get_client_for'">¶</a></dt>
+<dd><p>Get the OpenAI client for a specific model name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_name</strong> (<em>str</em>) – The name of the model to get the client for.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The OpenAI client for the specified model, or None if not found, and a fallback flag.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[Optional[openai.Client], bool]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ell.Config.get_provider_for">
+<span class="sig-name descname"><span class="pre">get_provider_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">Provider</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#ell.Config.get_provider_for" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.get_provider_for'">¶</a></dt>
+<dd><p>Get the provider instance for a specific client instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client</strong> (<em>Any</em>) – The client instance to get the provider for.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The provider instance for the specified client, or None if not found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Provider]</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ell.Config.model_registry_override">
+<span class="sig-name descname"><span class="pre">model_registry_override</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">overrides</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_Model</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.Config.model_registry_override" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.model_registry_override'">¶</a></dt>
+<dd><p>Temporarily override the model registry with new model configurations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>overrides</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>ModelConfig</em><em>]</em>) – A dictionary of model names to ModelConfig instances to override.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ell.Config.register_model">
+<span class="sig-name descname"><span class="pre">register_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OpenAI</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supports_streaming</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ell.Config.register_model" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.register_model'">¶</a></dt>
+<dd><p>Register a model with its configuration.</p>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ell.Config.register_provider">
+<span class="sig-name descname"><span class="pre">register_provider</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ell.Config.register_provider" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Config.register_provider'">¶</a></dt>
+<dd><p>Register a provider class for a specific client type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>provider_class</strong> (<em>Type</em><em>[</em><em>Provider</em><em>]</em>) – The provider class to register.</p>
+</dd>
+</dl>
+</dd></dl>
+</dd></dl>
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="ell.ContentBlock">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">ContentBlock</span></span><a class="headerlink" href="#ell.ContentBlock" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock'">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p><details class="autodoc_pydantic_collapsable_json">
+<summary>Show JSON schema</summary><div class="highlight-json notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="p">{</span>
+</span><span id="line-2"><span class="w">   </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ContentBlock"</span><span class="p">,</span>
+</span><span id="line-3"><span class="w">   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span>
+</span><span id="line-4"><span class="w">   </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-5"><span class="w">      </span><span class="nt">"text"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-6"><span class="w">         </span><span class="nt">"anyOf"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="line-7"><span class="w">            </span><span class="p">{</span>
+</span><span id="line-8"><span class="w">               </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-9"><span class="w">                  </span><span class="nt">"content"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-10"><span class="w">                     </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Content"</span><span class="p">,</span>
+</span><span id="line-11"><span class="w">                     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span>
+</span><span id="line-12"><span class="w">                  </span><span class="p">},</span>
+</span><span id="line-13"><span class="w">                  </span><span class="nt">"__origin_trace__"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-14"><span class="w">                     </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"  Origin Trace  "</span><span class="p">,</span>
+</span><span id="line-15"><span class="w">                     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span>
+</span><span id="line-16"><span class="w">                  </span><span class="p">},</span>
+</span><span id="line-17"><span class="w">                  </span><span class="nt">"__lstr"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-18"><span class="w">                     </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"  Lstr"</span><span class="p">,</span>
+</span><span id="line-19"><span class="w">                     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span>
+</span><span id="line-20"><span class="w">                  </span><span class="p">}</span>
+</span><span id="line-21"><span class="w">               </span><span class="p">},</span>
+</span><span id="line-22"><span class="w">               </span><span class="nt">"required"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="line-23"><span class="w">                  </span><span class="s2">"content"</span><span class="p">,</span>
+</span><span id="line-24"><span class="w">                  </span><span class="s2">"__origin_trace__"</span><span class="p">,</span>
+</span><span id="line-25"><span class="w">                  </span><span class="s2">"__lstr"</span>
+</span><span id="line-26"><span class="w">               </span><span class="p">],</span>
+</span><span id="line-27"><span class="w">               </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span>
+</span><span id="line-28"><span class="w">            </span><span class="p">},</span>
+</span><span id="line-29"><span class="w">            </span><span class="p">{</span>
+</span><span id="line-30"><span class="w">               </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span>
+</span><span id="line-31"><span class="w">            </span><span class="p">},</span>
+</span><span id="line-32"><span class="w">            </span><span class="p">{</span>
+</span><span id="line-33"><span class="w">               </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"null"</span>
+</span><span id="line-34"><span class="w">            </span><span class="p">}</span>
+</span><span id="line-35"><span class="w">         </span><span class="p">],</span>
+</span><span id="line-36"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="line-37"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Text"</span>
+</span><span id="line-38"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-39"><span class="w">      </span><span class="nt">"image"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-40"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="line-41"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Image"</span>
+</span><span id="line-42"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-43"><span class="w">      </span><span class="nt">"audio"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-44"><span class="w">         </span><span class="nt">"anyOf"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="line-45"><span class="w">            </span><span class="p">{</span>
+</span><span id="line-46"><span class="w">               </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-47"><span class="w">                  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span>
+</span><span id="line-48"><span class="w">               </span><span class="p">},</span>
+</span><span id="line-49"><span class="w">               </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"array"</span>
+</span><span id="line-50"><span class="w">            </span><span class="p">},</span>
+</span><span id="line-51"><span class="w">            </span><span class="p">{</span>
+</span><span id="line-52"><span class="w">               </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"null"</span>
+</span><span id="line-53"><span class="w">            </span><span class="p">}</span>
+</span><span id="line-54"><span class="w">         </span><span class="p">],</span>
+</span><span id="line-55"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="line-56"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Audio"</span>
+</span><span id="line-57"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-58"><span class="w">      </span><span class="nt">"tool_call"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-59"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="line-60"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tool Call"</span>
+</span><span id="line-61"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-62"><span class="w">      </span><span class="nt">"parsed"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-63"><span class="w">         </span><span class="nt">"anyOf"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="line-64"><span class="w">            </span><span class="p">{</span>
+</span><span id="line-65"><span class="w">               </span><span class="nt">"$ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#/$defs/BaseModel"</span>
+</span><span id="line-66"><span class="w">            </span><span class="p">},</span>
+</span><span id="line-67"><span class="w">            </span><span class="p">{</span>
+</span><span id="line-68"><span class="w">               </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"null"</span>
+</span><span id="line-69"><span class="w">            </span><span class="p">}</span>
+</span><span id="line-70"><span class="w">         </span><span class="p">],</span>
+</span><span id="line-71"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+</span><span id="line-72"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-73"><span class="w">      </span><span class="nt">"tool_result"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-74"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="line-75"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Tool Result"</span>
+</span><span id="line-76"><span class="w">      </span><span class="p">}</span>
+</span><span id="line-77"><span class="w">   </span><span class="p">},</span>
+</span><span id="line-78"><span class="w">   </span><span class="nt">"$defs"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-79"><span class="w">      </span><span class="nt">"BaseModel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-80"><span class="w">         </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+</span><span id="line-81"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BaseModel"</span><span class="p">,</span>
+</span><span id="line-82"><span class="w">         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span>
+</span><span id="line-83"><span class="w">      </span><span class="p">}</span>
+</span><span id="line-84"><span class="w">   </span><span class="p">}</span>
+</span><span id="line-85"><span class="p">}</span>
+</span></code></pre></div>
+</div>
+</details></p><dl class="field-list simple">
+<dt class="field-odd">Config<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>arbitrary_types_allowed</strong>: <em>bool = True</em></p></li>
+</ul>
+</dd>
+<dt class="field-even">Fields<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">audio</span> <span class="pre">(numpy.ndarray</span> <span class="pre">|</span> <span class="pre">List[float]</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">image</span> <span class="pre">(ell.types.message.ImageContent</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parsed</span> <span class="pre">(pydantic.main.BaseModel</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">text</span> <span class="pre">(ell.types._lstr._lstr</span> <span class="pre">|</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tool_call</span> <span class="pre">(ell.types.message.ToolCall</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tool_result</span> <span class="pre">(ell.types.message.ToolResult</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-odd">Validators<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_single_non_null</span></code> » <code class="xref py py-obj docutils literal notranslate"><span class="pre">all</span> <span class="pre">fields</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.ContentBlock.audio">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">audio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#ell.ContentBlock.audio" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.audio'">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_single_non_null</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.ContentBlock.image">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">image</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ImageContent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#ell.ContentBlock.image" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.image'">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_single_non_null</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.ContentBlock.parsed">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parsed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">BaseModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#ell.ContentBlock.parsed" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.parsed'">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_single_non_null</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.ContentBlock.text">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">text</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">_lstr</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#ell.ContentBlock.text" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.text'">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_single_non_null</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.ContentBlock.tool_call">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tool_call</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ToolCall</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#ell.ContentBlock.tool_call" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.tool_call'">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_single_non_null</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.ContentBlock.tool_result">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tool_result</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ToolResult</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#ell.ContentBlock.tool_result" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.tool_result'">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Validated by<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_single_non_null</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py method pydantic_validator">
+<dt class="sig sig-object py" id="ell.ContentBlock.check_single_non_null">
+<em class="property"><span class="pre">validator</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_single_non_null</span></span><em class="autodoc_pydantic_validator_arrow property">  <span class="pre">»</span>  </em><em class="xref py py-obj"><span class="pre">all</span> <span class="pre">fields</span></em><a class="headerlink" href="#ell.ContentBlock.check_single_non_null" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.check_single_non_null'">¶</a></dt>
+<dd></dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ell.ContentBlock.coerce">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coerce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ell.ContentBlock" title="ell.types.message.ContentBlock"><span class="pre">ContentBlock</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolCall</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolResult</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ImageContent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Image</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BaseModel</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#ell.ContentBlock" title="ell.types.message.ContentBlock"><span class="pre">ContentBlock</span></a></span></span><a class="headerlink" href="#ell.ContentBlock.coerce" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.coerce'">¶</a></dt>
+<dd><p>Coerce various types of content into a ContentBlock.</p>
+<p>This method provides a flexible way to create ContentBlock instances from different types of input.</p>
+<p>Args:
+content: The content to be coerced into a ContentBlock. Can be one of the following types:
+- str: Will be converted to a text ContentBlock.
+- ToolCall: Will be converted to a tool_call ContentBlock.
+- ToolResult: Will be converted to a tool_result ContentBlock.
+- BaseModel: Will be converted to a parsed ContentBlock.
+- ContentBlock: Will be returned as-is.
+- Image: Will be converted to an image ContentBlock.
+- np.ndarray: Will be converted to an image ContentBlock.
+- PILImage.Image: Will be converted to an image ContentBlock.</p>
+<p>Returns:
+ContentBlock: A new ContentBlock instance containing the coerced content.</p>
+<p>Raises:
+ValueError: If the content cannot be coerced into a valid ContentBlock.</p>
+<p>Examples:
+&gt;&gt;&gt; ContentBlock.coerce(“Hello, world!”)
+ContentBlock(text=”Hello, world!”)</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">tool_call</span> <span class="o">=</span> <span class="n">ToolCall</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">ContentBlock</span><span class="o">.</span><span class="n">coerce</span><span class="p">(</span><span class="n">tool_call</span><span class="p">)</span>
+</span><span id="line-3"><span class="go">ContentBlock(tool_call=tool_call)</span>
+</span></code></pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">tool_result</span> <span class="o">=</span> <span class="n">ToolResult</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">ContentBlock</span><span class="o">.</span><span class="n">coerce</span><span class="p">(</span><span class="n">tool_result</span><span class="p">)</span>
+</span><span id="line-3"><span class="go">ContentBlock(tool_result=tool_result)</span>
+</span></code></pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="line-2"><span class="gp">... </span>    <span class="n">field</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">model_instance</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
+</span><span id="line-4"><span class="gp">&gt;&gt;&gt; </span><span class="n">ContentBlock</span><span class="o">.</span><span class="n">coerce</span><span class="p">(</span><span class="n">model_instance</span><span class="p">)</span>
+</span><span id="line-5"><span class="go">ContentBlock(parsed=model_instance)</span>
+</span></code></pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">PILImage</span>
+</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">img</span> <span class="o">=</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">'RGB'</span><span class="p">,</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
+</span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">ContentBlock</span><span class="o">.</span><span class="n">coerce</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+</span><span id="line-4"><span class="go">ContentBlock(image=ImageContent(image=&lt;PIL.Image.Image object&gt;))</span>
+</span></code></pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">ContentBlock</span><span class="o">.</span><span class="n">coerce</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+</span><span id="line-4"><span class="go">ContentBlock(image=ImageContent(image=&lt;PIL.Image.Image object&gt;))</span>
+</span></code></pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">"https://example.com/image.jpg"</span><span class="p">)</span>
+</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">ContentBlock</span><span class="o">.</span><span class="n">coerce</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</span><span id="line-3"><span class="go">ContentBlock(image=ImageContent(url="https://example.com/image.jpg"))</span>
+</span></code></pre></div>
+</div>
+<p>Notes:
+- This method is particularly useful when working with heterogeneous content types</p>
+<blockquote>
+<div><p>and you want to ensure they are all properly encapsulated in ContentBlock instances.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>The method performs type checking and appropriate conversions to ensure the resulting
+ContentBlock is valid according to the model’s constraints.</p></li>
+<li><p>For image content, Image objects, PIL Image objects, and numpy arrays are supported,
+with automatic conversion to the appropriate format.</p></li>
+<li><p>As a last resort, the method will attempt to create an image from the input before
+raising a ValueError.</p></li>
+</ul>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ell.ContentBlock.serialize_parsed">
+<span class="sig-name descname"><span class="pre">serialize_parsed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BaseModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.ContentBlock.serialize_parsed" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.serialize_parsed'">¶</a></dt>
+<dd></dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ell.ContentBlock.content">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">content</span></span><a class="headerlink" href="#ell.ContentBlock.content" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.content'">¶</a></dt>
+<dd></dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ell.ContentBlock.type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">type</span></span><a class="headerlink" href="#ell.ContentBlock.type" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.ContentBlock.type'">¶</a></dt>
+<dd></dd></dl>
+</dd></dl>
+<dl class="py class pydantic_model">
+<dt class="sig sig-object py" id="ell.Message">
+<em class="property"><span class="pre">pydantic</span> <span class="pre">model</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">Message</span></span><a class="headerlink" href="#ell.Message" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message'">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p><details class="autodoc_pydantic_collapsable_json">
+<summary>Show JSON schema</summary><div class="highlight-json notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="p">{</span>
+</span><span id="line-2"><span class="w">   </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Message"</span><span class="p">,</span>
+</span><span id="line-3"><span class="w">   </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"object"</span><span class="p">,</span>
+</span><span id="line-4"><span class="w">   </span><span class="nt">"properties"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-5"><span class="w">      </span><span class="nt">"role"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-6"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Role"</span><span class="p">,</span>
+</span><span id="line-7"><span class="w">         </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span>
+</span><span id="line-8"><span class="w">      </span><span class="p">},</span>
+</span><span id="line-9"><span class="w">      </span><span class="nt">"content"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="line-10"><span class="w">         </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="line-11"><span class="w">         </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Content"</span>
+</span><span id="line-12"><span class="w">      </span><span class="p">}</span>
+</span><span id="line-13"><span class="w">   </span><span class="p">},</span>
+</span><span id="line-14"><span class="w">   </span><span class="nt">"required"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="line-15"><span class="w">      </span><span class="s2">"role"</span>
+</span><span id="line-16"><span class="w">   </span><span class="p">]</span>
+</span><span id="line-17"><span class="p">}</span>
+</span></code></pre></div>
+</div>
+</details></p><dl class="field-list simple">
+<dt class="field-odd">Fields<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">content</span> <span class="pre">(List[ell.types.message.ContentBlock])</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">role</span> <span class="pre">(str)</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Message.content">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">content</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ell.ContentBlock" title="ell.types.message.ContentBlock"><span class="pre">ContentBlock</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#ell.Message.content" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.content'">¶</a></dt>
+<dd></dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="ell.Message.role">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">role</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"> <span class="pre">[Required]</span></em><a class="headerlink" href="#ell.Message.role" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.role'">¶</a></dt>
+<dd></dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ell.Message.call_tools_and_collect_as_message">
+<span class="sig-name descname"><span class="pre">call_tools_and_collect_as_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.Message.call_tools_and_collect_as_message" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.call_tools_and_collect_as_message'">¶</a></dt>
+<dd></dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ell.Message.model_validate">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_validate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#ell.Message" title="ell.types.message.Message"><span class="pre">Message</span></a></span></span><a class="headerlink" href="#ell.Message.model_validate" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.model_validate'">¶</a></dt>
+<dd><p>Custom validation to handle deserialization</p>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ell.Message.model_validate_json">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_validate_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#ell.Message" title="ell.types.message.Message"><span class="pre">Message</span></a></span></span><a class="headerlink" href="#ell.Message.model_validate_json" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.model_validate_json'">¶</a></dt>
+<dd><p>Custom validation to handle deserialization from JSON string</p>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ell.Message.serialize_content">
+<span class="sig-name descname"><span class="pre">serialize_content</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ell.ContentBlock" title="ell.types.message.ContentBlock"><span class="pre">ContentBlock</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.Message.serialize_content" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.serialize_content'">¶</a></dt>
+<dd><p>Serialize content blocks to a format suitable for JSON</p>
+</dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ell.Message.audios">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">audios</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ell.Message.audios" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.audios'">¶</a></dt>
+<dd><p>Returns a list of all audio content.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">audio1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
+</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">audio2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">])</span>
+</span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">[</span><span class="s2">"Text"</span><span class="p">,</span> <span class="n">audio1</span><span class="p">,</span> <span class="s2">"More text"</span><span class="p">,</span> <span class="n">audio2</span><span class="p">])</span>
+</span><span id="line-4"><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">audios</span><span class="p">)</span>
+</span><span id="line-5"><span class="go">2</span>
+</span></code></pre></div>
+</div>
+</dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ell.Message.images">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">images</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ImageContent</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ell.Message.images" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.images'">¶</a></dt>
+<dd><p>Returns a list of all image content.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">PILImage</span>
+</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">image1</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">"https://example.com/image.jpg"</span><span class="p">)</span>
+</span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">image2</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">PILImage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">'RGB'</span><span class="p">,</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">)))</span>
+</span><span id="line-4"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">[</span><span class="s2">"Text"</span><span class="p">,</span> <span class="n">image1</span><span class="p">,</span> <span class="s2">"More text"</span><span class="p">,</span> <span class="n">image2</span><span class="p">])</span>
+</span><span id="line-5"><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">images</span><span class="p">)</span>
+</span><span id="line-6"><span class="go">2</span>
+</span><span id="line-7"><span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Image</span><span class="p">)</span>
+</span><span id="line-8"><span class="go">True</span>
+</span><span id="line-9"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">url</span>
+</span><span id="line-10"><span class="go">'https://example.com/image.jpg'</span>
+</span><span id="line-11"><span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">image</span><span class="p">,</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span>
+</span><span id="line-12"><span class="go">True</span>
+</span></code></pre></div>
+</div>
+</dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ell.Message.parsed">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parsed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">BaseModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">BaseModel</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ell.Message.parsed" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.parsed'">¶</a></dt>
+<dd><p>Returns a list of all parsed content.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="line-2"><span class="gp">... </span>    <span class="n">value</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">parsed_content</span> <span class="o">=</span> <span class="n">CustomModel</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+</span><span id="line-4"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">[</span><span class="s2">"Text"</span><span class="p">,</span> <span class="n">ContentBlock</span><span class="p">(</span><span class="n">parsed</span><span class="o">=</span><span class="n">parsed_content</span><span class="p">)])</span>
+</span><span id="line-5"><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">parsed</span><span class="p">)</span>
+</span><span id="line-6"><span class="go">1</span>
+</span></code></pre></div>
+</div>
+</dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ell.Message.text">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">text</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#ell.Message.text" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.text'">¶</a></dt>
+<dd><p>Returns all text content, replacing non-text content with their representations.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">[</span><span class="s2">"Hello"</span><span class="p">,</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">'RGB'</span><span class="p">,</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)),</span> <span class="s2">"World"</span><span class="p">])</span>
+</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span><span class="o">.</span><span class="n">text</span>
+</span><span id="line-3"><span class="go">'Hello\n&lt;PilImage&gt;\nWorld'</span>
+</span></code></pre></div>
+</div>
+</dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ell.Message.text_only">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">text_only</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#ell.Message.text_only" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.text_only'">¶</a></dt>
+<dd><p>Returns only the text content, ignoring non-text content.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">[</span><span class="s2">"Hello"</span><span class="p">,</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">'RGB'</span><span class="p">,</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">)),</span> <span class="s2">"World"</span><span class="p">])</span>
+</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span><span class="o">.</span><span class="n">text_only</span>
+</span><span id="line-3"><span class="go">'Hello\nWorld'</span>
+</span></code></pre></div>
+</div>
+</dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ell.Message.tool_calls">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tool_calls</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ToolCall</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ell.Message.tool_calls" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.tool_calls'">¶</a></dt>
+<dd><p>Returns a list of all tool calls.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">tool_call</span> <span class="o">=</span> <span class="n">ToolCall</span><span class="p">(</span><span class="n">tool</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">BaseModel</span><span class="p">())</span>
+</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">[</span><span class="s2">"Text"</span><span class="p">,</span> <span class="n">tool_call</span><span class="p">])</span>
+</span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">)</span>
+</span><span id="line-4"><span class="go">1</span>
+</span></code></pre></div>
+</div>
+</dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ell.Message.tool_results">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tool_results</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ToolResult</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ell.Message.tool_results" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.tool_results'">¶</a></dt>
+<dd><p>Returns a list of all tool results.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">tool_result</span> <span class="o">=</span> <span class="n">ToolResult</span><span class="p">(</span><span class="n">tool_call_id</span><span class="o">=</span><span class="s2">"123"</span><span class="p">,</span> <span class="n">result</span><span class="o">=</span><span class="p">[</span><span class="n">ContentBlock</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">"Result"</span><span class="p">)])</span>
+</span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">[</span><span class="s2">"Text"</span><span class="p">,</span> <span class="n">tool_result</span><span class="p">])</span>
+</span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">tool_results</span><span class="p">)</span>
+</span><span id="line-4"><span class="go">1</span>
+</span></code></pre></div>
+</div>
+</dd></dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="ell.assistant">
+<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">assistant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ell.ContentBlock" title="ell.types.message.ContentBlock"><span class="pre">ContentBlock</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolCall</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolResult</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ImageContent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Image</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BaseModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ell.ContentBlock" title="ell.types.message.ContentBlock"><span class="pre">ContentBlock</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolCall</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolResult</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ImageContent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Image</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BaseModel</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#ell.Message" title="ell.types.message.Message"><span class="pre">Message</span></a></span></span><a class="headerlink" href="#ell.assistant" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.assistant'">¶</a></dt>
+<dd><p>Create an assistant message with the given content.</p>
+<p>Args:
+content (str): The content of the assistant message.</p>
+<p>Returns:
+Message: A Message object with role set to ‘assistant’ and the provided content.</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="ell.complex">
+<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">complex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exempt_from_tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_callback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">api_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.complex" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.complex'">¶</a></dt>
+<dd><p>A sophisticated language model programming decorator for complex LLM interactions.</p>
+<p>This decorator transforms a function into a Language Model Program (LMP) capable of handling
+multi-turn conversations, tool usage, and various output formats. It’s designed for advanced
+use cases where full control over the LLM’s capabilities is needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>str</em>) – The name or identifier of the language model to use.</p></li>
+<li><p><strong>client</strong> (<em>Optional</em><em>[</em><em>openai.Client</em><em>]</em>) – An optional OpenAI client instance. If not provided, a default client will be used.</p></li>
+<li><p><strong>tools</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>Callable</em><em>]</em><em>]</em>) – A list of tool functions that can be used by the LLM. Only available for certain models.</p></li>
+<li><p><strong>response_format</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – The response format for the LLM. Only available for certain models.</p></li>
+<li><p><strong>n</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The number of responses to generate for the LLM. Only available for certain models.</p></li>
+<li><p><strong>temperature</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – The temperature parameter for controlling the randomness of the LLM.</p></li>
+<li><p><strong>max_tokens</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of tokens to generate for the LLM.</p></li>
+<li><p><strong>top_p</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – The top-p sampling parameter for controlling the diversity of the LLM.</p></li>
+<li><p><strong>frequency_penalty</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – The frequency penalty parameter for controlling the LLM’s repetition.</p></li>
+<li><p><strong>presence_penalty</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – The presence penalty parameter for controlling the LLM’s relevance.</p></li>
+<li><p><strong>stop</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – The stop sequence for the LLM.</p></li>
+<li><p><strong>exempt_from_tracking</strong> (<em>bool</em>) – If True, the LMP usage won’t be tracked. Default is False.</p></li>
+<li><p><strong>post_callback</strong> (<em>Optional</em><em>[</em><em>Callable</em><em>]</em>) – An optional function to process the LLM’s output before returning.</p></li>
+<li><p><strong>api_params</strong> (<em>Any</em>) – Additional keyword arguments to pass to the underlying API call.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A decorator that can be applied to a function, transforming it into a complex LMP.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Callable</p>
+</dd>
+</dl>
+<p>Functionality:</p>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>Advanced LMP Creation:</dt><dd><ul class="simple">
+<li><p>Supports multi-turn conversations and stateful interactions.</p></li>
+<li><p>Enables tool usage within the LLM context.</p></li>
+<li><p>Allows for various output formats, including structured data and function calls.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Flexible Input Handling:</dt><dd><ul class="simple">
+<li><p>Can process both single prompts and conversation histories.</p></li>
+<li><p>Supports multimodal inputs (text, images, etc.) in the prompt.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Comprehensive Integration:</dt><dd><ul class="simple">
+<li><p>Integrates with ell’s tracking system for monitoring LMP versions, usage, and performance.</p></li>
+<li><p>Supports various language models and API configurations.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Output Processing:</dt><dd><ul class="simple">
+<li><p>Can return raw LLM outputs or process them through a post-callback function.</p></li>
+<li><p>Supports returning multiple message types (e.g., text, function calls, tool results).</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+<p>Usage Modes and Examples:</p>
+<ol class="arabic simple">
+<li><p>Basic Prompt:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-3"><span class="w">    </span><span class="sd">'''You are a creative story writer'''</span> <span class="c1"># System prompt</span>
+</span><span id="line-4">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Write a short story based on this prompt: </span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-6">    <span class="p">]</span>
+</span><span id="line-7">
+</span><span id="line-8"><span class="n">story</span> <span class="p">:</span> <span class="n">ell</span><span class="o">.</span><span class="n">Message</span> <span class="o">=</span> <span class="n">generate_story</span><span class="p">(</span><span class="s2">"A robot discovers emotions"</span><span class="p">)</span>
+</span><span id="line-9"><span class="nb">print</span><span class="p">(</span><span class="n">story</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># Access the text content of the last message</span>
+</span></code></pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Multi-turn Conversation:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant."</span><span class="p">),</span>
+</span><span id="line-5">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="n">conversation</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="line-8">    <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">"Hello, who are you?"</span><span class="p">),</span>
+</span><span id="line-9">    <span class="n">ell</span><span class="o">.</span><span class="n">assistant</span><span class="p">(</span><span class="s2">"I'm an AI assistant. How can I help you today?"</span><span class="p">),</span>
+</span><span id="line-10">    <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">"Can you explain quantum computing?"</span><span class="p">)</span>
+</span><span id="line-11"><span class="p">]</span>
+</span><span id="line-12"><span class="n">response</span> <span class="p">:</span> <span class="n">ell</span><span class="o">.</span><span class="n">Message</span> <span class="o">=</span> <span class="n">chat_bot</span><span class="p">(</span><span class="n">conversation</span><span class="p">)</span>
+</span><span id="line-13"><span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># Print the assistant's response</span>
+</span></code></pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Tool Usage:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">tool</span><span class="p">()</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-3">    <span class="c1"># Implementation to fetch weather</span>
+</span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"The weather in </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s2"> is sunny."</span>
+</span><span id="line-5">
+</span><span id="line-6"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_weather</span><span class="p">])</span>
+</span><span id="line-7"><span class="k">def</span> <span class="nf">weather_assistant</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-8">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-9">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a weather assistant. Use the get_weather tool when needed."</span><span class="p">),</span>
+</span><span id="line-10">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
+</span><span id="line-11">
+</span><span id="line-12"><span class="n">conversation</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="line-13">    <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">"What's the weather like in New York?"</span><span class="p">)</span>
+</span><span id="line-14"><span class="p">]</span>
+</span><span id="line-15"><span class="n">response</span> <span class="p">:</span> <span class="n">ell</span><span class="o">.</span><span class="n">Message</span> <span class="o">=</span> <span class="n">weather_assistant</span><span class="p">(</span><span class="n">conversation</span><span class="p">)</span>
+</span><span id="line-16">
+</span><span id="line-17"><span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+</span><span id="line-18">    <span class="n">tool_results</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">call_tools_and_collect_as_message</span><span class="p">()</span>
+</span><span id="line-19">    <span class="nb">print</span><span class="p">(</span><span class="s2">"Tool results:"</span><span class="p">,</span> <span class="n">tool_results</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</span><span id="line-20">
+</span><span id="line-21">    <span class="c1"># Continue the conversation with tool results</span>
+</span><span id="line-22">    <span class="n">final_response</span> <span class="o">=</span> <span class="n">weather_assistant</span><span class="p">(</span><span class="n">conversation</span> <span class="o">+</span> <span class="p">[</span><span class="n">response</span><span class="p">,</span> <span class="n">tool_results</span><span class="p">])</span>
+</span><span id="line-23">    <span class="nb">print</span><span class="p">(</span><span class="s2">"Final response:"</span><span class="p">,</span> <span class="n">final_response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Structured Output:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="k">class</span> <span class="nc">PersonInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="line-4">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="line-5">    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">response_format</span><span class="o">=</span><span class="n">PersonInfo</span><span class="p">)</span>
+</span><span id="line-8"><span class="k">def</span> <span class="nf">extract_person_info</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-9">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-10">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"Extract person information from the given text."</span><span class="p">),</span>
+</span><span id="line-11">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span id="line-12">    <span class="p">]</span>
+</span><span id="line-13">
+</span><span id="line-14"><span class="n">text</span> <span class="o">=</span> <span class="s2">"John Doe is a 30-year-old software engineer."</span>
+</span><span id="line-15"><span class="n">result</span> <span class="p">:</span> <span class="n">ell</span><span class="o">.</span><span class="n">Message</span> <span class="o">=</span> <span class="n">extract_person_info</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span id="line-16"><span class="n">person_info</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">parsed</span>
+</span><span id="line-17"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Name: </span><span class="si">{</span><span class="n">person_info</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, Age: </span><span class="si">{</span><span class="n">person_info</span><span class="o">.</span><span class="n">age</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li><p>Multimodal Input:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-vision-preview"</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"Describe the contents of the image in detail."</span><span class="p">),</span>
+</span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span>
+</span><span id="line-6">            <span class="n">ContentBlock</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">"What do you see in this image?"</span><span class="p">),</span>
+</span><span id="line-7">            <span class="n">ContentBlock</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
+</span><span id="line-8">        <span class="p">])</span>
+</span><span id="line-9">    <span class="p">]</span>
+</span><span id="line-10">
+</span><span id="line-11"><span class="n">image</span> <span class="o">=</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"example.jpg"</span><span class="p">)</span>
+</span><span id="line-12"><span class="n">description</span> <span class="o">=</span> <span class="n">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</span><span id="line-13"><span class="nb">print</span><span class="p">(</span><span class="n">description</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<ol class="arabic simple" start="6">
+<li><p>Parallel Tool Execution:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">tool1</span><span class="p">,</span> <span class="n">tool2</span><span class="p">,</span> <span class="n">tool3</span><span class="p">])</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">parallel_assistant</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You can use multiple tools in parallel."</span><span class="p">),</span>
+</span><span id="line-5">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="n">response</span> <span class="o">=</span> <span class="n">parallel_assistant</span><span class="p">([</span><span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">"Perform tasks A, B, and C simultaneously."</span><span class="p">)])</span>
+</span><span id="line-8"><span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+</span><span id="line-9">    <span class="n">tool_results</span> <span class="p">:</span> <span class="n">ell</span><span class="o">.</span><span class="n">Message</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">call_tools_and_collect_as_message</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span><span id="line-10">    <span class="nb">print</span><span class="p">(</span><span class="s2">"Parallel tool results:"</span><span class="p">,</span> <span class="n">tool_results</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>Helper Functions for Output Processing:</p>
+<ul class="simple">
+<li><p>response.text: Get the full text content of the last message.</p></li>
+<li><p>response.text_only: Get only the text content, excluding non-text elements.</p></li>
+<li><p>response.tool_calls: Access the list of tool calls in the message.</p></li>
+<li><p>response.tool_results: Access the list of tool results in the message.</p></li>
+<li><p>response.structured: Access structured data outputs.</p></li>
+<li><p>response.call_tools_and_collect_as_message(): Execute tool calls and collect results.</p></li>
+<li><p>Message(role=”user”, content=[…]).to_openai_message(): Convert to OpenAI API format.</p></li>
+</ul>
+<p>Notes:</p>
+<ul class="simple">
+<li><p>The decorated function should return a list of Message objects.</p></li>
+<li><p>For tool usage, ensure that tools are properly decorated with @ell.tool().</p></li>
+<li><p>When using structured outputs, specify the response_format in the decorator.</p></li>
+<li><p>The complex decorator supports all features of simpler decorators like @ell.simple.</p></li>
+<li><p>Use helper functions and properties to easily access and process different types of outputs.</p></li>
+</ul>
+<p>See Also:</p>
+<ul class="simple">
+<li><p>ell.simple: For simpler text-only LMP interactions.</p></li>
+<li><p>ell.tool: For defining tools that can be used within complex LMPs.</p></li>
+<li><p>ell.studio: For visualizing and analyzing LMP executions.</p></li>
+</ul>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="ell.get_store">
+<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">get_store</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ell.get_store" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.get_store'">¶</a></dt>
+<dd></dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="ell.init">
+<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autocommit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lazy_versioning</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_api_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autocommit_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gpt-4o-mini'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ell.init" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.init'">¶</a></dt>
+<dd><p>Initialize the ELL configuration with various settings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>verbose</strong> (<em>bool</em>) – Set verbosity of ELL operations.</p></li>
+<li><p><strong>store</strong> (<em>Union</em><em>[</em><em>Store</em><em>, </em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Set the store for ELL. Can be a Store instance or a string path for SQLiteStore.</p></li>
+<li><p><strong>autocommit</strong> (<em>bool</em>) – Set autocommit for the store operations.</p></li>
+<li><p><strong>lazy_versioning</strong> (<em>bool</em>) – Enable or disable lazy versioning.</p></li>
+<li><p><strong>default_api_params</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>optional</em>) – Set default parameters for language models.</p></li>
+<li><p><strong>default_openai_client</strong> (<em>openai.Client</em><em>, </em><em>optional</em>) – Set the default OpenAI client.</p></li>
+<li><p><strong>autocommit_model</strong> (<em>str</em>) – Set the model used for autocommitting.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="ell.register_provider">
+<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">register_provider</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ell.register_provider" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.register_provider'">¶</a></dt>
+<dd></dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="ell.set_store">
+<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">set_store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ell.set_store" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.set_store'">¶</a></dt>
+<dd></dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="ell.simple">
+<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">simple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exempt_from_tracking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">api_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.simple" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.simple'">¶</a></dt>
+<dd><p>The fundamental unit of language model programming in ell.</p>
+<p>This decorator simplifies the process of creating Language Model Programs (LMPs)
+that return text-only outputs from language models, while supporting multimodal inputs.
+It wraps the more complex ‘complex’ decorator, providing a streamlined interface for common use cases.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>str</em>) – The name or identifier of the language model to use.</p></li>
+<li><p><strong>client</strong> (<em>Optional</em><em>[</em><em>openai.Client</em><em>]</em>) – An optional OpenAI client instance. If not provided, a default client will be used.</p></li>
+<li><p><strong>exempt_from_tracking</strong> (<em>bool</em>) – If True, the LMP usage won’t be tracked. Default is False.</p></li>
+<li><p><strong>api_params</strong> (<em>Any</em>) – Additional keyword arguments to pass to the underlying API call.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Usage:
+The decorated function can return either a single prompt or a list of ell.Message objects:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">summarize_text</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-3"><span class="w">    </span><span class="sd">'''You are an expert at summarizing text.'''</span> <span class="c1"># System prompt</span>
+</span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Please summarize the following text:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span> <span class="c1"># User prompt</span>
+</span><span id="line-5">
+</span><span id="line-6">
+</span><span id="line-7"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</span><span id="line-8"><span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span> <span class="p">:</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ell</span><span class="o">.</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-9"><span class="w">    </span><span class="sd">'''Describe the contents of an image.'''</span> <span class="c1"># unused because we're returning a list of Messages</span>
+</span><span id="line-10">    <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-11">        <span class="c1"># helper function for ell.Message(text="...", role="system")</span>
+</span><span id="line-12">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are an AI trained to describe images."</span><span class="p">),</span>
+</span><span id="line-13">        <span class="c1"># helper function for ell.Message(content="...", role="user")</span>
+</span><span id="line-14">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span><span class="s2">"Describe this image in detail."</span><span class="p">,</span> <span class="n">image</span><span class="p">]),</span>
+</span><span id="line-15">    <span class="p">]</span>
+</span><span id="line-16">
+</span><span id="line-17">
+</span><span id="line-18"><span class="n">image_description</span> <span class="o">=</span> <span class="n">describe_image</span><span class="p">(</span><span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"https://example.com/image.jpg"</span><span class="p">))</span>
+</span><span id="line-19"><span class="nb">print</span><span class="p">(</span><span class="n">image_description</span><span class="p">)</span>
+</span><span id="line-20"><span class="c1"># Output will be a string text-only description of the image</span>
+</span><span id="line-21">
+</span><span id="line-22"><span class="n">summary</span> <span class="o">=</span> <span class="n">summarize_text</span><span class="p">(</span><span class="s2">"Long text to summarize..."</span><span class="p">)</span>
+</span><span id="line-23"><span class="nb">print</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span>
+</span><span id="line-24"><span class="c1"># Output will be a text-only summary</span>
+</span></code></pre></div>
+</div>
+<p>Notes:</p>
+<ul class="simple">
+<li><p>This decorator is designed for text-only model outputs, but supports multimodal inputs.</p></li>
+<li><p>It simplifies complex responses from language models to text-only format, regardless of
+the model’s capability for structured outputs, function calling, or multimodal outputs.</p></li>
+<li><p>For preserving complex model outputs (e.g., structured data, function calls, or multimodal
+outputs), use the @ell.complex decorator instead. @ell.complex returns a Message object (role=’assistant’)</p></li>
+<li><p>The decorated function can return a string or a list of ell.Message objects for more
+complex prompts, including multimodal inputs.</p></li>
+<li><p>If called with n &gt; 1 in api_params, the wrapped LMP will return a list of strings for the n parallel outputs
+of the model instead of just one string. Otherwise, it will return a single string.</p></li>
+<li><p>You can pass LM API parameters either in the decorator or when calling the decorated function.
+Parameters passed during the function call will override those set in the decorator.</p></li>
+</ul>
+<p>Example of passing LM API params:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-3">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Write a short story based on this prompt: </span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="c1"># Using default parameters</span>
+</span><span id="line-6"><span class="n">story1</span> <span class="o">=</span> <span class="n">generate_story</span><span class="p">(</span><span class="s2">"A day in the life of a time traveler"</span><span class="p">)</span>
+</span><span id="line-7">
+</span><span id="line-8"><span class="c1"># Overriding parameters during function call</span>
+</span><span id="line-9"><span class="n">story2</span> <span class="o">=</span> <span class="n">generate_story</span><span class="p">(</span><span class="s2">"An AI's first day of consciousness"</span><span class="p">,</span> <span class="n">api_params</span><span class="o">=</span><span class="p">{</span><span class="s2">"temperature"</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s2">"max_tokens"</span><span class="p">:</span> <span class="mi">500</span><span class="p">})</span>
+</span></code></pre></div>
+</div>
+<p>See Also:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ell.complex" title="ell.complex"><code class="xref py py-func docutils literal notranslate"><span class="pre">ell.complex()</span></code></a>: For LMPs that preserve full structure of model responses, including multimodal outputs.</p></li>
+<li><p><a class="reference internal" href="#ell.tool" title="ell.tool"><code class="xref py py-func docutils literal notranslate"><span class="pre">ell.tool()</span></code></a>: For defining tools that can be used within complex LMPs.</p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">ell.studio</span></code>: For visualizing and analyzing LMP executions.</p></li>
+</ul>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="ell.system">
+<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ell.ContentBlock" title="ell.types.message.ContentBlock"><span class="pre">ContentBlock</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolCall</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolResult</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ImageContent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Image</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BaseModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ell.ContentBlock" title="ell.types.message.ContentBlock"><span class="pre">ContentBlock</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolCall</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolResult</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ImageContent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Image</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BaseModel</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#ell.Message" title="ell.types.message.Message"><span class="pre">Message</span></a></span></span><a class="headerlink" href="#ell.system" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.system'">¶</a></dt>
+<dd><p>Create a system message with the given content.</p>
+<p>Args:
+content (str): The content of the system message.</p>
+<p>Returns:
+Message: A Message object with role set to ‘system’ and the provided content.</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="ell.tool">
+<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">tool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exempt_from_tracking</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">tool_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ell.tool" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.tool'">¶</a></dt>
+<dd><p>Defines a tool for use in language model programs (LMPs) that support tool use.</p>
+<p>This decorator wraps a function, adding metadata and handling for tool invocations.
+It automatically extracts the tool’s description and parameters from the function’s
+docstring and type annotations, creating a structured representation for LMs to use.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exempt_from_tracking</strong> (<em>bool</em>) – If True, the tool usage won’t be tracked. Default is False.</p></li>
+<li><p><strong>tool_kwargs</strong> – Additional keyword arguments for tool configuration.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A wrapped version of the original function, usable as a tool by LMs.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Callable</p>
+</dd>
+</dl>
+<p>Requirements:</p>
+<ul class="simple">
+<li><p>Function must have fully typed arguments (Pydantic-serializable).</p></li>
+<li><p>Return value must be one of: str, JSON-serializable object, Pydantic model, or List[ContentBlock].</p></li>
+<li><p>All parameters must have type annotations.</p></li>
+<li><p>Complex types should be Pydantic models.</p></li>
+<li><p>Function should have a descriptive docstring.</p></li>
+<li><p>Can only be used in LMPs with @ell.complex decorators</p></li>
+</ul>
+<p>Functionality:</p>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>Metadata Extraction:</dt><dd><ul class="simple">
+<li><p>Uses function docstring as tool description.</p></li>
+<li><p>Extracts parameter info from type annotations and docstring.</p></li>
+<li><p>Creates a Pydantic model for parameter validation and schema generation.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Integration with LMs:</dt><dd><ul class="simple">
+<li><p>Can be passed to @ell.complex decorators.</p></li>
+<li><p>Provides structured tool information to LMs.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Invocation Handling:</dt><dd><ul class="simple">
+<li><p>Manages tracking, logging, and result processing.</p></li>
+<li><p>Wraps results in appropriate types (e.g., _lstr) for tracking.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+<p>Usage Modes:</p>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>Normal Function Call:</dt><dd><ul class="simple">
+<li><p>Behaves like a regular Python function.</p></li>
+<li><p>Example: result = my_tool(arg1=”value”, arg2=123)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>LMP Tool Call:</dt><dd><ul class="simple">
+<li><p>Used within LMPs or with explicit _tool_call_id.</p></li>
+<li><p>Returns a ToolResult object.</p></li>
+<li><p>Example: result = my_tool(arg1=”value”, arg2=123, _tool_call_id=”unique_id”)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+<p>Result Coercion:</p>
+<ul class="simple">
+<li><p>String → ContentBlock(text=result)</p></li>
+<li><p>Pydantic BaseModel → ContentBlock(parsed=result)</p></li>
+<li><p>List[ContentBlock] → Used as-is</p></li>
+<li><p>Other types → ContentBlock(text=json.dumps(result))</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">tool</span><span class="p">()</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">create_claim_draft</span><span class="p">(</span>
+</span><span id="line-3">    <span class="n">claim_details</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="line-4">    <span class="n">claim_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="line-5">    <span class="n">claim_amount</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span id="line-6">    <span class="n">claim_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"Date format: YYYY-MM-DD"</span><span class="p">)</span>
+</span><span id="line-7"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-8"><span class="w">    </span><span class="sd">'''Create a claim draft. Returns the created claim ID.'''</span>
+</span><span id="line-9">    <span class="k">return</span> <span class="s2">"12345"</span>
+</span><span id="line-10">
+</span><span id="line-11"><span class="c1"># For use in a complex LMP:</span>
+</span><span id="line-12"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">create_claim_draft</span><span class="p">],</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</span><span id="line-13"><span class="k">def</span> <span class="nf">insurance_chatbot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-14">    <span class="c1"># Chatbot implementation...</span>
+</span><span id="line-15">
+</span><span id="line-16"><span class="n">x</span> <span class="o">=</span> <span class="n">insurance_chatbot</span><span class="p">([</span>
+</span><span id="line-17">    <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">"I crashed my car into a tree."</span><span class="p">),</span>
+</span><span id="line-18">    <span class="n">ell</span><span class="o">.</span><span class="n">assistant</span><span class="p">(</span><span class="s2">"I'm sorry to hear that. Can you provide more details?"</span><span class="p">),</span>
+</span><span id="line-19">    <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="s2">"The car is totaled and I need to file a claim. Happened on 2024-08-01. total value is like $5000"</span><span class="p">)</span>
+</span><span id="line-20"><span class="p">])</span>
+</span><span id="line-21"><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span><span id="line-22"><span class="sd">'''ell.Message(content=[</span>
+</span><span id="line-23"><span class="sd">    ContentBlock(tool_call(</span>
+</span><span id="line-24"><span class="sd">        tool_call_id="asdas4e",</span>
+</span><span id="line-25"><span class="sd">        tool_fn=create_claim_draft,</span>
+</span><span id="line-26"><span class="sd">        input=create_claim_draftParams({</span>
+</span><span id="line-27"><span class="sd">            claim_details="The car is totaled and I need to file a claim. Happened on 2024-08-01. total value is like $5000",</span>
+</span><span id="line-28"><span class="sd">            claim_type="car",</span>
+</span><span id="line-29"><span class="sd">            claim_amount=5000,</span>
+</span><span id="line-30"><span class="sd">            claim_date="2024-08-01"</span>
+</span><span id="line-31"><span class="sd">        })</span>
+</span><span id="line-32"><span class="sd">    ))</span>
+</span><span id="line-33"><span class="sd">], role='assistant')'''</span>
+</span><span id="line-34">
+</span><span id="line-35"><span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+</span><span id="line-36">    <span class="n">next_user_message</span> <span class="o">=</span> <span class="n">response_message</span><span class="o">.</span><span class="n">call_tools_and_collect_as_message</span><span class="p">()</span>
+</span><span id="line-37">    <span class="c1"># This actually calls create_claim_draft</span>
+</span><span id="line-38">    <span class="nb">print</span><span class="p">(</span><span class="n">next_user_message</span><span class="p">)</span>
+</span><span id="line-39"><span class="w">    </span><span class="sd">'''</span>
+</span><span id="line-40"><span class="sd">    ell.Message(content=[</span>
+</span><span id="line-41"><span class="sd">        ContentBlock(tool_result=ToolResult(</span>
+</span><span id="line-42"><span class="sd">            tool_call_id="asdas4e",</span>
+</span><span id="line-43"><span class="sd">            result=[ContentBlock(text="12345")]</span>
+</span><span id="line-44"><span class="sd">        ))</span>
+</span><span id="line-45"><span class="sd">    ], role='user')</span>
+</span><span id="line-46"><span class="sd">    '''</span>
+</span><span id="line-47">    <span class="n">y</span> <span class="o">=</span> <span class="n">insurance_chatbot</span><span class="p">(</span><span class="n">message_history</span> <span class="o">+</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">next_user_message</span><span class="p">])</span>
+</span><span id="line-48">    <span class="nb">print</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+</span><span id="line-49"><span class="w">    </span><span class="sd">'''</span>
+</span><span id="line-50"><span class="sd">    ell.Message("I've filed that for you!", role='assistant')</span>
+</span><span id="line-51"><span class="sd">    '''</span>
+</span></code></pre></div>
+</div>
+<p>Note:
+- Tools are integrated into LMP calls via the ‘tools’ parameter in @ell.complex.
+- LMs receive structured tool information, enabling understanding and usage within the conversation context.</p>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="ell.user">
+<span class="sig-prename descclassname"><span class="pre">ell.</span></span><span class="sig-name descname"><span class="pre">user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ell.ContentBlock" title="ell.types.message.ContentBlock"><span class="pre">ContentBlock</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolCall</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolResult</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ImageContent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Image</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BaseModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ell.ContentBlock" title="ell.types.message.ContentBlock"><span class="pre">ContentBlock</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolCall</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ToolResult</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ImageContent</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Image</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">BaseModel</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">→</span> <span class="sig-return-typehint"><a class="reference internal" href="#ell.Message" title="ell.types.message.Message"><span class="pre">Message</span></a></span></span><a class="headerlink" href="#ell.user" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.user'">¶</a></dt>
+<dd><p>Create a user message with the given content.</p>
+<p>Args:
+content (str): The content of the user message.</p>
+<p>Returns:
+Message: A Message object with role set to ‘user’ and the provided content.</p>
+</dd></dl>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="current">
@@ -370,7 +1535,71 @@ and intuitive interface for working with large language models.</p>
         Configuration
       </a>
 </div>
-</div></div>
+</div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
+<div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
+<ul>
+<li><a :data-current="activeSection === '#ell.Config'" class="reference internal" href="#ell.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a><ul>
+<li><a :data-current="activeSection === '#ell.Config.autocommit'" class="reference internal" href="#ell.Config.autocommit"><code class="docutils literal notranslate"><span class="pre">Config.autocommit</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.autocommit_model'" class="reference internal" href="#ell.Config.autocommit_model"><code class="docutils literal notranslate"><span class="pre">Config.autocommit_model</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.default_api_params'" class="reference internal" href="#ell.Config.default_api_params"><code class="docutils literal notranslate"><span class="pre">Config.default_api_params</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.default_client'" class="reference internal" href="#ell.Config.default_client"><code class="docutils literal notranslate"><span class="pre">Config.default_client</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.lazy_versioning'" class="reference internal" href="#ell.Config.lazy_versioning"><code class="docutils literal notranslate"><span class="pre">Config.lazy_versioning</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.override_wrapped_logging_width'" class="reference internal" href="#ell.Config.override_wrapped_logging_width"><code class="docutils literal notranslate"><span class="pre">Config.override_wrapped_logging_width</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.providers'" class="reference internal" href="#ell.Config.providers"><code class="docutils literal notranslate"><span class="pre">Config.providers</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.registry'" class="reference internal" href="#ell.Config.registry"><code class="docutils literal notranslate"><span class="pre">Config.registry</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.store'" class="reference internal" href="#ell.Config.store"><code class="docutils literal notranslate"><span class="pre">Config.store</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.verbose'" class="reference internal" href="#ell.Config.verbose"><code class="docutils literal notranslate"><span class="pre">Config.verbose</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.wrapped_logging'" class="reference internal" href="#ell.Config.wrapped_logging"><code class="docutils literal notranslate"><span class="pre">Config.wrapped_logging</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.get_client_for'" class="reference internal" href="#ell.Config.get_client_for"><code class="docutils literal notranslate"><span class="pre">Config.get_client_for()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.get_provider_for'" class="reference internal" href="#ell.Config.get_provider_for"><code class="docutils literal notranslate"><span class="pre">Config.get_provider_for()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.model_registry_override'" class="reference internal" href="#ell.Config.model_registry_override"><code class="docutils literal notranslate"><span class="pre">Config.model_registry_override()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.register_model'" class="reference internal" href="#ell.Config.register_model"><code class="docutils literal notranslate"><span class="pre">Config.register_model()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Config.register_provider'" class="reference internal" href="#ell.Config.register_provider"><code class="docutils literal notranslate"><span class="pre">Config.register_provider()</span></code></a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#ell.ContentBlock'" class="reference internal" href="#ell.ContentBlock"><code class="docutils literal notranslate"><span class="pre">ContentBlock</span></code></a><ul>
+<li><a :data-current="activeSection === '#ell.ContentBlock.audio'" class="reference internal" href="#ell.ContentBlock.audio"><code class="docutils literal notranslate"><span class="pre">ContentBlock.audio</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.ContentBlock.image'" class="reference internal" href="#ell.ContentBlock.image"><code class="docutils literal notranslate"><span class="pre">ContentBlock.image</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.ContentBlock.parsed'" class="reference internal" href="#ell.ContentBlock.parsed"><code class="docutils literal notranslate"><span class="pre">ContentBlock.parsed</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.ContentBlock.text'" class="reference internal" href="#ell.ContentBlock.text"><code class="docutils literal notranslate"><span class="pre">ContentBlock.text</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.ContentBlock.tool_call'" class="reference internal" href="#ell.ContentBlock.tool_call"><code class="docutils literal notranslate"><span class="pre">ContentBlock.tool_call</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.ContentBlock.tool_result'" class="reference internal" href="#ell.ContentBlock.tool_result"><code class="docutils literal notranslate"><span class="pre">ContentBlock.tool_result</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.ContentBlock.check_single_non_null'" class="reference internal" href="#ell.ContentBlock.check_single_non_null"><code class="docutils literal notranslate"><span class="pre">ContentBlock.check_single_non_null</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.ContentBlock.coerce'" class="reference internal" href="#ell.ContentBlock.coerce"><code class="docutils literal notranslate"><span class="pre">ContentBlock.coerce()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.ContentBlock.serialize_parsed'" class="reference internal" href="#ell.ContentBlock.serialize_parsed"><code class="docutils literal notranslate"><span class="pre">ContentBlock.serialize_parsed()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.ContentBlock.content'" class="reference internal" href="#ell.ContentBlock.content"><code class="docutils literal notranslate"><span class="pre">ContentBlock.content</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.ContentBlock.type'" class="reference internal" href="#ell.ContentBlock.type"><code class="docutils literal notranslate"><span class="pre">ContentBlock.type</span></code></a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#ell.Message'" class="reference internal" href="#ell.Message"><code class="docutils literal notranslate"><span class="pre">Message</span></code></a><ul>
+<li><a :data-current="activeSection === '#ell.Message.content'" class="reference internal" href="#ell.Message.content"><code class="docutils literal notranslate"><span class="pre">Message.content</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Message.role'" class="reference internal" href="#ell.Message.role"><code class="docutils literal notranslate"><span class="pre">Message.role</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Message.call_tools_and_collect_as_message'" class="reference internal" href="#ell.Message.call_tools_and_collect_as_message"><code class="docutils literal notranslate"><span class="pre">Message.call_tools_and_collect_as_message()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Message.model_validate'" class="reference internal" href="#ell.Message.model_validate"><code class="docutils literal notranslate"><span class="pre">Message.model_validate()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Message.model_validate_json'" class="reference internal" href="#ell.Message.model_validate_json"><code class="docutils literal notranslate"><span class="pre">Message.model_validate_json()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Message.serialize_content'" class="reference internal" href="#ell.Message.serialize_content"><code class="docutils literal notranslate"><span class="pre">Message.serialize_content()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Message.audios'" class="reference internal" href="#ell.Message.audios"><code class="docutils literal notranslate"><span class="pre">Message.audios</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Message.images'" class="reference internal" href="#ell.Message.images"><code class="docutils literal notranslate"><span class="pre">Message.images</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Message.parsed'" class="reference internal" href="#ell.Message.parsed"><code class="docutils literal notranslate"><span class="pre">Message.parsed</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Message.text'" class="reference internal" href="#ell.Message.text"><code class="docutils literal notranslate"><span class="pre">Message.text</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Message.text_only'" class="reference internal" href="#ell.Message.text_only"><code class="docutils literal notranslate"><span class="pre">Message.text_only</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Message.tool_calls'" class="reference internal" href="#ell.Message.tool_calls"><code class="docutils literal notranslate"><span class="pre">Message.tool_calls</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.Message.tool_results'" class="reference internal" href="#ell.Message.tool_results"><code class="docutils literal notranslate"><span class="pre">Message.tool_results</span></code></a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#ell.assistant'" class="reference internal" href="#ell.assistant"><code class="docutils literal notranslate"><span class="pre">assistant()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.complex'" class="reference internal" href="#ell.complex"><code class="docutils literal notranslate"><span class="pre">complex()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.get_store'" class="reference internal" href="#ell.get_store"><code class="docutils literal notranslate"><span class="pre">get_store()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.init'" class="reference internal" href="#ell.init"><code class="docutils literal notranslate"><span class="pre">init()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.register_provider'" class="reference internal" href="#ell.register_provider"><code class="docutils literal notranslate"><span class="pre">register_provider()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.set_store'" class="reference internal" href="#ell.set_store"><code class="docutils literal notranslate"><span class="pre">set_store()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.simple'" class="reference internal" href="#ell.simple"><code class="docutils literal notranslate"><span class="pre">simple()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.system'" class="reference internal" href="#ell.system"><code class="docutils literal notranslate"><span class="pre">system()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.tool'" class="reference internal" href="#ell.tool"><code class="docutils literal notranslate"><span class="pre">tool()</span></code></a></li>
+<li><a :data-current="activeSection === '#ell.user'" class="reference internal" href="#ell.user"><code class="docutils literal notranslate"><span class="pre">user()</span></code></a></li>
+</ul>
+</div>
+</aside>
 </main>
 </div>
 </div><footer class="py-6 border-t border-border md:py-0">

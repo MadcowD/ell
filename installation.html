@@ -353,13 +353,10 @@ nav a {
 <h2>Installing ell<a class="headerlink" href="#installing-ell" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#installing-ell'">¶</a></h2>
 <ol class="arabic">
 <li><p>Install using pip:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>all<span class="o">]</span>
 </span></code></pre></div>
 </div>
-<p>By default, this installs only the OpenAI client SDK. If you want to include the Anthropic client SDK, use the “anthropic” extra like so:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span><span class="s1">'ell-ai[anthropic]'</span>
-</span></code></pre></div>
-</div>
+<p>This installs <code class="docutils literal notranslate"><span class="pre">ell</span></code>, <code class="docutils literal notranslate"><span class="pre">ell-studio</span></code>, versioning and tracing with SQLite, and the default provider clients.</p>
 </li>
 <li><p>Verify installation:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import ell; print(ell.__version__)"</span>
@@ -367,6 +364,59 @@ nav a {
 </div>
 </li>
 </ol>
+</section>
+<section id="custom-installation">
+<h2>Custom Installation<a class="headerlink" href="#custom-installation" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#custom-installation'">¶</a></h2>
+<p>You can create a custom <code class="docutils literal notranslate"><span class="pre">ell</span></code> installation with the following options.</p>
+<p>Install <code class="docutils literal notranslate"><span class="pre">ell</span></code> without storage or <code class="docutils literal notranslate"><span class="pre">ell-studio</span></code> and with the default OpenAI client:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai
+</span></code></pre></div>
+</div>
+<p>Supported options:</p>
+<section id="anthropic">
+<h3><code class="docutils literal notranslate"><span class="pre">anthropic</span></code><a class="headerlink" href="#anthropic" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#anthropic'">¶</a></h3>
+<p>Adds the Anthropic client.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>anthropic<span class="o">]</span>
+</span></code></pre></div>
+</div>
+</section>
+<section id="groq">
+<h3><code class="docutils literal notranslate"><span class="pre">groq</span></code><a class="headerlink" href="#groq" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#groq'">¶</a></h3>
+<p>Adds the Groq client.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>groq<span class="o">]</span>
+</span></code></pre></div>
+</div>
+</section>
+<section id="studio">
+<h3><code class="docutils literal notranslate"><span class="pre">studio</span></code><a class="headerlink" href="#studio" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#studio'">¶</a></h3>
+<p>Adds <code class="docutils literal notranslate"><span class="pre">ell-studio</span></code>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>studio<span class="o">]</span>
+</span></code></pre></div>
+</div>
+</section>
+<section id="sqlite">
+<h3><code class="docutils literal notranslate"><span class="pre">sqlite</span></code><a class="headerlink" href="#sqlite" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#sqlite'">¶</a></h3>
+<p>SQLite storage for versioning and tracing.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>sqlite<span class="o">]</span>
+</span></code></pre></div>
+</div>
+</section>
+<section id="postgres">
+<h3><code class="docutils literal notranslate"><span class="pre">postgres</span></code><a class="headerlink" href="#postgres" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#postgres'">¶</a></h3>
+<p>Postgres storage for versioning and tracing.</p>
+<p>Include this option if you’d like to use <code class="docutils literal notranslate"><span class="pre">ell-studio</span></code> with Postgres.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>postgres<span class="o">]</span>
+</span></code></pre></div>
+</div>
+</section>
+<section id="combining-options">
+<h3>Combining options<a class="headerlink" href="#combining-options" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#combining-options'">¶</a></h3>
+<p>All options are additive and can be combined as needed.</p>
+<p>Example: Install <code class="docutils literal notranslate"><span class="pre">ell</span></code> with <code class="docutils literal notranslate"><span class="pre">ell-studio</span></code>, Postgres, and the Anthropic client:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>studio,<span class="w"> </span>postgres,<span class="w"> </span>anthropic<span class="o">]</span>
+</span></code></pre></div>
+</div>
+</section>
 </section>
 <section id="api-key-setup">
 <h2>API Key Setup<a class="headerlink" href="#api-key-setup" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#api-key-setup'">¶</a></h2>
@@ -459,6 +509,15 @@ nav a {
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
 <li><a :data-current="activeSection === '#installing-ell'" class="reference internal" href="#installing-ell">Installing ell</a></li>
+<li><a :data-current="activeSection === '#custom-installation'" class="reference internal" href="#custom-installation">Custom Installation</a><ul>
+<li><a :data-current="activeSection === '#anthropic'" class="reference internal" href="#anthropic"><code class="docutils literal notranslate"><span class="pre">anthropic</span></code></a></li>
+<li><a :data-current="activeSection === '#groq'" class="reference internal" href="#groq"><code class="docutils literal notranslate"><span class="pre">groq</span></code></a></li>
+<li><a :data-current="activeSection === '#studio'" class="reference internal" href="#studio"><code class="docutils literal notranslate"><span class="pre">studio</span></code></a></li>
+<li><a :data-current="activeSection === '#sqlite'" class="reference internal" href="#sqlite"><code class="docutils literal notranslate"><span class="pre">sqlite</span></code></a></li>
+<li><a :data-current="activeSection === '#postgres'" class="reference internal" href="#postgres"><code class="docutils literal notranslate"><span class="pre">postgres</span></code></a></li>
+<li><a :data-current="activeSection === '#combining-options'" class="reference internal" href="#combining-options">Combining options</a></li>
+</ul>
+</li>
 <li><a :data-current="activeSection === '#api-key-setup'" class="reference internal" href="#api-key-setup">API Key Setup</a><ul>
 <li><a :data-current="activeSection === '#openai-api-key'" class="reference internal" href="#openai-api-key">OpenAI API Key</a></li>
 <li><a :data-current="activeSection === '#anthropic-api-key'" class="reference internal" href="#anthropic-api-key">Anthropic API Key</a></li>

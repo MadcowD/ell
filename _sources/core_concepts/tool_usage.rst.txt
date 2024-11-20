@@ -271,7 +271,7 @@ This is accomplished by a language model program that takes the source code of a
 
 .. code-block:: python
 
-    @ell.simple(model="claude-3-5-sonnet", temperature=0.0)
+    @ell.simple(model="claude-3-5-sonnet-20241022", temperature=0.0)
     def generate_tool_spec(tool_source: str):
         '''
         You are a helpful assistant that takes in source code for a python function and produces a JSON schema for the function.
