@@ -59,6 +59,14 @@ def register(client: openai.Client):
         'gpt-4o-mini-2024-07-18',
         'gpt-4o-mini',
         'gpt-4o-2024-08-06',
+        'gpt-4o-2024-11-20',
+        'chatgpt-4o-latest',
+        'gpt-4o-realtime-preview',
+        'gpt-4o-realtime-preview-2024-10-01',
+        'gpt-4o-audio-preview',
+        'gpt-4o-audio-preview-2024-10-01',
+        'o1-preview-2024-09-12',
+        'o1-mini-2024-09-12',
         'gpt-3.5-turbo-0301',
         'gpt-3.5-turbo-0613',
         'tts-1',
@@ -82,8 +90,8 @@ def register(client: openai.Client):
         config.register_model(model_id, client)
 
     #XXX: Deprecation in 0.1.0
-    config.register_model('o1-preview', client, supports_streaming=False)
-    config.register_model('o1-mini', client, supports_streaming=False)
+    config.register_model('o1-preview', client, supports_streaming=True)
+    config.register_model('o1-mini', client, supports_streaming=True)
 
 default_client = None
 try:
