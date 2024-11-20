@@ -17,7 +17,7 @@ from ell.api.config import Config
 from ell.api.logger import setup_logging
 from ell.types import ToolCall
 from ell.types.serialize import WriteInvocationInput, utc_now, Invocation, InvocationContents
-from ell.stores.studio import SerializedLMP
+from ell.stores.models import SerializedLMP
 from ell.types.lmp import LMPType
 from ell.types.serialize import WriteLMPInput
 

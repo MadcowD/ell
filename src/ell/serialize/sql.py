@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any
 
 from ell.stores.store import Store
-from ell.stores.studio import Invocation, SerializedLMP
+from ell.stores.models import Invocation, SerializedLMP
 from ell.types.serialize import LMP, WriteLMPInput, WriteInvocationInput
 from ell.serialize.protocol import EllSerializer, EllAsyncSerializer
 
