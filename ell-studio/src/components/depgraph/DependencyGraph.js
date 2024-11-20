@@ -17,13 +17,15 @@ import ReactFlow, {
 } from "reactflow";
 import { getBezierPath } from 'reactflow';
 import { Link } from "react-router-dom";
-import { LMPCardTitle } from "./LMPCardTitle"; // Add this import
-import { Card } from "../Card";
+import { LMPCardTitle } from "./LMPCardTitle";
+import { OldCard } from "../OldCard";
+import EvaluationCard from "../evaluations/EvaluationCard"; // Update this import
 import "reactflow/dist/style.css";
 import { ZoomIn, ZoomOut, Lock, Maximize, Unlock } from 'lucide-react';
 import { Button } from "components/common/Button";
 
-import { useLayoutedElements, getInitialGraph } from "./graphUtils";
+import { getInitialGraph } from "./graphUtils";
+import { useLayoutedElements } from "./layoutUtils";
 
 
 function LMPNode({ data }) {
@@ -32,13 +34,28 @@ function LMPNode({ data }) {
 
   return (
     <>
-      <Handle type="source" position={Position.Top} />
-      <Card  key={lmp.lmp_id}>
+      <Handle type="source" position={Position.Bottom} id="uses" />
+      <OldCard  key={lmp.lmp_id}>
         <Link to={`/lmp/${lmp.name}`}>
           <LMPCardTitle displayVersion lmp={lmp} fontSize="sm" />
         </Link>
-      </Card>
-      <Handle type="target" position={Position.Bottom} id="a" />
+      </OldCard>
+      <Handle type="target" position={Position.Top} id="usedby" />
+      <Handle type="target" position={Position.Left} id="inputs" />
+      <Handle type="source" position={Position.Right} id="outputs" />
+    </>
+  );
+}
+function EvalNode({ data }) {
+  const { evaluation } = data;
+
+  return (
+    <>
+      <Handle type="source" position={Position.Bottom} id="uses" />
+      <div className="w-[400px]"> {/* Adjust the width as needed */}
+        <EvaluationCard evaluation={evaluation} isGraphMode={true} />
+      </div>
+      <Handle type="target" position={Position.Top} id="usedby" />
       <Handle type="target" position={Position.Left} id="inputs" />
       <Handle type="source" position={Position.Right} id="outputs" />
     </>
@@ -56,18 +73,21 @@ const LayoutFlow = ({ initialNodes, initialEdges }) => {
   useEffect(() => {
     if (initialised && !didInitialSimulation) {
       setDidInitialSimulation(true);
-      toggle();
+      // toggle();
 
     fitView({ duration: 500, padding: 0.1 });
       setTimeout(() => {
-        toggle();
+        // toggle();
         // Fit view after the simulation has run
         fitView({ duration: 500, padding: 0.1 });
       }, 1000);
     }
   }, [initialised, didInitialSimulation, toggle, fitView]);
 
-  const nodeTypes = useMemo(() => ({ lmp: LMPNode }), []);
+  const nodeTypes = useMemo(() => ({ 
+    lmp: LMPNode,
+    evaluation: EvalNode // Add the new EvalNode type
+  }), []);
 
   return (
     <div className="h-full relative">
@@ -119,11 +139,11 @@ function CustomControls() {
   );
 }
 
-export function DependencyGraph({ lmps, traces, ...rest }) {
+export function DependencyGraph({ lmps, traces, evals, ...rest }) {
   // construct ndoes from LMPS
   const { initialEdges, initialNodes } = useMemo(
-    () => getInitialGraph(lmps, traces),
-    [lmps, traces]
+    () => getInitialGraph(lmps, traces, evals),
+    [lmps, traces, evals]
   );
 
   return (

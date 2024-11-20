@@ -38,6 +38,9 @@ export const useWebSocketConnection = () => {
         queryClient.invalidateQueries({ queryKey: ["latestLMPs"] });
         queryClient.invalidateQueries({ queryKey: ["invocations"] });
         queryClient.invalidateQueries({ queryKey: ["lmpDetails"] });
+        queryClient.invalidateQueries({ queryKey: ["evaluations"] });
+        queryClient.invalidateQueries({ queryKey: ["latestEvaluations"] });
+        queryClient.invalidateQueries({ queryKey: ["evaluation"] });
         console.log("Database updated, invalidating queries");
       }
     };
@@ -230,5 +233,94 @@ export const useBlob = (id) => {
     queryKey: ["blob", id],
     queryFn: () => fetchBlob(id),
     enabled: !!id,
+  });
+};
+
+
+
+export const useEvaluations = (page = 0, pageSize = 100) => {
+  return useQuery({
+    queryKey: ["evaluations", page, pageSize],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/api/evaluations?skip=${page * pageSize}&limit=${pageSize}`);
+      return response.data;
+    },
+  });
+};
+
+
+export const useLatestEvaluations = (page = 0, pageSize = 100) => {
+  return useQuery({
+    queryKey: ["latestEvaluations", page, pageSize],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/api/latest/evaluations?skip=${page * pageSize}&limit=${pageSize}`);
+      return response.data;
+    },
+  });
+};
+
+export const useEvaluation = (id) => {
+  return useQuery({
+    queryKey: ["evaluation", id],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/api/evaluation/${id}`);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+};
+
+export const useEvaluationRuns = (evaluationId, page = 0, pageSize = 10) => {
+  return useQuery({
+    queryKey: ["evaluationRuns", evaluationId, page, pageSize],
+    queryFn: async () => {
+      const skip = page * pageSize;
+      const response = await axios.get(`${API_BASE_URL}/api/evaluations/${evaluationId}/runs?skip=${skip}&limit=${pageSize}`);
+      return response.data;
+    },
+    enabled: !!evaluationId,
+  });
+};
+
+export const useEvaluationRun = (id) => {
+  return useQuery({
+    queryKey: ["evaluationRun", id],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/api/evaluation-runs/${id}`);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+};
+
+export const useEvaluationRunResults = (runId, page = 0, pageSize = 100, filters = null) => {
+  return useQuery({
+    queryKey: ["evaluationRunResults", runId, page, pageSize, filters],
+    queryFn: async () => {
+      const skip = page * pageSize;
+      const params = new URLSearchParams({
+        skip: skip.toString(),
+        limit: pageSize.toString(),
+      });
+      if (filters) {
+        params.append('filters', JSON.stringify(filters));
+      }
+      const response = await axios.get(
+        `${API_BASE_URL}/api/evaluation-runs/${runId}/results?${params}`
+      );
+      return response.data;
+    },
+    enabled: !!runId,
+  });
+};
+
+export const useDataset = (datasetId) => {
+  return useQuery({
+    queryKey: ["dataset", datasetId],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/api/dataset/${datasetId}`);
+      return response.data;
+    },
+    enabled: !!datasetId,
   });
 };

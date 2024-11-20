@@ -1,6 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from sqlmodel import Session
 
@@ -13,12 +13,13 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 import json
 from ell.studio.config import Config
-from ell.studio.datamodels import InvocationPublicWithConsumes, SerializedLMPWithUses
+from ell.studio.datamodels import EvaluationResultDatapointPublic, InvocationPublicWithConsumes, SerializedLMPWithUses, EvaluationPublic, SpecificEvaluationRunPublic
 
-from ell.stores.studio import SerializedLMP
+from ell.stores.models.core import SerializedLMP
 from datetime import datetime, timedelta
 from sqlmodel import select
 from contextlib import AsyncExitStack
+from ell.stores.models.evaluations import SerializedEvaluation
 
 
 from ell.api.pubsub.abc import PubSub
@@ -92,7 +93,7 @@ def create_app(config:Config):
                     await pubsub_task
                 except asyncio.CancelledError:
                     pass
-        
+
             await exit_stack.aclose()
             pubsub = None
 
@@ -286,4 +287,129 @@ def create_app(config:Config):
     
     
     
+    @app.get("/api/evaluations", response_model=List[EvaluationPublic])
+    def get_evaluations(
+        evaluation_id: Optional[str] = Query(None),
+        lmp_id: Optional[str] = Query(None),
+        skip: int = Query(0, ge=0),
+        limit: int = Query(100, ge=1, le=100),
+        session: Session = Depends(get_session)
+    ):
+        filters: Dict[str, Any] = {}
+        if evaluation_id:
+            filters['id'] = evaluation_id
+        if lmp_id:
+            filters['lmp_id'] = lmp_id
+
+        evaluations = serializer.get_evaluations(
+            session,
+            filters=filters,
+            skip=skip,
+            limit=limit
+        )
+
+
+        return evaluations
+
+    @app.get("/api/latest/evaluations", response_model=List[EvaluationPublic])
+    def get_latest_evaluations(
+        skip: int = Query(0, ge=0),
+        limit: int = Query(100, ge=1, le=100),
+        session: Session = Depends(get_session)
+    ):
+        evaluations = serializer.get_latest_evaluations(
+            session,
+            skip=skip,
+            limit=limit
+        )
+
+        return evaluations
+
+    @app.get("/api/evaluation/{evaluation_id}", response_model=EvaluationPublic)
+    def get_evaluation(
+        evaluation_id: str,
+        session: Session = Depends(get_session)
+    ):
+        evaluation = serializer.get_evaluations(session, filters={"id": evaluation_id})
+        if not evaluation:
+            raise HTTPException(status_code=404, detail="Evaluation not found")
+        return evaluation[0]
+
+
+
+    @app.get("/api/evaluation-runs/{run_id}", response_model=SpecificEvaluationRunPublic)
+    def get_evaluation_run(
+        run_id: str,
+        session: Session = Depends(get_session)
+    ):
+        runs = serializer.get_evaluation_run(session, run_id)
+        return runs
+
+    @app.get("/api/evaluation-runs/{run_id}/results", response_model=List[EvaluationResultDatapointPublic])
+    def get_evaluation_run_results(
+        run_id: str,
+        skip: int = Query(0, ge=0),
+        limit: int = Query(100, ge=1, le=100),
+        session: Session = Depends(get_session)
+    ):
+        results = serializer.get_evaluation_run_results(
+            session,
+            run_id,
+            skip=skip,
+            limit=limit,
+        )
+        return results
+
+    @app.get("/api/all-evaluations", response_model=List[EvaluationPublic])
+    def get_all_evaluations(
+        skip: int = Query(0, ge=0),
+        limit: int = Query(100, ge=1, le=100),
+        session: Session = Depends(get_session)
+    ):
+        # Get all evaluations ordered by creation date, without deduplication
+        query = (
+            select(SerializedEvaluation)
+            .order_by(SerializedEvaluation.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+        results = session.exec(query).all()
+        return list(results)
+
+    @app.get("/api/dataset/{dataset_id}")
+    def get_dataset(
+        dataset_id: str,
+        session: Session = Depends(get_session)
+    ):
+        if not serializer.blob_store:
+            raise HTTPException(status_code=400, detail="Blob storage not configured")
+
+        try:
+            # Get the blob data
+            blob_data = serializer.blob_store.retrieve_blob(dataset_id)
+
+
+            # Check if size is under 5MB
+            if len(blob_data) > 5 * 1024 * 1024:  # 5MB in bytes
+                raise HTTPException(
+                    status_code=413,
+                    detail="Dataset too large to preview (>5MB)"
+                )
+
+            # Decode and parse JSON
+            dataset_json = json.loads(blob_data.decode('utf-8'))
+
+            return {
+                "size": len(blob_data),
+                "data": dataset_json
+            }
+
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="Dataset not found")
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Invalid JSON data")
+        except Exception as e:
+            logger.error(f"Error retrieving dataset: {str(e)}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+
     return app

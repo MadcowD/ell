@@ -68,8 +68,8 @@ const SmoothLine = ({ index, startX, startY, endX: endXPreprocess, special, endY
 
 
 
-const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWidth, rowClassName, setRowRef, links, linkColumn }) => {
-  const { expandedRows, selectedRows, toggleRow, toggleSelection, isItemSelected, setHoveredRow, sortedData } = useHierarchicalTable();
+const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWidth, rowClassName, setRowRef, links, linkColumn, showHierarchical, statusColumn }) => {
+  const { expandedRows, selectedRows, toggleRow, toggleSelection, isItemSelected, setHoveredRow, sortedData, hoveredRow } = useHierarchicalTable();
   const hasChildren = item.children && item.children.length > 0;
   const isExpanded = expandedRows[item.id];
   const isSelected = isItemSelected(item);
@@ -132,7 +132,7 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
           ${customRowClassName}
           ${isNew ? 'animate-fade-in bg-green-900/30' : ''}`}
         onClick={() => {
-          if (onRowClick) onRowClick(item);
+          if (onRowClick) onRowClick(item, toggleRow);
         }}
         onMouseEnter={() => setHoveredRow(item.id)}
         onMouseLeave={() => setHoveredRow(null)}
@@ -144,19 +144,26 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
             onClick={(e) => e.stopPropagation()}
           />
         </td>
-        <td className="py-3 px-4 w-12 relative" style={{ paddingLeft: `${level * 20 + 16}px` }}>
-          <div className="flex items-center">
-            {hasChildren && (
-              <span onClick={(e) => { e.stopPropagation(); toggleRow(item.id); }} 
-              >
-                {isExpanded ? <FiChevronDown className="text-gray-400 text-base" /> : <FiChevronRight className="text-gray-400 text-base" />}
-              </span>
-            )}
-          </div>
-        
+        <td className={`py-3 ${showHierarchical ? 'px-4 w-12' : 'px-2 w-8'} relative`}>
+          {showHierarchical ? (
+            <div className="flex items-center" style={{ paddingLeft: `${level * 20}px` }}>
+              {hasChildren && (
+                <span onClick={(e) => { e.stopPropagation(); toggleRow(item.id); }}>
+                  {isExpanded ? <FiChevronDown className="text-gray-400 text-base" /> : <FiChevronRight className="text-gray-400 text-base" />}
+                </span>
+              )}
+            </div>
+          ) : statusColumn?.render ? (
+            <div className="flex justify-center">
+              {statusColumn.render(item)}
+            </div>
+          ) : null}
         </td>
         {schema.columns.map((column, index) => {
-          const content = column.render ? column.render(item) : item[column.key];
+          const content = column.render ? column.render(item, index, { 
+            expanded: isExpanded,
+            isHovered: hoveredRow === item.id 
+          }) : item[column.key];
           const maxWidth = column.maxWidth || Infinity;
           return (
             <React.Fragment key={index}>
@@ -184,13 +191,13 @@ const TableRow = ({ item, schema, level = 0, onRowClick, columnWidths, updateWid
         })}
       </tr>
       {hasChildren && isExpanded && item.children.map(child => (
-        <TableRow key={child.id} item={child} schema={schema} level={level + 1} onRowClick={onRowClick} columnWidths={columnWidths} updateWidth={updateWidth} rowClassName={rowClassName} setRowRef={setRowRef} links={links} linkColumn={linkColumn} />
+        <TableRow key={child.id} item={child} schema={schema} level={level + 1} onRowClick={onRowClick} columnWidths={columnWidths} updateWidth={updateWidth} rowClassName={rowClassName} setRowRef={setRowRef} links={links} linkColumn={linkColumn} showHierarchical={showHierarchical} statusColumn={statusColumn} />
       ))}
     </React.Fragment>
   );
 };
 
-const TableHeader = ({ schema, columnWidths, updateWidth }) => {
+const TableHeader = ({ schema, columnWidths, updateWidth, showHierarchical, statusColumn }) => {
   const { isAllSelected, toggleAllSelection, sortConfig, onSort } = useHierarchicalTable();
 
   return (
@@ -202,8 +209,12 @@ const TableHeader = ({ schema, columnWidths, updateWidth }) => {
             onCheckedChange={(checked) => toggleAllSelection(checked)}
           />
         </th>
-        <th className="py-2 px-4 w-12">
-          <FiChevronRight className="text-gray-400 text-base" />
+        <th className={`py-2 ${showHierarchical ? 'px-4 w-12' : 'px-2 w-8'}`}>
+          {showHierarchical ? (
+            <FiChevronRight className="text-gray-400 text-base" />
+          ) : (
+            statusColumn?.header || ''
+          )}
         </th>
         {schema.columns.map((column, index) => {
           const maxWidth = column.maxWidth || Infinity;
@@ -233,12 +244,11 @@ const TableHeader = ({ schema, columnWidths, updateWidth }) => {
   );
 };
 
-const TableBody = ({ schema, onRowClick, columnWidths, updateWidth, rowClassName, setRowRef, links, linkColumn }) => {
+const TableBody = ({ schema, onRowClick, columnWidths, updateWidth, rowClassName, setRowRef, links, linkColumn, showHierarchical, statusColumn }) => {
   const { sortedData } = useHierarchicalTable();
   const [, forceUpdate] = useState({});
 
   useEffect(() => {
-    // Force a re-render to trigger position updates
     forceUpdate({});
   }, [sortedData]);
 
@@ -256,6 +266,8 @@ const TableBody = ({ schema, onRowClick, columnWidths, updateWidth, rowClassName
           setRowRef={setRowRef}
           links={links}
           linkColumn={linkColumn}
+          showHierarchical={showHierarchical}
+          statusColumn={statusColumn}
         />
       ))}
     </tbody>
@@ -312,7 +324,26 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, pageSize, t
   );
 };
 
-const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initialSortConfig, rowClassName, currentPage, onPageChange, pageSize, totalItems, omitColumns, expandAll, links, expandedLinkColumn, collapsedLinkColumn }) => {
+const HierarchicalTable = ({ 
+  schema, 
+  data, 
+  onRowClick, 
+  onSelectionChange, 
+  initialSortConfig, 
+  rowClassName, 
+  currentPage, 
+  onPageChange, 
+  pageSize, 
+  totalItems, 
+  omitColumns, 
+  expandAll, 
+  links, 
+  expandedLinkColumn, 
+  collapsedLinkColumn, 
+  showHierarchical = true, 
+  statusColumn = null,
+  hierarchicalSort = false
+}) => {
   const [columnWidths, setColumnWidths] = useState({});
   const [isExpanded, setIsExpanded] = useState(false);
   const [rowRefs, setRowRefs] = useState({});
@@ -372,17 +403,21 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
   return (
     <HierarchicalTableProvider 
       data={data} 
+      schema={schema} 
       onSelectionChange={onSelectionChange}
       initialSortConfig={initialSortConfig}
       setIsExpanded={setIsExpanded}
       expandAll={expandAll}
+      hierarchicalSort={hierarchicalSort}
     >
       <div className="overflow-x-auto hide-scrollbar relative" ref={tableRef}>
         <table className="w-full">
           <TableHeader 
             schema={filteredSchema} 
             columnWidths={columnWidths} 
-            updateWidth={updateWidth} 
+            updateWidth={updateWidth}
+            showHierarchical={showHierarchical}
+            statusColumn={statusColumn}
           />
           <TableBody 
             schema={filteredSchema} 
@@ -393,10 +428,11 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
             setRowRef={setRowRef}
             links={links}
             linkColumn={linkColumn}
+            showHierarchical={showHierarchical}
+            statusColumn={statusColumn}
           />
         </table>
-        
-        {/* Update SVG rendering for direct lines */}
+        { links && 
         <svg
           className="absolute top-0 left-0 w-full h-full pointer-events-none"
           style={{ overflow: 'visible' }}
@@ -405,8 +441,9 @@ const HierarchicalTable = ({ schema, data, onRowClick, onSelectionChange, initia
             links={links} 
             rowRefs={rowRefs} 
             tableOffset={tableOffset}
-          />
-        </svg>
+            />
+          </svg>
+        }
       </div>
       {onPageChange && (
         <PaginationControls

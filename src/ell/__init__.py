@@ -6,6 +6,7 @@ and intuitive interface for working with large language models.
 from ell.lmp import simple, tool, complex
 from ell.types import system, user, assistant, Message, ContentBlock
 from ell.__version__ import __version__
+from ell.evaluation import Evaluation
 
 # Import all providers
 from ell import providers

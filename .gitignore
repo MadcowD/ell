@@ -312,5 +312,7 @@ dist
 static/
 *.db-shm
 *.db-wal
+
+logdir/
 .aider*
 examples/logdir

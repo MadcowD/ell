@@ -1,0 +1,23 @@
+THIS MODULE WILL BE DEPRECATED WE ARE MOVING TO LOCAL UTIL MODULES
+```
+project/
+│
+├── module1/
+│   ├── __init__.py
+│   ├── core.py
+│   └── util.py
+│
+├── module2/
+│   ├── __init__.py
+│   ├── main.py
+│   └── util.py
+│
+├── module3/
+│   ├── __init__.py
+│   ├── handler.py
+│   └── util.py
+│
+└── common/
+    ├── __init__.py
+    └── util.py
+```

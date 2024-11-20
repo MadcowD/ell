@@ -52,7 +52,7 @@ const preprocessData = (data, currentLevel = 0, typeMatchLevel = 0) => {
 };
 
 const renderInline = (data, customRenderers) => {
-  if (data.__lstr) {
+  if (data?.__lstr) {
     data = data.content;
   }
 
@@ -166,7 +166,7 @@ const renderNdarray = (data) => {
 };
 
 const renderNonInline = (data, customRenderers, level = 0, isArrayItem = false, postfix = '') => {
-  if (data.__lstr) {
+  if (data?.__lstr) {
     data = data.content;
   }
 
@@ -298,7 +298,9 @@ const Indent = ({ children }) => (
 );
 
 const IORenderer = ({ content : content_obj, customRenderers = [], inline = true, typeMatchLevel = 0 }) => {
+  
   const content =  JSON.stringify(content_obj)
+  console.log(content);
   try {
     const parsedContent = JSON.parse(content);
     const preprocessedContent = preprocessData(parsedContent, 0, typeMatchLevel);
@@ -307,7 +309,9 @@ const IORenderer = ({ content : content_obj, customRenderers = [], inline = true
         {inline ? renderInline(preprocessedContent, customRenderers) : renderNonInline(preprocessedContent, customRenderers)}
       </div>
     );
-  } catch {
+  } catch (e) {
+  
+    console.error(e);
     return <span className="text-sm text-gray-300">{content}</span>;
   }
 };

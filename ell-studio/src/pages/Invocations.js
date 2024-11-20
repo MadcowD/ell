@@ -52,8 +52,13 @@ const Invocations = () => {
   };
 
   const handleSelectTrace = (trace) => {
-    setSelectedTrace(trace);
-    navigate(`?i=${trace.id}`);
+    if(trace) {
+      setSelectedTrace(trace);
+      navigate(`?i=${trace.id}`);
+    } else{
+      setSelectedTrace(null);
+      navigate(``);
+    }
   };
 
   const filteredInvocations = useMemo(() => {
