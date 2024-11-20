@@ -33,18 +33,57 @@ class _Model:
 
 
 class Config(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    registry: Dict[str, _Model] = Field(default_factory=dict, description="A dictionary mapping model names to their configurations.")
-    verbose: bool = Field(default=False, description="If True, enables verbose logging.")
-    wrapped_logging: bool = Field(default=True, description="If True, enables wrapped logging for better readability.")
-    override_wrapped_logging_width: Optional[int] = Field(default=None, description="If set, overrides the default width for wrapped logging.")
-    store: Optional[Store] = Field(default=None, description="An optional Store instance for persistence.")
-    autocommit: bool = Field(default=False, description="If True, enables automatic committing of changes to the store.")
-    lazy_versioning: bool = Field(default=True, description="If True, enables lazy versioning for improved performance.")
-    default_api_params: Dict[str, Any] = Field(default_factory=dict, description="Default parameters for language models.")
-    default_client: Optional[openai.Client] = Field(default=None, description="The default OpenAI client used when a specific model client is not found.")
-    autocommit_model: str = Field(default="gpt-4o-mini", description="When set, changes the default autocommit model from GPT 4o mini.")
-    providers: Dict[Type, Provider] = Field(default_factory=dict, description="A dictionary mapping client types to provider classes.")
+    """Configuration class for ELL."""
+    
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        protected_namespaces=('protect_', )  # Override protected namespaces
+    )
+
+    registry: Dict[str, _Model] = Field(
+        default_factory=dict, 
+        description="A dictionary mapping model names to their configurations."
+    )
+    verbose: bool = Field(
+        default=False, 
+        description="If True, enables verbose logging."
+    )
+    wrapped_logging: bool = Field(
+        default=True, 
+        description="If True, enables wrapped logging for better readability."
+    )
+    override_wrapped_logging_width: Optional[int] = Field(
+        default=None, 
+        description="If set, overrides the default width for wrapped logging."
+    )
+    store: Optional[Store] = Field(
+        default=None, 
+        description="An optional Store instance for persistence."
+    )
+    autocommit: bool = Field(
+        default=False, 
+        description="If True, enables automatic committing of changes to the store."
+    )
+    lazy_versioning: bool = Field(
+        default=True, 
+        description="If True, enables lazy versioning for improved performance."
+    )
+    default_api_params: Dict[str, Any] = Field(
+        default_factory=dict, 
+        description="Default parameters for language models."
+    )
+    default_client: Optional[openai.Client] = Field(
+        default=None, 
+        description="The default OpenAI client used when a specific model client is not found."
+    )
+    autocommit_model: str = Field(
+        default="gpt-4o-mini", 
+        description="When set, changes the default autocommit model from GPT 4o mini."
+    )
+    providers: Dict[Type, Provider] = Field(
+        default_factory=dict, 
+        description="A dictionary mapping client types to provider classes."
+    )
     def __init__(self, **data):
         super().__init__(**data)
         self._lock = threading.Lock()
