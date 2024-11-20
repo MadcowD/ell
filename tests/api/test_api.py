@@ -2,18 +2,21 @@ from datetime import timezone
 from logging import DEBUG
 from uuid import uuid4
 import pytest
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
+
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import BaseModel, Field, ValidationError
 
 import ell
 from ell import Message
+from ell.serialize.http import EllHTTPSerializer
 from ell.serialize.sqlite import SQLiteSerializer, AsyncSQLiteSerializer
 from ell.api.server import create_app, get_pubsub, get_serializer
 from ell.api.config import Config
 from ell.api.logger import setup_logging
 from ell.types import ToolCall
-from ell.types.serialize import utc_now, Invocation, InvocationContents
+from ell.types.serialize import WriteInvocationInput, utc_now, Invocation, InvocationContents
 from ell.stores.studio import SerializedLMP
 from ell.types.lmp import LMPType
 from ell.types.serialize import WriteLMPInput
@@ -96,7 +99,7 @@ def test_write_lmp_input():
     assert input2.created_at.tzinfo == timezone.utc
 
 
-def create_test_app(serializer: AsyncSQLiteSerializer):
+def create_test_app(serializer: AsyncSQLiteSerializer) -> Tuple[FastAPI, EllHTTPSerializer, None, Config]:
     setup_logging(DEBUG)
     config = Config(storage_dir=":memory:")
     app = create_app(config)
@@ -112,7 +115,7 @@ def create_test_app(serializer: AsyncSQLiteSerializer):
     app.dependency_overrides[get_pubsub] = get_publisher_override
     app.dependency_overrides[get_serializer] = get_serializer_override
 
-    client = TestClient(app)
+    client = EllHTTPSerializer(client=TestClient(app))
 
     return app, client, publisher, config
 
@@ -120,7 +123,6 @@ def create_test_app(serializer: AsyncSQLiteSerializer):
 def test_write_lmp(async_sqlite_serializer: AsyncSQLiteSerializer):
     _app, client, *_ = create_test_app(async_sqlite_serializer)
 
-    # fime. figure out what's going on with `uses`
     lmp_data: Dict[str, Any] = {
         "lmp_id": uuid4().hex,
         "name": "Test LMP",
@@ -133,28 +135,28 @@ def test_write_lmp(async_sqlite_serializer: AsyncSQLiteSerializer):
         "initial_global_vars": {"global_var1": "value1"},
         "initial_free_vars": {"free_var1": "value2"},
         "commit_message": "Initial commit",
-        "created_at": utc_now().isoformat().replace("+00:00", "Z")
+        "created_at": utc_now().isoformat().replace("+00:00", "Z"),
+        "uses": ['used_lmp_1']
     }
-    # uses: List[str] = {"used_lmp_1": {}, "used_lmp_2": {}},
 
-    response = client.post(
-        "/lmp",
-        json={
-            "lmp": lmp_data,
-            "uses": []
-        }
-    )
+    response = client.client.post("/lmp", json=lmp_data)
+
+    # response = client.write_lmp(
+    #     WriteLMPInput(**lmp_data),
+    # )
 
     assert response.status_code == 200
 
-    lmp = client.get(f"/lmp/{lmp_data['lmp_id']}")
+    lmp = client.client.get(f"/lmp/{lmp_data['lmp_id']}")
     assert lmp.status_code == 200
-    # del lmp_data["uses"]
+    del lmp_data["uses"] # todo. return uses y/n?
     assert lmp.json() == {**lmp_data, "num_invocations": 0}
 
 
 def test_write_invocation(async_sqlite_serializer: AsyncSQLiteSerializer):
     _app, client, *_ = create_test_app(async_sqlite_serializer)
+    # Test basic http client functionality
+    client = client.client
 
     # first write an lmp..
     lmp_id = uuid4().hex
@@ -166,10 +168,9 @@ def test_write_invocation(async_sqlite_serializer: AsyncSQLiteSerializer):
         "lmp_type": LMPType.LM,
         "api_params": {"param1": "value1"},
     }
-    response = client.post(
-        "/lmp",
-        json={'lmp': lmp_data, 'uses': []}
-    )
+
+    response = client.post("/lmp", json=lmp_data)
+
     try:
         assert response.status_code == 200
     except Exception as e:
@@ -262,6 +263,8 @@ def test_invocation_json_round_trip():
 
 def test_write_invocation_tool_call(async_sqlite_serializer: AsyncSQLiteSerializer):
     _app, client, *_ = create_test_app(async_sqlite_serializer)
+    # Test basic http functionality
+    client = client.client
 
     # first write an lmp..
     lmp_id = uuid4().hex
@@ -275,7 +278,7 @@ def test_write_invocation_tool_call(async_sqlite_serializer: AsyncSQLiteSerializ
     }
     response = client.post(
         "/lmp",
-        json={'lmp': lmp_data, 'uses': []}
+        json=lmp_data
     )
     try:
         assert response.status_code == 200
@@ -309,6 +312,55 @@ def test_write_invocation_tool_call(async_sqlite_serializer: AsyncSQLiteSerializ
     )
     print(response.json())
     assert response.status_code == 200
+
+def test_http_client_write_lmp(async_sqlite_serializer: AsyncSQLiteSerializer):
+    _app, client, *_ = create_test_app(async_sqlite_serializer)
+
+    lmp_data: Dict[str, Any] = {
+        "lmp_id": uuid4().hex,
+        "lmp_type": LMPType.LM,
+        "name": "Test LMP",
+        "source": "def test_function(): pass",
+        "dependencies": str(["dep1", "dep2"]),
+    }
+    result = client.write_lmp(WriteLMPInput(
+        lmp_id=lmp_data["lmp_id"],
+        lmp_type=lmp_data["lmp_type"],
+        name=lmp_data["name"],
+        source=lmp_data["source"],
+        dependencies=lmp_data["dependencies"],
+    ))
+    assert result is None
+
+def test_http_client_write_invocation(async_sqlite_serializer: AsyncSQLiteSerializer):
+    _app, client, *_ = create_test_app(async_sqlite_serializer)
+
+    # Invocation depends on an lmp being written so write one first
+    lmp_id = uuid4().hex
+
+    client.write_lmp(WriteLMPInput(
+        lmp_id=lmp_id,
+        name="Test LMP",
+        source="def test_function(): pass",
+        dependencies=str(["dep1", "dep2"]),
+        lmp_type=LMPType.LM,
+    ))
+
+    invocation_id = uuid4().hex
+    result = client.write_invocation(WriteInvocationInput(
+        invocation=Invocation(
+            id=invocation_id,
+            lmp_id=lmp_id,
+            contents=InvocationContents(
+                invocation_id=invocation_id,
+                results=[Message(role='user', content="hello")]
+            ),
+            created_at=utc_now(),
+            latency_ms=42.0,
+        ),
+        consumes=[]
+    ))
+    assert result is None
 
 
 if __name__ == "__main__":
