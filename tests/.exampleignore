@@ -14,3 +14,7 @@ openrouter_ex.py
 vllm_ex.py
 *_ex.py
 bedrock_hello.py
+hello_postgres.py
+exa/exa.py
+exa.py
+wikipedia_mini_rag.py

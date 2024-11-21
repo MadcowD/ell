@@ -83,12 +83,19 @@ class Evaluation(LabelListMixin):
                     )
                     for k, v in value.items()
                 }
+            elif isinstance(value, list):
+                return [
+                    function(type=LMPType.LABELER)(v)
+                    if callable(v) and not hasattr(v, "__ell_track__")
+                    else v
+                    for v in value
+                ]
             elif callable(value) and not hasattr(value, "__ell_track__"):
                 return function()(value)
             elif value is None:
                 return value
             else:
-                raise ValueError(f"Expected dict, callable, or None, got {type(value)}")
+                raise ValueError(f"Expected dict, list, callable, or None, got {type(value)}")
 
         # Validate dataset/n_evals
         if self.dataset is None and self.n_evals is None:

@@ -9,7 +9,7 @@ import numpy as np
 import ell.lmp.function
 
 
-dataset: List[ell.evaluation.Datapoint] = [
+dataset = [
     {
         "input": {  # I really don't like this. Forcing "input" without typing feels disgusting.
             "text": "The Industrial Revolution was a period of major industrialization and innovation that took place during the late 1700s and early 1800s. It began in Great Britain and quickly spread throughout Western Europe and North America. This revolution saw a shift from an economy based on agriculture and handicrafts to one dominated by industry and machine manufacturing. Key technological advancements included the steam engine, which revolutionized transportation and manufacturing processes. The textile industry, in particular, saw significant changes with the invention of spinning jennies, water frames, and power looms. These innovations led to increased productivity and the rise of factories. The Industrial Revolution also brought about significant social changes, including urbanization, as people moved from rural areas to cities for factory work. While it led to economic growth and improved living standards for some, it also resulted in poor working conditions, child labor, and environmental pollution. The effects of this period continue to shape our modern world."
@@ -126,7 +126,7 @@ def length_criterion(_, output):
 eval_list = ell.evaluation.Evaluation(
     name="test_list",
     dataset=dataset,
-    criteria=[score_criterion, length_criterion],
+    metrics=[score_criterion, length_criterion],
 )
 
 # Example using a dictionary of criteria (as before)
@@ -139,8 +139,8 @@ eval_dict = ell.evaluation.Evaluation(
 # Run evaluation with list-based criteria
 print("EVAL WITH GPT-4o (list-based criteria)")
 results = eval_list.run(summarizer, n_workers=4, verbose=False).results
-print("Mean critic score:", results.metrics["score"].mean())
-print("Mean length of completions:", results.metrics["length"].mean())
+print("Mean critic score:", results.metrics["score_criterion"].mean())
+print("Mean length of completions:", results.metrics["length_criterion"].mean())
 
 # Run evaluation with dict-based criteria
 print("EVAL WITH GPT-4o (dict-based criteria)")

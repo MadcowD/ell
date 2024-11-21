@@ -117,7 +117,7 @@ class SQLStore(ell.stores.store.Store):
 
     def write_evaluation(self, evaluation: SerializedEvaluation) -> str:
         with Session(self.engine) as session:
-            try:
+            with session.no_autoflush:  # Prevent autoflush while we query
                 # Check if the evaluation already exists
                 existing_evaluation = session.exec(
                     select(SerializedEvaluation).where(
@@ -136,33 +136,30 @@ class SQLStore(ell.stores.store.Store):
                     # Add the new evaluation
                     session.add(evaluation)
 
-                # Process labelers
-                for labeler in evaluation.labelers:
-                    existing_labeler = session.exec(
-                        select(EvaluationLabeler).where(
-                            (EvaluationLabeler.evaluation_id == evaluation.id)
-                            & (EvaluationLabeler.name == labeler.name)
-                        )
-                    ).first()
+                    # Process labelers
+                    for labeler in evaluation.labelers:
+                        existing_labeler = session.exec(
+                            select(EvaluationLabeler).where(
+                                and_(
+                                    EvaluationLabeler.evaluation_id == evaluation.id,
+                                    EvaluationLabeler.name == labeler.name
+                                )
+                            )
+                        ).first()
 
-                    if existing_labeler:
-                        # Update existing labeler
-                        existing_labeler.type = labeler.type
-                        existing_labeler.labeling_lmp_id = labeler.labeling_lmp_id
-                        existing_labeler.labeling_rubric = labeler.labeling_rubric
-                    else:
-                        # Add new labeler
-                        labeler.evaluation_id = evaluation.id
-                        session.add(labeler)
+                        if existing_labeler:
+                            # Update existing labeler
+                            existing_labeler.type = labeler.type
+                            existing_labeler.labeling_lmp_id = labeler.labeling_lmp_id
+                            existing_labeler.labeling_rubric = labeler.labeling_rubric
+                        else:
+                            # Add new labeler
+                            labeler.evaluation_id = evaluation.id
+                            session.add(labeler)
 
-                session.commit()
-                return evaluation.id
-            except IntegrityError as e:
-                session.rollback()
-                raise ValueError(f"Error writing evaluation: {str(e)}")
-            except Exception as e:
-                session.rollback()
-                raise e
+                    session.commit()
+                    return evaluation.id
+
 
     def write_evaluation_run(self, evaluation_run: SerializedEvaluationRun) -> int:
         with Session(self.engine) as session:
