@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import socket
 import time
 import webbrowser
@@ -32,12 +33,33 @@ def _setup_logging(level):
 
 def main():
     parser = ArgumentParser(description="ell studio")
-    parser.add_argument("--storage-dir" , default=None,
-                        help="Directory for filesystem serializer storage (default: current directory)")
-    parser.add_argument("--pg-connection-string", default=None,
-                        help="PostgreSQL connection string (default: None)")
-    parser.add_argument("--host", default="127.0.0.1", help="Host to run the server on (default: localhost)")
-    parser.add_argument("--port", type=int, default=5555, help="Port to run the server on (default: 5555)")
+    parser.add_argument("--storage-dir" , 
+                        default=os.getenv("ELL_STORAGE_DIR"),
+                        help="Directory for filesystem serialize storage (default: None, env: ELL_STORAGE_DIR)")
+    parser.add_argument("--pg-connection-string", 
+                        default=os.getenv("ELL_PG_CONNECTION_STRING"),
+                        help="PostgreSQL connection string (default: None, env: ELL_PG_CONNECTION_STRING)")
+    parser.add_argument("--mqtt-connection-string", 
+                        default=os.getenv("ELL_MQTT_CONNECTION_STRING"),
+                        help="MQTT connection string (default: None, env: ELL_MQTT_CONNECTION_STRING)")
+    parser.add_argument("--minio-endpoint", 
+                        default=os.getenv("ELL_MINIO_ENDPOINT"),
+                        help="MinIO endpoint (default: None, env: ELL_MINIO_ENDPOINT)")
+    parser.add_argument("--minio-access-key", 
+                        default=os.getenv("ELL_MINIO_ACCESS_KEY"),
+                        help="MinIO access key (default: None, env: ELL_MINIO_ACCESS_KEY)")
+    parser.add_argument("--minio-secret-key", 
+                        default=os.getenv("ELL_MINIO_SECRET_KEY"),
+                        help="MinIO secret key (default: None, env: ELL_MINIO_SECRET_KEY)")
+    parser.add_argument("--minio-bucket", default=os.getenv("ELL_MINIO_BUCKET"),
+                        help="MinIO bucket (default: None, env: ELL_MINIO_BUCKET)")
+    parser.add_argument("--host", 
+                        default=os.getenv("ELL_STUDIO_HOST") or "0.0.0.0",
+                        help="Host to run the server on (default: 0.0.0.0, env: ELL_STUDIO_HOST)")
+    parser.add_argument("--port", 
+                        type=int, 
+                        default=int(os.getenv("ELL_STUDIO_PORT") or 5555),
+                        help="Port to run the server on (default: 5555, env: ELL_STUDIO_PORT)")
     parser.add_argument("--dev", action="store_true", help="Run in development mode")
     parser.add_argument("--dev-static-dir", default=None, help="Directory to serve static files from in development mode")
     parser.add_argument("--open", action="store_true", help="Opens the studio web UI in a browser")
@@ -47,10 +69,17 @@ def main():
     _setup_logging(logging.DEBUG if args.verbose else logging.INFO)
 
     if args.dev:
-        assert args.port == 5555, "Port must be 5000 in development mode"
+        assert args.port == 5555, "Port must be 5555 in development mode"
 
-    config = Config.create(storage_dir=args.storage_dir,
-                    pg_connection_string=args.pg_connection_string)
+    config = Config.create(
+        storage_dir=args.storage_dir,
+        pg_connection_string=args.pg_connection_string,
+        mqtt_connection_string=args.mqtt_connection_string,
+        minio_endpoint=args.minio_endpoint,
+        minio_access_key=args.minio_access_key,
+        minio_secret_key=args.minio_secret_key,
+        minio_bucket=args.minio_bucket
+    )
     app = create_app(config)
 
     if not args.dev:

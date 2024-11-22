@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from pydantic import BaseModel
 import ell
@@ -144,3 +146,38 @@ def test_message_json_serialization():
     assert loaded_message.role == original_message.role
     assert len(loaded_message.content) == len(original_message.content)
     assert str(loaded_message.content[0].text) == str(original_message.content[0].text)
+
+def test_tool_call_json_serialization():
+    class MySampleToolInput(BaseModel):
+        sample_property: str
+
+    @ell.tool()
+    def my_sample_tool(args: MySampleToolInput):
+        return '42'
+
+    original_message = Message(role='assistant', content=[
+        ToolCall(
+            tool=my_sample_tool,
+            tool_call_id=f'call_{uuid4().hex}',
+            params={'args': MySampleToolInput(sample_property="test")},
+        )])
+
+    message_json = original_message.model_dump_json()
+    loaded_message = Message.model_validate_json(message_json)
+    assert loaded_message.tool_calls[0].params == {'args': {'sample_property': 'test'}}
+
+    assert loaded_message.role == original_message.role
+    assert len(loaded_message.content) == len(original_message.content)
+    assert str(loaded_message.content[0].text) == str(original_message.content[0].text)
+
+def test_parsed_json_serialization():
+    class DummyFormattedResponse(BaseModel):
+        field1: str
+        field2: int
+
+    original_message = Message(role='assistant', content=[ContentBlock(parsed=DummyFormattedResponse(field1="test", field2=42))])
+    message_json = original_message.model_dump_json()
+    loaded_message = Message.model_validate_json(message_json)
+    assert loaded_message.content[0].parsed == {'field1': 'test', 'field2': 42}
+
+    

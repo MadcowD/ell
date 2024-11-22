@@ -1,7 +1,10 @@
 import json
 import logging
 import threading
+
+from ell.types import Message, ContentBlock, ToolResult
 from ell.types.lmp import LMPType
+from ell.types.serialize import Invocation, InvocationContents, WriteInvocationInput, utc_now, WriteLMPInput
 from ell.util._warnings import _autocommit_warning
 import ell.util.closure
 from ell.configurator import config
@@ -16,10 +19,6 @@ from ell.util.serialization import get_immutable_vars, utc_now
 from ell.util.serialization import compute_state_cache_key
 from ell.util.serialization import prepare_invocation_params
 
-try:
-    from ell.stores.models.core import SerializedLMP, Invocation, InvocationContents
-except ImportError:
-    SerializedLMP = Invocation =  InvocationContents = None
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ def _track(
     func_to_track.__ell_force_closure__ = lambda: ell.util.closure.lexically_closured_source(func_to_track, forced_dependencies)
     if not hasattr(func_to_track, "__ell_hash__") and not config.lazy_versioning:
         func_to_track.__ell_force_closure__()
-    
+
 
     @wraps(func_to_track)
     def tracked_func(*fn_args, _get_invocation_id=False, **fn_kwargs) -> str:
@@ -66,7 +65,7 @@ def _track(
         invocation_id = "invocation-" + secrets.token_hex(16)
 
         state_cache_key: str = None
-        if not config.store:
+        if not config.serializer:
             res = func_to_track(
                 *fn_args, **fn_kwargs, _invocation_origin=invocation_id
             )[0]
@@ -216,7 +215,7 @@ def serialize_lmp(func):
     # print(name)
     api_params = getattr(func, "__ell_api_params__", None)
 
-    lmps = config.store.get_versions_by_fqn(fqn=name)
+    lmps = config.serializer.get_lmp_versions(fqn=name)
     version = 0
     already_in_store = any(lmp.lmp_id == func.__ell_hash__ for lmp in lmps)
 
@@ -237,7 +236,7 @@ def serialize_lmp(func):
                         )[0]
                     )
 
-        serialized_lmp = SerializedLMP(
+        serialized_lmp = WriteLMPInput(
             lmp_id=func.__ell_hash__,
             name=name,
             created_at=utc_now(),
@@ -249,46 +248,55 @@ def serialize_lmp(func):
             lmp_type=lmp_type,
             api_params=api_params if api_params else None,
             version_number=version,
+            uses=[f.__ell_hash__ for f in func.__ell_uses__],
         )
-        config.store.write_lmp(
-            serialized_lmp, [f.__ell_hash__ for f in func.__ell_uses__]
-        )
+        config.serializer.write_lmp(serialized_lmp)
     func._has_serialized_lmp = True
     return func
 
-
 def _write_invocation(
-    func,
-    invocation_id,
-    latency_ms,
-    prompt_tokens,
-    completion_tokens,
-    state_cache_key,
-    invocation_api_params,
-    cleaned_invocation_params,
-    consumes,
-    result,
-    parent_invocation_id,
+        func,
+        invocation_id,
+        latency_ms,
+        prompt_tokens,
+        completion_tokens,
+       state_cache_key,
+        invocation_api_params,
+        cleaned_invocation_params,
+        consumes,
+        result,
+        parent_invocation_id
 ):
+
+    # print(result)
+    # todo(alex). figure out what's going on here, looks like we're getting result as a tool result / single message sometimes
+
+    results = None
+    if isinstance(result, list):
+        results = result
+    elif isinstance(result, ToolResult):
+        results = [Message(role='tool', content=[ContentBlock(tool_result=result)])]
+    else:
+        results = [result]
 
     invocation_contents = InvocationContents(
         invocation_id=invocation_id,
         params=cleaned_invocation_params,
-        results=result,
+        results=results,
         invocation_api_params=invocation_api_params,
         global_vars=get_immutable_vars(func.__ell_closure__[2]),
         free_vars=get_immutable_vars(func.__ell_closure__[3]),
     )
 
-    if invocation_contents.should_externalize and config.store.has_blob_storage:
+    if invocation_contents.should_externalize and config.serializer.supports_blobs:
         invocation_contents.is_external = True
-
-        # Write to the blob store
-        blob_id = config.store.blob_store.store_blob(
-            json.dumps(
-                invocation_contents.model_dump(), default=str, ensure_ascii=False
-            ).encode("utf-8"),
-            invocation_id,
+        
+        # Write to the blob store 
+        blob_id = config.serializer.store_blob(
+            blob_id=invocation_id,
+            #todo(alex): normalize serialization
+            blob=json.dumps(invocation_contents.model_dump(
+            ), default=str, ensure_ascii=False).encode('utf-8'),
         )
         invocation_contents = InvocationContents(
             invocation_id=invocation_id,
@@ -307,4 +315,4 @@ def _write_invocation(
         contents=invocation_contents,
     )
 
-    config.store.write_invocation(invocation, consumes)
+    config.serializer.write_invocation(WriteInvocationInput(invocation=invocation, consumes=consumes))

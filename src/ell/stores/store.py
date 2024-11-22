@@ -1,21 +1,40 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from datetime import datetime
-from typing import Any, Optional, Dict, List, Set, Union
+from typing import Any, Optional, Dict, List, Set, Union, TYPE_CHECKING
+
 from ell.types._lstr import _lstr
 from ell.stores.models.core import SerializedLMP, Invocation
 from ell.types.message import InvocableLM
 from ell.stores.models.evaluations import EvaluationResultDatapoint, EvaluationRunLabelerSummary, SerializedEvaluation, SerializedEvaluationRun
 # from ell.types.studio import SerializedEvaluation, SerializedEvaluationRun
 
+if TYPE_CHECKING:
+    from sqlmodel import Session
+else:
+    Session = None
+
+
 class BlobStore(ABC):
     @abstractmethod
-    def store_blob(self, blob: bytes, blob_id  : str) -> str:
+    def store_blob(self, blob: bytes, blob_id  : str, metadata: Optional[Dict[str, Any]] = None) -> str:
         """Store a blob and return its identifier."""
         pass
 
     @abstractmethod
     def retrieve_blob(self, blob_id: str) -> bytes:
+        """Retrieve a blob by its identifier."""
+        pass
+
+
+class AsyncBlobStore(BlobStore):
+    @abstractmethod
+    async def store_blob(self, blob: bytes, blob_id: str, metadata: Optional[Dict[str, Any]] = None) -> str:
+        """Store a blob and return its identifier."""
+        pass
+
+    @abstractmethod
+    async def retrieve_blob(self, blob_id: str) -> bytes:
         """Retrieve a blob by its identifier."""
         pass
 
@@ -124,6 +143,12 @@ class Store(ABC):
         pass
 
 
+    @abstractmethod
+    def get_lmp(self, lmp_id: str, session: Optional[Session] = None) -> Optional[SerializedLMP]:
+        """
+        Get an LMP by its id.
+        """
+        pass
 
     @contextmanager
     def freeze(self, *lmps: InvocableLM):

@@ -1,19 +1,19 @@
 # todo: implement tracing for structured outs. this a v2 feature.
-import json
-from ell.types._lstr import _lstr
-from functools import cached_property
-import numpy as np
 import base64
-from io import BytesIO
-from PIL import Image as PILImage
-
-from pydantic import BaseModel, ConfigDict, Field, model_validator, field_serializer
-
+import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+from functools import cached_property
+from io import BytesIO
+from types import FunctionType
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from ell.util.serialization import serialize_image
+import numpy as np
+from PIL import Image as PILImage
+from pydantic import BaseModel, ConfigDict, Field, model_validator, field_serializer, field_validator
+
+from ell.types._lstr import _lstr
+from ell.util.serialization import serialize_image, unstructure_lstr
+
 _lstr_generic = Union[_lstr, str]
 InvocableTool = Callable[..., Union["ToolResult", _lstr_generic, List["ContentBlock"], ]]
 
@@ -22,8 +22,8 @@ AnyContent = Union["ContentBlock", str, "ToolCall", "ToolResult", "ImageContent"
 
 
 class ToolResult(BaseModel):
-    tool_call_id: _lstr_generic
-    result: List["ContentBlock"]
+    tool_call_id: _lstr_generic = Field(description="Id of the tool call from the model that led the tool to be called (`'call_{id}'`)")
+    result: List["ContentBlock"] = Field(description="Tool call output as a list of ell ContentBlocks")
 
     @property
     def text(self) -> str:
@@ -40,35 +40,75 @@ class ToolResult(BaseModel):
     def __repr__(self):
         return f"{self.__class__.__name__}(tool_call_id={self.tool_call_id}, result={_content_to_text(self.result)})"
 
+class ToolReference(BaseModel):
+    """A reference to an invocable tool"""
+    fqn: str = Field(description="The fully qualified name of the tool")
+    hash: str = Field(description="The hash of the tool and its dependencies")
+    
 class ToolCall(BaseModel):
-    tool : InvocableTool
-    tool_call_id : Optional[_lstr_generic] = Field(default=None)
-    params : BaseModel
+    tool: Union[InvocableTool, ToolReference] = Field(description="The tool function to call or a reference to it when serialized")
+    tool_call_id: Optional[_lstr_generic] = Field(default=None)
+    params: Union[Dict[str, Any], BaseModel] = Field(description="Arguments for the tool call provided by the model.")
 
-    def __init__(self, tool, params : Union[BaseModel, Dict[str, Any]],  tool_call_id=None):
-        if not isinstance(params, BaseModel):
-            params = tool.__ell_params_model__(**params) #convenience.
+    def __init__(self, tool, params: Optional[Union[BaseModel, Dict[str, Any]]], tool_call_id: Optional[_lstr_generic]=None):
+        if (not isinstance(params, BaseModel)) and isinstance(tool, FunctionType) and hasattr(tool, '__ell_params_model__'):
+             params = tool.__ell_params_model__(**params)
+        if isinstance(tool_call_id, dict):
+            tool_call_id = _lstr(content=tool_call_id['content'], origin_trace=tool_call_id.get('__origin_trace__'), logits=tool_call_id.get('logits'))
+
         super().__init__(tool=tool, tool_call_id=tool_call_id, params=params)
+
+    @field_serializer('tool')
+    def serialize_tool(self, tool: Union[InvocableTool, ToolReference], _info):
+        if isinstance(tool, ToolReference):
+            return tool
+        return ToolReference(
+            # todo(alex). add the value of fqn we want to standardize on to all lmps so we don't keep using qualname
+            fqn=tool.__qualname__,
+            hash=getattr(tool, '__ell_hash__', 'unknown')
+        )
+
+    @field_serializer('params')
+    def _serialize_params(self, params: Union[Dict[str, Any], BaseModel]) -> Dict[str, Any]:
+        if isinstance(params, dict):
+            return params
+        return params.model_dump(exclude_none=True, exclude_unset=True)
+
+    def serialize_params(self) -> Dict[str, Any]:
+        return self._serialize_params(self.params)
+
+    @field_serializer('tool_call_id')
+    def serialize_tool_call_id(self, tool_call_id: _lstr_generic):
+        if tool_call_id is None:
+            return None
+        origin_trace = tool_call_id.__dict__['__origin_trace__']
+        if origin_trace:
+            return unstructure_lstr(tool_call_id)
+        return tool_call_id
 
     def __call__(self, **kwargs):
         assert not kwargs, "Unexpected arguments provided. Calling a tool uses the params provided in the ToolCall."
+        assert not isinstance(self.tool, ToolReference), f"Tools are not invocable once serialized. ToolCall.tool is a ToolReference: {self.tool}"
 
         # XXX: TODO: MOVE TRACKING CODE TO _TRACK AND OUT OF HERE AND API.
-        return self.tool(**self.params.model_dump())
+        return self.tool(**self.serialize_params())
     
     # XXX: Deprecate in 0.1.0
     def call_and_collect_as_message_block(self):
         raise DeprecationWarning("call_and_collect_as_message_block is deprecated. Use collect_as_content_block instead.")
     
     def call_and_collect_as_content_block(self):
-        res = self.tool(**self.params.model_dump(), _tool_call_id=self.tool_call_id)
+        if isinstance(self.tool, ToolReference):
+            raise ValueError(f"Cannot call a tool that is a ToolReference: {self.tool}")
+        res = self.tool(**self.serialize_params(),
+                        _tool_call_id=self.tool_call_id)
         return ContentBlock(tool_result=res)
 
     def call_and_collect_as_message(self):
         return Message(role="user", content=[self.call_and_collect_as_message_block()])
     
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.tool.__name__}({self.params}), tool_call_id='{self.tool_call_id}')"
+        return f"{self.__class__.__name__}({self.tool.__name__ if hasattr(self.tool, '__name__') else str(self.tool)}({self.params}), tool_call_id='{self.tool_call_id}')"
     
 
 class ImageContent(BaseModel):
@@ -129,13 +169,13 @@ class ContentBlock(BaseModel):
     image: Optional[ImageContent] = Field(default=None)
     audio: Optional[Union[np.ndarray, List[float]]] = Field(default=None)
     tool_call: Optional[ToolCall] = Field(default=None)
-    parsed: Optional[BaseModel] = Field(default=None)
+    parsed: Optional[Union[Dict[str, Any], BaseModel]] = Field(default=None)
     tool_result: Optional[ToolResult] = Field(default=None)
     # TODO: Add a JSON type? This would be nice for response_format. This is different than resposne_format = model. Or we could be opinionated and automatically parse the json response. That might be nice.
     # This breaks us maintaing parity with the openai python client in some sen but so does image.
 
     def __init__(self, *args, **kwargs):
-        if "image" in kwargs and not isinstance(kwargs["image"], ImageContent):
+        if "image" in kwargs and kwargs['image'] is not None and not isinstance(kwargs["image"], ImageContent): # todo(alex). are we looking for dict here?
             im = kwargs["image"] = ImageContent.coerce(kwargs["image"])
             # XXX: Backwards compatibility, Deprecate.
             if (d := kwargs.get("image_detail", None)): im.detail = d
@@ -175,7 +215,7 @@ class ContentBlock(BaseModel):
     
     @property
     def content(self):
-        return getattr(self, self.type)
+        return getattr(self, self.type) # type: ignore
 
     @classmethod
     def coerce(cls, content: AnyContent) -> "ContentBlock":
@@ -255,14 +295,25 @@ class ContentBlock(BaseModel):
             return cls(image=ImageContent.coerce(content))
         if isinstance(content, BaseModel):
             return cls(parsed=content)
+        if isinstance(content, dict):
+            return cls(**content)
 
-        raise ValueError(f"Invalid content type: {type(content)}")
+        raise ValueError(f"Invalid ContentBlock content type: {type(content)}")
     
     @field_serializer('parsed')
     def serialize_parsed(self, value: Optional[BaseModel], _info):
         if value is None:
             return None
         return value.model_dump(exclude_none=True, exclude_unset=True)
+
+    @field_validator('parsed' ,mode='wrap')
+    def deserialize_parsed(cls, value: Optional[Union[Dict[str, Any],BaseModel]], _info):
+        # Why must we do this? 
+        # pydantic returns an empty BaseModel() whenever parsed is a dict
+        if value is None or isinstance(value, (dict,BaseModel)):
+            return value
+        raise ValueError(f"Invalid ContentBlock.parsed value: {type(value)}")
+
     
 
 def to_content_blocks(
@@ -303,7 +354,7 @@ def to_content_blocks(
 
     if not isinstance(content, list):
         content = [content]
-    
+
     return [ContentBlock.model_validate(ContentBlock.coerce(c)) for c in content]
 
 
@@ -437,22 +488,7 @@ class Message(BaseModel):
             for block in content
         ]
 
-    @classmethod
-    def model_validate(cls, obj: Any) -> 'Message':
-        """Custom validation to handle deserialization"""
-        if isinstance(obj, dict):
-            if 'content' in obj and isinstance(obj['content'], list):
-                content_blocks = []
-                for block in obj['content']:
-                    if isinstance(block, dict):
-                        if 'text' in block:
-                            block['text'] = str(block['text']) if block['text'] is not None else None
-                        content_blocks.append(ContentBlock.model_validate(block))
-                    else:
-                        content_blocks.append(ContentBlock.coerce(block))
-                obj['content'] = content_blocks
-        return super().model_validate(obj)
-
+    #todo(alex): needed?
     @classmethod
     def model_validate_json(cls, json_str: str) -> 'Message':  
         """Custom validation to handle deserialization from JSON string"""

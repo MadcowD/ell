@@ -54,7 +54,19 @@ pydantic_ltype_aware_cattr.register_unstructure_hook(
 )
 
 def unstructure_lstr(obj):
-    return dict(content=str(obj), **obj.__dict__, __lstr=True)
+    if isinstance(obj, str):
+        return dict(content=obj, __lstr=True)
+    origin_trace = obj.__dict__.__origin_trace__
+    if origin_trace and isinstance(origin_trace, frozenset):
+        return dict(content=str(obj),
+                    **obj.__dict__,
+                    origin_trace=list(sorted(origin_trace)),
+                    __lstr=True)
+
+    return dict(content=str(obj),
+                **obj.__dict__,
+                __lstr=True)
+
 
 pydantic_ltype_aware_cattr.register_unstructure_hook(
     _lstr,

@@ -8,8 +8,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from ell.provider import Provider
 from dataclasses import dataclass, field
 
+from ell.serialize.config import SerializeConfig
+from ell.serialize.protocol import EllSerializer
+from ell.serialize.serializer import get_serializer
+from ell.util.errors import missing_ell_extras
+
 if TYPE_CHECKING:
-    from ell.stores import Store
+    from ell.stores.store import Store
 else:
     Store = None
 
@@ -34,55 +39,59 @@ class _Model:
 
 class Config(BaseModel):
     """Configuration class for ELL."""
-    
+
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
         protected_namespaces=('protect_', )  # Override protected namespaces
     )
 
     registry: Dict[str, _Model] = Field(
-        default_factory=dict, 
+        default_factory=dict,
         description="A dictionary mapping model names to their configurations."
     )
     verbose: bool = Field(
-        default=False, 
+        default=False,
         description="If True, enables verbose logging."
     )
     wrapped_logging: bool = Field(
-        default=True, 
+        default=True,
         description="If True, enables wrapped logging for better readability."
     )
     override_wrapped_logging_width: Optional[int] = Field(
-        default=None, 
+        default=None,
         description="If set, overrides the default width for wrapped logging."
     )
     store: Optional[Store] = Field(
-        default=None, 
+        default=None,
         description="An optional Store instance for persistence."
     )
     autocommit: bool = Field(
-        default=False, 
+        default=False,
         description="If True, enables automatic committing of changes to the store."
     )
     lazy_versioning: bool = Field(
-        default=True, 
+        default=True,
         description="If True, enables lazy versioning for improved performance."
     )
     default_api_params: Dict[str, Any] = Field(
-        default_factory=dict, 
+        default_factory=dict,
         description="Default parameters for language models."
     )
     default_client: Optional[openai.Client] = Field(
-        default=None, 
+        default=None,
         description="The default OpenAI client used when a specific model client is not found."
     )
     autocommit_model: str = Field(
-        default="gpt-4o-mini", 
+        default="gpt-4o-mini",
         description="When set, changes the default autocommit model from GPT 4o mini."
     )
     providers: Dict[Type, Provider] = Field(
-        default_factory=dict, 
+        default_factory=dict,
         description="A dictionary mapping client types to provider classes."
+    )
+    serializer: EllSerializer = Field(
+        default=None,
+        description="Serializer used for LMPs and invocations"
     )
     def __init__(self, **data):
         super().__init__(**data)
@@ -195,7 +204,9 @@ def init(
     lazy_versioning: bool = True,
     default_api_params: Optional[Dict[str, Any]] = None,
     default_client: Optional[Any] = None,
-    autocommit_model: str = "gpt-4o-mini"
+    autocommit_model: str = "gpt-4o-mini",
+    api_url: Optional[str] = None,
+    serializer: Optional[EllSerializer] = None,
 ) -> None:
     """
     Initialize the ELL configuration with various settings.
@@ -214,19 +225,38 @@ def init(
     :type default_openai_client: openai.Client, optional
     :param autocommit_model: Set the model used for autocommitting.
     :type autocommit_model: str
+    :param api_server_url: Ell API server URL
+    :type api_server_url: str
+    :param serializer: Ell serializer class.
+    :type serializer: EllSerializer
     """
     # XXX: prevent double init
     config.verbose = verbose
     config.lazy_versioning = lazy_versioning
 
-    if isinstance(store, str):
+    if store and not isinstance(store, str):
         try:
-            from ell.stores.sql import SQLiteStore
-            config.store = SQLiteStore(store)
+            from ell.serialize.sql import SQLSerializer
+            config.serializer = SQLSerializer(store)
+            config.store = config.serializer.store # legacy
         except ImportError:
-            raise ImportError("Failed importing SQLiteStore. Install with `pip install -U ell-ai[all]`. More info: https://docs.ell.so/installation")
+            raise missing_ell_extras(
+                message="Failed importing SQL store dependencies",
+                extras=["all"]
+            )
     else:
-        config.store = store
+        if serializer is not None:
+            config.serializer = serializer
+        else:
+            serialize_config = SerializeConfig(
+                api_url=api_url,
+                storage_dir=store,
+                # ...other options
+                log_level=20 if verbose else 0,
+            )
+            if serialize_config.is_enabled:
+                config.serializer = get_serializer(serialize_config)
+
     config.autocommit = autocommit or config.autocommit
 
     if default_api_params is not None:

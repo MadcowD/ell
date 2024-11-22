@@ -1,6 +1,11 @@
+import asyncio
+from contextlib import asynccontextmanager
 from typing import Optional, Dict, Any, List
 
 from sqlmodel import Session
+
+from ell.serialize.serializer import get_serializer, get_blob_store
+from ell.serialize.config import SerializeConfig
 from ell.stores.sql import PostgresStore, SQLiteStore
 from ell import __version__
 from fastapi import FastAPI, Query, HTTPException, Depends, Response, WebSocket, WebSocketDisconnect
@@ -8,14 +13,17 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 import json
 from ell.studio.config import Config
-from ell.studio.connection_manager import ConnectionManager
 from ell.studio.datamodels import EvaluationResultDatapointPublic, InvocationPublicWithConsumes, SerializedLMPWithUses, EvaluationPublic, SpecificEvaluationRunPublic
 
 from ell.stores.models.core import SerializedLMP
 from datetime import datetime, timedelta
 from sqlmodel import select
+from contextlib import AsyncExitStack
 from ell.stores.models.evaluations import SerializedEvaluation
 
+
+from ell.api.pubsub.abc import PubSub
+from ell.api.pubsub.websocket import WebSocketPubSub
 
 logger = logging.getLogger(__name__)
 
@@ -24,14 +32,42 @@ from ell.studio.datamodels import InvocationsAggregate
 
 
 def get_serializer(config: Config):
+    serialize_config = SerializeConfig(**config.model_dump())
+    blob_store = get_blob_store(serialize_config)
     if config.pg_connection_string:
-        return PostgresStore(config.pg_connection_string)
+        return PostgresStore(config.pg_connection_string, blob_store)
     elif config.storage_dir:
-        return SQLiteStore(config.storage_dir)
+        return SQLiteStore(config.storage_dir, blob_store)
     else:
         raise ValueError("No storage configuration found")
 
 
+pubsub: Optional[PubSub] = None
+
+async def get_pubsub():
+    yield pubsub
+
+
+async def setup_pubsub(config: Config, exit_stack: AsyncExitStack):
+    """Set up the appropriate pubsub client based on configuration."""
+    if config.storage_dir is not None:
+        return WebSocketPubSub(), None
+
+    if config.mqtt_connection_string is not None:
+        try:
+            from ell.api.pubsub.mqtt import setup
+        except ImportError as e:
+            raise ImportError(
+                "Received mqtt_connection_string but dependencies missing. Install with `pip install -U ell-ai[mqtt]. More info: https://docs.ell.so/installation") from e
+
+        pubsub, mqtt_client = await setup(config.mqtt_connection_string)
+        exit_stack.push_async_exit(mqtt_client)
+        logger.info("Connected to MQTT")
+
+        loop = asyncio.get_event_loop()
+        return pubsub, pubsub.listen(loop)
+
+    return None, None
 
 def create_app(config:Config):
     serializer = get_serializer(config)
@@ -40,7 +76,29 @@ def create_app(config:Config):
         with Session(serializer.engine) as session:
             yield session
 
-    app = FastAPI(title="ell Studio", version=__version__)
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        global pubsub
+        exit_stack = AsyncExitStack()
+        pubsub_task = None
+
+        try:
+            pubsub, pubsub_task = await setup_pubsub(config, exit_stack)
+            yield
+
+        finally:
+            if pubsub_task and not pubsub_task.done():
+                pubsub_task.cancel()
+                try:
+                    await pubsub_task
+                except asyncio.CancelledError:
+                    pass
+
+            await exit_stack.aclose()
+            pubsub = None
+
+
+    app = FastAPI(title="ell Studio", version=__version__, lifespan=lifespan)
 
     # Enable CORS for all origins
     app.add_middleware(
@@ -51,17 +109,21 @@ def create_app(config:Config):
         allow_headers=["*"],
     )
 
-    manager = ConnectionManager()
 
     @app.websocket("/ws")
-    async def websocket_endpoint(websocket: WebSocket):
-        await manager.connect(websocket)
+    async def websocket_endpoint(websocket: WebSocket,pubsub: PubSub = Depends(get_pubsub)):
+        await websocket.accept()
+        # NB. for now, studio does not dynamically subscribe to data topics. We subscribe every client to these by
+        # default. If desired, apps may issue a "subscribe" message that we can handle in websocket.receive_text below
+        # to sign up to receive data from arbitrary topics. They can unsubscribe when done via an "unsubscribe" message.
+        await pubsub.subscribe_async("all", websocket)
+        await pubsub.subscribe_async("lmp/#", websocket)
         try:
             while True:
                 data = await websocket.receive_text()
                 # Handle incoming WebSocket messages if needed
         except WebSocketDisconnect:
-            manager.disconnect(websocket)
+            pubsub.unsubscribe_from_all(websocket)
 
     
     @app.get("/api/latest/lmps", response_model=list[SerializedLMPWithUses])
@@ -195,9 +257,13 @@ def create_app(config:Config):
 
         return history
 
+    # Used by studio to publish changes from a SQLLite store directly
     async def notify_clients(entity: str, id: Optional[str] = None):
+        if pubsub is None:
+            logger.error("No pubsub client, cannot notify clients")
+            return
         message = json.dumps({"entity": entity, "id": id})
-        await manager.broadcast(message)
+        await pubsub.publish("all", message)
 
     # Add this method to the app object
     app.notify_clients = notify_clients
@@ -244,7 +310,7 @@ def create_app(config:Config):
 
 
         return evaluations
-    
+
     @app.get("/api/latest/evaluations", response_model=List[EvaluationPublic])
     def get_latest_evaluations(
         skip: int = Query(0, ge=0),
@@ -268,8 +334,8 @@ def create_app(config:Config):
         if not evaluation:
             raise HTTPException(status_code=404, detail="Evaluation not found")
         return evaluation[0]
-    
-    
+
+
 
     @app.get("/api/evaluation-runs/{run_id}", response_model=SpecificEvaluationRunPublic)
     def get_evaluation_run(
@@ -278,7 +344,7 @@ def create_app(config:Config):
     ):
         runs = serializer.get_evaluation_run(session, run_id)
         return runs
-    
+
     @app.get("/api/evaluation-runs/{run_id}/results", response_model=List[EvaluationResultDatapointPublic])
     def get_evaluation_run_results(
         run_id: str,
@@ -293,7 +359,7 @@ def create_app(config:Config):
             limit=limit,
         )
         return results
-    
+
     @app.get("/api/all-evaluations", response_model=List[EvaluationPublic])
     def get_all_evaluations(
         skip: int = Query(0, ge=0),
@@ -309,7 +375,7 @@ def create_app(config:Config):
         )
         results = session.exec(query).all()
         return list(results)
-    
+
     @app.get("/api/dataset/{dataset_id}")
     def get_dataset(
         dataset_id: str,
@@ -317,27 +383,27 @@ def create_app(config:Config):
     ):
         if not serializer.blob_store:
             raise HTTPException(status_code=400, detail="Blob storage not configured")
-        
+
         try:
             # Get the blob data
             blob_data = serializer.blob_store.retrieve_blob(dataset_id)
 
-            
+
             # Check if size is under 5MB
             if len(blob_data) > 5 * 1024 * 1024:  # 5MB in bytes
                 raise HTTPException(
                     status_code=413,
                     detail="Dataset too large to preview (>5MB)"
                 )
-            
+
             # Decode and parse JSON
             dataset_json = json.loads(blob_data.decode('utf-8'))
-            
+
             return {
                 "size": len(blob_data),
                 "data": dataset_json
             }
-            
+
         except FileNotFoundError:
             raise HTTPException(status_code=404, detail="Dataset not found")
         except json.JSONDecodeError:
@@ -345,5 +411,5 @@ def create_app(config:Config):
         except Exception as e:
             logger.error(f"Error retrieving dataset: {str(e)}")
             raise HTTPException(status_code=500, detail="Internal server error")
-    
+
     return app

@@ -8,9 +8,6 @@ from ell.types.lmp import LMPType
 from ell.types.message import Any, Any, Field, Message, Optional
 
 from sqlmodel import Column, Field, SQLModel
-from typing import Optional
-
-from typing import Optional
 from typing import Dict, List, Union, Any, Optional
 
 from pydantic import BaseModel
@@ -20,8 +17,16 @@ from typing import Any, List, Optional
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column
 from sqlalchemy import Index, func
 
-
 from typing import  Any
+import ell.types.serialize
+
+def utc_now() -> datetime:
+    """
+    Returns the current UTC timestamp.
+    Serializes to ISO-8601.
+    """
+    return datetime.now(tz=timezone.utc)
+
 
 class SerializedLMPUses(SQLModel, table=True):
     """
@@ -95,6 +100,21 @@ class SerializedLMP(SerializedLMPBase, table=True):
 
     evaluation_runs: List["SerializedEvaluationRun"] = Relationship(back_populates="evaluated_lmp")
 
+    @classmethod
+    def coerce(cls, input: ell.types.serialize.WriteLMPInput):
+        return cls(
+            lmp_id=input.lmp_id,
+            lmp_type=input.lmp_type,
+            name=input.name,
+            source=input.source,
+            dependencies=input.dependencies,
+            api_params=input.api_params,
+            version_number=input.version_number,
+            initial_global_vars=input.initial_global_vars,
+            initial_free_vars=input.initial_free_vars,
+            commit_message=input.commit_message,
+            created_at=input.created_at
+        )
 
     class Config:
         table_name = "serializedlmp"
@@ -173,6 +193,10 @@ class InvocationContentsBase(ExternalizeableModel):
 class InvocationContents(InvocationContentsBase, table=True):
     invocation: "Invocation" = Relationship(back_populates="contents")
 
+    @classmethod
+    def coerce(cls, input: ell.types.serialize.InvocationContents):
+        return cls(**input.model_dump())
+
 
 class Invocation(InvocationBase, table=True):
     lmp: SerializedLMP = Relationship(back_populates="invocations")
@@ -208,3 +232,15 @@ class Invocation(InvocationBase, table=True):
         ),
     )
     evaluation_result_datapoints: List["EvaluationResultDatapoint"] = Relationship(back_populates="invocation_being_labeled")
+
+    @classmethod
+    def coerce(cls, input: ell.types.serialize.Invocation):
+        fields = {
+            field: getattr(input, field)
+            for field in input.model_fields
+            if field != "contents"
+        }
+        return cls(
+            **fields,
+            contents=InvocationContents.coerce(input.contents)
+        )
