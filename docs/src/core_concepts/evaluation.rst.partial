@@ -1,0 +1,210 @@
+Evaluations
+===========
+
+Evaluations in ELL provide a powerful framework for assessing and analyzing Language Model Programs (LMPs). This guide covers the core concepts and features of the evaluation system.
+
+Basic Usage
+----------
+
+Here's a simple example of creating and running an evaluation:
+
+.. code-block:: python
+
+    import ell
+    from ell import Evaluation
+
+    @ell.simple(model="gpt-4")
+    def my_lmp(input_text: str):
+        return f"Process this: {input_text}"
+
+    # Define a metric function
+    def accuracy_metric(datapoint, output):
+        return float(datapoint["expected_output"].lower() in output.lower())
+
+    # Create an evaluation
+    eval = Evaluation(
+        name="basic_evaluation",
+        n_evals=10,
+        metrics={"accuracy": accuracy_metric}
+    )
+
+    # Run the evaluation
+    results = eval.run(my_lmp, n_workers=10)
+
+Core Components
+-------------
+
+Evaluation Configuration
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``Evaluation`` class accepts several key parameters:
+
+- ``name``: A unique identifier for the evaluation
+- ``n_evals``: Number of evaluations to run
+- ``metrics``: Dictionary of metric functions
+- ``dataset``: Optional dataset for evaluation
+- ``samples_per_datapoint``: Number of samples per dataset point (default: 1)
+
+Metrics
+~~~~~~~
+
+Metrics are functions that assess the performance of your LMP. They can be:
+
+1. Simple scalar metrics:
+
+.. code-block:: python
+
+    def length_metric(_, output):
+        return len(output)
+
+2. Structured metrics:
+
+.. code-block:: python
+
+    def detailed_metric(datapoint, output):
+        return {
+            "length": len(output),
+            "contains_keyword": datapoint["keyword"] in output,
+            "response_time": datapoint["response_time"]
+        }
+
+3. Multiple metrics:
+
+.. code-block:: python
+
+    metrics = {
+        "accuracy": accuracy_metric,
+        "length": length_metric,
+        "detailed": detailed_metric
+    }
+
+Dataset Handling
+~~~~~~~~~~~~~~
+
+Evaluations can use custom datasets:
+
+.. code-block:: python
+
+    dataset = [
+        {
+            "input": {"question": "What is the capital of France?"},
+            "expected_output": "Paris"
+        },
+        {
+            "input": {"question": "What is the capital of Italy?"},
+            "expected_output": "Rome"
+        }
+    ]
+
+    eval = Evaluation(
+        name="geography_quiz",
+        dataset=dataset,
+        metrics={"accuracy": accuracy_metric}
+    )
+
+Parallel Execution
+~~~~~~~~~~~~~~~~
+
+Evaluations support parallel execution for improved performance:
+
+.. code-block:: python
+
+    # Run with 10 parallel workers
+    results = eval.run(my_lmp, n_workers=10, verbose=True)
+
+Results and Analysis
+------------------
+
+Result Structure
+~~~~~~~~~~~~~~
+
+Evaluation results include:
+
+- Metric summaries (mean, std, min, max)
+- Individual run details
+- Execution metadata
+- Error tracking
+
+Accessing Results
+~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    # Get mean accuracy
+    mean_accuracy = results.metrics["accuracy"].mean()
+    
+    # Get standard deviation
+    std_accuracy = results.metrics["accuracy"].std()
+
+    # Access individual runs
+    for run in results.runs:
+        print(f"Run ID: {run.id}")
+        print(f"Success: {run.success}")
+        print(f"Duration: {run.end_time - run.start_time}")
+
+Advanced Features
+---------------
+
+Evaluation Types
+~~~~~~~~~~~~~~
+
+ELL supports different types of evaluations:
+
+- ``METRIC``: Numerical performance metrics
+- ``ANNOTATION``: Human or model annotations
+- ``CRITERION``: Pass/fail criteria
+
+Version Control
+~~~~~~~~~~~~~
+
+Evaluations support versioning:
+
+- Version numbers
+- Commit messages
+- History tracking
+- Multiple runs per version
+
+Error Handling
+~~~~~~~~~~~~
+
+Robust error handling and reporting:
+
+- Automatic error capture
+- Failed run management
+- Success status tracking
+- Detailed error messages
+
+ELL Studio Integration
+--------------------
+
+The evaluation system integrates with ELL Studio, providing:
+
+- Visual evaluation management
+- Result visualization
+- Run comparisons
+- Filtering and search
+- Metric summaries
+- Version control interface
+
+Best Practices
+------------
+
+1. **Metric Design**
+   - Keep metrics focused and specific
+   - Use appropriate return types
+   - Handle edge cases
+
+2. **Dataset Management**
+   - Use representative data
+   - Include edge cases
+   - Maintain dataset versioning
+
+3. **Performance Optimization**
+   - Use appropriate worker counts
+   - Monitor resource usage
+   - Cache results when possible
+
+4. **Version Control**
+   - Use meaningful commit messages
+   - Track major changes
+   - Maintain evaluation history

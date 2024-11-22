@@ -91,7 +91,7 @@ To install `ell` and `ell studio`, you can use pip. Follow these steps:
 2. Run the following command to install the `ell-ai` package from PyPI:
 
    ```bash
-   pip install ell-ai
+   pip install ell-ai[all]
    ```
 
 3. Verify the installation by checking the version of `ell`:
