@@ -152,16 +152,19 @@ Here's an example of a multi-step interaction using the insurance claim chatbot:
         ' smashed by someone else, today, $5k',
         'please file it.'
     ]
-    for user_message in user_messages:
-        message_history.append(ell.user(user_message))
+    while len(user_messages) > 0:
+        # Get the last message in the message history
+        last_message = message_history[-1] if message_history else None
+        if not last_message or last_message.role == 'assistant':
+            user_message = user_messages.pop(0)
+            message_history.append(ell.user(user_message))
+
         response_message = insurance_claim_chatbot(message_history)
         message_history.append(response_message)
 
         if response_message.tool_calls:
             next_message = response_message.call_tools_and_collect_as_message()
             message_history.append(next_message)
-            insurance_claim_chatbot(message_history)
-
 
 
 Parallel Tool Execution
