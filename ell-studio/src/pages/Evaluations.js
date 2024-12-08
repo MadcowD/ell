@@ -69,8 +69,7 @@ def metric(datapoint, output):
 # Initialize your evaluation
 eval = Evaluation(
     name="basic-eval",
-    dataset=[{"input": "Hello", "expected": "Hi there!"}],
-    n_evals=10,
+    dataset=[{"input": ["Hello"], "expected": "Hi there!"}],
     metrics={"score": metric}
 )
 
