@@ -1,8 +1,7 @@
 Evaluations
 ===========
 
-Evaluations in ELL provide a powerful framework for assessing and analyzing Language Model Programs (LMPs). This guide covers the core concepts and features of the evaluation system.
-
+ transcriptions
 Basic Usage
 ----------
 
@@ -208,3 +207,5 @@ Best Practices
    - Use meaningful commit messages
    - Track major changes
    - Maintain evaluation history
+
+

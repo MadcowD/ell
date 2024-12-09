@@ -1,0 +1,196 @@
+Evaluations
+===========
+
+Prompt engineering often resembles an optimization process without a clear, quantifiable objective function. Engineers tweak prompts based on intuition or "vibes," hoping to improve the model's outputs. While this approach can yield short-term results, it presents several significant challenges.
+
+Firstly, relying on intuition makes it difficult to quantify improvements or regressions in the model's performance. Without clear metrics, determining whether changes to prompts are genuinely beneficial becomes speculative. This lack of quantitative feedback can lead to inefficient iterations and missed opportunities for optimization.
+
+Secondly, the process is inherently subjective. Different prompt engineers may have varying opinions on what constitutes a "good" output, leading to inconsistent optimizations. This subjectivity hampers collaboration and makes it challenging to build upon each other's work effectively.
+
+Moreover, manually evaluating outputs is time-consuming and doesn't scale well, especially with large datasets or diverse use cases. As the number of inputs grows, it's impractical to assess each output individually. This limitation hampers the ability to guarantee that the language model will perform reliably across all desired scenarios.
+
+In high-stakes applications—such as legal, healthcare, or domains requiring stringent compliance—stakeholders demand assurances about model performance. Providing such guarantees is virtually impossible without quantitative assessments. The inability to measure and demonstrate performance can hinder the deployment of language models in critical areas where they could offer significant benefits.
+
+Additionally, when working with complex prompt chains involving multiple language model programs (LMPs), optimizing one component may inadvertently degrade the performance of others. Without systematic evaluation methods, identifying and rectifying these issues becomes a formidable challenge. This interdependency underscores the need for a holistic approach to prompt optimization.
+
+These challenges highlight the necessity for a more rigorous, objective, and scalable approach to prompt engineering.
+
+Introducing Evals
+-----------------
+
+An **Eval** is a systematic method for evaluating language model programs using quantitative metrics over a dataset of inputs. It serves as a programmatic means to assess whether your prompt engineering efforts have successfully optimized the model's performance for your specific use case.
+
+### What Are Evals?
+
+Evals consist of three main components:
+
+- **Dataset**: A collection of inputs representative of the use cases you care about. This dataset should be large and varied to ensure statistical significance and to capture the diversity of scenarios your model will encounter.
+
+- **Metrics**: Quantitative criteria that measure how well the LMP performs on the dataset. Metrics could include accuracy, precision, recall, or custom functions that reflect specific aspects of performance relevant to your application.
+
+- **Qualitative Annotations**: Optional assessments providing additional context or insights into the model's outputs. These annotations can help interpret quantitative results and guide further refinements.
+
+By running an LMP against an Eval, you obtain scores that reflect the model's performance according to your defined metrics.
+
+### Benefits of Using Evals
+
+The use of Evals offers several key advantages:
+
+- **Statistical Significance**: Evaluating the model over a large and varied dataset yields meaningful performance statistics. This approach reduces the influence of outliers and provides a more accurate picture of the model's capabilities.
+
+- **Quantitative Analysis**: Replacing subjective judgments with objective metrics reduces cognitive load and enables more focused improvements. Quantitative feedback accelerates the optimization process by highlighting specific areas for enhancement.
+
+- **Reproducibility**: Consistent and comparable evaluations over time allow you to track progress and ensure that changes lead to genuine improvements. Reproducibility is essential for debugging, auditing, and maintaining confidence in the model.
+
+- **Scalability**: Evals facilitate efficient assessment of model performance across thousands of examples without manual intervention. This scalability is crucial for deploying language models in production environments where they must handle diverse and extensive input.
+
+The Necessity of Eval Engineering
+---------------------------------
+
+While Evals provide a systematic framework for assessment, creating effective Evals is an engineering process in itself—this is where **Eval Engineering** becomes crucial.
+
+### Why Eval Engineering Is Crucial
+
+An Eval that lacks discriminative power may saturate too early, showing perfect or near-perfect scores even when the model has significant room for improvement. This saturation typically results from metrics or criteria that are insufficiently sensitive to variations in output quality.
+
+Conversely, misaligned Evals—where the metrics do not align with the true objectives—can lead to optimizing the model in the wrong direction. The model may perform well on the Eval but fail to deliver the desired outcomes in real-world applications.
+
+Eval Engineering involves carefully designing and iteratively refining the dataset, metrics, and criteria to ensure that the Eval accurately reflects the qualities you desire in the model's outputs. This process mirrors prompt engineering but focuses on crafting robust evaluations rather than optimizing prompts.
+
+### The Process of Eval Engineering
+
+Eval Engineering encompasses several key activities:
+
+- **Defining Clear Criteria**: Establish explicit, measurable criteria that align with your goals. Clarity in what constitutes success is essential for both the prompt and Eval.
+
+- **Ensuring Statistical Power**: Collect sufficient and diverse data to make meaningful assessments. A well-constructed dataset captures the range of inputs the model will encounter and provides a solid foundation for evaluation.
+
+- **Iteratively Refining Metrics**: Adjust metrics and criteria as needed to maintain alignment with objectives and improve discriminative ability. This refinement is an ongoing process as you discover new insights or as requirements evolve.
+
+- **Versioning and Documentation**: Keep detailed records of Eval versions, changes made, and reasons for those changes. Proper documentation ensures transparency and facilitates collaboration among team members.
+
+### Turning Qualitative Evaluations into Quantitative Ones
+
+In scenarios where you lack ground truth labels or have open-ended generative tasks, transforming qualitative assessments into quantitative metrics is challenging. Several approaches can help bridge this gap:
+
+#### Using Language Models as Critics
+
+Language models can serve as evaluators by acting as critics of other models' outputs. By providing explicit criteria, you can prompt a language model to assess outputs and generate scores. This method leverages the language model's understanding to provide consistent evaluations.
+
+#### Human Evaluations
+
+Human evaluators can assess model outputs against defined criteria, offering qualitative annotations that convert into quantitative scores. While effective, this approach can be resource-intensive and may not scale well for large datasets.
+
+#### Training Reward Models
+
+By collecting a dataset of human evaluations, you can train a reward model—a specialized machine learning model that predicts human judgments. This reward model can then provide quantitative assessments, enabling scalable evaluations that approximate human feedback.
+
+Implementing Evals in ell
+-------------------------
+
+**ell** introduces built-in support for Evals, integrating evaluation directly into your prompt engineering workflow.
+
+### Creating an Eval in ell
+
+An Eval in ell is defined using the `Evaluation` class:
+```python
+from ell.eval import Evaluation
+Define your Eval
+my_eval = Evaluation(
+name='example_eval',
+data=[{'input': 'sample input', 'expected_output': 'desired output'}],
+metrics=[accuracy_metric],
+description='An example Eval for demonstration purposes.'
+```
+
+- **Name**: A unique identifier for the Eval.
+
+- **Data**: A list of dictionaries containing input data and, optionally, expected outputs.
+
+- **Metrics**: A list of functions that compute performance metrics.
+
+- **Description**: A textual description of the Eval's purpose and contents.
+
+### Running an Eval
+
+To run an Eval on an LMP:
+```python
+Run the Eval
+results = my_eval.run(your_language_model_program)
+Access the results
+print(results.metrics)
+```
+
+The `run` method executes the LMP on the Eval's dataset and computes the specified metrics, returning a `RunResult` object with detailed performance data.
+
+### Viewing Eval Results in ell Studio
+
+When you run an Eval, the results are automatically stored and can be viewed using ell Studio:
+
+ell Studio provides an interactive dashboard where you can visualize Eval scores, track performance over time, and compare different versions of your LMPs and Evals.
+
+Versioning Evals with ell
+-------------------------
+
+Just as prompts require versioning, Evals need version control to manage changes and ensure consistency.
+
+### Automatic Versioning
+
+ell automatically versions your Evals by hashing the following components:
+
+- **Dataset**: Changes to the input data result in a new Eval version.
+
+- **Metric Functions**: Modifications to the evaluation metrics produce a new version.
+
+Each Eval version is stored with metadata, including:
+
+- **Eval ID**: A unique hash representing the Eval version.
+
+- **Creation Date**: Timestamp of when the Eval was created.
+
+- **Change Log**: Automatically generated commit messages describing changes between versions.
+
+### Benefits of Versioning Evals
+
+Versioning Evals offers significant benefits:
+
+- **Reproducibility**: Reproduce past evaluations exactly as they were conducted.
+
+- **Comparison Over Time**: Compare model performance across different Eval versions to track progress or identify regressions.
+
+- **Rollback Capability**: Revert to previous Eval versions if new changes negatively affect evaluations.
+
+- **Transparency**: Clearly document how and why Evals have changed over time, enhancing collaboration and accountability.
+
+Benefits of Eval Engineering
+----------------------------
+
+Implementing Eval Engineering provides numerous advantages:
+
+- **Enhanced Rigor**: Introduce scientific methods into prompt engineering, making the process more objective and reliable.
+
+- **Improved Collaboration**: Separate concerns by having team members focus on prompt engineering or Eval engineering, promoting specialization and efficiency.
+
+- **Faster Iterations**: Reduce the time spent on manual evaluations, allowing for quicker optimization cycles.
+
+- **Scalable Evaluations**: Efficiently handle large datasets, enabling comprehensive assessments of model performance.
+
+- **Alignment with Objectives**: Ensure that the model's outputs closely match stakeholder needs by defining explicit evaluation criteria.
+
+Evaluations and the Future of Prompt Engineering
+-----------------------------------------------
+
+As language models continue to advance, the importance of robust evaluation methods will grow. Models will increasingly saturate existing Evals, meaning they perform near-perfectly on current evaluations. At this point, further improvements require constructing new Evals with greater discriminative power.
+
+Eval Engineering will be pivotal in pushing the boundaries of model performance. By continuously refining Evals, you can identify subtle areas for enhancement even when models appear to have plateaued. This ongoing process ensures that models remain aligned with evolving objectives and adapt to new challenges.
+
+Moreover, Eval Engineering is not just about immediate gains. Developing expertise in this area prepares teams for future developments in the field, positioning them to leverage advancements effectively.
+
+Conclusion
+----------
+
+Evals and Eval Engineering represent significant steps toward making prompt engineering a more systematic, reliable, and scalable process. By integrating Evals into your workflow with ell, you move beyond subjective assessments, introducing scientific rigor into the optimization of language model programs.
+
+The adoption of Eval Engineering practices not only improves current outcomes but also future-proofs your workflows. As language models evolve, the ability to design and implement robust evaluations will be increasingly valuable.
+
+To get started with Evals in ell, consult the API documentation and explore examples. By embracing Eval Engineering, you enhance your prompt engineering efforts and contribute to the advancement of the field.
