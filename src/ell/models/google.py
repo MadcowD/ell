@@ -66,4 +66,5 @@ except openai.OpenAIError as e:
     pass
 
 register(default_client)
+print(default_client)
 config.default_client = default_client
