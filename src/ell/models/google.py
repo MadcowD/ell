@@ -61,7 +61,7 @@ try:
     gemini_api_key = os.environ.get("GEMINI_API_KEY")
     if not gemini_api_key:
         raise openai.OpenAIError("GEMINI_API_KEY not found in environment variables")
-    default_client = openai.Client(base_url="https://api.x.ai/v1", api_key=gemini_api_key)
+    default_client = openai.Client(base_url="https://generativelanguage.googleapis.com/v1beta/openai/", api_key=gemini_api_key)
 except openai.OpenAIError as e:
     pass
 
