@@ -50,7 +50,6 @@ def register(client: openai.Client):
     'gemini-1.5-flash-8b',
     'gemini-1.5-pro',
     'gemini-1.0-pro',
-    'aqa',
     ]
     for model_id in standard_models:
         config.register_model(model_id, client)
@@ -66,5 +65,5 @@ except openai.OpenAIError as e:
     pass
 
 register(default_client)
-print(default_client)
+
 config.default_client = default_client
