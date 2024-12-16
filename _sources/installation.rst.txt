@@ -10,7 +10,7 @@ Installing ell
 
    .. code-block:: bash
 
-      pip install -U ell-ai[all]
+      pip install -U "ell-ai[all]"
 
    This installs ``ell``, ``ell-studio``, versioning and tracing with SQLite, and the default provider clients.
 
@@ -39,7 +39,7 @@ Adds the Anthropic client.
 
 .. code-block:: bash
 
-   pip install -U ell-ai[anthropic]
+   pip install -U "ell-ai[anthropic]"
 
 
 ``groq``
@@ -48,7 +48,7 @@ Adds the Groq client.
 
 .. code-block:: bash
 
-   pip install -U ell-ai[groq]
+   pip install -U "ell-ai[groq]"
 
 
 ``studio``
@@ -57,7 +57,7 @@ Adds ``ell-studio``.
 
 .. code-block:: bash
 
-   pip install -U ell-ai[studio]
+   pip install -U "ell-ai[studio]"
 
 
 ``sqlite``
@@ -66,7 +66,7 @@ SQLite storage for versioning and tracing.
 
 .. code-block:: bash
 
-   pip install -U ell-ai[sqlite]
+   pip install -U "ell-ai[sqlite]"
 
 
 ``postgres``
@@ -77,7 +77,7 @@ Include this option if you'd like to use ``ell-studio`` with Postgres.
 
 .. code-block:: bash
 
-   pip install -U ell-ai[postgres]
+   pip install -U "ell-ai[postgres]"
 
 Combining options
 ~~~~~~~~~~~~~~~~~
@@ -88,7 +88,7 @@ Example: Install ``ell`` with ``ell-studio``, Postgres, and the Anthropic client
 
 .. code-block:: bash
 
-   pip install -U ell-ai[studio, postgres, anthropic]
+   pip install -U "ell-ai[studio, postgres, anthropic]"
 
 
 API Key Setup

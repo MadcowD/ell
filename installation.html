@@ -353,7 +353,7 @@ nav a {
 <h2>Installing ell<a class="headerlink" href="#installing-ell" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#installing-ell'">¶</a></h2>
 <ol class="arabic">
 <li><p>Install using pip:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>all<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span><span class="s2">"ell-ai[all]"</span>
 </span></code></pre></div>
 </div>
 <p>This installs <code class="docutils literal notranslate"><span class="pre">ell</span></code>, <code class="docutils literal notranslate"><span class="pre">ell-studio</span></code>, versioning and tracing with SQLite, and the default provider clients.</p>
@@ -376,28 +376,28 @@ nav a {
 <section id="anthropic">
 <h3><code class="docutils literal notranslate"><span class="pre">anthropic</span></code><a class="headerlink" href="#anthropic" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#anthropic'">¶</a></h3>
 <p>Adds the Anthropic client.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>anthropic<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span><span class="s2">"ell-ai[anthropic]"</span>
 </span></code></pre></div>
 </div>
 </section>
 <section id="groq">
 <h3><code class="docutils literal notranslate"><span class="pre">groq</span></code><a class="headerlink" href="#groq" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#groq'">¶</a></h3>
 <p>Adds the Groq client.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>groq<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span><span class="s2">"ell-ai[groq]"</span>
 </span></code></pre></div>
 </div>
 </section>
 <section id="studio">
 <h3><code class="docutils literal notranslate"><span class="pre">studio</span></code><a class="headerlink" href="#studio" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#studio'">¶</a></h3>
 <p>Adds <code class="docutils literal notranslate"><span class="pre">ell-studio</span></code>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>studio<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span><span class="s2">"ell-ai[studio]"</span>
 </span></code></pre></div>
 </div>
 </section>
 <section id="sqlite">
 <h3><code class="docutils literal notranslate"><span class="pre">sqlite</span></code><a class="headerlink" href="#sqlite" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#sqlite'">¶</a></h3>
 <p>SQLite storage for versioning and tracing.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>sqlite<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span><span class="s2">"ell-ai[sqlite]"</span>
 </span></code></pre></div>
 </div>
 </section>
@@ -405,7 +405,7 @@ nav a {
 <h3><code class="docutils literal notranslate"><span class="pre">postgres</span></code><a class="headerlink" href="#postgres" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#postgres'">¶</a></h3>
 <p>Postgres storage for versioning and tracing.</p>
 <p>Include this option if you’d like to use <code class="docutils literal notranslate"><span class="pre">ell-studio</span></code> with Postgres.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>postgres<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span><span class="s2">"ell-ai[postgres]"</span>
 </span></code></pre></div>
 </div>
 </section>
@@ -413,7 +413,7 @@ nav a {
 <h3>Combining options<a class="headerlink" href="#combining-options" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#combining-options'">¶</a></h3>
 <p>All options are additive and can be combined as needed.</p>
 <p>Example: Install <code class="docutils literal notranslate"><span class="pre">ell</span></code> with <code class="docutils literal notranslate"><span class="pre">ell-studio</span></code>, Postgres, and the Anthropic client:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>ell-ai<span class="o">[</span>studio,<span class="w"> </span>postgres,<span class="w"> </span>anthropic<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span><span class="s2">"ell-ai[studio, postgres, anthropic]"</span>
 </span></code></pre></div>
 </div>
 </section>
