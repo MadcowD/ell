@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+
+<html :class="{'dark': darkMode === 'dark' || (darkMode === 'system' &amp;&amp; window.matchMedia('(prefers-color-scheme: dark)').matches)}" class="scroll-smooth" data-content_root="../" lang="en" x-data="{ darkMode: localStorage.getItem('darkMode') || localStorage.setItem('darkMode', 'system'), activeSection: '' }" x-init="$watch('darkMode', val =&gt; localStorage.setItem('darkMode', val))">
+<head>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta charset="utf-8"/>
+<meta content="white" media="(prefers-color-scheme: light)" name="theme-color"/>
+<meta content="black" media="(prefers-color-scheme: dark)" name="theme-color"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Evaluations (New) | ell  documentation</title>
+<meta content="Evaluations (New) | ell  documentation" property="og:title"/>
+<meta content="Evaluations (New) | ell  documentation" name="twitter:title"/>
+<link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
+<link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
+<link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
+<link href="../_static/favicon.ico" rel="icon"/>
+<link href="../search.html" rel="search" title="Search"/>
+<link href="../genindex.html" rel="index" title="Index"/>
+<link href="message_api.html" rel="next" title="Messages"/>
+<link href="ell_studio.html" rel="prev" title="Studio"/>
+<script>
+    <!-- Prevent Flash of wrong theme -->
+      const userPreference = localStorage.getItem('darkMode');
+      let mode;
+      if (userPreference === 'dark' || window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        mode = 'dark';
+        document.documentElement.classList.add('dark');
+      } else {
+        mode = 'light';
+      }
+      if (!userPreference) {localStorage.setItem('darkMode', mode)}
+    </script>
+
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-220ZB10X27"></script>
+<script>
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-220ZB10X27');
+  }
+</script>
+<style>
+    .rounded-image {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+</style>
+<script>
+function invertImage(dark) {
+    var images = document.querySelectorAll('.invertible-image img');
+    var htmlElement = document.documentElement;
+    images.forEach(function(image) {
+        if (!dark) {
+            image.style.filter = 'invert(100%) hue-rotate(160deg)';
+        } else {
+            image.style.filter = 'none';
+        }
+    });
+}
+
+
+
+// Run when the 'dark' class is added or removed from the <html> element
+const htmlElement = document.documentElement;
+
+// Use MutationObserver to detect changes in the class attribute
+const observer = new MutationObserver((mutations) => {
+console.log(document.documentElement.classList)
+    mutations.forEach((mutation) => {
+            invertImage(document.documentElement.classList.contains('dark'));
+
+    });
+});
+
+observer.observe(htmlElement, { attributes: true, attributeFilter: ['class'] });
+</script>
+
+<meta content="https://docs.ell.so/" property="og:url"/>
+<meta content="ell is a lightweight prompt engineering library treating prompts as functions. It provides tools for versioning, monitoring, and visualization of language model programs." property="og:description"/>
+<meta content="https://docs.ell.so/_static/og2.png" property="og:image"/>
+
+<meta content="summary_large_image" property="twitter:card"/>
+<meta content="ell is a lightweight prompt engineering library treating prompts as functions. It provides tools for versioning, monitoring, and visualization of language model programs." property="twitter:description"/>
+
+<meta content="ell is a lightweight prompt engineering library treating prompts as functions. It provides tools for versioning, monitoring, and visualization of language model programs." name="description"/>
+<meta content="ell, language model programming, prompt engineering, LLM, AI, machine learning, GPT" name="keywords"/>
+<meta content="William Guss" name="author"/>
+</head>
+<body :class="{ 'overflow-hidden': showSidebar }" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false }">
+<div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="#content">
+      Skip to content
+    </a><header class="sticky top-0 z-40 w-full border-b shadow-sm border-border supports-backdrop-blur:bg-background/60 bg-background/95 backdrop-blur"><div class="container flex items-center h-14">
+<div class="hidden mr-4 md:flex">
+<style>
+:root {
+  --color-1: 0 100% 63%;
+  --color-2: 270 100% 63%;
+  --color-3: 210 100% 63%;
+  --color-4: 195 100% 63%;
+  --color-5: 90 100% 63%;
+}
+
+@keyframes rainbow {
+    0% { background-position: 0%; }
+    100% { background-position: 200%; }
+}
+
+.github-star-btn {
+    height: 2.2rem;
+    padding: 0.5rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    border: 0;
+    position: relative;
+    background-size: 200%;
+    background-clip: padding-box, border-box, border-box;
+    background-origin: border-box;
+    border: calc(0.08 * 1rem) solid transparent;
+    color: #fff;
+    background-image: 
+      linear-gradient(#121213, #121213),
+      linear-gradient(#121213 50%, rgba(18,18,19,0.6) 80%, rgba(18,18,19,0)),
+      linear-gradient(90deg, hsl(var(--color-1)), hsl(var(--color-5)), hsl(var(--color-3)), hsl(var(--color-4)), hsl(var(--color-2)));
+    animation: rainbow 2s infinite linear;
+}
+
+.github-star-btn::before {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    left: 50%;
+    z-index: 0;
+    height: 20%;
+    width: 60%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, hsl(var(--color-1)), hsl(var(--color-5)), hsl(var(--color-3)), hsl(var(--color-4)), hsl(var(--color-2)));
+    background-size: 200%;
+    filter: blur(calc(0.8 * 1rem));
+    animation: rainbow 2s infinite linear;
+}
+
+.dark .github-star-btn {
+    color: #030303;
+    background-image: 
+      linear-gradient(#fff, #fff),
+      linear-gradient(#fff 50%, rgba(255,255,255,0.6) 80%, rgba(0,0,0,0)),
+      linear-gradient(90deg, hsl(var(--color-1)), hsl(var(--color-5)), hsl(var(--color-3)), hsl(var(--color-4)), hsl(var(--color-2)));
+}
+
+
+nav a {
+  white-space: nowrap;
+}
+
+.twin-btn-container {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-direction: row-reverse;
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .twin-btn-container {
+        flex-direction: row;
+        justify-content: flex-end;
+    }
+}
+
+
+@media (max-width: 640px) {
+    .github-star-btn {
+        font-size: 12px;
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+
+
+</style>
+<a class="flex items-center mr-6" href="../index.html">
+<img alt="Logo" class="mr-2 hidden dark:block" height="24" src="../_static/ell-wide-dark.png" style="min-width: 120px; max-width: 120px;" width="120"/>
+<img alt="Logo" class="mr-2 dark:hidden" height="24" src="../_static/ell-wide-light.png" style="min-width: 120px; max-width: 120px;" width="120"/></a>
+<nav class="flex items-center space-x-6 text-sm font-medium">
+<a class="transition-colors hover:text-foreground/80 text-foreground/60" href="../index.html">Docs</a>
+<a class="transition-colors hover:text-foreground/80 text-foreground/60" href="../reference/index.html">API Reference</a>
+<a class="transition-colors hover:text-foreground/80 text-foreground/60" href="https://jobs.ell.so" rel="noopener nofollow">AI Jobs Board</a>
+</nav></div><button @click="showSidebar = true" class="inline-flex items-center justify-center h-10 px-0 py-2 mr-2 text-base font-medium transition-colors rounded-md hover:text-accent-foreground hover:bg-transparent md:hidden" type="button">
+<svg aria-hidden="true" fill="currentColor" height="24" viewbox="0 96 960 960" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M152.587 825.087q-19.152 0-32.326-13.174t-13.174-32.326q0-19.152 13.174-32.326t32.326-13.174h440q19.152 0 32.326 13.174t13.174 32.326q0 19.152-13.174 32.326t-32.326 13.174h-440Zm0-203.587q-19.152 0-32.326-13.174T107.087 576q0-19.152 13.174-32.326t32.326-13.174h320q19.152 0 32.326 13.174T518.087 576q0 19.152-13.174 32.326T472.587 621.5h-320Zm0-203.587q-19.152 0-32.326-13.174t-13.174-32.326q0-19.152 13.174-32.326t32.326-13.174h440q19.152 0 32.326 13.174t13.174 32.326q0 19.152-13.174 32.326t-32.326 13.174h-440ZM708.913 576l112.174 112.174q12.674 12.674 12.674 31.826t-12.674 31.826Q808.413 764.5 789.261 764.5t-31.826-12.674l-144-144Q600 594.391 600 576t13.435-31.826l144-144q12.674-12.674 31.826-12.674t31.826 12.674q12.674 12.674 12.674 31.826t-12.674 31.826L708.913 576Z"></path>
+</svg>
+<span class="sr-only">Toggle navigation menu</span>
+</button>
+<div class="flex flex-wrap items-center justify-between flex-1 space-x-2 sm:space-x-4 md:justify-end">
+<div class="twin-btn-container">
+<div class="github-star-btn-container md:w-auto mb-2 md:mb-0">
+<a class="github-star-btn whitespace-nowrap" href="https://github.com/madcowd/ell" rel="noopener noreferrer" target="_blank">
+<svg aria-hidden="true" class="w-5 h-5 mr-2 hidden sm:inline-block" fill="currentColor" viewbox="0 0 24 24">
+<path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path>
+</svg>
+<span class="font-medium">Star on GitHub</span>
+<svg class="star-icon w-4 h-4 ml-2" fill="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+<animate attributename="opacity" dur="2s" repeatcount="indefinite" values="1;0.7;1"></animate>
+</path>
+</svg>
+<span class="ml-2 star-count" data-stars="0" style="min-width: 3ch; text-align: center;">0</span>
+</a>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const starBtn = document.querySelector('.github-star-btn');
+      const starCount = starBtn.querySelector('.star-count');
+      
+      fetch('https://api.github.com/repos/madcowd/ell')
+        .then(response => response.json())
+        .then(data => {
+          const stars = data.stargazers_count;
+          animateValue(starCount, 0, stars, 1500);
+        })
+        .catch(error => console.error('Error fetching GitHub stars:', error));
+    });
+
+    function animateValue(obj, start, end, duration) {
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        obj.textContent = Math.floor(progress * (end - start) + start);
+        obj.setAttribute('data-stars', obj.textContent);
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+  </script>
+<div class="searchbox-container w-full md:w-auto md:flex-none"><form @keydown.k.window.meta="$refs.search.focus()" action="../search.html" class="relative flex items-center group" id="searchbox" method="get">
+<input aria-label="Search the docs" class="inline-flex items-center font-medium transition-colors bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background border border-input hover:bg-accent focus:bg-accent hover:text-accent-foreground focus:text-accent-foreground hover:placeholder-accent-foreground py-2 px-4 relative h-9 w-full justify-start rounded-[0.5rem] text-sm text-muted-foreground sm:pr-12 md:w-40 lg:w-64" id="search-input" name="q" placeholder="Search ..." type="search" x-ref="search"/>
+<kbd class="pointer-events-none absolute right-1.5 top-2 hidden h-5 select-none text-muted-foreground items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex group-hover:bg-accent group-hover:text-accent-foreground">
+<span class="text-xs">⌘</span>
+    K
+  </kbd>
+</form>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.querySelector('.searchbox-container input');
+      const starBtnContainer = document.querySelector('.github-star-btn-container');
+  
+      if (searchInput && starBtnContainer) {
+        const isMobile = window.innerWidth < 768; // Adjust this breakpoint as needed
+  
+        if (isMobile) {
+          searchInput.addEventListener('focus', function() {
+            starBtnContainer.style.display = 'none';
+          });
+  
+          searchInput.addEventListener('blur', function() {
+            starBtnContainer.style.display = 'block';
+          });
+        }
+      }
+    });
+  </script>
+</div>
+<nav class="flex items-center space-x-1 mt-2 md:mt-0">
+<a href="https://discord.gg/vWntgU52Xb" rel="noopener nofollow" title="Visit Discord">
+<div class="inline-flex items-center justify-center px-0 text-sm font-medium transition-colors rounded-md disabled:opacity-50 disabled:pointer-events-none hover:bg-accent hover:text-accent-foreground h-9 w-9">
+<svg fill="currentColor" height="18" viewbox="0 0 640 512" xmlns="http://www.w3.org/2000/svg"><path d="M524.5 69.8a1.5 1.5 0 0 0 -.8-.7A485.1 485.1 0 0 0 404.1 32a1.8 1.8 0 0 0 -1.9 .9 337.5 337.5 0 0 0 -14.9 30.6 447.8 447.8 0 0 0 -134.4 0 309.5 309.5 0 0 0 -15.1-30.6 1.9 1.9 0 0 0 -1.9-.9A483.7 483.7 0 0 0 116.1 69.1a1.7 1.7 0 0 0 -.8 .7C39.1 183.7 18.2 294.7 28.4 404.4a2 2 0 0 0 .8 1.4A487.7 487.7 0 0 0 176 479.9a1.9 1.9 0 0 0 2.1-.7A348.2 348.2 0 0 0 208.1 430.4a1.9 1.9 0 0 0 -1-2.6 321.2 321.2 0 0 1 -45.9-21.9 1.9 1.9 0 0 1 -.2-3.1c3.1-2.3 6.2-4.7 9.1-7.1a1.8 1.8 0 0 1 1.9-.3c96.2 43.9 200.4 43.9 295.5 0a1.8 1.8 0 0 1 1.9 .2c2.9 2.4 6 4.9 9.1 7.2a1.9 1.9 0 0 1 -.2 3.1 301.4 301.4 0 0 1 -45.9 21.8 1.9 1.9 0 0 0 -1 2.6 391.1 391.1 0 0 0 30 48.8 1.9 1.9 0 0 0 2.1 .7A486 486 0 0 0 610.7 405.7a1.9 1.9 0 0 0 .8-1.4C623.7 277.6 590.9 167.5 524.5 69.8zM222.5 337.6c-29 0-52.8-26.6-52.8-59.2S193.1 219.1 222.5 219.1c29.7 0 53.3 26.8 52.8 59.2C275.3 311 251.9 337.6 222.5 337.6zm195.4 0c-29 0-52.8-26.6-52.8-59.2S388.4 219.1 417.9 219.1c29.7 0 53.3 26.8 52.8 59.2C470.7 311 447.5 337.6 417.9 337.6z"></path></svg>
+</div>
+</a>
+<button @click="darkMode = darkMode === 'light' ? 'dark' : 'light'" aria-label="Color theme switcher" class="relative inline-flex items-center justify-center px-0 text-sm font-medium transition-colors rounded-md hover:bg-accent hover:text-accent-foreground h-9 w-9" type="button">
+<svg class="absolute transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0" fill="currentColor" height="24" viewbox="0 96 960 960" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M480 685q45.456 0 77.228-31.772Q589 621.456 589 576q0-45.456-31.772-77.228Q525.456 467 480 467q-45.456 0-77.228 31.772Q371 530.544 371 576q0 45.456 31.772 77.228Q434.544 685 480 685Zm0 91q-83 0-141.5-58.5T280 576q0-83 58.5-141.5T480 376q83 0 141.5 58.5T680 576q0 83-58.5 141.5T480 776ZM80 621.5q-19.152 0-32.326-13.174T34.5 576q0-19.152 13.174-32.326T80 530.5h80q19.152 0 32.326 13.174T205.5 576q0 19.152-13.174 32.326T160 621.5H80Zm720 0q-19.152 0-32.326-13.174T754.5 576q0-19.152 13.174-32.326T800 530.5h80q19.152 0 32.326 13.174T925.5 576q0 19.152-13.174 32.326T880 621.5h-80Zm-320-320q-19.152 0-32.326-13.174T434.5 256v-80q0-19.152 13.174-32.326T480 130.5q19.152 0 32.326 13.174T525.5 176v80q0 19.152-13.174 32.326T480 301.5Zm0 720q-19.152 0-32.326-13.17Q434.5 995.152 434.5 976v-80q0-19.152 13.174-32.326T480 850.5q19.152 0 32.326 13.174T525.5 896v80q0 19.152-13.174 32.33-13.174 13.17-32.326 13.17ZM222.174 382.065l-43-42Q165.5 327.391 166 308.239t13.174-33.065q13.435-13.674 32.587-13.674t32.065 13.674l42.239 43q12.674 13.435 12.555 31.706-.12 18.272-12.555 31.946-12.674 13.674-31.445 13.413-18.772-.261-32.446-13.174Zm494 494.761-42.239-43q-12.674-13.435-12.674-32.087t12.674-31.565Q686.609 756.5 705.38 757q18.772.5 32.446 13.174l43 41.761Q794.5 824.609 794 843.761t-13.174 33.065Q767.391 890.5 748.239 890.5t-32.065-13.674Zm-42-494.761Q660.5 369.391 661 350.62q.5-18.772 13.174-32.446l41.761-43Q728.609 261.5 747.761 262t33.065 13.174q13.674 13.435 13.674 32.587t-13.674 32.065l-43 42.239q-13.435 12.674-31.706 12.555-18.272-.12-31.946-12.555Zm-495 494.761Q165.5 863.391 165.5 844.239t13.674-32.065l43-42.239q13.435-12.674 32.087-12.674t31.565 12.674Q299.5 782.609 299 801.38q-.5 18.772-13.174 32.446l-41.761 43Q231.391 890.5 212.239 890t-33.065-13.174ZM480 576Z"></path>
+</svg>
+<svg class="absolute transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100" fill="currentColor" height="24" viewbox="0 96 960 960" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M480 936q-151 0-255.5-104.5T120 576q0-138 90-239.5T440 218q25-3 39 18t-1 44q-17 26-25.5 55t-8.5 61q0 90 63 153t153 63q31 0 61.5-9t54.5-25q21-14 43-1.5t19 39.5q-14 138-117.5 229T480 936Zm0-80q88 0 158-48.5T740 681q-20 5-40 8t-40 3q-123 0-209.5-86.5T364 396q0-20 3-40t8-40q-78 32-126.5 102T200 576q0 116 82 198t198 82Zm-10-270Z"></path>
+</svg>
+</button>
+</nav>
+</div>
+</div>
+</header>
+<div class="flex-1"><div class="container flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10"><aside :aria-hidden="!showSidebar" :class="{ 'translate-x-0': showSidebar }" class="fixed inset-y-0 left-0 md:top-14 z-50 md:z-30 bg-background md:bg-transparent transition-all duration-100 -translate-x-full md:translate-x-0 ml-0 p-6 md:p-0 md:-ml-2 md:h-[calc(100vh-3.5rem)] w-5/6 md:w-full shrink-0 overflow-y-auto border-r border-border md:sticky" id="left-sidebar">
+<a class="!justify-start text-sm md:!hidden bg-background" href="../index.html">
+<img alt="Logo" class="mr-2 hidden dark:block" height="16" src="../_static/ell-wide-dark.png" width="16"/>
+<img alt="Logo" class="mr-2 dark:hidden" height="16" src="../_static/ell-wide-light.png" width="16"/><span class="font-bold text-clip whitespace-nowrap">ell  documentation</span>
+</a>
+<div class="relative overflow-hidden md:overflow-auto my-4 md:my-0 h-[calc(100vh-8rem)] md:h-auto">
+<div class="overflow-y-auto h-full w-full relative pr-6"><nav class="flex md:hidden flex-col font-medium mt-4">
+<a href="../index.html">Docs</a>
+<a href="../reference/index.html">API Reference</a>
+<a href="https://jobs.ell.so" rel="nofollow noopener">AI Jobs Board</a>
+</nav><nav class="table w-full min-w-full my-6 lg:my-8">
+<p class="caption" role="heading"><span class="caption-text">The Basics:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="ell_simple.html">@ell.simple</a></li>
+<li class="toctree-l1"><a class="reference internal" href="versioning_and_storage.html">Versioning &amp; Tracing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ell_studio.html">Studio</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Evaluations (New)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="message_api.html">Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ell_complex.html">@ell.complex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tool_usage.html">Tool Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structured_outputs.html">Structured Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multimodality.html">Multimodality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_and_api_clients.html">Models &amp; API Clients</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">ell package</a></li>
+</ul>
+</nav>
+</div>
+</div>
+<button @click="showSidebar = false" class="absolute md:hidden right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100" type="button">
+<svg class="h-4 w-4" fill="currentColor" height="24" stroke="none" viewbox="0 96 960 960" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M480 632 284 828q-11 11-28 11t-28-11q-11-11-11-28t11-28l196-196-196-196q-11-11-11-28t11-28q11-11 28-11t28 11l196 196 196-196q11-11 28-11t28 11q11 11 11 28t-11 28L536 576l196 196q11 11 11 28t-11 28q-11 11-28 11t-28-11L480 632Z"></path>
+</svg>
+</button>
+</aside>
+<main class="relative py-6 lg:gap-10 lg:py-8 xl:grid xl:grid-cols-[1fr_300px]">
+<div class="w-full min-w-0 mx-auto">
+<nav aria-label="breadcrumbs" class="flex items-center mb-4 space-x-1 text-sm text-muted-foreground">
+<a class="overflow-hidden text-ellipsis whitespace-nowrap hover:text-foreground" href="../index.html">
+<span class="hidden md:inline">ell  documentation</span>
+<svg aria-label="Home" class="md:hidden" fill="currentColor" height="18" stroke="none" viewbox="0 96 960 960" width="18" xmlns="http://www.w3.org/2000/svg">
+<path d="M240 856h120V616h240v240h120V496L480 316 240 496v360Zm-80 80V456l320-240 320 240v480H520V696h-80v240H160Zm320-350Z"></path>
+</svg>
+</a>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Evaluations (New)</span>
+</nav>
+<div id="content" role="main">
+<section id="evaluations-new">
+<h1>Evaluations (New)<a class="headerlink" href="#evaluations-new" title="Link to this heading">¶</a></h1>
+<p>Evaluations represent a crucial component in the practice of prompt engineering. They provide the quantitative and qualitative signals necessary to understand whether a language model program achieves the desired objectives. Without evaluations, the process of refining prompts often devolves into guesswork, guided only by subjective impressions rather than structured evidence. Although many developers default to an ad hoc process—manually reviewing a handful of generated outputs and deciding by intuition whether one version of a prompt is better than another—this approach quickly becomes untenable as tasks grow more complex, as teams grow larger, and as stakes get higher.</p>
+<p>The premise of ell’s evaluation feature is that prompt engineering should mirror, where possible, the rigor and methodology of modern machine learning. In machine learning, progress is measured against validated benchmarks, metrics, and datasets. Even as one tunes parameters or tries novel architectures, the question “Did we do better?” can be answered systematically. Similarly, evaluations in ell offer a structured and reproducible way to assess prompts. They transform the process from an ephemeral art into a form of empirical inquiry. In doing so, they also introduce the notion of eval engineering, whereby evaluations themselves become first-class entities that are carefully constructed, versioned, and refined over time.</p>
+<section id="the-problem-of-prompt-engineering-by-intuition">
+<h2>The Problem of Prompt Engineering by Intuition<a class="headerlink" href="#the-problem-of-prompt-engineering-by-intuition" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#the-problem-of-prompt-engineering-by-intuition'">¶</a></h2>
+<p>Prompt engineering without evaluations is often characterized by subjective assessments that vary from day to day and person to person. In simple projects, this might suffice. For example, when producing a handful of short marketing texts, a developer might be content to trust personal taste as the measure of success. However, as soon as the problem grows beyond a few trivial examples, this style of iterative tweaking collapses. With more complex tasks, larger data distributions, and subtle constraints—such as maintaining a specific tone or meeting domain-specific requirements—subjective judgments no longer yield consistent or reliable improvements.</p>
+<p>Without evaluations, there is no systematic way to ensure that a revised prompt actually improves performance on the desired tasks. There is no guarantee that adjusting a single detail in the prompt to improve outputs on one example does not degrade outputs elsewhere. Over time, as prompt engineers read through too many model responses, they become either desensitized to quality issues or hypersensitive to minor flaws. This miscalibration saps productivity and leads to unprincipled prompt tuning. Subjective judgment cannot scale, fails to capture statistical performance trends, and offers no verifiable path to satisfy external stakeholders who demand reliability, accuracy, or compliance with given standards.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The intuitive, trial-and-error style of prompt engineering can be visually depicted. Imagine a simple diagram in ell Studio (ell’s local, version-controlled dashboard) that shows a single prompt evolving over time, each modification recorded and compared. Without evaluations, this “diff” of prompt versions tells us only that the code changed—not whether it changed for the better.</p>
+</div>
+</section>
+<section id="the-concept-of-evals">
+<h2>The Concept of Evals<a class="headerlink" href="#the-concept-of-evals" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#the-concept-of-evals'">¶</a></h2>
+<p>An eval is a structured evaluation suite that measures a language model program’s performance quantitatively and, when necessary, qualitatively. It consists of three essential elements. First, there is a dataset that represents a distribution of inputs over which the prompt must perform. Second, there are criteria that define what constitutes a successful output. Third, there are metrics that translate the model’s raw outputs into a measurable quantity.</p>
+<p>Below is a minimal example showing how these pieces fit together in ell. Assume we have a dataset of simple classification tasks and a language model program (LMP) that attempts to answer them:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+</span><span id="line-2"><span class="n">ell</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="s2">"./logdir"</span><span class="p">)</span>  <span class="c1"># Enable versioning and storage</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="c1"># 1. Define an LMP:</span>
+</span><span id="line-5"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</span><span id="line-6"><span class="k">def</span> <span class="nf">classify_sentiment</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-7"><span class="w">    </span><span class="sd">"""You are a sentiment classifier. Return 'positive' or 'negative'."""</span>
+</span><span id="line-8">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Classify sentiment: </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="line-9">
+</span><span id="line-10"><span class="c1"># 2. A small dataset:</span>
+</span><span id="line-11"><span class="n">dataset</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="line-12">    <span class="p">{</span><span class="s2">"input"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"text"</span><span class="p">:</span> <span class="s2">"I love this product!"</span><span class="p">},</span> <span class="s2">"expected_output"</span><span class="p">:</span> <span class="s2">"positive"</span><span class="p">},</span>
+</span><span id="line-13">    <span class="p">{</span><span class="s2">"input"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"text"</span><span class="p">:</span> <span class="s2">"This is terrible."</span><span class="p">},</span> <span class="s2">"expected_output"</span><span class="p">:</span> <span class="s2">"negative"</span><span class="p">}</span>
+</span><span id="line-14"><span class="p">]</span>
+</span><span id="line-15">
+</span><span id="line-16"><span class="c1"># 3. A metric function that checks correctness:</span>
+</span><span id="line-17"><span class="k">def</span> <span class="nf">accuracy_metric</span><span class="p">(</span><span class="n">datapoint</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+</span><span id="line-18">    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">datapoint</span><span class="p">[</span><span class="s2">"expected_output"</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+</span><span id="line-19">
+</span><span id="line-20"><span class="c1"># 4. Constructing the eval:</span>
+</span><span id="line-21"><span class="nb">eval</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">Evaluation</span><span class="p">(</span>
+</span><span id="line-22">    <span class="n">name</span><span class="o">=</span><span class="s2">"sentiment_eval"</span><span class="p">,</span>
+</span><span id="line-23">    <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+</span><span id="line-24">    <span class="n">metrics</span><span class="o">=</span><span class="p">{</span><span class="s2">"accuracy"</span><span class="p">:</span> <span class="n">accuracy_metric</span><span class="p">}</span>
+</span><span id="line-25"><span class="p">)</span>
+</span><span id="line-26">
+</span><span id="line-27"><span class="c1"># Run the eval:</span>
+</span><span id="line-28"><span class="n">result</span> <span class="o">=</span> <span class="nb">eval</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">classify_sentiment</span><span class="p">)</span>
+</span><span id="line-29"><span class="nb">print</span><span class="p">(</span><span class="s2">"Average accuracy:"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s2">"accuracy"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+</span></code></pre></div>
+</div>
+<p>Here, the dataset provides two test cases, the LMP attempts to solve them, and the metric quantifies how well it performed. As the LMP changes over time, rerunning this eval yields comparable, reproducible scores.</p>
+<p>In many cases, constructing an eval means assembling a carefully chosen set of input examples along with ground-truth labels or ideal reference outputs. For tasks that resemble classification, defining metrics is straightforward. For more open-ended tasks, evals may rely on heuristic functions, human annotations, or even other language model programs (critics) to rate outputs.</p>
+</section>
+<section id="eval-engineering">
+<h2>Eval Engineering<a class="headerlink" href="#eval-engineering" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#eval-engineering'">¶</a></h2>
+<p>Defining a single eval and sticking to it blindly can be as problematic as never evaluating at all. In practice, an eval is never perfect on the first try. As the prompt engineer tests models against the eval, new edge cases and overlooked criteria emerge. Perhaps the chosen metric saturates too easily, or perhaps the dataset fails to represent the complexity of real inputs. Updating and refining the eval in response to these insights is what we call eval engineering.</p>
+<p>Consider a scenario where our first eval always returns a perfect score. Maybe our criteria are too lenient. With eval engineering, we revise and strengthen the eval:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="c1"># A new, more complex metric that penalizes incorrect formatting:</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">stricter_accuracy</span><span class="p">(</span><span class="n">datapoint</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+</span><span id="line-3">    <span class="c1"># Now we require the output to match exactly 'positive' or 'negative'</span>
+</span><span id="line-4">    <span class="c1"># to count as correct, making the eval more discriminative.</span>
+</span><span id="line-5">    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">datapoint</span><span class="p">[</span><span class="s2">"expected_output"</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="c1"># Revised eval:</span>
+</span><span id="line-8"><span class="n">eval_strict</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">Evaluation</span><span class="p">(</span>
+</span><span id="line-9">    <span class="n">name</span><span class="o">=</span><span class="s2">"sentiment_eval_stricter"</span><span class="p">,</span>
+</span><span id="line-10">    <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+</span><span id="line-11">    <span class="n">metrics</span><span class="o">=</span><span class="p">{</span><span class="s2">"accuracy"</span><span class="p">:</span> <span class="n">stricter_accuracy</span><span class="p">}</span>
+</span><span id="line-12"><span class="p">)</span>
+</span><span id="line-13">
+</span><span id="line-14"><span class="c1"># Run on the same LMP:</span>
+</span><span id="line-15"><span class="n">result_strict</span> <span class="o">=</span> <span class="n">eval_strict</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">classify_sentiment</span><span class="p">)</span>
+</span><span id="line-16"><span class="nb">print</span><span class="p">(</span><span class="s2">"Average accuracy (stricter):"</span><span class="p">,</span> <span class="n">result_strict</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s2">"accuracy"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+</span></code></pre></div>
+</div>
+<p>If the original eval gave an average accuracy of 1.0, the stricter eval might yield a lower score, prompting further improvements to the LMP. Over time, eval engineering leads to evaluations that genuinely reflect the underlying goals.</p>
+</section>
+<section id="model-based-evaluation">
+<h2>Model-Based Evaluation<a class="headerlink" href="#model-based-evaluation" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#model-based-evaluation'">¶</a></h2>
+<p>In many real-world scenarios, an eval cannot be reduced to a fixed set of rules or ground-truth answers. Consider a task like producing compelling outreach emails. Quality is subjective, and the notion of success might be tied to subtle attributes. In these cases, one can incorporate human judgments or another LMP as a critic:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">)</span>
+</span><span id="line-2"><span class="k">def</span> <span class="nf">write_invitation</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-3"><span class="w">    </span><span class="sd">"""Invite the given person to an event in a friendly, concise manner."""</span>
+</span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Write an invitation for </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> to our annual gala."</span>
+</span><span id="line-5">
+</span><span id="line-6"><span class="c1"># A critic that uses an LMP to check if the invitation is friendly enough:</span>
+</span><span id="line-7"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</span><span id="line-8"><span class="k">def</span> <span class="nf">invitation_critic</span><span class="p">(</span><span class="n">invitation</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-9"><span class="w">    </span><span class="sd">"""Return 'yes' if the invitation is friendly, otherwise 'no'."""</span>
+</span><span id="line-10">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Is this invitation friendly? </span><span class="si">{</span><span class="n">invitation</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="line-11">
+</span><span id="line-12"><span class="k">def</span> <span class="nf">friendly_score</span><span class="p">(</span><span class="n">datapoint</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+</span><span id="line-13">    <span class="c1"># Run the critic on the output</span>
+</span><span id="line-14">    <span class="n">verdict</span> <span class="o">=</span> <span class="n">invitation_critic</span><span class="p">(</span><span class="n">output</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</span><span id="line-15">    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"yes"</span> <span class="ow">in</span> <span class="n">verdict</span><span class="p">)</span>
+</span><span id="line-16">
+</span><span id="line-17"><span class="n">dataset_invites</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="line-18">    <span class="p">{</span><span class="s2">"input"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Alice"</span><span class="p">}},</span>
+</span><span id="line-19">    <span class="p">{</span><span class="s2">"input"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Bob"</span><span class="p">}},</span>
+</span><span id="line-20"><span class="p">]</span>
+</span><span id="line-21">
+</span><span id="line-22"><span class="n">eval_invites</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">Evaluation</span><span class="p">(</span>
+</span><span id="line-23">    <span class="n">name</span><span class="o">=</span><span class="s2">"friendly_invitation_eval"</span><span class="p">,</span>
+</span><span id="line-24">    <span class="n">dataset</span><span class="o">=</span><span class="n">dataset_invites</span><span class="p">,</span>
+</span><span id="line-25">    <span class="n">metrics</span><span class="o">=</span><span class="p">{</span><span class="s2">"friendliness"</span><span class="p">:</span> <span class="n">friendly_score</span><span class="p">},</span>
+</span><span id="line-26"><span class="p">)</span>
+</span><span id="line-27">
+</span><span id="line-28"><span class="n">result_invites</span> <span class="o">=</span> <span class="n">eval_invites</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">write_invitation</span><span class="p">)</span>
+</span><span id="line-29"><span class="nb">print</span><span class="p">(</span><span class="s2">"Average friendliness:"</span><span class="p">,</span> <span class="n">result_invites</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s2">"friendliness"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+</span></code></pre></div>
+</div>
+<p>Here, we rely on a second LMP to measure friendlier invitations. If its judgments are too lenient or too strict, we can “eval engineer” the critic as well—refining its instructions or training a reward model if we have human-labeled data. Over time, these improvements yield more robust and meaningful evaluations.</p>
+<p>In particular, one can construct an eval for their eval, period. In order to generate a critic that reliably mirrors human judgments, you can first create a dataset of your own qualitative assessment of various LLM outputs you wish to create an eval for. In order to generate a critic that reliably mirrors human judgments, you can first create a dataset of your own qualitative assessment of various LLM outputs you wish to create an eval for.</p>
+</section>
+<section id="connecting-evals-to-prompt-optimization">
+<h2>Connecting Evals to Prompt Optimization<a class="headerlink" href="#connecting-evals-to-prompt-optimization" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#connecting-evals-to-prompt-optimization'">¶</a></h2>
+<p>By placing evaluations at the center of prompt engineering, the entire process becomes more efficient and credible. Instead of repeatedly scanning outputs and making guesswork judgments, the prompt engineer tweaks the prompt, runs the eval, and compares the scores. This cycle can happen at scale and against large datasets, providing statistically meaningful insights.</p>
+<p>For example, suppose we want to improve the <cite>classify_sentiment</cite> LMP. We make a change to the prompt, then rerun the eval:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="c1"># Original prompt in classify_sentiment:</span>
+</span><span id="line-2"><span class="c1"># "You are a sentiment classifier. Return 'positive' or 'negative'."</span>
+</span><span id="line-3"><span class="c1"># Suppose we revise it to include a stricter definition:</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</span><span id="line-6"><span class="k">def</span> <span class="nf">classify_sentiment_improved</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-7"><span class="w">    </span><span class="sd">"""You are a sentiment classifier. If the text shows positive feelings, return exactly 'positive'.</span>
+</span><span id="line-8"><span class="sd">    Otherwise, return exactly 'negative'."""</span>
+</span><span id="line-9">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Check sentiment: </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="line-10">
+</span><span id="line-11"><span class="c1"># Re-run the stricter eval:</span>
+</span><span id="line-12"><span class="n">result_strict_improved</span> <span class="o">=</span> <span class="n">eval_strict</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">classify_sentiment_improved</span><span class="p">)</span>
+</span><span id="line-13"><span class="nb">print</span><span class="p">(</span><span class="s2">"Stricter accuracy after improvement:"</span><span class="p">,</span> <span class="n">result_strict_improved</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s2">"accuracy"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+</span></code></pre></div>
+</div>
+<p>If the new score surpasses the old one, we know we have made a meaningful improvement. Over time, multiple runs of these evals are recorded in ell’s store. They can be visualized in ell Studio (a local, dashboard-like interface) to track progress, identify regressions, and compare versions at a glance.</p>
+</section>
+<section id="versioning-and-storing-evals-in-ell">
+<h2>Versioning and Storing Evals in ell<a class="headerlink" href="#versioning-and-storing-evals-in-ell" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#versioning-and-storing-evals-in-ell'">¶</a></h2>
+<p>Just as prompt engineering benefits from version control and provenance tracking, so does eval engineering. An eval changes over time: new datasets, new metrics, new criteria. ell captures these changes automatically when <cite>ell.init()</cite> is called with a storage directory. Each run of an eval stores results, metrics, and associated prompts for future reference.</p>
+<p>You can open ell Studio with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">ell-studio<span class="w"> </span>--storage<span class="w"> </span>./logdir
+</span></code></pre></div>
+</div>
+<p>Here, you will see your evals listed alongside their version histories, their datasets, and the results produced by various LMP runs. This environment allows both prompt engineers and eval engineers to confidently iterate, knowing that any improvement or regression can be traced back to a specific version of the prompt and the eval.</p>
+</section>
+<section id="accessing-and-interpreting-evaluation-results">
+<h2>Accessing and Interpreting Evaluation Results<a class="headerlink" href="#accessing-and-interpreting-evaluation-results" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#accessing-and-interpreting-evaluation-results'">¶</a></h2>
+<p>After running an eval, ell provides an <cite>EvaluationRun</cite> object, which stores both raw outputs and computed metrics. You can access these as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="n">run</span> <span class="o">=</span> <span class="n">eval_strict</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">classify_sentiment_improved</span><span class="p">)</span>
+</span><span id="line-2"><span class="c1"># Access raw metrics:</span>
+</span><span id="line-3"><span class="n">metrics</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">metrics</span>
+</span><span id="line-4"><span class="nb">print</span><span class="p">(</span><span class="s2">"All metrics:"</span><span class="p">,</span> <span class="n">metrics</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</span><span id="line-5"><span class="nb">print</span><span class="p">(</span><span class="s2">"Accuracy scores per datapoint:"</span><span class="p">,</span> <span class="n">metrics</span><span class="p">[</span><span class="s2">"accuracy"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="c1"># Access raw outputs:</span>
+</span><span id="line-8"><span class="nb">print</span><span class="p">(</span><span class="s2">"Model outputs:"</span><span class="p">,</span> <span class="n">run</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>This structured data makes it straightforward to integrate evaluations into CI pipelines, automatic regression checks, or advanced statistical analyses.</p>
+</section>
+<section id="the-underlying-api-for-evaluations">
+<h2>The Underlying API for Evaluations<a class="headerlink" href="#the-underlying-api-for-evaluations" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#the-underlying-api-for-evaluations'">¶</a></h2>
+<p>The <cite>Evaluation</cite> class in ell is flexible yet straightforward. It handles dataset iteration, calling the LMP, collecting outputs, and applying metric and annotation functions. Its interface is designed so that, as your tasks and methodology evolve, you can easily incorporate new data, new metrics, or new eval configurations.</p>
+<p>A simplified version of the <cite>Evaluation</cite> class conceptually looks like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="k">class</span> <span class="nc">Evaluation</span><span class="p">:</span>
+</span><span id="line-2">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_evals</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">samples_per_datapoint</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">annotations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="line-3">        <span class="c1"># Initialization and validation logic</span>
+</span><span id="line-4">        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+</span><span id="line-5">        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
+</span><span id="line-6">        <span class="bp">self</span><span class="o">.</span><span class="n">n_evals</span> <span class="o">=</span> <span class="n">n_evals</span>
+</span><span id="line-7">        <span class="bp">self</span><span class="o">.</span><span class="n">samples_per_datapoint</span> <span class="o">=</span> <span class="n">samples_per_datapoint</span>
+</span><span id="line-8">        <span class="c1"># Wrap metrics and criteria and store them internally</span>
+</span><span id="line-9">        <span class="c1"># ...</span>
+</span><span id="line-10">
+</span><span id="line-11">    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lmp</span><span class="p">,</span> <span class="n">n_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">use_api_batching</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">api_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">additional_lmp_params</span><span class="p">):</span>
+</span><span id="line-12">        <span class="c1"># 1. Prepare dataset and parameters</span>
+</span><span id="line-13">        <span class="c1"># 2. Invoke the LMP on each datapoint</span>
+</span><span id="line-14">        <span class="c1"># 3. Compute metrics and store results</span>
+</span><span id="line-15">        <span class="c1"># 4. Return EvaluationRun with all information</span>
+</span><span id="line-16">        <span class="k">return</span> <span class="n">EvaluationRun</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p>This API, combined with ell’s built-in tracing, versioning, and visualization, provides a complete solution for rigorous prompt engineering and eval engineering workflows.</p>
+<p>As evals grow and mature, they provide the stable foundation on which to stand when refining prompts. Combined with ell’s infrastructure for versioning and tracing, evaluations make it possible to bring principled, data-driven methodologies to prompt engineering. The result is a process that can scale in complexity and ambition, confident that improvements are real, documented, and reproducible.</p>
+</section>
+</section>
+</div><div class="flex justify-between items-center pt-6 mt-12 border-t border-border gap-4">
+<div class="mr-auto">
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="ell_studio.html">
+<svg class="mr-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<polyline points="15 18 9 12 15 6"></polyline>
+</svg>
+        Studio
+      </a>
+</div>
+<div class="ml-auto">
+<a class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-input hover:bg-accent hover:text-accent-foreground py-2 px-4" href="message_api.html">
+        Messages
+        <svg class="ml-2 h-4 w-4" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<polyline points="9 18 15 12 9 6"></polyline>
+</svg>
+</a>
+</div>
+</div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
+<div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
+<ul>
+<li><a :data-current="activeSection === '#the-problem-of-prompt-engineering-by-intuition'" class="reference internal" href="#the-problem-of-prompt-engineering-by-intuition">The Problem of Prompt Engineering by Intuition</a></li>
+<li><a :data-current="activeSection === '#the-concept-of-evals'" class="reference internal" href="#the-concept-of-evals">The Concept of Evals</a></li>
+<li><a :data-current="activeSection === '#eval-engineering'" class="reference internal" href="#eval-engineering">Eval Engineering</a></li>
+<li><a :data-current="activeSection === '#model-based-evaluation'" class="reference internal" href="#model-based-evaluation">Model-Based Evaluation</a></li>
+<li><a :data-current="activeSection === '#connecting-evals-to-prompt-optimization'" class="reference internal" href="#connecting-evals-to-prompt-optimization">Connecting Evals to Prompt Optimization</a></li>
+<li><a :data-current="activeSection === '#versioning-and-storing-evals-in-ell'" class="reference internal" href="#versioning-and-storing-evals-in-ell">Versioning and Storing Evals in ell</a></li>
+<li><a :data-current="activeSection === '#accessing-and-interpreting-evaluation-results'" class="reference internal" href="#accessing-and-interpreting-evaluation-results">Accessing and Interpreting Evaluation Results</a></li>
+<li><a :data-current="activeSection === '#the-underlying-api-for-evaluations'" class="reference internal" href="#the-underlying-api-for-evaluations">The Underlying API for Evaluations</a></li>
+</ul>
+</div>
+</aside>
+</main>
+</div>
+</div><footer class="py-6 border-t border-border md:py-0">
+<div class="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
+<div class="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
+<p class="text-sm leading-loose text-center text-muted-foreground md:text-left">© 2024, William Guss Built with <a class="font-medium underline underline-offset-4" href="https://www.sphinx-doc.org" rel="noreferrer">Sphinx 7.2.6</a></p>
+</div>
+</div>
+</footer>
+</div>
+<script src="../_static/documentation_options.js?v=5929fcd5"></script>
+<script src="../_static/doctools.js?v=888ff710"></script>
+<script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+<script defer="defer" src="../_static/theme.js?v=e82a16a3"></script>
+</body>
+</html>
