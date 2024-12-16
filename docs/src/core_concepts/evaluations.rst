@@ -14,10 +14,6 @@ Prompt engineering without evaluations is often characterized by subjective asse
 
 Without evaluations, there is no systematic way to ensure that a revised prompt actually improves performance on the desired tasks. There is no guarantee that adjusting a single detail in the prompt to improve outputs on one example does not degrade outputs elsewhere. Over time, as prompt engineers read through too many model responses, they become either desensitized to quality issues or hypersensitive to minor flaws. This miscalibration saps productivity and leads to unprincipled prompt tuning. Subjective judgment cannot scale, fails to capture statistical performance trends, and offers no verifiable path to satisfy external stakeholders who demand reliability, accuracy, or compliance with given standards.
 
-.. note::
-
-   The intuitive, trial-and-error style of prompt engineering can be visually depicted. Imagine a simple diagram in ell Studio (ell’s local, version-controlled dashboard) that shows a single prompt evolving over time, each modification recorded and compared. Without evaluations, this “diff” of prompt versions tells us only that the code changed—not whether it changed for the better.
-
 
 The Concept of Evals
 --------------------
