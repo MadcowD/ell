@@ -150,7 +150,7 @@ try:
             usage["completion_tokens"] = usage.get("output_tokens", 0)
             usage["total_tokens"] = usage['prompt_tokens'] + usage['completion_tokens']
 
-            metadata["usage"] = usage
+            metadata["usage"] = {**usage, **metadata.get("usage", {})}
             return tracked_results, metadata
 
     # XXX: Make a singleton.
