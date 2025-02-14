@@ -59,6 +59,8 @@ const Evaluations = () => {
 {`import ell
 from ell import Evaluation
 
+ell.init(store='./logdir')
+
 @ell.simple(model="gpt-4o")
 def mylmp(greeting: str):
     return f"Say hi there!"
