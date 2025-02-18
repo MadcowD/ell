@@ -83,7 +83,8 @@ try:
                         role=message.role,
                         content=[_content_block_to_openai_format(c) for c in message.content] 
                              if message.role != "system" 
-                             else message.text_only
+                             else message.text_only,
+                        tool_call_id=message.tool_call_id
                     )))
                      
             final_call_params["messages"] = openai_messages
@@ -159,7 +160,7 @@ try:
                                     )
                                 )
                                 if logger: logger(repr(tool_call))
-                    messages.append(Message(role=role, content=content_blocks))
+                    messages.append(Message(role=role, content=content_blocks, tool_call_id=message.tool_call_id))
             return messages, metadata
 
 
