@@ -243,7 +243,13 @@ export const useEvaluations = (page = 0, pageSize = 100) => {
     queryKey: ["evaluations", page, pageSize],
     queryFn: async () => {
       const response = await axios.get(`${API_BASE_URL}/api/evaluations?skip=${page * pageSize}&limit=${pageSize}`);
-      return response.data;
+      const data=  response.data;
+      return data.map((evaluation) => {
+        return {
+          ...evaluation,
+          runs: evaluation.runs.filter((run) => run.evaluated_lmp !== null),
+        }
+      })
     },
   });
 };
@@ -254,7 +260,13 @@ export const useLatestEvaluations = (page = 0, pageSize = 100) => {
     queryKey: ["latestEvaluations", page, pageSize],
     queryFn: async () => {
       const response = await axios.get(`${API_BASE_URL}/api/latest/evaluations?skip=${page * pageSize}&limit=${pageSize}`);
-      return response.data;
+      const data=  response.data;
+      return data.map((evaluation) => {
+        return {
+          ...evaluation,
+          runs: evaluation.runs.filter((run) => run.evaluated_lmp !== null),
+        }
+      })
     },
   });
 };
@@ -264,7 +276,11 @@ export const useEvaluation = (id) => {
     queryKey: ["evaluation", id],
     queryFn: async () => {
       const response = await axios.get(`${API_BASE_URL}/api/evaluation/${id}`);
-      return response.data;
+      const data = response.data;
+      return {
+        ...data,
+        runs: data.runs.filter((run) => run.evaluated_lmp !== null),
+      };
     },
     enabled: !!id,
   });
@@ -276,7 +292,13 @@ export const useEvaluationRuns = (evaluationId, page = 0, pageSize = 10) => {
     queryFn: async () => {
       const skip = page * pageSize;
       const response = await axios.get(`${API_BASE_URL}/api/evaluations/${evaluationId}/runs?skip=${skip}&limit=${pageSize}`);
-      return response.data;
+      const data = response.data;
+      return data.map((run) => {
+        return {
+          ...run,
+          evaluated_lmp: run.evaluated_lmp ? run.evaluated_lmp : null,
+        }
+      })
     },
     enabled: !!evaluationId,
   });
