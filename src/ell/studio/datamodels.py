@@ -65,7 +65,7 @@ class EvaluationRunLabelerSummaryPublic(EvaluationRunLabelerSummaryBase):
     evaluation_labeler: EvaluationLabelerPublic
 
 class EvaluationRunPublic(SerializedEvaluationRunBase):
-    evaluated_lmp: SerializedLMPBase
+    evaluated_lmp: Optional[SerializedLMPBase]
     labeler_summaries: List[EvaluationRunLabelerSummaryPublic]
 
 class EvaluationPublic(SerializedEvaluationBase):
@@ -86,6 +86,6 @@ class EvaluationResultDatapointPublic(EvaluationResultDatapointBase):
     labels: List[EvaluationLabelPublic]
 
 class SpecificEvaluationRunPublic(SerializedEvaluationRunBase):
-    evaluated_lmp: SerializedLMPBase
+    evaluated_lmp: Optional[SerializedLMPBase]
     evaluation: EvaluationPublicWithoutRuns
     labeler_summaries: List[EvaluationRunLabelerSummaryPublic]
