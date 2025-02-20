@@ -12,16 +12,10 @@ import json
 import requests
 from PIL import Image as PILImage
 
-# TODO: Supported: 
-# Streaming
-# Text in, image in, text out
-# TODO: Not supported:
+# XXX: Not supported:
 # tool use
 # function calling
 # structured output
-
-
-
 try:
 
     from google import genai
