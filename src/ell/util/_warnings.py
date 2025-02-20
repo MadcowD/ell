@@ -55,7 +55,7 @@ or explicitly specify the client when the calling the LMP:
 ell.simple(model, client=my_client)(...)
 ```
 {Style.RESET_ALL}""")
-            elif (client_to_use := config.registry[model].default_client) is None or not client_to_use.api_key:
+            elif (client_to_use := config.registry[model].default_client) is None or (hasattr(client_to_use, "api_key") and not client_to_use.api_key):
                 logger.warning(_no_api_key_warning(model, fn.__name__, client_to_use, long=False))
 
 

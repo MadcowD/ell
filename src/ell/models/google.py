@@ -21,6 +21,7 @@ In this file, we use google's openai compatible client to perform the registrati
 """
 
 import os
+from typing import Optional
 from ell.configurator import config
 import openai
 
@@ -29,7 +30,7 @@ import colorama
 
 logger = logging.getLogger(__name__)
 
-def register(client: openai.Client):
+def register(client: Optional[openai.Client] = None):
     """
     Register OpenAI models with the provided client.
 
@@ -46,7 +47,8 @@ def register(client: openai.Client):
         configuration with the registered models.
     """
     standard_models = [
-    'gemini-2.0-flash-exp'
+    'gemini-2.0-flash-exp',
+    'gemini-2.0-flash',
     'gemini-1.5-flash',
     'gemini-1.5-flash-8b',
     'gemini-1.5-pro',
@@ -58,10 +60,16 @@ def register(client: openai.Client):
 
 default_client = None
 try:
-    gemini_api_key = os.environ.get("GEMINI_API_KEY")
+    gemini_api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not gemini_api_key:
-        raise openai.OpenAIError("GEMINI_API_KEY not found in environment variables")
-    default_client = openai.Client(base_url="https://generativelanguage.googleapis.com/v1beta/openai/", api_key=gemini_api_key)
+        raise openai.OpenAIError("Neither GEMINI_API_KEY nor GOOGLE_API_KEY found in environment variables")
+    try:
+        from google import genai
+        default_client = genai.Client()
+    except ImportError:
+        logger.debug(f"{colorama.Fore.YELLOW}google.genai not found - using openai proxy for google models {colorama.Style.RESET_ALL}")
+        default_client = openai.Client(base_url="https://generativelanguage.googleapis.com/v1beta/openai/", api_key=gemini_api_key)
+
 except openai.OpenAIError as e:
     pass
 

@@ -7,7 +7,6 @@ from google import genai
 ell.init(verbose=True)
 
 # custom client
-client = genai.Client()
 
 from PIL import Image, ImageDraw
 
@@ -25,7 +24,7 @@ draw.ellipse([center[0]-radius, center[1]-radius,
               fill='red')
 
 
-@ell.simple(model='gemini-2.0-flash', client=client, max_tokens=10000)
+@ell.simple(model='gemini-2.0-flash', max_tokens=10000)
 def chat(prompt: str):
     return [ell.user([prompt + " what is in this image", img])]
 
