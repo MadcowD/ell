@@ -9,6 +9,7 @@ from typing import (
     Dict,
     FrozenSet,
     List,
+    Mapping,
     Optional,
     Set,
     Tuple,
@@ -83,7 +84,7 @@ class Provider(ABC):
     ### TRANSLATION ###############
     ################################
     @abstractmethod
-    def translate_to_provider(self, ell_call: EllCallParams) -> Dict[str, Any]:
+    def translate_to_provider(self, ell_call: EllCallParams) -> Mapping[str, Any]:
         """Converts an ell call to provider call params!"""
         return NotImplemented
 
