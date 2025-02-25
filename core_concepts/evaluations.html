@@ -10,7 +10,7 @@
 <title>Evaluations (New) | ell  documentation</title>
 <meta content="Evaluations (New) | ell  documentation" property="og:title"/>
 <meta content="Evaluations (New) | ell  documentation" name="twitter:title"/>
-<link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
+<link href="../_static/pygments.css?v=1e13dadb" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
 <link href="../_static/favicon.ico" rel="icon"/>
@@ -360,12 +360,12 @@ nav a {
 <h2>The Concept of Evals<a class="headerlink" href="#the-concept-of-evals" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#the-concept-of-evals'">¶</a></h2>
 <p>An eval is a structured evaluation suite that measures a language model program’s performance quantitatively and, when necessary, qualitatively. It consists of three essential elements. First, there is a dataset that represents a distribution of inputs over which the prompt must perform. Second, there are criteria that define what constitutes a successful output. Third, there are metrics that translate the model’s raw outputs into a measurable quantity.</p>
 <p>Below is a minimal example showing how these pieces fit together in ell. Assume we have a dataset of simple classification tasks and a language model program (LMP) that attempts to answer them:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">ell</span>
 </span><span id="line-2"><span class="n">ell</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="s2">"./logdir"</span><span class="p">)</span>  <span class="c1"># Enable versioning and storage</span>
 </span><span id="line-3">
 </span><span id="line-4"><span class="c1"># 1. Define an LMP:</span>
 </span><span id="line-5"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</span><span id="line-6"><span class="k">def</span> <span class="nf">classify_sentiment</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-6"><span class="k">def</span><span class="w"> </span><span class="nf">classify_sentiment</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-7"><span class="w">    </span><span class="sd">"""You are a sentiment classifier. Return 'positive' or 'negative'."""</span>
 </span><span id="line-8">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Classify sentiment: </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="line-9">
@@ -376,7 +376,7 @@ nav a {
 </span><span id="line-14"><span class="p">]</span>
 </span><span id="line-15">
 </span><span id="line-16"><span class="c1"># 3. A metric function that checks correctness:</span>
-</span><span id="line-17"><span class="k">def</span> <span class="nf">accuracy_metric</span><span class="p">(</span><span class="n">datapoint</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+</span><span id="line-17"><span class="k">def</span><span class="w"> </span><span class="nf">accuracy_metric</span><span class="p">(</span><span class="n">datapoint</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
 </span><span id="line-18">    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">datapoint</span><span class="p">[</span><span class="s2">"expected_output"</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
 </span><span id="line-19">
 </span><span id="line-20"><span class="c1"># 4. Constructing the eval:</span>
@@ -399,7 +399,7 @@ nav a {
 <p>Defining a single eval and sticking to it blindly can be as problematic as never evaluating at all. In practice, an eval is never perfect on the first try. As the prompt engineer tests models against the eval, new edge cases and overlooked criteria emerge. Perhaps the chosen metric saturates too easily, or perhaps the dataset fails to represent the complexity of real inputs. Updating and refining the eval in response to these insights is what we call eval engineering.</p>
 <p>Consider a scenario where our first eval always returns a perfect score. Maybe our criteria are too lenient. With eval engineering, we revise and strengthen the eval:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="c1"># A new, more complex metric that penalizes incorrect formatting:</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">stricter_accuracy</span><span class="p">(</span><span class="n">datapoint</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">stricter_accuracy</span><span class="p">(</span><span class="n">datapoint</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
 </span><span id="line-3">    <span class="c1"># Now we require the output to match exactly 'positive' or 'negative'</span>
 </span><span id="line-4">    <span class="c1"># to count as correct, making the eval more discriminative.</span>
 </span><span id="line-5">    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">datapoint</span><span class="p">[</span><span class="s2">"expected_output"</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
@@ -422,17 +422,17 @@ nav a {
 <h2>Model-Based Evaluation<a class="headerlink" href="#model-based-evaluation" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#model-based-evaluation'">¶</a></h2>
 <p>In many real-world scenarios, an eval cannot be reduced to a fixed set of rules or ground-truth answers. Consider a task like producing compelling outreach emails. Quality is subjective, and the notion of success might be tied to subtle attributes. In these cases, one can incorporate human judgments or another LMP as a critic:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">write_invitation</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">write_invitation</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">"""Invite the given person to an event in a friendly, concise manner."""</span>
 </span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Write an invitation for </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> to our annual gala."</span>
 </span><span id="line-5">
 </span><span id="line-6"><span class="c1"># A critic that uses an LMP to check if the invitation is friendly enough:</span>
 </span><span id="line-7"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-</span><span id="line-8"><span class="k">def</span> <span class="nf">invitation_critic</span><span class="p">(</span><span class="n">invitation</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-8"><span class="k">def</span><span class="w"> </span><span class="nf">invitation_critic</span><span class="p">(</span><span class="n">invitation</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-9"><span class="w">    </span><span class="sd">"""Return 'yes' if the invitation is friendly, otherwise 'no'."""</span>
 </span><span id="line-10">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Is this invitation friendly? </span><span class="si">{</span><span class="n">invitation</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="line-11">
-</span><span id="line-12"><span class="k">def</span> <span class="nf">friendly_score</span><span class="p">(</span><span class="n">datapoint</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+</span><span id="line-12"><span class="k">def</span><span class="w"> </span><span class="nf">friendly_score</span><span class="p">(</span><span class="n">datapoint</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
 </span><span id="line-13">    <span class="c1"># Run the critic on the output</span>
 </span><span id="line-14">    <span class="n">verdict</span> <span class="o">=</span> <span class="n">invitation_critic</span><span class="p">(</span><span class="n">output</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 </span><span id="line-15">    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"yes"</span> <span class="ow">in</span> <span class="n">verdict</span><span class="p">)</span>
@@ -464,7 +464,7 @@ nav a {
 </span><span id="line-3"><span class="c1"># Suppose we revise it to include a stricter definition:</span>
 </span><span id="line-4">
 </span><span id="line-5"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</span><span id="line-6"><span class="k">def</span> <span class="nf">classify_sentiment_improved</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-6"><span class="k">def</span><span class="w"> </span><span class="nf">classify_sentiment_improved</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-7"><span class="w">    </span><span class="sd">"""You are a sentiment classifier. If the text shows positive feelings, return exactly 'positive'.</span>
 </span><span id="line-8"><span class="sd">    Otherwise, return exactly 'negative'."""</span>
 </span><span id="line-9">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Check sentiment: </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span>
@@ -504,8 +504,8 @@ nav a {
 <h2>The Underlying API for Evaluations<a class="headerlink" href="#the-underlying-api-for-evaluations" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#the-underlying-api-for-evaluations'">¶</a></h2>
 <p>The <cite>Evaluation</cite> class in ell is flexible yet straightforward. It handles dataset iteration, calling the LMP, collecting outputs, and applying metric and annotation functions. Its interface is designed so that, as your tasks and methodology evolve, you can easily incorporate new data, new metrics, or new eval configurations.</p>
 <p>A simplified version of the <cite>Evaluation</cite> class conceptually looks like this:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="k">class</span> <span class="nc">Evaluation</span><span class="p">:</span>
-</span><span id="line-2">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_evals</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">samples_per_datapoint</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">annotations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="k">class</span><span class="w"> </span><span class="nc">Evaluation</span><span class="p">:</span>
+</span><span id="line-2">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_evals</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">samples_per_datapoint</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">annotations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 </span><span id="line-3">        <span class="c1"># Initialization and validation logic</span>
 </span><span id="line-4">        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
 </span><span id="line-5">        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
@@ -514,7 +514,7 @@ nav a {
 </span><span id="line-8">        <span class="c1"># Wrap metrics and criteria and store them internally</span>
 </span><span id="line-9">        <span class="c1"># ...</span>
 </span><span id="line-10">
-</span><span id="line-11">    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lmp</span><span class="p">,</span> <span class="n">n_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">use_api_batching</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">api_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">additional_lmp_params</span><span class="p">):</span>
+</span><span id="line-11">    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lmp</span><span class="p">,</span> <span class="n">n_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">use_api_batching</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">api_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">additional_lmp_params</span><span class="p">):</span>
 </span><span id="line-12">        <span class="c1"># 1. Prepare dataset and parameters</span>
 </span><span id="line-13">        <span class="c1"># 2. Invoke the LMP on each datapoint</span>
 </span><span id="line-14">        <span class="c1"># 3. Compute metrics and store results</span>

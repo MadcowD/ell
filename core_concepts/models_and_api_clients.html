@@ -10,7 +10,7 @@
 <title>Models &amp; API Clients | ell  documentation</title>
 <meta content="Models &amp; API Clients | ell  documentation" property="og:title"/>
 <meta content="Models &amp; API Clients | ell  documentation" name="twitter:title"/>
-<link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
+<link href="../_static/pygments.css?v=1e13dadb" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
 <link href="../_static/favicon.ico" rel="icon"/>
@@ -361,13 +361,13 @@ nav a {
 <ol class="arabic simple">
 <li><p>Decorator-level Client Specification:</p></li>
 </ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
-</span><span id="line-2"><span class="kn">import</span> <span class="nn">openai</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">ell</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">openai</span>
 </span><span id="line-3">
 </span><span id="line-4"><span class="n">client</span> <span class="o">=</span> <span class="n">openai</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="s2">"your-api-key"</span><span class="p">)</span>
 </span><span id="line-5">
 </span><span id="line-6"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-next"</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">)</span>
-</span><span id="line-7"><span class="k">def</span> <span class="nf">my_lmp</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-7"><span class="k">def</span><span class="w"> </span><span class="nf">my_lmp</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-8">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Respond to: </span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="s2">"</span>
 </span></code></pre></div>
 </div>
@@ -387,8 +387,8 @@ nav a {
 <section id="custom-model-registration">
 <h2>Custom Model Registration<a class="headerlink" href="#custom-model-registration" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#custom-model-registration'">¶</a></h2>
 <p>For custom or newer models, ell provides a straightforward registration method:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
-</span><span id="line-2"><span class="kn">import</span> <span class="nn">my_custom_client</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">ell</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">my_custom_client</span>
 </span><span id="line-3">
 </span><span id="line-4"><span class="n">ell</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="s2">"my-custom-model"</span><span class="p">,</span> <span class="n">my_custom_client</span><span class="p">)</span>
 </span></code></pre></div>

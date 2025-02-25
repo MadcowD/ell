@@ -10,7 +10,7 @@
 <title>ell package | ell  documentation</title>
 <meta content="ell package | ell  documentation" property="og:title"/>
 <meta content="ell package | ell  documentation" name="twitter:title"/>
-<link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
+<link href="../_static/pygments.css?v=1e13dadb" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
 <link href="../_static/favicon.ico" rel="icon"/>
@@ -630,11 +630,11 @@ and intuitive interface for working with large language models.</p>
 </span><span id="line-11"><span class="w">                     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span>
 </span><span id="line-12"><span class="w">                  </span><span class="p">},</span>
 </span><span id="line-13"><span class="w">                  </span><span class="nt">"__origin_trace__"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="line-14"><span class="w">                     </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"  Origin Trace  "</span><span class="p">,</span>
+</span><span id="line-14"><span class="w">                     </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Origin Trace"</span><span class="p">,</span>
 </span><span id="line-15"><span class="w">                     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span>
 </span><span id="line-16"><span class="w">                  </span><span class="p">},</span>
 </span><span id="line-17"><span class="w">                  </span><span class="nt">"__lstr"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="line-18"><span class="w">                     </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"  Lstr"</span><span class="p">,</span>
+</span><span id="line-18"><span class="w">                     </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Lstr"</span><span class="p">,</span>
 </span><span id="line-19"><span class="w">                     </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span>
 </span><span id="line-20"><span class="w">                  </span><span class="p">}</span>
 </span><span id="line-21"><span class="w">               </span><span class="p">},</span>
@@ -828,20 +828,20 @@ ContentBlock(text=”Hello, world!”)</p>
 </span><span id="line-3"><span class="go">ContentBlock(tool_result=tool_result)</span>
 </span></code></pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 </span><span id="line-2"><span class="gp">... </span>    <span class="n">field</span><span class="p">:</span> <span class="nb">str</span>
 </span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">model_instance</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="s2">"value"</span><span class="p">)</span>
 </span><span id="line-4"><span class="gp">&gt;&gt;&gt; </span><span class="n">ContentBlock</span><span class="o">.</span><span class="n">coerce</span><span class="p">(</span><span class="n">model_instance</span><span class="p">)</span>
 </span><span id="line-5"><span class="go">ContentBlock(parsed=model_instance)</span>
 </span></code></pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">PILImage</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">PILImage</span>
 </span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">img</span> <span class="o">=</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">'RGB'</span><span class="p">,</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
 </span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">ContentBlock</span><span class="o">.</span><span class="n">coerce</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
 </span><span id="line-4"><span class="go">ContentBlock(image=ImageContent(image=&lt;PIL.Image.Image object&gt;))</span>
 </span></code></pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 </span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">ContentBlock</span><span class="o">.</span><span class="n">coerce</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
 </span><span id="line-4"><span class="go">ContentBlock(image=ImageContent(image=&lt;PIL.Image.Image object&gt;))</span>
@@ -956,7 +956,7 @@ raising a ValueError.</p></li>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">images</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">ImageContent</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ell.Message.images" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.images'">¶</a></dt>
 <dd><p>Returns a list of all image content.</p>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">PILImage</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">PILImage</span>
 </span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="n">image1</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">"https://example.com/image.jpg"</span><span class="p">)</span>
 </span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">image2</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">PILImage</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">'RGB'</span><span class="p">,</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">)))</span>
 </span><span id="line-4"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">[</span><span class="s2">"Text"</span><span class="p">,</span> <span class="n">image1</span><span class="p">,</span> <span class="s2">"More text"</span><span class="p">,</span> <span class="n">image2</span><span class="p">])</span>
@@ -976,7 +976,7 @@ raising a ValueError.</p></li>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parsed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">BaseModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">BaseModel</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#ell.Message.parsed" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ell.Message.parsed'">¶</a></dt>
 <dd><p>Returns a list of all parsed content.</p>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">CustomModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 </span><span id="line-2"><span class="gp">... </span>    <span class="n">value</span><span class="p">:</span> <span class="nb">int</span>
 </span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">parsed_content</span> <span class="o">=</span> <span class="n">CustomModel</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
 </span><span id="line-4"><span class="gp">&gt;&gt;&gt; </span><span class="n">message</span> <span class="o">=</span> <span class="n">Message</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="s2">"user"</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="p">[</span><span class="s2">"Text"</span><span class="p">,</span> <span class="n">ContentBlock</span><span class="p">(</span><span class="n">parsed</span><span class="o">=</span><span class="n">parsed_content</span><span class="p">)])</span>
@@ -1115,7 +1115,7 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 <li><p>Basic Prompt:</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">'''You are a creative story writer'''</span> <span class="c1"># System prompt</span>
 </span><span id="line-4">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Write a short story based on this prompt: </span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
@@ -1129,7 +1129,7 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 <li><p>Multi-turn Conversation:</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant."</span><span class="p">),</span>
 </span><span id="line-5">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
@@ -1147,12 +1147,12 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 <li><p>Tool Usage:</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">tool</span><span class="p">()</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-3">    <span class="c1"># Implementation to fetch weather</span>
 </span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"The weather in </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s2"> is sunny."</span>
 </span><span id="line-5">
 </span><span id="line-6"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_weather</span><span class="p">])</span>
-</span><span id="line-7"><span class="k">def</span> <span class="nf">weather_assistant</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-7"><span class="k">def</span><span class="w"> </span><span class="nf">weather_assistant</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-8">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-9">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a weather assistant. Use the get_weather tool when needed."</span><span class="p">),</span>
 </span><span id="line-10">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
@@ -1174,14 +1174,14 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 <ol class="arabic simple" start="4">
 <li><p>Structured Output:</p></li>
 </ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
 </span><span id="line-2">
-</span><span id="line-3"><span class="k">class</span> <span class="nc">PersonInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="line-3"><span class="k">class</span><span class="w"> </span><span class="nc">PersonInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 </span><span id="line-4">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
 </span><span id="line-5">    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span>
 </span><span id="line-6">
 </span><span id="line-7"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">response_format</span><span class="o">=</span><span class="n">PersonInfo</span><span class="p">)</span>
-</span><span id="line-8"><span class="k">def</span> <span class="nf">extract_person_info</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-8"><span class="k">def</span><span class="w"> </span><span class="nf">extract_person_info</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-9">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-10">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"Extract person information from the given text."</span><span class="p">),</span>
 </span><span id="line-11">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
@@ -1197,7 +1197,7 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 <li><p>Multimodal Input:</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-vision-preview"</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"Describe the contents of the image in detail."</span><span class="p">),</span>
 </span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span>
@@ -1215,7 +1215,7 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 <li><p>Parallel Tool Execution:</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">tool1</span><span class="p">,</span> <span class="n">tool2</span><span class="p">,</span> <span class="n">tool3</span><span class="p">])</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">parallel_assistant</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">parallel_assistant</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You can use multiple tools in parallel."</span><span class="p">),</span>
 </span><span id="line-5">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
@@ -1301,13 +1301,13 @@ It wraps the more complex ‘complex’ decorator, providing a streamlined inter
 <p>Usage:
 The decorated function can return either a single prompt or a list of ell.Message objects:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">summarize_text</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">summarize_text</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">'''You are an expert at summarizing text.'''</span> <span class="c1"># System prompt</span>
 </span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Please summarize the following text:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span> <span class="c1"># User prompt</span>
 </span><span id="line-5">
 </span><span id="line-6">
 </span><span id="line-7"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-</span><span id="line-8"><span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span> <span class="p">:</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ell</span><span class="o">.</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-8"><span class="k">def</span><span class="w"> </span><span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span> <span class="p">:</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ell</span><span class="o">.</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-9"><span class="w">    </span><span class="sd">'''Describe the contents of an image.'''</span> <span class="c1"># unused because we're returning a list of Messages</span>
 </span><span id="line-10">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-11">        <span class="c1"># helper function for ell.Message(text="...", role="system")</span>
@@ -1342,7 +1342,7 @@ Parameters passed during the function call will override those set in the decora
 </ul>
 <p>Example of passing LM API params:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-3">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Write a short story based on this prompt: </span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="line-4">
 </span><span id="line-5"><span class="c1"># Using default parameters</span>
@@ -1455,7 +1455,7 @@ docstring and type annotations, creating a structured representation for LMs to 
 </ul>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">tool</span><span class="p">()</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">create_claim_draft</span><span class="p">(</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">create_claim_draft</span><span class="p">(</span>
 </span><span id="line-3">    <span class="n">claim_details</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 </span><span id="line-4">    <span class="n">claim_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 </span><span id="line-5">    <span class="n">claim_amount</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -1466,7 +1466,7 @@ docstring and type annotations, creating a structured representation for LMs to 
 </span><span id="line-10">
 </span><span id="line-11"><span class="c1"># For use in a complex LMP:</span>
 </span><span id="line-12"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">create_claim_draft</span><span class="p">],</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-</span><span id="line-13"><span class="k">def</span> <span class="nf">insurance_chatbot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-13"><span class="k">def</span><span class="w"> </span><span class="nf">insurance_chatbot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-14">    <span class="c1"># Chatbot implementation...</span>
 </span><span id="line-15">
 </span><span id="line-16"><span class="n">x</span> <span class="o">=</span> <span class="n">insurance_chatbot</span><span class="p">([</span>

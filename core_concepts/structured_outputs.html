@@ -10,7 +10,7 @@
 <title>Structured Outputs | ell  documentation</title>
 <meta content="Structured Outputs | ell  documentation" property="og:title"/>
 <meta content="Structured Outputs | ell  documentation" name="twitter:title"/>
-<link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
+<link href="../_static/pygments.css?v=1e13dadb" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
 <link href="../_static/favicon.ico" rel="icon"/>
@@ -351,15 +351,15 @@ nav a {
 <h1>Structured Outputs<a class="headerlink" href="#structured-outputs" title="Link to this heading">¶</a></h1>
 <p>Structured outputs are essential for ensuring that language model responses are both controlled and predictable. By defining a clear schema for the expected output, we can leverage the power of language models to generate responses that adhere to specific formats and constraints.</p>
 <p>Consider the following example, which demonstrates how to use Pydantic models to define structured outputs in ell:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
 </span><span id="line-2">
-</span><span id="line-3"><span class="k">class</span> <span class="nc">MovieReview</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="line-3"><span class="k">class</span><span class="w"> </span><span class="nc">MovieReview</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 </span><span id="line-4">    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"The title of the movie"</span><span class="p">)</span>
 </span><span id="line-5">    <span class="n">rating</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"The rating of the movie out of 10"</span><span class="p">)</span>
 </span><span id="line-6">    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"A brief summary of the movie"</span><span class="p">)</span>
 </span><span id="line-7">
 </span><span id="line-8"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-2024-08-06"</span><span class="p">,</span> <span class="n">response_format</span><span class="o">=</span><span class="n">MovieReview</span><span class="p">)</span>
-</span><span id="line-9"><span class="k">def</span> <span class="nf">generate_movie_review</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MovieReview</span><span class="p">:</span>
+</span><span id="line-9"><span class="k">def</span><span class="w"> </span><span class="nf">generate_movie_review</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MovieReview</span><span class="p">:</span>
 </span><span id="line-10"><span class="w">    </span><span class="sd">"""You are a movie review generator. Given the name of a movie, you need to return a structured review."""</span>
 </span><span id="line-11">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"generate a review for the movie </span><span class="si">{</span><span class="n">movie</span><span class="si">}</span><span class="s2">"</span>
 </span></code></pre></div>
@@ -381,13 +381,13 @@ nav a {
 <p class="admonition-title">Note</p>
 <p>Structured outputs using Pydantic models are currently only available for the <code class="docutils literal notranslate"><span class="pre">gpt-4o-2024-08-06</span></code> model. For other models, you’ll need to manually prompt the model and enable JSON mode to achieve similar functionality.</p>
 <p>We purposefully chose to not opinionate prompting for other non-native json models because each prompt should be customized to the specific model and situation. For example if you want to get gpt-3.5-turbo to return json you should explicitly allow it by prompting the model to do so:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="k">class</span> <span class="nc">MovieReview</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="k">class</span><span class="w"> </span><span class="nc">MovieReview</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 </span><span id="line-2">    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"The title of the movie"</span><span class="p">)</span>
 </span><span id="line-3">    <span class="n">rating</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"The rating of the movie out of 10"</span><span class="p">)</span>
 </span><span id="line-4">    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"A brief summary of the movie"</span><span class="p">)</span>
 </span><span id="line-5">
 </span><span id="line-6"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-3.5-turbo"</span><span class="p">)</span>
-</span><span id="line-7"><span class="k">def</span> <span class="nf">generate_movie_review_manual</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-7"><span class="k">def</span><span class="w"> </span><span class="nf">generate_movie_review_manual</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-8">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-9">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">"""You are a movie review generator. Given the name of a movie, you need to return a structured review in JSON format.</span>
 </span><span id="line-10">

@@ -10,7 +10,7 @@
 <title>Versioning &amp; Tracing | ell  documentation</title>
 <meta content="Versioning &amp; Tracing | ell  documentation" property="og:title"/>
 <meta content="Versioning &amp; Tracing | ell  documentation" name="twitter:title"/>
-<link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
+<link href="../_static/pygments.css?v=1e13dadb" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
 <link href="../_static/favicon.ico" rel="icon"/>
@@ -372,25 +372,25 @@ nav a {
 <h3>Serializing prompts via lexical closures<a class="headerlink" href="#serializing-prompts-via-lexical-closures" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#serializing-prompts-via-lexical-closures'">¶</a></h3>
 <p>This automatic versioning is possible because ell treats prompts as discrete functional units called language model programs. By encapsulating the prompt within a function, we can use static and dynamic analysis tools to extract the source code of a prompt program and all its lexical dependencies at any point in time. This approach captures the exact set of source code needed to reproduce the prompt.</p>
 <p>Consider the following function embedded in a large code base.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">myother_module</span> <span class="kn">import</span> <span class="n">CONSTANT</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">other_code</span><span class="p">():</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">myother_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">CONSTANT</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">other_code</span><span class="p">():</span>
 </span><span id="line-3">    <span class="nb">print</span><span class="p">(</span><span class="s2">"hello"</span><span class="p">)</span>
 </span><span id="line-4">
-</span><span id="line-5"><span class="k">def</span> <span class="nf">some_other_function</span><span class="p">():</span>
+</span><span id="line-5"><span class="k">def</span><span class="w"> </span><span class="nf">some_other_function</span><span class="p">():</span>
 </span><span id="line-6">    <span class="k">return</span> <span class="s2">"to bob"</span>
 </span><span id="line-7">
 </span><span id="line-8"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">)</span>
-</span><span id="line-9"><span class="k">def</span> <span class="nf">hi</span><span class="p">():</span>
+</span><span id="line-9"><span class="k">def</span><span class="w"> </span><span class="nf">hi</span><span class="p">():</span>
 </span><span id="line-10"><span class="w">    </span><span class="sd">"""You are a helpful assistant"""</span>
 </span><span id="line-11">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"say hi </span><span class="si">{</span><span class="n">some_other_function</span><span class="p">()</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">CONSTANT</span><span class="si">}</span><span class="s2"> times."</span>
 </span><span id="line-12">
-</span><span id="line-13"><span class="k">def</span> <span class="nf">some_other_code</span><span class="p">():</span>
+</span><span id="line-13"><span class="k">def</span><span class="w"> </span><span class="nf">some_other_code</span><span class="p">():</span>
 </span><span id="line-14">    <span class="k">return</span> <span class="s2">"some other code"</span>
 </span></code></pre></div>
 </div>
 <p>What does it mean to serialize and version the LMP <cite>hi</cite> above? A first approach might be to simply capture the source code of the function body and its signature.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">hi</span><span class="p">():</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">hi</span><span class="p">():</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">"""You are a helpful assistant"""</span>
 </span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"say hi </span><span class="si">{</span><span class="n">some_other_function</span><span class="p">()</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">CONSTANT</span><span class="si">}</span><span class="s2"> times."</span>
 </span></code></pre></div>
@@ -416,27 +416,27 @@ nav a {
 <h3>Constructing a dependency graph<a class="headerlink" href="#constructing-a-dependency-graph" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#constructing-a-dependency-graph'">¶</a></h3>
 <p>In addition, when a language model program depends on another prompt (i.e., when one language model program calls another), the dependent prompt will automatically appear within the lexical closure of the calling prompt. This allows us to construct a computation graph that illustrates how language model programs depend on one another to execute, effectively leveraging test-time compute. This graph provides a clear visualization of the relationships and dependencies between different prompts in a complex language model program.</p>
 <a class="rounded-image invertible-image reference internal image-reference" href="../_images/compositionality.webp"><img alt="ell demonstration" class="rounded-image invertible-image" src="../_images/compositionality.webp" style="width: 100%;"/></a>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
-</span><span id="line-2"><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">ell</span>
+</span><span id="line-2"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
 </span><span id="line-3">
 </span><span id="line-4">
 </span><span id="line-5"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-mini"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-</span><span id="line-6"><span class="k">def</span> <span class="nf">generate_story_ideas</span><span class="p">(</span><span class="n">about</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-6"><span class="k">def</span><span class="w"> </span><span class="nf">generate_story_ideas</span><span class="p">(</span><span class="n">about</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-7"><span class="w">    </span><span class="sd">"""You are an expert story ideator. Only answer in a single sentence."""</span>
 </span><span id="line-8">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Generate a story idea about </span><span class="si">{</span><span class="n">about</span><span class="si">}</span><span class="s2">."</span>
 </span><span id="line-9">
 </span><span id="line-10"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-mini"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-</span><span id="line-11"><span class="k">def</span> <span class="nf">write_a_draft_of_a_story</span><span class="p">(</span><span class="n">idea</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-11"><span class="k">def</span><span class="w"> </span><span class="nf">write_a_draft_of_a_story</span><span class="p">(</span><span class="n">idea</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-12"><span class="w">    </span><span class="sd">"""You are an adept story writer. The story should only be 3 paragraphs."""</span>
 </span><span id="line-13">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Write a story about </span><span class="si">{</span><span class="n">idea</span><span class="si">}</span><span class="s2">."</span>
 </span><span id="line-14">
 </span><span id="line-15"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-</span><span id="line-16"><span class="k">def</span> <span class="nf">choose_the_best_draft</span><span class="p">(</span><span class="n">drafts</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+</span><span id="line-16"><span class="k">def</span><span class="w"> </span><span class="nf">choose_the_best_draft</span><span class="p">(</span><span class="n">drafts</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
 </span><span id="line-17"><span class="w">    </span><span class="sd">"""You are an expert fiction editor."""</span>
 </span><span id="line-18">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Choose the best draft from the following list: </span><span class="si">{</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">drafts</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
 </span><span id="line-19">
 </span><span id="line-20"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-turbo"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
-</span><span id="line-21"><span class="k">def</span> <span class="nf">write_a_really_good_story</span><span class="p">(</span><span class="n">about</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-21"><span class="k">def</span><span class="w"> </span><span class="nf">write_a_really_good_story</span><span class="p">(</span><span class="n">about</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-22"><span class="w">    </span><span class="sd">"""You are an expert novelist that writes in the style of Hemmingway. You write in lowercase."""</span>
 </span><span id="line-23">    <span class="c1"># Note: You can pass in api_params to control the language model call</span>
 </span><span id="line-24">    <span class="c1"># in the case n = 4 tells OpenAI to generate a batch of 4 outputs.</span>
@@ -468,13 +468,13 @@ nav a {
 <p>For production use, ell can utilize a store in any arbitrary database. In the near future, ell will be launching a service similar to Weights &amp; Biases (wandb), where your team can store all prompts in a centralized prompt version control system. This will provide collaborative features and advanced versioning capabilities, much like what wandb offers for machine learning experiments.</p>
 </div>
 <p>When ell is initialized with a store of any kind, anytime a language model program is invoked (actually, the first time it’s invoked), the lexical closure of source of that language model program is computed and hashed to create a version hash for that language model program. In addition, the aforementioned dependency graph is computed, and this language model program is then written to the store. After the invocation occurs, all of the input and output data associated with that version of the language model program is also stored in the database for later analysis. As the prompt engineering process continues, new versions of the language model programs are only added to the store if they are invoked at least once.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
-</span><span id="line-2"><span class="kn">from</span> <span class="nn">ell.stores.sql</span> <span class="kn">import</span> <span class="n">SQLiteStore</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">ell</span>
+</span><span id="line-2"><span class="kn">from</span><span class="w"> </span><span class="nn">ell.stores.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">SQLiteStore</span>
 </span><span id="line-3">
 </span><span id="line-4"><span class="n">ell</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="s1">'./logdir'</span><span class="p">,</span> <span class="n">autocommit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span><span id="line-5">
 </span><span id="line-6"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-mini"</span><span class="p">)</span>
-</span><span id="line-7"><span class="k">def</span> <span class="nf">greet</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-7"><span class="k">def</span><span class="w"> </span><span class="nf">greet</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-8"><span class="w">    </span><span class="sd">"""You are a friendly greeter."""</span>
 </span><span id="line-9">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Generate a greeting for </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">."</span>
 </span><span id="line-10">
@@ -540,10 +540,10 @@ nav a {
 <p>To track how language model programs interact during execution and construct a computation graph of data flow (similar to deep learning frameworks like PyTorch and TensorFlow), ell wraps the outputs of all language model programs with a tracing object.</p>
 <p>Tracing objects are wrappers around immutable base types in Python. They keep track of originating language model programs and other metadata, preserving this trace of origination across arbitrary operations. One of the most important tracing objects is the _lstr object.</p>
 <p>For example, consider the following language model program:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">ell</span>
 </span><span id="line-2">
 </span><span id="line-3"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">)</span> <span class="c1"># version: ae8f32s664200e1</span>
-</span><span id="line-4"><span class="k">def</span> <span class="nf">hi</span><span class="p">():</span>
+</span><span id="line-4"><span class="k">def</span><span class="w"> </span><span class="nf">hi</span><span class="p">():</span>
 </span><span id="line-5">    <span class="k">return</span> <span class="s2">"say hi"</span>
 </span><span id="line-6">
 </span><span id="line-7"><span class="n">x</span> <span class="o">=</span> <span class="n">hi</span><span class="p">()</span> <span class="c1"># invocation id: 4hdfjhe8ehf (version: ae8f32s664200e1)</span>
@@ -586,7 +586,7 @@ nav a {
 <p>This capability allows you to easily track the flow of language model outputs, identify weak points in prompt chains, understand unintended mutations in inputs and outputs of prompts as they are executed, and more generally, create a path for future symbolic and discrete optimization techniques applied to language model programs.</p>
 <a class="rounded-image invertible-image reference internal image-reference" href="../_images/invocations.webp"><img alt="ell demonstration" class="rounded-image invertible-image" src="../_images/invocations.webp" style="width: 100%;"/></a>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-2024-08-06"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">create_personality</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">create_personality</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">"""You are backstoryGPT. You come up with a backstory for a character incljuding name. Choose a completely random name from the list. Format as follows.</span>
 </span><span id="line-4">
 </span><span id="line-5"><span class="sd">Name: &lt;name&gt;</span>
@@ -595,11 +595,11 @@ nav a {
 </span><span id="line-8">    <span class="k">return</span> <span class="s2">"Come up with a backstory about "</span> <span class="o">+</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">names_list</span><span class="p">)</span> <span class="c1"># User prompt</span>
 </span><span id="line-9">
 </span><span id="line-10">
-</span><span id="line-11"><span class="k">def</span> <span class="nf">format_message_history</span><span class="p">(</span><span class="n">message_history</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-11"><span class="k">def</span><span class="w"> </span><span class="nf">format_message_history</span><span class="p">(</span><span class="n">message_history</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-12">    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">message_history</span><span class="p">])</span>
 </span><span id="line-13">
 </span><span id="line-14"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-2024-08-06"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-</span><span id="line-15"><span class="k">def</span> <span class="nf">chat</span><span class="p">(</span><span class="n">message_history</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n">personality</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-15"><span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span><span class="n">message_history</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n">personality</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-16">
 </span><span id="line-17">        <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-18">            <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">"""Here is your description.</span>

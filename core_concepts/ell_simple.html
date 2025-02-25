@@ -10,7 +10,7 @@
 <title>@ell.simple | ell  documentation</title>
 <meta content="@ell.simple | ell  documentation" property="og:title"/>
 <meta content="@ell.simple | ell  documentation" name="twitter:title"/>
-<link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
+<link href="../_static/pygments.css?v=1e13dadb" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
 <link href="../_static/favicon.ico" rel="icon"/>
@@ -362,7 +362,7 @@ nav a {
 <ol class="arabic">
 <li><p>Using the docstring as the system prompt, and the return value as the user message:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">"""You are a helpful assistant."""</span>
 </span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Say hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span>
 </span></code></pre></div>
@@ -370,7 +370,7 @@ nav a {
 </li>
 <li><p>Explicitly defining messages:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant."</span><span class="p">),</span>
 </span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Say hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span><span class="p">)</span>
@@ -400,7 +400,7 @@ nav a {
 <section id="variable-system-prompts">
 <h3>Variable system prompts<a class="headerlink" href="#variable-system-prompts" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#variable-system-prompts'">¶</a></h3>
 <p>One of the challenges with specifying the system prompt in the docstring of a language model program is that if you want to use variable system prompts, Python will no longer treat the string literal at the top of the function as a docstring. For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="k">def</span> <span class="nf">my_func</span><span class="p">(</span><span class="n">var</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="k">def</span><span class="w"> </span><span class="nf">my_func</span><span class="p">(</span><span class="n">var</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 </span><span id="line-2">    <span class="sa">f</span><span class="s2">"""my variable doc string for my_func. </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">"""</span>
 </span><span id="line-3">    <span class="k">pass</span>
 </span></code></pre></div>
@@ -412,7 +412,7 @@ nav a {
 <p>This behavior makes sense because a function’s docstring should not change during execution and should be extractable through static analysis.</p>
 <p>To address this issue with <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code>, you need to use the second method of defining an <code class="docutils literal notranslate"><span class="pre">ell.simple</span></code> language model program by creating a function that returns a list of messages (see <a class="reference internal" href="message_api.html"><span class="doc">Messages</span></a> for more details).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">my_func</span><span class="p">(</span><span class="n">name</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">var</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">my_func</span><span class="p">(</span><span class="n">name</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">var</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 </span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">"You are a helpful assistant. </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">"</span><span class="p">),</span>
 </span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Say hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span><span class="p">)</span>
@@ -425,7 +425,7 @@ nav a {
 <h3>Passing parameters to an LLM API<a class="headerlink" href="#passing-parameters-to-an-llm-api" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#passing-parameters-to-an-llm-api'">¶</a></h3>
 <p>One of the most convenient functions of the <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> decorator is that you can easily pass parameters to an LLM API, both at definition time and runtime. For example, models within the OpenAI API have parameters like <code class="docutils literal notranslate"><span class="pre">temperature</span></code>, <code class="docutils literal notranslate"><span class="pre">max_tokens</span></code>, stop tokens, and <code class="docutils literal notranslate"><span class="pre">logit_bias</span></code>. Due to how <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> works, you can simply specify these in the decorator as keyword arguments.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="p">[</span><span class="s2">"."</span><span class="p">])</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">"""You are a helpful assistant."""</span>
 </span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Hey there </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span>
 </span></code></pre></div>
@@ -451,7 +451,7 @@ nav a {
 </div>
 <p>In the spirit of simplicity, we’ve designed it to automatically coerce the return type into the correct shape, similar to NumPy and PyTorch. This means that when you call an <code class="docutils literal notranslate"><span class="pre">ell.simple</span></code> language model program with <code class="docutils literal notranslate"><span class="pre">n</span></code> greater than one, instead of returning a string, it returns a list of strings.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">hello</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">"""You are a helpful assistant."""</span>
 </span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Say hello to </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!"</span>
 </span></code></pre></div>
@@ -475,12 +475,12 @@ nav a {
 <h3>Multimodal inputs<a class="headerlink" href="#multimodal-inputs" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#multimodal-inputs'">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> supports multimodal inputs, allowing you to easily work with both text and images in your language model programs. This is particularly useful for models with vision capabilities, such as GPT-4 with vision.</p>
 <p>Here’s an example of how to use <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code> with multimodal inputs:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
-</span><span id="line-2"><span class="kn">import</span> <span class="nn">ell</span>
-</span><span id="line-3"><span class="kn">from</span> <span class="nn">ell.types.message</span> <span class="kn">import</span> <span class="n">ImageContent</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">ell</span>
+</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">ell.types.message</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageContent</span>
 </span><span id="line-4">
 </span><span id="line-5"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-vision-preview"</span><span class="p">)</span>
-</span><span id="line-6"><span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
+</span><span id="line-6"><span class="k">def</span><span class="w"> </span><span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
 </span><span id="line-7">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-8">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant that describes images."</span><span class="p">),</span>
 </span><span id="line-9">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span><span class="s2">"What's in this image?"</span><span class="p">,</span> <span class="n">image</span><span class="p">])</span>
@@ -533,13 +533,13 @@ It wraps the more complex ‘complex’ decorator, providing a streamlined inter
 <p>Usage:
 The decorated function can return either a single prompt or a list of ell.Message objects:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">summarize_text</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">summarize_text</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">'''You are an expert at summarizing text.'''</span> <span class="c1"># System prompt</span>
 </span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Please summarize the following text:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">"</span> <span class="c1"># User prompt</span>
 </span><span id="line-5">
 </span><span id="line-6">
 </span><span id="line-7"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-</span><span id="line-8"><span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span> <span class="p">:</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ell</span><span class="o">.</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-8"><span class="k">def</span><span class="w"> </span><span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span> <span class="p">:</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ell</span><span class="o">.</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-9"><span class="w">    </span><span class="sd">'''Describe the contents of an image.'''</span> <span class="c1"># unused because we're returning a list of Messages</span>
 </span><span id="line-10">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-11">        <span class="c1"># helper function for ell.Message(text="...", role="system")</span>
@@ -574,7 +574,7 @@ Parameters passed during the function call will override those set in the decora
 </ul>
 <p>Example of passing LM API params:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-3">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Write a short story based on this prompt: </span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="line-4">
 </span><span id="line-5"><span class="c1"># Using default parameters</span>

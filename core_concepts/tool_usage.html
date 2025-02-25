@@ -10,7 +10,7 @@
 <title>Tool Usage | ell  documentation</title>
 <meta content="Tool Usage | ell  documentation" property="og:title"/>
 <meta content="Tool Usage | ell  documentation" name="twitter:title"/>
-<link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
+<link href="../_static/pygments.css?v=1e13dadb" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
 <link href="../_static/favicon.ico" rel="icon"/>
@@ -358,7 +358,7 @@ nav a {
 <h2>Defining Tools<a class="headerlink" href="#defining-tools" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#defining-tools'">¶</a></h2>
 <p>In ell, tools are defined using the <code class="docutils literal notranslate"><span class="pre">@ell.tool()</span></code> decorator. This decorator transforms a regular Python function into a tool that can be used by language models. Here’s an example of a simple tool definition:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">tool</span><span class="p">()</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">create_claim_draft</span><span class="p">(</span><span class="n">claim_details</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">create_claim_draft</span><span class="p">(</span><span class="n">claim_details</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 </span><span id="line-3">                       <span class="n">claim_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 </span><span id="line-4">                       <span class="n">claim_amount</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 </span><span id="line-5">                       <span class="n">claim_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"The date of the claim in the format YYYY-MM-DD."</span><span class="p">)):</span>
@@ -406,7 +406,7 @@ nav a {
 <h2>Using Tools in LMPs<a class="headerlink" href="#using-tools-in-lmps" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#using-tools-in-lmps'">¶</a></h2>
 <p>To use tools in a language model program, you need to specify them in the <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> decorator:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">create_claim_draft</span><span class="p">],</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">insurance_claim_chatbot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">insurance_claim_chatbot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"""You are an insurance adjuster AI. You are given a dialogue with a user and have access to various tools to effectuate the insurance claim adjustment process. Ask questions until you have enough information to create a claim draft. Then ask for approval."""</span><span class="p">),</span>
 </span><span id="line-5">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
@@ -419,7 +419,7 @@ nav a {
 <p>In single-step tool usage, the language model decides to use a tool once during its execution. The process typically involves the LMP receiving input, generating a response with a tool call.</p>
 <p>Here’s an example where we want to take a natural language string for a website and convert it into a URL to get its content. We’ll call this LMP <code class="docutils literal notranslate"><span class="pre">get_website_content</span></code>, and it will allow the user to get the HTML page of any website they ask for in natural language. The chief goal of the language model here is to convert the website description into a URL and then invoke the <code class="docutils literal notranslate"><span class="pre">get_html_content</span></code> tool. The language model also has the option to refuse the request if no such website exists within its knowledge base.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">tool</span><span class="p">()</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">get_html_content</span><span class="p">(</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">get_html_content</span><span class="p">(</span>
 </span><span id="line-3">    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"The URL to get the HTML content of. Never include the protocol (like http:// or https://)"</span><span class="p">),</span>
 </span><span id="line-4"><span class="p">):</span>
 </span><span id="line-5"><span class="w">    </span><span class="sd">"""Get the HTML content of a URL."""</span>
@@ -428,7 +428,7 @@ nav a {
 </span><span id="line-8">    <span class="k">return</span> <span class="n">soup</span><span class="o">.</span><span class="n">get_text</span><span class="p">()[:</span><span class="mi">100</span><span class="p">]</span>
 </span><span id="line-9">
 </span><span id="line-10"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_html_content</span><span class="p">])</span>
-</span><span id="line-11"><span class="k">def</span> <span class="nf">get_website_content</span><span class="p">(</span><span class="n">website</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-11"><span class="k">def</span><span class="w"> </span><span class="nf">get_website_content</span><span class="p">(</span><span class="n">website</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-12"><span class="w">    </span><span class="sd">"""You are an agent that can summarize the contents of a website."""</span>
 </span><span id="line-13">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Tell me what's on </span><span class="si">{</span><span class="n">website</span><span class="si">}</span><span class="s2">"</span>
 </span></code></pre></div>
@@ -464,7 +464,7 @@ nav a {
 To simplify this process, ell provides a helper function <code class="docutils literal notranslate"><span class="pre">call_tools_and_collect_as_message()</span></code>. This function executes all tool calls in a response and collects the results into a single message, which can then be easily added to the conversation history.</p>
 <p>Here’s an example of a multi-step interaction using the insurance claim chatbot:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">create_claim_draft</span><span class="p">],</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">insurance_claim_chatbot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">insurance_claim_chatbot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"""You are an insurance adjuster AI. You are given a dialogue with a user and have access to various tools to effectuate the insurance claim adjustment process. Ask questions until you have enough information to create a claim draft. Then ask for approval."""</span><span class="p">),</span>
 </span><span id="line-5">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
@@ -518,9 +518,9 @@ To simplify this process, ell provides a helper function <code class="docutils l
 <p>In an ideal world, a prompt engineering library would not require the user to meticulously specify the schema for a tool. Instead, a language model should be able to infer the tool specification directly from the source code of the tool. In ell, we can extract the lexically closed source of any Python function, enabling a feature where the schema is automatically generated by another language model when a tool is given to an ell decorator.</p>
 <p>This approach eliminates the need for users to manually type every argument and provide a tool description, as the description becomes implicit from the source code.</p>
 <p>Consider the following example function in a user’s code:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="k">def</span> <span class="nf">search_twitter</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">7</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="k">def</span><span class="w"> </span><span class="nf">search_twitter</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">7</span><span class="p">):</span>
 </span><span id="line-2"> <span class="c1"># Query must be three words or less</span>
-</span><span id="line-3"> <span class="k">async</span> <span class="k">def</span> <span class="nf">fetch_tweets</span><span class="p">():</span>
+</span><span id="line-3"> <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch_tweets</span><span class="p">():</span>
 </span><span id="line-4">     <span class="n">api</span> <span class="o">=</span> <span class="n">API</span><span class="p">()</span>
 </span><span id="line-5">     <span class="k">await</span> <span class="n">api</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">login_all</span><span class="p">()</span>
 </span><span id="line-6">     <span class="k">try</span><span class="p">:</span>
@@ -549,7 +549,7 @@ To simplify this process, ell provides a helper function <code class="docutils l
 </div>
 <p>With tool spec autogeneration, the user could wrap this search_twitter function with a tool decorator and an optional parameter to automatically generate the tool spec. The following specification would be generated:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="n">autogenerate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">search_twitter</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">7</span><span class="p">):</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">search_twitter</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">7</span><span class="p">):</span>
 </span><span id="line-3">    <span class="o">...</span>
 </span></code></pre></div>
 </div>
@@ -578,7 +578,7 @@ To simplify this process, ell provides a helper function <code class="docutils l
 </div>
 <p>This is accomplished by a language model program that takes the source code of a tool function as input and generates the corresponding tool specification.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"claude-3-5-sonnet-20241022"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">generate_tool_spec</span><span class="p">(</span><span class="n">tool_source</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">generate_tool_spec</span><span class="p">(</span><span class="n">tool_source</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">'''</span>
 </span><span id="line-4"><span class="sd">    You are a helpful assistant that takes in source code for a python function and produces a JSON schema for the function.</span>
 </span><span id="line-5">
@@ -616,16 +616,16 @@ To simplify this process, ell provides a helper function <code class="docutils l
 </ol>
 <p>To address the issue of opinionation, we could require users to implement their own prompt for automatically generating tool specs from source code. While ell could offer some pre-packaged options, it would require users to make a conscious decision to use this auto-generation function, as it has more significant consequences than, for example, auto-committing.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">simple</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">my_custom_tool_spec_generator</span><span class="p">(</span><span class="n">tool_source</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">my_custom_tool_spec_generator</span><span class="p">(</span><span class="n">tool_source</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-3">    <span class="c1"># User implements this once in their code base or repo</span>
 </span><span id="line-4">    <span class="o">...</span>
 </span><span id="line-5">
 </span><span id="line-6"><span class="nd">@ell</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="n">autogenerate</span><span class="o">=</span><span class="n">my_custom_tool_spec_generator</span><span class="p">)</span>
-</span><span id="line-7"><span class="k">def</span> <span class="nf">search_twitter</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">7</span><span class="p">):</span>
+</span><span id="line-7"><span class="k">def</span><span class="w"> </span><span class="nf">search_twitter</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">7</span><span class="p">):</span>
 </span><span id="line-8">    <span class="o">...</span>
 </span><span id="line-9">
 </span><span id="line-10"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">search_twitter</span><span class="p">])</span>
-</span><span id="line-11"><span class="k">def</span> <span class="nf">my_llm_program</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-11"><span class="k">def</span><span class="w"> </span><span class="nf">my_llm_program</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-12">    <span class="o">...</span>
 </span></code></pre></div>
 </div>

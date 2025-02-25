@@ -10,7 +10,7 @@
 <title>@ell.complex | ell  documentation</title>
 <meta content="@ell.complex | ell  documentation" property="og:title"/>
 <meta content="@ell.complex | ell  documentation" name="twitter:title"/>
-<link href="../_static/pygments.css?v=5cc6ec80" rel="stylesheet" type="text/css"/>
+<link href="../_static/pygments.css?v=1e13dadb" rel="stylesheet" type="text/css"/>
 <link href="../_static/theme.css?v=ecdfb4fc" rel="stylesheet" type="text/css"/>
 <link href="../_static/autodoc_pydantic.css" rel="stylesheet" type="text/css"/>
 <link href="../_static/favicon.ico" rel="icon"/>
@@ -358,16 +358,16 @@ nav a {
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#usage'">¶</a></h2>
 <p>The basic usage of <code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> is similar to <code class="docutils literal notranslate"><span class="pre">@ell.simple</span></code>, but with enhanced capabilities:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span> <span class="nn">ell</span>
-</span><span id="line-2"><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">ell</span>
+</span><span id="line-2"><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
 </span><span id="line-3">
-</span><span id="line-4"><span class="k">class</span> <span class="nc">MovieReview</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="line-4"><span class="k">class</span><span class="w"> </span><span class="nc">MovieReview</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 </span><span id="line-5">    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"The title of the movie"</span><span class="p">)</span>
 </span><span id="line-6">    <span class="n">rating</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"The rating of the movie out of 10"</span><span class="p">)</span>
 </span><span id="line-7">    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"A brief summary of the movie"</span><span class="p">)</span>
 </span><span id="line-8">
 </span><span id="line-9"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-2024-08-06"</span><span class="p">,</span> <span class="n">response_format</span><span class="o">=</span><span class="n">MovieReview</span><span class="p">)</span>
-</span><span id="line-10"><span class="k">def</span> <span class="nf">generate_movie_review</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-10"><span class="k">def</span><span class="w"> </span><span class="nf">generate_movie_review</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-11"><span class="w">    </span><span class="sd">"""You are a movie review generator. Given the name of a movie, you need to return a structured review."""</span>
 </span><span id="line-12">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Generate a review for the movie </span><span class="si">{</span><span class="n">movie</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="line-13">
@@ -384,7 +384,7 @@ nav a {
 <h3>1. Structured Outputs<a class="headerlink" href="#structured-outputs" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#structured-outputs'">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> allows for structured outputs using Pydantic models:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o-2024-08-06"</span><span class="p">,</span> <span class="n">response_format</span><span class="o">=</span><span class="n">MovieReview</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">generate_movie_review</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MovieReview</span><span class="p">:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">generate_movie_review</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MovieReview</span><span class="p">:</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">"""You are a movie review generator. Given the name of a movie, you need to return a structured review."""</span>
 </span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"Generate a review for the movie </span><span class="si">{</span><span class="n">movie</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="line-5">
@@ -397,10 +397,10 @@ nav a {
 <section id="multimodal-interactions">
 <h3>2. Multimodal Interactions<a class="headerlink" href="#multimodal-interactions" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#multimodal-interactions'">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> can handle various types of inputs and <strong>outputs</strong>, including text and images:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 </span><span id="line-2">
 </span><span id="line-3"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-5-omni"</span><span class="p">)</span>
-</span><span id="line-4"><span class="k">def</span> <span class="nf">describe_and_generate</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-4"><span class="k">def</span><span class="w"> </span><span class="nf">describe_and_generate</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-5">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-6">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You can describe images and generate new ones based on text prompts."</span><span class="p">),</span>
 </span><span id="line-7">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
@@ -416,10 +416,10 @@ nav a {
 <section id="chat-based-use-cases">
 <h3>3. Chat-based Use Cases<a class="headerlink" href="#chat-based-use-cases" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#chat-based-use-cases'">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> is particularly useful for chat-based applications where you need to maintain conversation history:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">ell</span> <span class="kn">import</span> <span class="n">Message</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">ell</span><span class="w"> </span><span class="kn">import</span> <span class="n">Message</span>
 </span><span id="line-2">
 </span><span id="line-3"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4o"</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-</span><span id="line-4"><span class="k">def</span> <span class="nf">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-4"><span class="k">def</span><span class="w"> </span><span class="nf">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-5">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-6">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a friendly chatbot. Engage in casual conversation."</span><span class="p">),</span>
 </span><span id="line-7">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
@@ -438,13 +438,13 @@ nav a {
 <h3>4. Tool Usage<a class="headerlink" href="#tool-usage" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#tool-usage'">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">@ell.complex</span></code> supports tool usage, allowing language models to make function calls:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">tool</span><span class="p">()</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"The full name of a city and country, e.g. San Francisco, CA, USA"</span><span class="p">)):</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"The full name of a city and country, e.g. San Francisco, CA, USA"</span><span class="p">)):</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">"""Get the current weather for a given location."""</span>
 </span><span id="line-4">    <span class="c1"># Simulated weather API call</span>
 </span><span id="line-5">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"The weather in </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s2"> is sunny."</span>
 </span><span id="line-6">
 </span><span id="line-7"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-turbo"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_weather</span><span class="p">])</span>
-</span><span id="line-8"><span class="k">def</span> <span class="nf">travel_planner</span><span class="p">(</span><span class="n">destination</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-8"><span class="k">def</span><span class="w"> </span><span class="nf">travel_planner</span><span class="p">(</span><span class="n">destination</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-9"><span class="w">    </span><span class="sd">"""Plan a trip based on the destination and current weather."""</span>
 </span><span id="line-10">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-11">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a travel planner. Use the weather tool to provide relevant advice."</span><span class="p">),</span>
@@ -538,7 +538,7 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 <li><p>Basic Prompt:</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">generate_story</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-3"><span class="w">    </span><span class="sd">'''You are a creative story writer'''</span> <span class="c1"># System prompt</span>
 </span><span id="line-4">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Write a short story based on this prompt: </span><span class="si">{</span><span class="n">prompt</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
@@ -552,7 +552,7 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 <li><p>Multi-turn Conversation:</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">chat_bot</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a helpful assistant."</span><span class="p">),</span>
 </span><span id="line-5">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
@@ -570,12 +570,12 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 <li><p>Tool Usage:</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">tool</span><span class="p">()</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-3">    <span class="c1"># Implementation to fetch weather</span>
 </span><span id="line-4">    <span class="k">return</span> <span class="sa">f</span><span class="s2">"The weather in </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s2"> is sunny."</span>
 </span><span id="line-5">
 </span><span id="line-6"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_weather</span><span class="p">])</span>
-</span><span id="line-7"><span class="k">def</span> <span class="nf">weather_assistant</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-7"><span class="k">def</span><span class="w"> </span><span class="nf">weather_assistant</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-8">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-9">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You are a weather assistant. Use the get_weather tool when needed."</span><span class="p">),</span>
 </span><span id="line-10">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
@@ -597,14 +597,14 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 <ol class="arabic simple" start="4">
 <li><p>Structured Output:</p></li>
 </ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
 </span><span id="line-2">
-</span><span id="line-3"><span class="k">class</span> <span class="nc">PersonInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="line-3"><span class="k">class</span><span class="w"> </span><span class="nc">PersonInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
 </span><span id="line-4">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
 </span><span id="line-5">    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span>
 </span><span id="line-6">
 </span><span id="line-7"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">response_format</span><span class="o">=</span><span class="n">PersonInfo</span><span class="p">)</span>
-</span><span id="line-8"><span class="k">def</span> <span class="nf">extract_person_info</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-8"><span class="k">def</span><span class="w"> </span><span class="nf">extract_person_info</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-9">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-10">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"Extract person information from the given text."</span><span class="p">),</span>
 </span><span id="line-11">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
@@ -620,7 +620,7 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 <li><p>Multimodal Input:</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4-vision-preview"</span><span class="p">)</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"Describe the contents of the image in detail."</span><span class="p">),</span>
 </span><span id="line-5">        <span class="n">ell</span><span class="o">.</span><span class="n">user</span><span class="p">([</span>
@@ -638,7 +638,7 @@ use cases where full control over the LLM’s capabilities is needed.</p>
 <li><p>Parallel Tool Execution:</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nd">@ell</span><span class="o">.</span><span class="n">complex</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-4"</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">tool1</span><span class="p">,</span> <span class="n">tool2</span><span class="p">,</span> <span class="n">tool3</span><span class="p">])</span>
-</span><span id="line-2"><span class="k">def</span> <span class="nf">parallel_assistant</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+</span><span id="line-2"><span class="k">def</span><span class="w"> </span><span class="nf">parallel_assistant</span><span class="p">(</span><span class="n">message_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
 </span><span id="line-3">    <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-4">        <span class="n">ell</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"You can use multiple tools in parallel."</span><span class="p">),</span>
 </span><span id="line-5">    <span class="p">]</span> <span class="o">+</span> <span class="n">message_history</span>
