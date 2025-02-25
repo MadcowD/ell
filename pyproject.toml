@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ell-ai"
-version = "0.0.16"
+version = "0.0.17"
 description = "ell - the language model programming library"
 authors = ["William Guss <will@lrsys.xyz>"]
 license = "MIT"
@@ -27,33 +27,35 @@ include = [
 
 [tool.poetry.dependencies]
 python = ">=3.9"
-numpy = ">=1.26.0"
-dill = "^0.3.8"
-colorama = "^0.4.6"
-cattrs = "^23.2.3"
-openai = "^1.51.0"
-requests = "^2.32.3"
-typing-extensions = "^4.12.2"
-black = "^24.8.0"
-pillow = "^10.4.0"
-psutil = "^5.9.0"
-# Providers
-anthropic = { version = "^0.34.2", optional = true }
+numpy = "*"
+dill = "*"
+colorama = "*"
+cattrs = "*"
+openai = ">=1.51.0"
+requests = "*"
+typing-extensions = "*"
+black = "*"
+pillow = ">=10.4.0"
+psutil = "*"
 
-groq = { version = "^0.11.0", optional = true }
+# Providers
+anthropic = { version = ">=0.34.2", optional = true }
+groq = { version = ">=0.11.0", optional = true }
+
 # Storage
 psycopg2 = { version = ">=2.7", optional = true }
 sqlmodel = { version = ">=0.0.21, <0.1.0", optional = true }
+
 # Studio
 fastapi = { version = "^0.111.1", optional = true }
 uvicorn = { version = "^0.30.3", optional = true }
-
 alembic = { version = "^1.14.0", optional = true }
 google-genai = { version = "^1.2.0", optional = true }
+
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3.2"
-sphinx = "<8.0.0"
-sphinx-rtd-theme = "^2.0.0"
+pytest = "*"
+sphinx = "*"
+sphinx-rtd-theme = "*"
 
 [tool.poetry.extras]
 # N.B. The `openai` dep is always required, but explicitly providing it via an e.g. "openai" extra
