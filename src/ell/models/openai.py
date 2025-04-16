@@ -26,6 +26,7 @@ from ell.configurator import config
 import openai
 
 import logging
+import colorama
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +106,7 @@ def register(client: openai.Client):
 default_client = None
 try:
     default_client = openai.Client()
-except openai.OpenAIError:
+except openai.OpenAIError as e:
     pass
 
 register(default_client)
