@@ -26,9 +26,9 @@ from ell.configurator import config
 import openai
 
 import logging
-import colorama
 
 logger = logging.getLogger(__name__)
+
 
 def register(client: openai.Client):
     """
@@ -46,58 +46,66 @@ def register(client: openai.Client):
         The function doesn't return anything but updates the global
         configuration with the registered models.
     """
-    #XXX: Deprecation in 0.1.0
+    # XXX: Deprecation in 0.1.0
     standard_models = [
-        'gpt-4-1106-preview',
-        'gpt-4-32k-0314',
-        'text-embedding-3-large',
-        'gpt-4-0125-preview',
-        'babbage-002',
-        'gpt-4-turbo-preview',
-        'gpt-4o',
-        'gpt-4o-2024-05-13',
-        'gpt-4o-mini-2024-07-18',
-        'gpt-4o-mini',
-        'gpt-4o-2024-08-06',
-        'gpt-4o-2024-11-20',
-        'chatgpt-4o-latest',
-        'gpt-4o-realtime-preview',
-        'gpt-4o-realtime-preview-2024-10-01',
-        'gpt-4o-audio-preview',
-        'gpt-4o-audio-preview-2024-10-01',
-        'o1-preview-2024-09-12',
-        'o1-mini-2024-09-12',
-        'o1-2024-12-17',
-        'gpt-3.5-turbo-0301',
-        'gpt-3.5-turbo-0613',
-        'tts-1',
-        'gpt-3.5-turbo',
-        'gpt-3.5-turbo-16k',
-        'davinci-002',
-        'gpt-3.5-turbo-16k-0613',
-        'gpt-4-turbo-2024-04-09',
-        'gpt-3.5-turbo-0125',
-        'gpt-4-turbo',
-        'gpt-3.5-turbo-1106',
-        'gpt-3.5-turbo-instruct-0914',
-        'gpt-3.5-turbo-instruct',
-        'gpt-4-0613',
-        'gpt-4',
-        'gpt-4-0314',
-        'gpt-4o-audio-preview',
-        'gpt-4o-realtime',
+        "gpt-4-1106-preview",
+        "gpt-4-32k-0314",
+        "text-embedding-3-large",
+        "gpt-4-0125-preview",
+        "babbage-002",
+        "gpt-4-turbo-preview",
+        "gpt-4o",
+        "gpt-4o-2024-05-13",
+        "gpt-4o-mini-2024-07-18",
+        "gpt-4o-mini",
+        "gpt-4o-2024-08-06",
+        "gpt-4o-2024-11-20",
+        "chatgpt-4o-latest",
+        "gpt-4o-realtime-preview",
+        "gpt-4o-realtime-preview-2024-10-01",
+        "gpt-4o-audio-preview",
+        "gpt-4o-audio-preview-2024-10-01",
+        "o1-preview-2024-09-12",
+        "o1-mini-2024-09-12",
+        "o1-2024-12-17",
+        "gpt-3.5-turbo-0301",
+        "gpt-3.5-turbo-0613",
+        "tts-1",
+        "gpt-3.5-turbo",
+        "gpt-3.5-turbo-16k",
+        "davinci-002",
+        "gpt-3.5-turbo-16k-0613",
+        "gpt-4-turbo-2024-04-09",
+        "gpt-3.5-turbo-0125",
+        "gpt-4-turbo",
+        "gpt-3.5-turbo-1106",
+        "gpt-3.5-turbo-instruct-0914",
+        "gpt-3.5-turbo-instruct",
+        "gpt-4-0613",
+        "gpt-4",
+        "gpt-4-0314",
+        "gpt-4o-audio-preview",
+        "gpt-4o-realtime",
+        "gpt-4.1-mini",
+        "gpt-4.1-mini-2025-04-14",
+        "gpt-4.1",
+        "gpt-4.1-2025-04-14",
+        "gpt-4.1-nano",
+        "gpt-4.1-nano-2025-04-14",
     ]
     for model_id in standard_models:
         config.register_model(model_id, client)
 
-    #XXX: Deprecation in 0.1.0
-    config.register_model('o1-preview', client, supports_streaming=True)
-    config.register_model('o1-mini', client, supports_streaming=True)
-    config.register_model('o1-2024-12-17', client, supports_streaming=True)
+    # XXX: Deprecation in 0.1.0
+    config.register_model("o1-preview", client, supports_streaming=True)
+    config.register_model("o1-mini", client, supports_streaming=True)
+    config.register_model("o1-2024-12-17", client, supports_streaming=True)
+
+
 default_client = None
 try:
     default_client = openai.Client()
-except openai.OpenAIError as e:
+except openai.OpenAIError:
     pass
 
 register(default_client)
