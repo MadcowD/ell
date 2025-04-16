@@ -30,6 +30,7 @@ import colorama
 
 logger = logging.getLogger(__name__)
 
+
 def register(client: openai.Client):
     """
     Register OpenAI models with the provided client.
@@ -86,6 +87,12 @@ def register(client: openai.Client):
         'gpt-4-0314',
         'gpt-4o-audio-preview',
         'gpt-4o-realtime',
+        'gpt-4.1-mini',
+        'gpt-4.1-mini-2025-04-14',
+        'gpt-4.1',
+        'gpt-4.1-2025-04-14',
+        'gpt-4.1-nano',
+        'gpt-4.1-nano-2025-04-14',
     ]
     for model_id in standard_models:
         config.register_model(model_id, client)
@@ -94,6 +101,8 @@ def register(client: openai.Client):
     config.register_model('o1-preview', client, supports_streaming=True)
     config.register_model('o1-mini', client, supports_streaming=True)
     config.register_model('o1-2024-12-17', client, supports_streaming=True)
+
+
 default_client = None
 try:
     default_client = openai.Client()
