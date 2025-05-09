@@ -501,6 +501,18 @@ def assistant(content: Union[AnyContent, List[AnyContent]]) -> Message:
     """
     return Message(role="assistant", content=content)
 
+def gemini_assistant(content: Union[AnyContent, List[AnyContent]]) -> Message:
+    """
+    Create an assistant message with the given content. Google assistant messages need the role to be set to 'model'.
+
+    Args:
+    content (str): The content of the assistant message.
+
+    Returns:
+    Message: A Message object with role set to 'model' and the provided content.
+    """
+    return Message(role="model", content=content)
+
 #XXX: Make a mixi for these properties.
 def _content_to_text_only(content: List[ContentBlock]) -> str:
     return _lstr("\n").join(
