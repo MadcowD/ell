@@ -65,7 +65,7 @@ try:
         raise openai.OpenAIError("Neither GEMINI_API_KEY nor GOOGLE_API_KEY found in environment variables")
     try:
         from google import genai
-        default_client = genai.Client()
+        default_client = genai.Client(api_key=gemini_api_key)
     except ImportError:
         logger.debug(f"{colorama.Fore.YELLOW}google.genai not found - using openai proxy for google models {colorama.Style.RESET_ALL}")
         default_client = openai.Client(base_url="https://generativelanguage.googleapis.com/v1beta/openai/", api_key=gemini_api_key)

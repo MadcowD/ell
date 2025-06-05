@@ -48,7 +48,7 @@ try:
             
             msgs = [
                 types.Content(
-                    role=message.role,
+                    role=message.role if message.role in ['system', 'user'] else 'model',
                     parts=[
                         _content_block_to_google_format(c)
                         for c in message.content
