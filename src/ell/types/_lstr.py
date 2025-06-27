@@ -116,7 +116,8 @@ class _lstr(str):
         def validate_lstr(value):
             if isinstance(value, dict) and value.get("__lstr", False):
                 content = value["content"]
-                origin_trace = value["__origin_trace__"].split(",")
+                ot_value = value["__origin_trace__"]
+                origin_trace = ot_value.split(",") if hasattr(ot_value, "split") else ot_value
                 return cls(content, origin_trace=origin_trace)
             elif isinstance(value, str):
                 return cls(value)

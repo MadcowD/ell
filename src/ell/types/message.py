@@ -1,4 +1,5 @@
 # todo: implement tracing for structured outs. this a v2 feature.
+import importlib
 import json
 from ell.types._lstr import _lstr
 from functools import cached_property
@@ -7,7 +8,7 @@ import base64
 from io import BytesIO
 from PIL import Image as PILImage
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator, field_serializer
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -45,7 +46,36 @@ class ToolCall(BaseModel):
     tool_call_id : Optional[_lstr_generic] = Field(default=None)
     params : BaseModel
 
+    @field_serializer('tool')
+    def serialize_tool(self, tool: InvocableTool) -> dict[str, str]:
+        print(tool)
+        print(tool.__ell_params_model__)
+        return {
+            "name": str(tool.__qualname__),
+            "module": str(tool.__module__),
+            "fqn": f"{tool.__module__}.{tool.__qualname__}"
+        }
+
+    @field_validator('tool', mode='before')
+    @classmethod
+    def validate_tool(cls, value: Any) -> Any:
+        if isinstance(value, Callable):
+            return value
+        elif isinstance(value, dict) and value.get('name') and value.get('module'):
+            name = value.get('name')
+            module = value.get('module')
+            try:
+                module = importlib.import_module(module)
+                clbl = getattr(module, name) # this gets the @tool()-wrapped function
+                return clbl
+            except Exception as e:
+                raise ValueError(f"Failed to resolve callable from ToolCall.tool dict: {value}")
+        else:
+            raise ValueError(f"Expected ToolCall.tool to be a callable or dict with 'name' and 'module' but ToolCall.tool is: {value}")
+
     def __init__(self, tool, params : Union[BaseModel, Dict[str, Any]],  tool_call_id=None):
+        if not isinstance(tool, Callable):
+            tool = ToolCall.validate_tool(tool)
         if not isinstance(params, BaseModel):
             params = tool.__ell_params_model__(**params) #convenience.
         super().__init__(tool=tool, tool_call_id=tool_call_id, params=params)
