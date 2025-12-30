@@ -122,9 +122,23 @@ def tool(*, exempt_from_tracking: bool = False, **tool_kwargs):
 
         # handle tracking last.
         if exempt_from_tracking:
-            ret = wrapper
+            # Wrap to return only the result (not the 3-tuple)
+            # This ensures consistent return behavior regardless of exempt_from_tracking setting
+            @wraps(wrapper)
+            def exempt_wrapper(*args, **kwargs):
+                # Remove internal kwargs that shouldn't be passed through
+                kwargs.pop('_invocation_origin', None)
+                kwargs.pop('_tool_call_id', None)
+                result, _, _ = wrapper(*args, **kwargs)
+                return result
+            exempt_wrapper.__ell_tool_kwargs__ = tool_kwargs
+            exempt_wrapper.__ell_func__ = _under_fn
+            exempt_wrapper.__ell_type__ = LMPType.TOOL
+            exempt_wrapper.__ell_exempt_from_tracking = exempt_from_tracking
+            exempt_wrapper.__ell_params_model__ = wrapper.__ell_params_model__
+            ret = exempt_wrapper
         else:
-            ret=  _track(wrapper)
+            ret = _track(wrapper)
 
         # Helper function to get the Pydantic model for the tool
         def get_params_model():

@@ -85,7 +85,16 @@ def complex(model: str, client: Optional[Any] = None, tools: Optional[List[Calla
  
 
         if exempt_from_tracking:
-            return model_call
+            # Wrap model_call to return only the result (not the 3-tuple)
+            # This ensures consistent return behavior regardless of exempt_from_tracking setting
+            @wraps(model_call)
+            def exempt_wrapper(*args, **kwargs):
+                # Remove internal kwargs that shouldn't be passed through
+                kwargs.pop('_invocation_origin', None)
+                result, _, _ = model_call(*args, **kwargs)
+                return result
+            exempt_wrapper.__ell_exempt_from_tracking = exempt_from_tracking
+            return exempt_wrapper
         else:
             # XXX: Analyze decorators with AST instead.
             return _track(model_call, forced_dependencies=dict(tools=tools, response_format=api_params.get("response_format", {})))
