@@ -116,7 +116,14 @@ class _lstr(str):
         def validate_lstr(value):
             if isinstance(value, dict) and value.get("__lstr", False):
                 content = value["content"]
-                origin_trace = value["__origin_trace__"].split(",")
+                ot_value = value.get("__origin_trace__", "")
+                # Handle both string (comma-separated) and list formats
+                if isinstance(ot_value, str):
+                    origin_trace = ot_value.split(",") if ot_value else []
+                elif isinstance(ot_value, (list, tuple, set, frozenset)):
+                    origin_trace = list(ot_value)
+                else:
+                    origin_trace = []
                 return cls(content, origin_trace=origin_trace)
             elif isinstance(value, str):
                 return cls(value)
@@ -144,7 +151,7 @@ class _lstr(str):
             serialization=core_schema.plain_serializer_function_ser_schema(
                 lambda instance: {
                     "content": str(instance),
-                    "__origin_trace__": (instance.__origin_trace__),
+                    "__origin_trace__": list(instance.__origin_trace__),
                     "__lstr": True,
                 }
             ),

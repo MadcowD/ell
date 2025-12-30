@@ -1,4 +1,5 @@
 # todo: implement tracing for structured outs. this a v2 feature.
+import importlib
 import json
 from ell.types._lstr import _lstr
 from functools import cached_property
@@ -7,7 +8,7 @@ import base64
 from io import BytesIO
 from PIL import Image as PILImage
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, model_validator, field_serializer, field_validator
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -45,8 +46,57 @@ class ToolCall(BaseModel):
     tool_call_id : Optional[_lstr_generic] = Field(default=None)
     params : BaseModel
 
+    @field_serializer('tool')
+    def serialize_tool(self, tool: InvocableTool) -> dict:
+        """Serialize tool callable to a dict with module and name for later resolution."""
+        return {
+            "module": tool.__module__,
+            "qualname": tool.__qualname__,
+        }
+
+    @field_serializer('params')
+    def serialize_params(self, params: BaseModel) -> dict:
+        """Serialize params BaseModel to dict with type info for reconstruction."""
+        return {
+            "__params_type__": {
+                "module": params.__class__.__module__,
+                "qualname": params.__class__.__qualname__,
+            },
+            "data": params.model_dump(),
+        }
+
+    @field_validator('tool', mode='before')
+    @classmethod
+    def validate_tool(cls, value: Any) -> InvocableTool:
+        """Validate and resolve tool from serialized dict or return callable as-is."""
+        if callable(value):
+            return value
+        if isinstance(value, dict) and 'module' in value and 'qualname' in value:
+            module_name = value['module']
+            qualname = value['qualname']
+            try:
+                module = importlib.import_module(module_name)
+                # Handle nested names like "ClassName.method_name"
+                obj = module
+                for part in qualname.split('.'):
+                    obj = getattr(obj, part)
+                return obj
+            except (ImportError, AttributeError) as e:
+                raise ValueError(
+                    f"Failed to resolve tool from module='{module_name}', qualname='{qualname}': {e}"
+                )
+        raise ValueError(
+            f"Expected tool to be a callable or dict with 'module' and 'qualname', got: {type(value)}"
+        )
+
     def __init__(self, tool, params : Union[BaseModel, Dict[str, Any]],  tool_call_id=None):
+        # Validate tool if it's a dict (from deserialization)
+        if isinstance(tool, dict):
+            tool = ToolCall.validate_tool(tool)
         if not isinstance(params, BaseModel):
+            # Handle serialized params format with __params_type__
+            if isinstance(params, dict) and "__params_type__" in params:
+                params = params.get("data", {})
             params = tool.__ell_params_model__(**params) #convenience.
         super().__init__(tool=tool, tool_call_id=tool_call_id, params=params)
 
