@@ -288,9 +288,9 @@ def _dereference_module_names(cur_src, mname, attrs_to_extract):
 
 def _build_final_source(imports, module_src, dependencies, source):
     """Build the final source code."""
-    seperated_dependencies = sorted(imports) + sorted(module_src) + sorted(dependencies) + ([source] if source else [])
-    seperated_dependencies = list(dict.fromkeys(seperated_dependencies))
-    return DELIM + "\n" + f"\n{DELIM}\n".join(seperated_dependencies) + "\n" + DELIM + "\n"
+    separated_dependencies = sorted(imports) + sorted(module_src) + sorted(dependencies) + ([source] if source else [])
+    separated_dependencies = list(dict.fromkeys(separated_dependencies))
+    return DELIM + "\n" + f"\n{DELIM}\n".join(separated_dependencies) + "\n" + DELIM + "\n"
 
 def _generate_function_hash(source, dsrc, qualname):
     """Generate a hash for the function."""
