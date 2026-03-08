@@ -230,7 +230,7 @@ def init(
                 'Failed importing SQLiteStore. Install with `pip install -U "ell-ai[all]"`. More info: https://docs.ell.so/installation')
     else:
         config.store = store
-    config.autocommit = autocommit or config.autocommit
+    config.autocommit = autocommit
 
     if default_api_params is not None:
         config.default_api_params.update(default_api_params)
@@ -261,3 +261,4 @@ def register_provider(provider: Provider, client_type: Type[Any]) -> None:
 def set_store(*args, **kwargs) -> None:
     raise DeprecationWarning(
         "The set_store function is deprecated and will be removed in a future version. Use ell.init(store=...) instead.")
+
