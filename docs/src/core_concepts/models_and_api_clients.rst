@@ -7,7 +7,7 @@ In language model programming, the relationship between models and API clients i
 Model Registration and Default Clients
 --------------------------------------
 
-ell automatically registers numerous models from providers like OpenAI, Anthropic, Cohere, and Groq upon initialization. This allows you to use models without explicitly specifying a client. 
+ell automatically registers numerous models from providers like OpenAI, Anthropic, Cohere, Groq, and MiniMax upon initialization. This allows you to use models without explicitly specifying a client.
 
 If no client is found for a model, ell falls back to a default OpenAI client. This enables the utilization of newly released models without updating ell for new model registrations. If the fallback fails because the model is not available in the OpenAI API, you can register your own client for the model using the `ell.config.register_model` method or specify a client when calling the language model program below
 

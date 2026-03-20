@@ -6,7 +6,7 @@ For example, to register an OpenAI model:
 
 """
 
-from ell.models import openai, anthropic, ollama, groq, bedrock, xai, google
+from ell.models import openai, anthropic, ollama, groq, bedrock, xai, google, minimax
 
-__all__ = ["openai", "anthropic", "ollama", "groq", "bedrock", "xai", "google"]
+__all__ = ["openai", "anthropic", "ollama", "groq", "bedrock", "xai", "google", "minimax"]
 
