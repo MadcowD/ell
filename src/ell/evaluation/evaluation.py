@@ -182,7 +182,7 @@ class Evaluation(LabelListMixin):
                     def written_result(o):
                         write_evaluation_run_intermediate(self, evaluation_run, (res := o()))
                         return res
-                
+
                     metric_futures.extend([executor.submit(written_result, o) for o in get_outputs])
 
                 for result_future in (
@@ -206,7 +206,15 @@ class Evaluation(LabelListMixin):
             write_evaluation_run_end(self, evaluation_run)
 
             return evaluation_run
-            # TODO: add error handling and unsccessful runs.
+        except BaseException as e:
+            # Mark the run as failed so it doesn't remain stuck in "Running" state
+            # when the process is interrupted (e.g. KeyboardInterrupt) or an error occurs.
+            evaluation_run.end_time = datetime.now(timezone.utc)
+            evaluation_run.success = False
+            evaluation_run.error = str(e)
+            evaluation_run.results = EvaluationResults.from_rowar_results(rowar_results)
+            write_evaluation_run_end(self, evaluation_run)
+            raise
         finally:
             config.verbose = original_verbose
 

@@ -60,7 +60,7 @@ class EvaluationResults(Generic[T], LabelListMixin):
         rowar_results: List[_ResultDatapoint],
     ) -> "EvaluationResults":
         def extract_labels(is_invocation: bool):
-            if not rowar_results[0].labels:
+            if not rowar_results or not rowar_results[0].labels:
                 return []
             
             # Group labels by name and type
